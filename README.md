@@ -19,7 +19,8 @@ Displays a preview of the image or video when hovering over the name.
 + Wget command for downloading the files of the current directory.
 
 # Setup
-See `/public/indexer.php` to see how it can be used. You may have to update the `require_once` path if you are using a custom location for the `/src/eyy-indexer.php`.
+See [/public/indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php) to see how it can be used. You may have to update the `require_once` path if you are using a custom location for the [/src/eyy-indexer.php
+](https://github.com/sixem/eyy-indexer/blob/master/src/eyy-indexer.php).
 
 This script is meant to be used with rewrites instead of accessing the PHP file directly, you can see [example-apache-config.conf](https://github.com/sixem/eyy-indexer/blob/master/example-apache-config.conf) for an example of how this is done on Apache. I have not tested this on any other HTTP server but i'd imagine that adapting this method to something like nginx shouldn't be too hard.
 
