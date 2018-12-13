@@ -12,10 +12,11 @@ You can visit the [demo](https://eyy.co/indexer-demo/) to view the indexer in ac
 A gallery mode where you can view images and videos of the current directory without the need to visit each URL separately. It has support for downloading files and reverse searching images.
 #### Hover Previews
 Displays a preview of the image or video when hovering over the name.
-##### File attributes (date modified and size).
-##### Direct download links.
-##### Clickable path for easy navigation.
-##### Wget command for downloading the files of the current directory.
+#### And more ..
++ File attributes (date modified and size).
++ Direct download links.
++ Clickable path for easy navigation.
++ Wget command for downloading the files of the current directory.
 
 # Requirements
 ### [mbstring](https://secure.php.net/manual/en/mbstring.installation.php)
