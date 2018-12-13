@@ -26,6 +26,8 @@ See [/public/indexer.php](https://github.com/sixem/eyy-indexer/blob/master/publi
 
 This script is meant to be used with rewrites instead of accessing the PHP file directly, you can see [example-apache-config.conf](https://github.com/sixem/eyy-indexer/blob/master/example-apache-config.conf) for an example of how this is done with Apache. I have not tested this on any other HTTP server but i'd imagine that adapting this method to something like nginx shouldn't be too hard.
 
+*Note: You may have to manually enabled the rewrite module in order to use rewrites (`sudo a2enmod rewrite`).*
+
 # Options
 You can pass an array of options to the Indexer when initializing it. Example:
 
@@ -52,7 +54,7 @@ mbstring provides multibyte specific string functions that help you deal with mu
 
 It can be usually installed via your package manager (`sudo apt-get install php-*mbstring`).
 
-## Complementary plugins
+# Plugins used
 ### [jquery.scrollTo](https://github.com/flesler/jquery.scrollTo)
 Lightweight, cross-browser and highly customizable animated scrolling with jQuery.
 ### [Tocca.js](https://gianlucaguarini.com/Tocca.js/)
