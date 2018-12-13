@@ -10,8 +10,7 @@ You can visit the [demo](https://eyy.co/indexer-demo/) to view the indexer in ac
 + #### Gallery Mode
 A gallery mode where you can view images and videos of the current directory without the need to visit each URL separately. It has support for downloading files and reverse searching images.
 + #### Hover Previews
-Displays a preview of the image or video when hovering over the name.<br/><br/>
-
+Displays a preview of the image or video when hovering over the name.
 + ##### File attributes (date modified and size).
 + ##### Direct download links.
 + ##### Clickable path for easy navigation.
