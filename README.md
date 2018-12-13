@@ -3,7 +3,7 @@ This is a simple file directory indexer / lister script written in PHP, with som
 
 It is designed to have a retro and simple feel to it which is why it doesn't use any fancy font or icon packs.
 
-JavaScript is not required for the Indexer but it is needed for the the extra functions (gallery mode, hover previews etc.).
+JavaScript is not required for the Indexer but it is needed for extra functionality (gallery mode, hover previews etc.).
 
 You can visit the [demo](https://eyy.co/indexer-demo/) to view the indexer in action.
 
@@ -25,7 +25,7 @@ See [/public/indexer.php](https://github.com/sixem/eyy-indexer/blob/master/publi
 This script is meant to be used with rewrites instead of accessing the PHP file directly, you can see [example-apache-config.conf](https://github.com/sixem/eyy-indexer/blob/master/example-apache-config.conf) for an example of how this is done on Apache. I have not tested this on any other HTTP server but i'd imagine that adapting this method to something like nginx shouldn't be too hard.
 
 # Options
-You can pass an array of options to the Indexer when initializing it. Example:\
+You can pass an array of options to the Indexer when initializing it. Example:
 
 `$options = array('SHOW_VERSION' => true, 'IGNORED_EXTS' => array('exe', 'php'));`\
 `$indexer = new indexer($options, '/images');`
