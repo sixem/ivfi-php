@@ -25,117 +25,117 @@ class indexer
 	protected $CUSTOM_ERROR_PAGE = '';
 
 	function __construct($a = array(), $path = NULL)
-    {
-    	$this->setOptions($a);
+	{
+    		$this->setOptions($a);
 
-    	$this->newest = 0;
+    		$this->newest = 0;
 
-    	$this->filetypes = array();
+    		$this->filetypes = array();
 
-    	$this->error = $this->forbidden = false;
+    		$this->error = $this->forbidden = false;
 
-    	$this->current_path_safe = '';
+    		$this->current_path_safe = '';
 
-    	if($path != NULL) { $this->setPath($path); } else { $this->setPath(''); }
-    }
+    		if($path != NULL) { $this->setPath($path); } else { $this->setPath(''); }
+	}
 
-    function setOptions($options)
-    {
-    	foreach(array_keys($options) as $key)
-    	{
-    		$validOptions = array(
-    			'PREVIEW_EXSTS',
-    			'IGNORED_DIRS',
-    			'IGNORED_FILES',
-    			'IGNORED_EXTS',
-    			'DISABLED_DIRS',
-    			'SHOW_VERSION',
-    			'SHOW_WGET',
-    			'CUSTOM_ERROR_PAGE'
-    		);
-
-    		foreach($validOptions as $e)
+	function setOptions($options)
+	{
+    		foreach(array_keys($options) as $key)
     		{
-    			if(strtoupper($key) == $e)
+    			$validOptions = array(
+    				'PREVIEW_EXSTS',
+    				'IGNORED_DIRS',
+    				'IGNORED_FILES',
+    				'IGNORED_EXTS',
+    				'DISABLED_DIRS',
+    				'SHOW_VERSION',
+    				'SHOW_WGET',
+    				'CUSTOM_ERROR_PAGE'
+    			);
+
+    			foreach($validOptions as $e)
     			{
-    				if(gettype($this->{$e}) == gettype($options[$key]))
+    				if(strtoupper($key) == $e)
     				{
-    					$this->{$e} = $options[$key];
-    				} else {
-    					$this->alertInvalidSetting($e, $this->{$e});
+    					if(gettype($this->{$e}) == gettype($options[$key]))
+    					{
+    						$this->{$e} = $options[$key];
+    					} else {
+    						$this->alertInvalidSetting($e, $this->{$e});
+    					}
     				}
     			}
     		}
-    	}
 
-    	if(!empty($this->IGNORED_DIRS))
-    	{
-    		$this->IGNORED_DIRS = array_map('strtolower', $this->IGNORED_DIRS);
-    	}
-
-    	if(!empty($this->IGNORED_FILES))
-    	{
-    		$this->IGNORED_FILES = array_map('strtolower', $this->IGNORED_FILES);
-    	}
-    }
-
-    function makePathClickable($path)
-    {
-    	$path = rtrim($path, '/');
-
-    	$split = explode('/', $path);
-
-    	$b = $op = (string) NULL;
-
-    	foreach($split as $directory)
-    	{
-    		if(!empty($directory))
+    		if(!empty($this->IGNORED_DIRS))
     		{
-    			$b .= '/' . $directory;
+    			$this->IGNORED_DIRS = array_map('strtolower', $this->IGNORED_DIRS);
+    		}
 
-    			if(empty($op))
+    		if(!empty($this->IGNORED_FILES))
+    		{
+    			$this->IGNORED_FILES = array_map('strtolower', $this->IGNORED_FILES);
+    		}
+	}
+
+	function makePathClickable($path)
+	{
+		$path = rtrim($path, '/');
+
+		$split = explode('/', $path);
+
+		$b = $op = (string) NULL;
+
+		foreach($split as $directory)
+		{
+			if(!empty($directory))
+			{
+				$b .= '/' . $directory;
+
+				if(empty($op))
+				{
+					$op .= sprintf('<a href="/">/</a><a href="%s">%s</a>', $b, $directory);
+				} else {
+					$op .= sprintf('/<a href="%s">%s</a>', $b, $directory);
+				}
+			}
+		}
+
+		return $op;
+	}
+
+	function createTitle()
+	{
+    		if($this->current_path == '' || $this->current_path == '.')
+    		{
+    			return 'Indexer // Viewing /';
+    		} else {
+    			return 'Indexer // Viewing /' . $this->current_path_safe;
+    		}
+	}
+
+	function createUpper($timestamp = '')
+	{
+    		if(!empty($timestamp))
+    		{
+    			if($timestamp > 0)
     			{
-    				$op .= sprintf('<a href="/">/</a><a href="%s">%s</a>', $b, $directory);
-    			} else {
-    				$op .= sprintf('/<a href="%s">%s</a>', $b, $directory);
+    				$timestamp = '[Newest: <span title="' . date('l, F jS Y H:i:s', $this->newest) . '">' . date('d/m/y H:i:s', $this->newest) . '</span>]';
     			}
+    		} else {
+    			$current_time = time();
+
+    			$timestamp = '[Server Time: <span title="' . date('l, F jS Y H:i:s', $current_time) . '">' . date('d/m/y H:i:s', $current_time) . '</span>]';
     		}
-    	}
 
-    	return $op;
-    }
-
-    function createTitle()
-    {
-    	if($this->current_path == '' || $this->current_path == '.')
-    	{
-    		return 'Indexer // Viewing /';
-    	} else {
-    		return 'Indexer // Viewing /' . $this->current_path_safe;
-    	}
-    }
-
-    function createUpper($timestamp = '')
-    {
-    	if(!empty($timestamp))
-    	{
-    		if($timestamp > 0)
-    		{
-    			$timestamp = '[Newest: <span title="' . date('l, F jS Y H:i:s', $this->newest) . '">' . date('d/m/y H:i:s', $this->newest) . '</span>]';
-    		}
-    	} else {
-    		$current_time = time();
-
-    		$timestamp = '[Server Time: <span title="' . date('l, F jS Y H:i:s', $current_time) . '">' . date('d/m/y H:i:s', $current_time) . '</span>]';
-    	}
-
-    	return '<div class="upper-container">
+    		return '<div class="upper-container">
         <span class="links">
           <a href="/">[Home]</a>
         </span>
         <div class="upper">' . $timestamp . PHP_EOL . '      </div>' . PHP_EOL . '
       </div>';
-    }
+	}
 
 	function setPath($path)
 	{
@@ -441,7 +441,7 @@ class indexer
 
 		if(empty($getDir) || isset($getDir) == false)
 		{
-			return ".";
+			return '.';
 		} else {
 			if(file_exists($getDir))
 			{
@@ -458,14 +458,14 @@ class indexer
 	}
 
 	function startsWith($haystack, $needle) {
-        return $needle === '' || strrpos($haystack, $needle, - strlen($haystack)) !== false;
-    }
+		return $needle === '' || strrpos($haystack, $needle, - strlen($haystack)) !== false;
+	}
 
 	function endsWith($haystack, $needle)
 	{
-    	$length = strlen($needle);
+		$length = strlen($needle);
 
-    	return $length === 0 || (substr($haystack, - $length) === $needle);
+		return $length === 0 || (substr($haystack, - $length) === $needle);
 	}
 
 	function formatTimestamp($timestamp)
@@ -481,15 +481,15 @@ class indexer
 
 		if($bytes > 104857600) { $decimals = 0; }
 
-    	$size = array(' B',' kB',' MB',' GB',' TB',' PB',' EB',' ZB',' YB');
+		$size = array(' B',' kB',' MB',' GB',' TB',' PB',' EB',' ZB',' YB');
 
-    	$factor = floor((strlen($bytes) - 1) / 3);
+		$factor = floor((strlen($bytes) - 1) / 3);
 
-    	$x = @$size[$factor];
+		$x = @$size[$factor];
 
-        if($x == ' kB') { $decimals = 0; }
+		if($x == ' kB') { $decimals = 0; }
 
-    	return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . $x;
+		return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . $x;
 	}
 
 }
