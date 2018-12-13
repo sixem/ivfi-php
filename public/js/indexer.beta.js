@@ -1,6 +1,6 @@
 /*
 
-indexer.js [06.11.18]
+indexer.js [https://github.com/sixem/eyy-indexer]
 
 */
 
