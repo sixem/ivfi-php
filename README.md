@@ -1,4 +1,4 @@
-# eyy-indexer
+# eyy-indexer <img src="https://img.shields.io/badge/version-1.0.0-brightgreen.svg?sanitize=true">
 This is a simple file directory indexer / lister script written in PHP, with some help from Javascript and jQuery as well.
 
 It is designed to have a retro and simple feel to it which is why it doesn't use any fancy font or icon packs.
