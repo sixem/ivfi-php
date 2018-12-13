@@ -52,7 +52,7 @@ Whether or not to display a wget command at the bottom of the page. This will di
 ### [mbstring](https://secure.php.net/manual/en/mbstring.installation.php)
 mbstring provides multibyte specific string functions that help you deal with multibyte encodings in PHP.
 
-It can be usually installed via your package manager (`sudo apt-get install php-*mbstring`).
+It can (usually) be installed via your package manager (`sudo apt-get install php-*mbstring`).
 
 # Plugins used
 ### [jquery.scrollTo](https://github.com/flesler/jquery.scrollTo)
