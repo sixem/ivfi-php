@@ -1,5 +1,6 @@
 # eyy-indexer
-This is a simple file directory indexer / lister script written in PHP, with some help from Javascript and jQuery as well.<br/>
+This is a simple file directory indexer / lister script written in PHP, with some help from Javascript and jQuery as well.
+
 It is designed to have a retro and simple feel to it which is why it doesn't use any fancy font or icon packs.
 
 JavaScript is not required for the Indexer but it is needed for the the extra functions (gallery mode, hover previews etc.).
@@ -7,14 +8,14 @@ JavaScript is not required for the Indexer but it is needed for the the extra fu
 You can visit the [demo](https://eyy.co/indexer-demo/) to view the indexer in action.
 
 # Features
-+ #### Gallery Mode
+#### Gallery Mode
 A gallery mode where you can view images and videos of the current directory without the need to visit each URL separately. It has support for downloading files and reverse searching images.
-+ #### Hover Previews
+#### Hover Previews
 Displays a preview of the image or video when hovering over the name.
-+ ##### File attributes (date modified and size).
-+ ##### Direct download links.
-+ ##### Clickable path for easy navigation.
-+ ##### Wget command for downloading the files of the current directory.
+##### File attributes (date modified and size).
+##### Direct download links.
+##### Clickable path for easy navigation.
+##### Wget command for downloading the files of the current directory.
 
 # Requirements
 ### [mbstring](https://secure.php.net/manual/en/mbstring.installation.php)
