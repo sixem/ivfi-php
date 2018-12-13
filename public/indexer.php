@@ -2,7 +2,7 @@
 require_once('../src/eyy-indexer.php');
 
 $options = array(
-  'IGNORED_FILES' => array('OmNx0-90ywg.jpg', 'indexer.php', 'index.php', '404.php')
+  'IGNORED_FILES' => array('indexer.php', 'index.php')
 );
 
 if(!isset($_GET['dir']) || empty($_GET['dir'])) { $indexer = new indexer($options);} else { $indexer = new indexer($options, $_GET['dir']);}
