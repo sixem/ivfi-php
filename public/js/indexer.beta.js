@@ -5,26 +5,27 @@ indexer.js [https://github.com/sixem/eyy-indexer]
 */
 
 $variables = {
-    'current_item' : 0,
-    'current_item_type' : undefined,
-    'gallery_busy' : false,
-    'gallery_items' : undefined,
-    'gallery_list_show' : undefined,
-    'last_adjusted' : undefined,
-    'last_preview' : undefined,
-    'topbar_height': 0,
-    'scroll_position' : undefined,
-    'is_mobile' : false
+    'currentItem' : 0,
+    'currentItemType' : undefined,
+    'galleryIsBusy' : false,
+    'galleryItems' : undefined,
+    'galleryListShow' : undefined,
+    'lastAdjusted' : undefined,
+    'lastPreview' : undefined,
+    'topbarHeight': 0,
+    'scrollPosition' : undefined,
+    'isMobile' : false
 };
 
 $extensions = {
-    'image' : ['jpg', 'jpeg', 'gif', 'png'],
+    'image' : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'],
     'video' : ['mp4', 'webm']
 };
 
 $options = {
     'indexer.UseXMLHttpRequest' : true,
-    'gallery.Hover.ShowImageOptions' : true
+    'gallery.Hover.ShowImageOptions' : true,
+    'gallery.ScrollInterval' : 0
 };
 
 function isMobileDevice()
@@ -88,10 +89,9 @@ function elemPosition($elem)
 
 String.prototype.format = String.prototype.f = function()
 {
-    var s = this,
-        i = arguments.length;
+    var s = this, i = arguments.length;
 
-    while (i--)
+    while(i--)
     {
         s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
     }
@@ -123,7 +123,7 @@ function getReverseImageSearchOptions($url)
 
 function applySwipeEventListeners()
 {
-    if($variables['is_mobile'] == true)
+    if($variables['isMobile'] == true)
     {
         $container = $(document).find('.gallery-item-container');
 
@@ -149,7 +149,7 @@ function applyReverseSearchOptions($source)
     {
         $opts = '<a href="' + $source + '" target="_blank">Direct Link</a>';
 
-        if($variables['current_item_type'] == 1)
+        if($variables['currentItemType'] == 1)
         {
             $.each(getReverseImageSearchOptions(document.location.origin + $source), function($key, $value)
             {
@@ -193,7 +193,7 @@ function disableMainScrolling($state)
 
     if($state)
     {
-        $variables['scroll_position'] = $(document).scrollTop();
+        $variables['scrollPosition'] = $(document).scrollTop();
 
         $('html, body').css({
             overflow: 'hidden',
@@ -221,16 +221,16 @@ function disableMainScrolling($state)
             'padding-right' : ''
         });
 
-        if($variables['scroll_position'] != undefined && $variables['scroll_position'] > 0)
+        if($variables['scrollPosition'] != undefined && $variables['scrollPosition'] > 0)
         {
-            $(document).scrollTop($variables['scroll_position']);
+            $(document).scrollTop($variables['scrollPosition']);
         }
     }
 }
 
 function adjustGalleryItems()
 {
-    $variables['topbar_height'] = $(document).find('.gallery-topbar').outerHeight();
+    $variables['topbarHeight'] = $(document).find('.gallery-topbar').outerHeight();
 
     $list = $(document).find('#gallery-list');
 
@@ -238,21 +238,21 @@ function adjustGalleryItems()
     {
         $list.css(
             {
-                'height' : 'calc(100vh - ' + ($variables['topbar_height'] + 2) + 'px)',
+                'height' : 'calc(100vh - ' + ($variables['topbarHeight'] + 2) + 'px)',
                 'margin-top' : '0 px'
             }
         );
     }
 
     $(document).find('#gallery-container').css({
-        'margin-top' : $variables['topbar_height'] + 'px',
-        'height' : 'calc(100vh - ' + $variables['topbar_height'] + 'px'
+        'margin-top' : $variables['topbarHeight'] + 'px',
+        'height' : 'calc(100vh - ' + $variables['topbarHeight'] + 'px'
     });
 }
 
 function galleryLoading($state)
 {
-    $variables['gallery_busy'] = $state;
+    $variables['galleryIsBusy'] = $state;
 
     if($state == true)
     {
@@ -366,7 +366,7 @@ function hideGalleryList()
 {
     $list_container = $(document).find('#gallery-list');
 
-    if($variables['is_mobile'])
+    if($variables['isMobile'])
     {
         if($list_container.length > 0)
         {
@@ -383,7 +383,7 @@ function hideGalleryList()
         $list_toggle_button.attr('onclick', 'showGalleryList();');
         $list_toggle_button.text('[List+]');
 
-        $variables['gallery_list_show'] = false;
+        $variables['galleryListShow'] = false;
     }
 }
 
@@ -391,7 +391,7 @@ function showGalleryList()
 {
     $list_toggle_button = $(document).find('#gallery-toggle-list');
 
-    $variables['gallery_list_show'] = true;
+    $variables['galleryListShow'] = true;
 
     if(doesGalleryListExist() && isGalleryListVisible() == false)
     {
@@ -424,10 +424,10 @@ function showGalleryList()
             }
         });
 
-        setGalleryListSelected($variables['current_item']);
+        setGalleryListSelected($variables['currentItem']);
     }
 
-    if($variables['is_mobile'])
+    if($variables['isMobile'])
     {
         $list_container = $(document).find('#gallery-list');
 
@@ -524,9 +524,9 @@ function galleryLoadItem($source)
         $video_container.find('video').get(0).pause();
     }
 
-    if(arrayContains($ext, ['jpg', 'jpeg', 'gif', 'png']))
+    if(arrayContains($ext, $extensions['image']))
     {
-        $variables['current_item_type'] = 1;
+        $variables['currentItemType'] = 1;
 
         if($('.gallery-item-container').find('#image-container').length == 0)
         {
@@ -549,9 +549,9 @@ function galleryLoadItem($source)
         $img.src = $source;
     }
 
-    if(arrayContains($ext, ['mp4', 'webm']))
+    if(arrayContains($ext, $extensions['video']))
     {
-        $variables['current_item_type'] = 2;
+        $variables['currentItemType'] = 2;
 
         if($video_container.length == 0)
         {
@@ -581,7 +581,7 @@ function galleryLoadItem($source)
 
 function getItemData($item)
 {
-    if($variables['is_mobile'])
+    if($variables['isMobile'])
     {
         $filename = shortenString($item.attr('data-raw'));
     } else {
@@ -608,36 +608,36 @@ function setCurrentItem($i, $direct)
     {
         if($i == 1)
         {
-            if(($variables['current_item'] + $i) > ($variables['gallery_items'].length - 1))
+            if(($variables['currentItem'] + $i) > ($variables['galleryItems'].length - 1))
             {
-                $variables['current_item'] = 0;
+                $variables['currentItem'] = 0;
             } else {
-                $variables['current_item'] = ($variables['current_item'] + $i);
+                $variables['currentItem'] = ($variables['currentItem'] + $i);
             }
         }
 
         if($i < 0)
         {
-            if(($variables['current_item'] + $i) < 0)
+            if(($variables['currentItem'] + $i) < 0)
             {
-                $variables['current_item'] = ($variables['gallery_items'].length - 1);
+                $variables['currentItem'] = ($variables['galleryItems'].length - 1);
             } else {
-                $variables['current_item'] = ($variables['current_item'] + $i);
+                $variables['currentItem'] = ($variables['currentItem'] + $i);
             }
         }
     } else {
-        if($variables['current_item'] == $i)
+        if($variables['currentItem'] == $i)
         {
             return false;
         } else {
-            $variables['current_item'] = $i;
+            $variables['currentItem'] = $i;
         }
     }
 }
 
 function updateTbFileInfo($item)
 {
-    $counter = '<span class="tb-counter">{0} of {1}</span> | '.f(($variables['current_item'] + 1), $variables['gallery_items'].length);
+    $counter = '<span class="tb-counter">{0} of {1}</span> | '.f(($variables['currentItem'] + 1), $variables['galleryItems'].length);
 
     $data = '<a target="_blank" href="{0}" class="tb-filename" data-filename-full="{1}" data-last-modified="{2}">{3}</a> | '+
     '<span class="tb-filesize">{4}</span>';
@@ -663,25 +663,25 @@ function updateTbFileInfo($item)
 
 function galleryNavigate($i, $direct)
 {
-    $direct = $direct || false; if($variables['gallery_busy'] == true) { return false; }
+    $direct = $direct || false; if($variables['galleryIsBusy'] == true) { return false; }
 
     setCurrentItem($i, $direct);
 
-    showGalleryOverlay($variables['current_item'], undefined, true);
+    showGalleryOverlay($variables['currentItem'], undefined, true);
 
     if(isGalleryListVisible())
     {
-        setGalleryListSelected($variables['current_item']);
+        setGalleryListSelected($variables['currentItem']);
     }
 
     galleryLoading(true);
 
     if($('#gallery-container').find('.gallery-item-container').length > 0)
     {
-        updateTbFileInfo(getItemData($variables['gallery_items'].eq($variables['current_item'])));
+        updateTbFileInfo(getItemData($variables['galleryItems'].eq($variables['currentItem'])));
     }
 
-    galleryLoadItem($variables['gallery_items'].eq($variables['current_item']).attr('data-thumb'));
+    galleryLoadItem($variables['galleryItems'].eq($variables['currentItem']).attr('data-thumb'));
 }
 
 $(document).keydown(function(e)
@@ -750,7 +750,7 @@ $(document).on('click', '#view-gallery', function()
         disableMainScrolling(true);
     }
 
-    $variables['gallery_items'] = $('table').find('.preview'); galleryNavigate(0);
+    $variables['galleryItems'] = $('table').find('.preview'); galleryNavigate(0);
 });
 
 $(document).on('click', '.copy.wget', function()
@@ -847,7 +847,7 @@ function adjustThumbnail($container)
         }
     }
 
-    if($variables['last_adjusted'] != $src)
+    if($variables['lastAdjusted'] != $src)
     {
         $container.show();
 
@@ -859,7 +859,7 @@ function adjustThumbnail($container)
 
         $container.css('top', $container.css('top').replace(/[^-\d\.]/g, '') - $y);
 
-        $variables['last_adjusted'] = $src;
+        $variables['lastAdjusted'] = $src;
 
     }
 
@@ -875,7 +875,7 @@ function showThumbnail($trigger)
 {
     $item = getItemData($trigger);
 
-    $variables['last_preview'] = $item['filename_full'];
+    $variables['lastPreview'] = $item['filename_full'];
 
     $container = $(document).find('#thumbnail-container');
 
@@ -916,27 +916,27 @@ function hideThumbnail()
 {
     $container = $(document).find('#thumbnail-container');
 
-    $container.html(''); $container.hide(); $variables['last_adjusted'] = undefined;
+    $container.html(''); $container.hide(); $variables['lastAdjusted'] = undefined;
 }
 
 function showGalleryOverlay($start, $show_list, $navigate)
 {
     hideThumbnail();
 
-    if($show_list == undefined && $variables['gallery_list_show'] != undefined)
+    if($show_list == undefined && $variables['galleryListShow'] != undefined)
     {
-        $show_list = $variables['gallery_list_show'];
+        $show_list = $variables['galleryListShow'];
     }
 
     $start = $start || 0; $show_list = $show_list || false; $navigate = $navigate || false;
 
-    $variables['gallery_items'] = $('table').find('.preview');
+    $variables['galleryItems'] = $('table').find('.preview');
 
     if(!$.isNumeric($start))
     {
         if($start.is('td'))
         {
-            $start = $variables['gallery_items'].index($start);
+            $start = $variables['galleryItems'].index($start);
         }
     }
 
@@ -954,7 +954,7 @@ function showGalleryOverlay($start, $show_list, $navigate)
         $('#gallery-container').html('<div class="gallery-current-item"></div>');
     }
 
-    $item = getItemData($variables['gallery_items'].eq($variables['current_item']));
+    $item = getItemData($variables['galleryItems'].eq($variables['currentItem']));
 
     if($('#gallery-container').find('.gallery-item-container').length == 0)
     {
@@ -974,7 +974,7 @@ function showGalleryOverlay($start, $show_list, $navigate)
 
     if($navigate != true)
     {
-        galleryLoadItem($variables['gallery_items'].eq($variables['current_item']).attr('data-thumb'));
+        galleryLoadItem($variables['galleryItems'].eq($variables['currentItem']).attr('data-thumb'));
     }
 
     if($show_list)
@@ -1005,6 +1005,41 @@ $(document).on('mouseenter', '.preview > a', function()
 $(document).on('mouseleave', '.preview > a', function()
 {
     clearTimeout($timer); hideThumbnail();
+});
+
+$scroll_break = false;
+
+function scrollEventBreak()
+{
+    $scroll_break = false;
+}
+
+$(document).on('DOMMouseScroll mousewheel', '.gallery-item-container', function(e)
+{
+    if(e.originalEvent.detail > 0 || e.originalEvent.wheelDelta < 0)
+    {
+        if($scroll_break === false)
+        {
+            galleryNavigate(1);
+
+            if($options['gallery.ScrollInterval'] > 0)
+            {
+                $scroll_break = true; setTimeout(scrollEventBreak, $options['gallery.ScrollInterval']);
+            }
+        }
+    } else {
+        if($scroll_break === false)
+        {
+            galleryNavigate(-1);
+
+            if($options['gallery.ScrollInterval'] > 0)
+            {
+                $scroll_break = true; setTimeout(scrollEventBreak, $options['gallery.ScrollInterval']);
+            }
+        }
+    }
+
+    return false;
 });
 
 function loadImage($imageUrl, onprogress)
@@ -1117,10 +1152,12 @@ function loadPreviewImage($url, $offset, $container)
 
 function loadOptions()
 {
-    $keys = [
-        'indexer.UseXMLHttpRequest',
-        'gallery.Hover.ShowImageOptions'
-    ];
+    $keys = [];
+
+    $.each($options, function($index, $value)
+    {
+        $keys.push($index);
+    });
 
     $.each($keys, function($index, $value)
     {
@@ -1145,7 +1182,7 @@ $(window).on('load', function()
 
         if(isMobileDevice())
         {
-            $variables['is_mobile'] = true;
+            $variables['isMobile'] = true;
         }
     }
 

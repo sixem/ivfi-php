@@ -5,7 +5,7 @@ class indexer
 	CONST VERSION = "1.0.0";
 
 	protected $PREVIEW_EXSTS = array(
-		'jpg', 'jpeg', 'png', 'gif', 'mp4', 'webm'
+		'jpg', 'jpeg', 'png', 'gif', 'mp4', 'webm', 'ico', 'svg', 'bmp'
 	);
 
 	protected $IGNORED_DIRS = array();
@@ -26,57 +26,60 @@ class indexer
 
 	function __construct($a = array(), $path = NULL)
 	{
-    		$this->setOptions($a);
+		if(is_array($a))
+		{
+			$this->setOptions($a);
+		}
 
-    		$this->newest = 0;
+    	$this->newest = 0;
 
-    		$this->filetypes = array();
+    	$this->filetypes = array();
 
-    		$this->error = $this->forbidden = false;
+    	$this->error = $this->forbidden = false;
 
-    		$this->current_path_safe = '';
+    	$this->current_path_safe = '';
 
-    		if($path != NULL) { $this->setPath($path); } else { $this->setPath(''); }
+    	if($path != NULL) { $this->setPath($path); } else { $this->setPath(''); }
 	}
 
 	function setOptions($options)
 	{
-    		foreach(array_keys($options) as $key)
-    		{
-    			$validOptions = array(
-    				'PREVIEW_EXSTS',
-    				'IGNORED_DIRS',
-    				'IGNORED_FILES',
-    				'IGNORED_EXTS',
-    				'DISABLED_DIRS',
-    				'SHOW_VERSION',
-    				'SHOW_WGET',
-    				'CUSTOM_ERROR_PAGE'
-    			);
+    	foreach(array_keys($options) as $key)
+    	{
+    		$validOptions = array(
+    			'PREVIEW_EXSTS',
+    			'IGNORED_DIRS',
+    			'IGNORED_FILES',
+    			'IGNORED_EXTS',
+    			'DISABLED_DIRS',
+    			'SHOW_VERSION',
+    			'SHOW_WGET',
+    			'CUSTOM_ERROR_PAGE'
+    		);
 
-    			foreach($validOptions as $e)
+    		foreach($validOptions as $e)
+    		{
+    			if(strtoupper($key) == $e)
     			{
-    				if(strtoupper($key) == $e)
+    				if(gettype($this->{$e}) == gettype($options[$key]))
     				{
-    					if(gettype($this->{$e}) == gettype($options[$key]))
-    					{
-    						$this->{$e} = $options[$key];
-    					} else {
-    						$this->alertInvalidSetting($e, $this->{$e});
-    					}
+    					$this->{$e} = $options[$key];
+    				} else {
+    					$this->alertInvalidSetting($e, $this->{$e});
     				}
     			}
     		}
+    	}
 
-    		if(!empty($this->IGNORED_DIRS))
-    		{
-    			$this->IGNORED_DIRS = array_map('strtolower', $this->IGNORED_DIRS);
-    		}
+    	if(!empty($this->IGNORED_DIRS))
+    	{
+    		$this->IGNORED_DIRS = array_map('strtolower', $this->IGNORED_DIRS);
+    	}
 
-    		if(!empty($this->IGNORED_FILES))
-    		{
-    			$this->IGNORED_FILES = array_map('strtolower', $this->IGNORED_FILES);
-    		}
+    	if(!empty($this->IGNORED_FILES))
+    	{
+    		$this->IGNORED_FILES = array_map('strtolower', $this->IGNORED_FILES);
+    	}
 	}
 
 	function makePathClickable($path)
@@ -107,29 +110,29 @@ class indexer
 
 	function createTitle()
 	{
-    		if($this->current_path == '' || $this->current_path == '.')
-    		{
-    			return 'Indexer // Viewing /';
-    		} else {
-    			return 'Indexer // Viewing /' . $this->current_path_safe;
-    		}
+    	if($this->current_path == '' || $this->current_path == '.')
+    	{
+    		return 'Indexer // Viewing /';
+    	} else {
+    		return 'Indexer // Viewing /' . $this->current_path_safe;
+    	}
 	}
 
 	function createUpper($timestamp = '')
 	{
-    		if(!empty($timestamp))
+    	if(!empty($timestamp))
+    	{
+    		if($timestamp > 0)
     		{
-    			if($timestamp > 0)
-    			{
-    				$timestamp = '[Newest: <span title="' . date('l, F jS Y H:i:s', $this->newest) . '">' . date('d/m/y H:i:s', $this->newest) . '</span>]';
-    			}
-    		} else {
-    			$current_time = time();
-
-    			$timestamp = '[Server Time: <span title="' . date('l, F jS Y H:i:s', $current_time) . '">' . date('d/m/y H:i:s', $current_time) . '</span>]';
+    			$timestamp = '[Newest: <span title="' . date('l, F jS Y H:i:s', $this->newest) . '">' . date('d/m/y H:i:s', $this->newest) . '</span>]';
     		}
+    	} else {
+    		$current_time = time();
 
-    		return '<div class="upper-container">
+    		$timestamp = '[Server Time: <span title="' . date('l, F jS Y H:i:s', $current_time) . '">' . date('d/m/y H:i:s', $current_time) . '</span>]';
+    	}
+
+    	return '<div class="upper-container">
         <span class="links">
           <a href="/">[Home]</a>
         </span>
@@ -320,13 +323,13 @@ class indexer
 		} else {
 			$item_class = 'item';
 
-			if(in_array($file_info["extension"], array('7z', 'zip', 'rar', 'tar', 'tar.gz', 'tgz', 'tar.bz2')))
+			if(in_array($file_info['extension'], array('7z', 'zip', 'rar', 'tar', 'tar.gz', 'tgz', 'tar.bz2')))
 			{
 				$item_class = 'item file-archive';
 			}
 		}
 
-		if(in_array($file_info["extension"], $this->PREVIEW_EXSTS))
+		if(in_array($file_info['extension'], $this->PREVIEW_EXSTS))
 		{
 			$skeleton =
 			'        <tr class="' . $item_class . '">
@@ -348,11 +351,11 @@ class indexer
 		return array(
 			"html" => sprintf(
 			  $skeleton,
-			  $file_info["raw_data"]["filename_full"], $file_info["file_link"],
-			  $file_info["raw_data"]["file_modified"], $file_info["file_modified"],
-			  $file_info["raw_data"]["filesize_raw"], $file_info["filesize"],
-			  $file_info["file_direct_download"]
-		), "filesize" => $file_info["filesize_raw"]);
+			  $file_info['raw_data']['filename_full'], $file_info['file_link'],
+			  $file_info['raw_data']['file_modified'], $file_info['file_modified'],
+			  $file_info['raw_data']['filesize_raw'], $file_info['filesize'],
+			  $file_info['file_direct_download']
+		), "filesize" => $file_info['filesize_raw']);
 	}
 
 	function shortenFilename($s, $cutoff = 30)
@@ -373,7 +376,7 @@ class indexer
 
 		if(is_dir($path . $file))
 		{
-			$fileSize = "-";
+			$fileSize = '-';
 			$filesize_raw = 0;
 			$file_link = sprintf("<span class=\"directory\"><a href=\"/%s\">[%s]</a></span>",
 				$path . $file,

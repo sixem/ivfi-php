@@ -2,6 +2,17 @@
 
 @import url('/fonts/liberation-mono.css');
 
+#gallery-container .tb-right span,
+#gallery-list table td,
+.tb-reverse-search-container,
+table .sortable
+{
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 body
 {
   font-family: 'LiberationMonoRegular';
@@ -209,7 +220,7 @@ table
 
 .file-archive td:first-child a, .file-archive td:first-child a:link
 {
-  color: #ffd91d;
+  color: #e4c21d;
 }
 
 .file-archive td:first-child a:visited
@@ -291,10 +302,6 @@ table .sortable
 {
   cursor: pointer;
   text-decoration: underline;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 
 tr .download
@@ -503,10 +510,6 @@ tr .download
   cursor:pointer;
   padding:1px;
   margin-right: 0;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 
 #image-container .tb-reverse-search-container,
@@ -584,10 +587,6 @@ tr .download
   border-radius: 0px 0px 2px 0px;
   display: none;
   color: #3f3f3f;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 
 .tb-reverse-search-container a,
@@ -662,10 +661,6 @@ tr .download
 {
   padding: 5px 10px 5px 10px;
   cursor: pointer;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
 }
 
 #gallery-list table tr:hover
