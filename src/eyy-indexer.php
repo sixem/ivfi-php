@@ -18,6 +18,8 @@ class indexer
 
 	protected $DISABLED_DIRS = array();
 
+	protected $LINKS = array();
+
 	protected $SHOW_VERSION = false;
 
 	protected $SHOW_WGET = true;
@@ -26,14 +28,9 @@ class indexer
 
 	function __construct($a = array(), $path = NULL)
 	{
-		if(is_array($a))
-		{
-			$this->setOptions($a);
-		}
+		if(is_array($a)) { $this->setOptions($a); }
 
     	$this->newest = 0;
-
-    	$this->filetypes = array();
 
     	$this->error = $this->forbidden = false;
 
@@ -52,6 +49,7 @@ class indexer
     			'IGNORED_FILES',
     			'IGNORED_EXTS',
     			'DISABLED_DIRS',
+    			'LINKS',
     			'SHOW_VERSION',
     			'SHOW_WGET',
     			'CUSTOM_ERROR_PAGE'
@@ -102,6 +100,8 @@ class indexer
 				} else {
 					$op .= sprintf('/<a href="%s">%s</a>', $b, $directory);
 				}
+			} else {
+				return '/';
 			}
 		}
 
@@ -132,9 +132,24 @@ class indexer
     		$timestamp = '[Server Time: <span title="' . date('l, F jS Y H:i:s', $current_time) . '">' . date('d/m/y H:i:s', $current_time) . '</span>]';
     	}
 
+    	$upper_urls = '';
+
+    	if(is_array($this->LINKS) && count($this->LINKS) > 0)
+    	{
+    		foreach($this->LINKS as $key => $value)
+    		{
+    			if(is_string($key) && is_string($value))
+    			{
+    				$upper_urls .= '<a href="' . $value . '">[' . $key . ']</a>';
+    			}
+    		}
+    	}
+
+    	if(empty($upper_urls)) { $upper_urls = '<a href="/">[Home]</a>'; }
+
     	return '<div class="upper-container">
         <span class="links">
-          <a href="/">[Home]</a>
+          ' . $upper_urls . '
         </span>
         <div class="upper">' . $timestamp . PHP_EOL . '      </div>' . PHP_EOL . '
       </div>';
@@ -220,7 +235,7 @@ class indexer
 			) . PHP_EOL. PHP_EOL;
 		}
 
-		$filesArr = $dirsArr = array();
+		$filesArr = $dirsArr = array(); $has_files = false;
 
 		if($this->current_path != false)
 		{
@@ -260,10 +275,7 @@ class indexer
 
 				$extension = pathinfo($entry['file'], PATHINFO_EXTENSION);
 
-				if(!in_array($extension, $this->filetypes))
-				{
-					array_push($this->filetypes, $extension);
-				}
+				$has_files = true;
 			}
 
 		} else {
@@ -273,23 +285,29 @@ class indexer
 		$out .=  '     </table>
       <div class="bottom">';
 
-		if(count($this->filetypes) > 0 && $this->SHOW_WGET == true)
+		if($has_files == true && $this->SHOW_WGET == true)
 		{
 			$out .= '<span id="wget" class="no-select">[+wget]</span> - ';
 		}
 
-		if(count($filesArr) > 0)
+		$file_count_total = count($filesArr); $filesize_total = $this->readableFilesize($totalSize);
+
+		$file_count_span = '<span id="file-count-bottom" data-total="' . $file_count_total . '">' . $file_count_total . '</span>';
+
+		$total_size_span = '<span id="filesize-bottom" data-total="' . $filesize_total . '">' . $filesize_total . '</span>';
+
+		if($file_count_total > 0)
 		{
-			$out .= 'Showing ' . count($filesArr) . ' files and ' . count($dirsArr) . ' directories - Total Size ' . $this->readableFilesize($totalSize);
+			$out .= 'Showing ' . $file_count_span . ' files and ' . count($dirsArr) . ' directories - Total Size ' . $total_size_span;
 		} else {
-			$out .= 'Showing ' . count($filesArr) . ' files and ' . count($dirsArr) . ' directories';
+			$out .= 'Showing ' . $file_count_span . ' files and ' . count($dirsArr) . ' directories';
 		}
 
 		if($this->SHOW_VERSION == true) { $out .= ' - v. ' . self::VERSION; }
 
 		$out .= ' ..';
 
-        if(count($this->filetypes) > 0 && $this->SHOW_WGET === true)
+        if($has_files == true && $this->SHOW_WGET === true)
         {
         	$out .= '
           <div class="command wget" data-path="' . $this->current_path_safe . '">Javascript is required.</div>';
@@ -446,12 +464,7 @@ class indexer
 		{
 			return '.';
 		} else {
-			if(file_exists($getDir))
-			{
-				return $getDir;
-			} else {
-				return false;
-			}
+			return file_exists($getDir) ? $getDir : false;
 		}
 	}
 

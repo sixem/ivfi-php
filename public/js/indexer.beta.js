@@ -1,8 +1,4 @@
-/*
-
-indexer.js [https://github.com/sixem/eyy-indexer]
-
-*/
+/* indexer.js [https://github.com/sixem/eyy-indexer] */
 
 $variables = {
     'currentItem' : 0,
@@ -30,7 +26,7 @@ $options = {
 
 function isMobileDevice()
 {
-    return (typeof window.orientation !== "undefined") || (navigator.userAgent.indexOf('IEMobile') !== -1);
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? true : false;
 };
 
 function shortenString($input, $cutoff)
@@ -248,6 +244,16 @@ function adjustGalleryItems()
         'margin-top' : $variables['topbarHeight'] + 'px',
         'height' : 'calc(100vh - ' + $variables['topbarHeight'] + 'px'
     });
+
+    if($variables['isMobile'])
+    {
+        $navigationBars = $(document).find('.navigation-overlay-left, .navigation-overlay-right');
+
+        $navigationBars.css({
+            'margin-top' : $variables['topbarHeight'] + 'px',
+            'height' : 'calc(100vh - ' + $variables['topbarHeight'] + 'px)'
+        });
+    }
 }
 
 function galleryLoading($state)
@@ -366,14 +372,6 @@ function hideGalleryList()
 {
     $list_container = $(document).find('#gallery-list');
 
-    if($variables['isMobile'])
-    {
-        if($list_container.length > 0)
-        {
-            $list_container.off('swipedown', 'swipeup');
-        }
-    }
-
     if(isGalleryListVisible())
     {
         $list_container.hide();
@@ -413,8 +411,10 @@ function showGalleryList()
         $container = $(document).find('#gallery-container').first();
         $container.find('.gallery-current-item').append('<div id="gallery-list">' + $table + '</div>');
 
-        $('#indexer-files-table tr').each(function()
+        $('#indexer-files-table .item:visible').each(function()
         {
+            if($(this).is(':hidden')) { return true; }
+
             $current = $(this).find('td').first();
 
             if($current.hasClass('preview'))
@@ -425,19 +425,6 @@ function showGalleryList()
         });
 
         setGalleryListSelected($variables['currentItem']);
-    }
-
-    if($variables['isMobile'])
-    {
-        $list_container = $(document).find('#gallery-list');
-
-        if($list_container.length > 0)
-        {
-            $list_container.on({
-                'swipedown' : function(e){galleryNavigate(1)},
-                'swipeup' : function(e){galleryNavigate(-1)}
-            });
-        }
     }
 
     adjustGalleryItems();
@@ -466,11 +453,14 @@ function setGalleryListSelected($index)
         }
     });
 
-    if(!isScrolledIntoView($current, $current.height()))
+    if($current != undefined)
     {
-        $y = $list.scrollTop() + ($current.offset().top - $list.offset().top);
+        if(!isScrolledIntoView($current, $current.height()))
+        {
+            $y = $list.scrollTop() + ($current.offset().top - $list.offset().top);
 
-        $list.scrollTo($current);
+            $list.scrollTo($current);
+        }
     }
 
     $current.addClass('selected');
@@ -684,8 +674,34 @@ function galleryNavigate($i, $direct)
     galleryLoadItem($variables['galleryItems'].eq($variables['currentItem']).attr('data-thumb'));
 }
 
+$shift_key = false;
+
 $(document).keydown(function(e)
 {
+    $shift_key = e.shiftKey;
+
+    if(e.keyCode == 27)
+    {
+        $elem = $('#search-filter');
+
+        if($elem.is(':visible') && $elem.find('input').is(':focus'))
+        {
+            toggleFilter();
+        }
+    }
+
+    if(e.keyCode == 70 && $shift_key == true)
+    {
+        $elem = $('#search-filter');
+
+        if($elem.is(':visible') && $elem.find('input').is(':focus'))
+        {
+            return true;
+        }
+
+        e.preventDefault(); e.stopPropagation(); toggleFilter();
+    }
+
     if(e.keyCode == 38 || e.keyCode == 40)
     {
         if(isGalleryListVisible())
@@ -698,6 +714,8 @@ $(document).keydown(function(e)
 
 $(document).keyup(function(e)
 {
+    $shift_key = e.shiftKey;
+
     if(galleryIsVisible())
     {
         galleryHandleKey(e.keyCode);
@@ -744,13 +762,18 @@ window.onmouseover=function(e)
 
 $(document).on('click', '#view-gallery', function()
 {
-    if($('body').find('#gallery-container').length == 0)
+    if($('#indexer-files-table .item:visible .preview').length === 0)
+    {
+        return false;
+    }
+
+    if($('body').find('#gallery-container').length === 0)
     {
         $('body').prepend('<div id="gallery-container"></div>');
         disableMainScrolling(true);
     }
 
-    $variables['galleryItems'] = $('table').find('.preview'); galleryNavigate(0);
+    $variables['galleryItems'] = $('#indexer-files-table .item:visible .preview'); galleryNavigate(0);
 });
 
 $(document).on('click', '.copy.wget', function()
@@ -930,7 +953,7 @@ function showGalleryOverlay($start, $show_list, $navigate)
 
     $start = $start || 0; $show_list = $show_list || false; $navigate = $navigate || false;
 
-    $variables['galleryItems'] = $('table').find('.preview');
+    $variables['galleryItems'] = $('#indexer-files-table .item:visible .preview');;
 
     if(!$.isNumeric($start))
     {
@@ -969,6 +992,12 @@ function showGalleryOverlay($start, $show_list, $navigate)
 
         $('.gallery-topbar > .tb-items').append($np); $('.gallery-topbar > .tb-items').prepend(updateTbFileInfo($item));
 
+        if($variables['isMobile'] && $variables['galleryItems'].length > 1)
+        {
+            $('#gallery-container').append('<div class="navigation-overlay-left">&#x3C;</div>'+
+                '<div class="navigation-overlay-right">&#x3E;</div>');
+        }
+
         applySwipeEventListeners();
     }
 
@@ -985,9 +1014,29 @@ function showGalleryOverlay($start, $show_list, $navigate)
 
 $(document).on('click', '.preview > a', function(e)
 {
-    showGalleryOverlay($(this).parent(), true);
+    if($variables['isMobile'])
+    {
+        showGalleryOverlay($(this).parent(), false);
+    } else {
+        showGalleryOverlay($(this).parent(), true);
+    }
 
     e.preventDefault();
+});
+
+$(document).on('input', '#search-filter input', function()
+{
+  filerTable($(this).val(), $(this));
+});
+
+$(document).on('click', '.navigation-overlay-left', function(e)
+{
+    galleryNavigate(-1); e.preventDefault();
+});
+
+$(document).on('click', '.navigation-overlay-right', function(e)
+{
+    galleryNavigate(1); e.preventDefault();
 });
 
 $timer = undefined;
@@ -996,10 +1045,7 @@ $(document).on('mouseenter', '.preview > a', function()
 {
     $item = $(this).parent();
 
-    $timer = setTimeout(function()
-    {
-        showThumbnail($item);
-    }, 250);
+    $timer = setTimeout(function() { showThumbnail($item); }, 250);
 });
 
 $(document).on('mouseleave', '.preview > a', function()
@@ -1172,6 +1218,110 @@ function loadOptions()
     console.log($options);
 }
 
+function getReadableFileSizeString(fileSizeInBytes)
+{
+    /* https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string */
+
+    var i = -1;
+    var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+
+    do {
+        fileSizeInBytes = fileSizeInBytes / 1024;
+        i++;
+    } while (fileSizeInBytes > 1024);
+
+    return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
+};
+
+function filerTable($query, $input)
+{
+    if(!$query || $query == undefined) { $('#indexer-files-table tr').show(); }
+
+    $status = $input.parents('#search-filter').find('span').first(); $status.html('');
+
+    $variables['currentItem'] = 0; $syntax_error = false;
+
+    if($input != undefined) { $input.removeClass('error'); }
+
+    $hidden = $total_size = 0; $table_items = $('#indexer-files-table .item');
+
+    $table_items.each(function()
+    {
+        $attrs = $(this).find('td');
+
+        $filename = $attrs.first().attr('data-raw'); $filesize = $attrs.eq(2).attr('data-raw');
+
+        if($filename != undefined)
+        {
+            try
+            {
+                if(!($filename).match($query, 'i'))
+                {
+                    $(this).hide(); $hidden++;
+                } else {
+                    $(this).show(); if($.isNumeric($filesize)) { $total_size = ($total_size + parseInt($filesize)); }
+                }
+            } catch (e)
+            {
+                if($input != undefined)
+                {
+                    $input.addClass('error'); $status.html('Syntax error :/'); $table_items.show();
+
+                    $syntax_error = true; return false;
+                }
+            }
+        }
+    });
+
+    if($hidden > 0)
+    {
+        $('#file-count-bottom').html(($table_items.length - $hidden) + '/' + $table_items.length)
+    } else {
+        $('#file-count-bottom').html($('#file-count-bottom').attr('data-total'));
+    }
+
+    if($total_size > 0)
+    {
+        if($hidden == 0)
+        {
+            $('#filesize-bottom').html($('#filesize-bottom').attr('data-total'));
+        } else {
+            $('#filesize-bottom').html(getReadableFileSizeString($total_size));
+        }
+    } else {
+        if(($table_items.length - $hidden) == 0)
+        {
+            $('#filesize-bottom').html('0 kB');
+        } else {
+            $('#filesize-bottom').html($('#filesize-bottom').attr('data-total'));
+        }
+    }
+
+    if($syntax_error == false)
+    {
+        $status.html('Showing ' + ($table_items.length - $hidden) + ' matches ..');
+    }
+}
+
+function toggleFilter()
+{
+    $elem = $('#search-filter');
+
+    if($elem.length > 0)
+    {
+        $elem.toggle();
+
+        if($elem.is(':visible')) { $elem.find('input').get(0).focus(); }
+    } else {
+        $filter = $(document.createElement('div')).attr('id', 'search-filter');
+
+        $filter.append('<div><input type="text" placeholder="Search .."></div>');
+        $filter.append('<span></span>').append('<div id="search-filter-close"><span onclick="toggleFilter();">[X]</span></div>');
+
+        $('body').append($filter); $('#search-filter input').get(0).focus();
+    }
+}
+
 $(window).on('load', function()
 {
     if($('table').find('.item > .preview > a').length > 0)
@@ -1184,6 +1334,12 @@ $(window).on('load', function()
         {
             $variables['isMobile'] = true;
         }
+
+        if($variables['isMobile'])
+        {
+            $('body').find('#view-gallery').wrap('<div class="upper-extras"></div>');
+            $('body').find('.upper-extras').prepend('<div onclick="toggleFilter();">[Search Filter]</div>');
+        }
     }
 
     loadOptions();
@@ -1191,10 +1347,10 @@ $(window).on('load', function()
 
 $(document).ready(function()
 {
-    /* slightly modified version of this answer: https://stackoverflow.com/a/19947532 */
-
     $('th.sortable').click(function()
     {
+        /* slightly modified version of this answer: https://stackoverflow.com/a/19947532 */
+
         var table = $(this).parents('table').eq(0);
         var rows = table.find('tr.item').toArray().sort(comparer($(this).index()));
 
@@ -1233,9 +1389,9 @@ $(document).ready(function()
 
         $domain = document.location.origin + '/' + $element.attr('data-path');
 
-        $('#indexer-files-table tr').each(function()
+        $('#indexer-files-table .item').each(function()
         {
-            if($(this).find('.download').length > 0)
+            if($(this).find('td:last a').attr('filename'))
             {
                 $filename = $(this).find('td').first().attr('data-raw');
 
