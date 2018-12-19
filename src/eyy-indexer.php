@@ -108,7 +108,7 @@ class indexer
 		return $op;
 	}
 
-	function createTitle()
+	function getTitle()
 	{
     	if($this->current_path == '' || $this->current_path == '.')
     	{
@@ -157,6 +157,8 @@ class indexer
 
 	function setPath($path)
 	{
+		$path = trim(ltrim($path, '/'),  '/');
+
 		$this->current_path = $this->getCurrentPath($path);
 
 		$stack = debug_backtrace();

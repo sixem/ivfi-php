@@ -1,15 +1,16 @@
-# eyy-indexer <img src="https://img.shields.io/badge/version-1.0.0-brightgreen.svg?sanitize=true">
+# eyy-indexer <img src="https://img.shields.io/badge/version-1.0.1-brightgreen.svg?sanitize=true">
 This is a simple file directory indexer / lister script written in PHP, with some help from Javascript and jQuery as well.
 
-This Indexer is designed to be a more image and video friendly Indexer while still having most of the basic functions of any other Indexer or Directory Lister. It is also desgined to have a retro and simple feel to it which is why it doesn't use any fancy fonts or icon packs.
+This Indexer is designed to be a more image and video friendly Indexer while still having most of the basic functions of any other Indexer or Directory Lister. It is also designed to have a retro and simple feel to it which is why it doesn't use any fancy fonts or icon packs.
 
 JavaScript is not required for the Indexer but it is needed for extra functionality (gallery mode, hover previews etc.).
 
-You can visit the [demo](https://eyy.co/indexer-demo/) to view the indexer in action.\
+You can visit the [demo](https://eyy.co/indexer-demo/) to view the indexer in action.
+
 *Note: The demo will use the latest release which does not necessarily include the latest commits.*
 
 #### Feedback
-Feel free to come with any suggestions if you want something added or changed. I have not heavily tested this script so there is bound to be bugs that i do not know of so please don't hesitate reporting any bugs you may find.
+Feel free to come with any suggestions if you want something added or changed. I have not heavily tested this script so there are bound to be bugs that i do not know of so please don't hesitate reporting any bugs you may find.
 
 # Features
 #### Gallery Mode
@@ -25,19 +26,48 @@ The search filter can be used to search for filenames or filetypes in the curren
 + Wget command for downloading the files of the current directory.
 + Mobile support (Work in progress).
 
-# Setup
-See [/public/indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php) to see how it can be used. You may have to update the `require_once` path if you are using a custom location for the [/src/eyy-indexer.php
+# Setup (Apache)
+Place the [/public/](https://github.com/sixem/eyy-indexer/blob/master/public/) files in your root web directory. The [/src/](https://github.com/sixem/eyy-indexer/blob/master/src/) files are recommended to be placed in a folder below your root directory called `src`, but you can place it wherever you want to, just remember that the [/public/indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php) is set up to read from `../src/eyy-indexer.php` so you will have to update that if you are using a custom location for the [/src/eyy-indexer.php
 ](https://github.com/sixem/eyy-indexer/blob/master/src/eyy-indexer.php).
 
-This script is meant to be used with rewrites instead of accessing the PHP file directly, you can see [example-apache-config.conf](https://github.com/sixem/eyy-indexer/blob/master/example-apache-config.conf) for an example of how this is done with Apache. I have not tested this on any other HTTP server but i'd imagine that adapting this method to something like nginx shouldn't be too hard.
+In order to automatically use this script you need to edit your Apache configuration. To do that you can place this line in your Apache configuration:
 
-*Note (Apache): You may have to manually enable the rewrite module if you haven't already (`sudo a2enmod rewrite`).*
+```
+DirectoryIndex index.php index.html index.htm /indexer.php
+```
+
+This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to look for a regular index file at first and if none are found it'll then use the Indexer instead.
+
+If you want to disable direct access to the Indexer you can add these lines to your Apache configuration:
+
+
+```
+RewriteEngine On
+RewriteRule ^/indexer.php(.*)$ - [R=404,L]
+```
+
+*This requires the rewrite module to be enabled (`sudo a2enmod rewrite`).*
+
+### Alternative setup
+
+You can also use the script by using rewrites. You can rewrite certain or all URLs to the Indexer by passing them via the `GET` parameter. You can see [example-apache-configs.md](https://github.com/sixem/eyy-indexer/blob/master/example-apache-configs.md) for an example of how this can be done.
+
+### Other Web Servers
+This script should be usable on all web servers supporting PHP but i have only tested it on Apache so far. I'd imagine that adapting the methods seen above to work with other web servers shouldn't be too hard.
+
+# Requirements
+### [mbstring](https://secure.php.net/manual/en/mbstring.installation.php)
+mbstring provides multibyte specific string functions that help you deal with multibyte encodings in PHP.
+
+It can (usually) be installed via your package manager (`sudo apt-get install php-*mbstring`).
 
 # Options
 You can pass an array of options to the Indexer when initializing it. Example:
 
-`$options = array('SHOW_VERSION' => true, 'IGNORED_EXTS' => array('exe', 'php'));`\
-`$indexer = new indexer($options, '/images');`
+```
+$options = array('SHOW_VERSION' => true, 'IGNORED_EXTS' => array('exe', 'php'));
+$indexer = new indexer($options, '/images');
+```
 
 *Note: Some of these options may have default values, setting a new value will not add to the existing ones but instead overwrite them.*
 #### PREVIEW_EXSTS *(Array)*
@@ -54,12 +84,6 @@ What paths should be disabled. This will show a forbidden error when attempting 
 Whether or not to display a version label at the bottom of the page. Default: `false`.
 #### SHOW_WGET *(Boolean)*
 Whether or not to display a wget command at the bottom of the page. This will display a simple command that can be used to download the contents of the current directory. Default: `true`.
-
-# Requirements
-### [mbstring](https://secure.php.net/manual/en/mbstring.installation.php)
-mbstring provides multibyte specific string functions that help you deal with multibyte encodings in PHP.
-
-It can (usually) be installed via your package manager (`sudo apt-get install php-*mbstring`).
 
 # Plugins used
 ### [jquery.scrollTo](https://github.com/flesler/jquery.scrollTo)

@@ -93,11 +93,20 @@ a:visited
     font-size:6pt!important;
   }
 
-  #gallery-loading,
   .gallery-next,
   .gallery-prev
   {
     display: none!important;
+  }
+
+  #gallery-loader
+  {
+    background-color: rgba(0, 0, 0, 0.25);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    padding: 3px;
+    font-size: 6pt!important;
   }
 
   .navigation-overlay-left
@@ -119,7 +128,7 @@ a:visited
     top: 0;
     line-height: 100vh;
     z-index: 2;
-    padding: 0px 5px 0px 5px;
+    padding: 0px 1.2vw 0px 1.2vw;
     cursor: pointer;
   }
 
@@ -156,6 +165,32 @@ a:visited
     text-align: center;
     font-weight: bold;
     font-size: 9pt;
+  }
+
+  #image-container .tb-reverse-search-container .reverse
+  {
+    font-size:5pt!important;
+  }
+
+  .gallery-topbar
+  {
+    font-size: 5pt!important;
+  }
+
+  #gallery-list
+  {
+    font-size: 5pt!important;
+  }
+
+  .tools-container .tools-results .tools-placeholder
+  {
+    min-height:auto!important;
+  }
+
+  .tb-reverse-search-container
+  {
+    font-size: 5pt!important;
+    padding: 3px 2px 2px 2px!important;
   }
 }
 
@@ -594,8 +629,7 @@ tr .download
   margin-right: 0;
 }
 
-#image-container .tb-reverse-search-container,
-#video-container .tb-reverse-search-container
+#image-container .tb-reverse-search-container
 {
   display: none;
   margin-right:5px;
@@ -625,50 +659,15 @@ tr .download
   cursor: pointer;
 }
 
-@media only screen and (min-device-width : 320px) and (max-device-width : 480px)
-{
-    #image-container .tb-reverse-search-container .reverse,
-    #video-container .tb-reverse-search-container .reverse
-    {
-        font-size:5pt!important;
-    }
-
-    .gallery-topbar
-    {
-        font-size: 5pt!important;
-    }
-
-    #gallery-loading
-    {
-        font-size: 5pt!important;
-    }
-
-    #gallery-list
-    {
-        font-size: 5pt!important;
-    }
-
-    .tools-container .tools-results .tools-placeholder
-    {
-        min-height:auto!important;
-    }
-
-    .tb-reverse-search-container
-    {
-        font-size: 5pt!important;
-        padding: 3px 2px 2px 2px!important;
-    }
-}
-
 .tb-reverse-search-container
 {
   font-size:8pt;
   position: absolute;
   padding: 4px 4px 4px 4px;
-  background-color: #1d1d1de6;
+  background-color: rgba(0, 0, 0, 0.65);
   border-radius: 0px 0px 2px 0px;
   display: none;
-  color: #3f3f3f;
+  color: rgba(255, 255, 255, 0.35);
 }
 
 .tb-reverse-search-container a,
@@ -762,9 +761,9 @@ tr .download
   cursor: pointer;
 }
 
-#gallery-loading
+#gallery-loader
 {
-  z-index:9999;
+  z-index: 2;
   font-size:10pt;
   display: none;
 }

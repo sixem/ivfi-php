@@ -26,7 +26,7 @@ $options = {
 
 function isMobileDevice()
 {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? true : false;
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
 
 function shortenString($input, $cutoff)
@@ -49,18 +49,15 @@ function getLocalStorageKey($key)
 {
     $value = localStorage.getItem($key);
 
-    if($value === null)
+    if($value === null) { return null; }
+
+    if($value == 'false' || $value == 'true')
     {
-        return null;
+        return JSON.parse($value);
     } else {
-        if($value == 'false' || $value == 'true')
+        if($.isNumeric($value))
         {
-            return JSON.parse($value);
-        } else {
-            if($.isNumeric($value))
-            {
-                return parseInt($value);
-            }
+            return parseInt($value);
         }
     }
 
@@ -143,27 +140,17 @@ function applyReverseSearchOptions($source)
 {
     if($options['gallery.Hover.ShowImageOptions'])
     {
-        $opts = '<a href="' + $source + '" target="_blank">Direct Link</a>';
-
-        if($variables['currentItemType'] == 1)
+        $reverseOptions = $.map(getReverseImageSearchOptions(document.location.origin + $source), function($url, $site)
         {
-            $.each(getReverseImageSearchOptions(document.location.origin + $source), function($key, $value)
-            {
-                $opts += '|<a target="_blank" href="' + $value + '">' + $key + '</a>';
-            });
-        }
+            return '<a target="_blank" href="' + $url + '">' + $site + '</a>';
+        }).join('|');
 
         if($('#image-container > .tb-reverse-search-container').length == 0)
         {
             $('#image-container').prepend('<div class="tb-reverse-search-container"></div>');
         }
 
-        if($('#video-container > .tb-reverse-search-container').length == 0)
-        {
-            $('#video-container').prepend('<div class="tb-reverse-search-container"></div>');
-        }
-
-        $('#video-container > .tb-reverse-search-container, #image-container > .tb-reverse-search-container').html($opts);
+        $('#image-container > .tb-reverse-search-container').html($reverseOptions);
     }
 }
 
@@ -258,24 +245,34 @@ function adjustGalleryItems()
 
 function galleryLoading($state)
 {
-    $variables['galleryIsBusy'] = $state;
+    $variables['galleryIsBusy'] = $state; $loader = $('#gallery-loader');
 
-    if($state == true)
+    if($state)
     {
-        $x = $('#gallery-loading');
-
-        if($x.length == 0)
+        if($loader.length == 0)
         {
-            $(document).find('.tb-items').find('div').prepend('<span id="gallery-loading">[Loading ..]</span>');
+            if($variables['isMobile'])
+            {
+                $('body').append('<div id="gallery-loader">Loading ..</div>');
+
+                $y = $(document).find('.navigation-overlay-left');
+
+                if($y.length > 0)
+                {
+                    $('#gallery-loader').css('left', $y.innerWidth() + 'px');
+                }
+            } else {
+                $(document).find('.tb-items > div').prepend('<span id="gallery-loader">[Loading ..]</span>');
+            }
         }
 
-        $('#gallery-loading').fadeIn(500);
+        $('#gallery-loader').fadeIn(500);
     } else {
-        $x = $('#gallery-loading'); $x.stop();
+        $loader.stop();
 
-        $x.fadeOut(100, function()
+        $loader.fadeOut(100, function()
         {
-            $('#gallery-loading').remove(); adjustGalleryItems();
+            $('#gallery-loader').remove(); adjustGalleryItems();
         });
     }
 }
@@ -292,42 +289,34 @@ jQuery.expr.filters.offscreen = function($el)
 
 function galleryIsVisible()
 {
-    if($(document).find('#gallery-container').length > 0)
-    {
-        return true;
-    } else {
-        return false;
-    }
+    return $(document).find('#gallery-container').length > 0;
 }
 
 function galleryHandleKey($keycode)
 {
     if(galleryIsVisible())
     {
-        if($keycode == 27)
+        if($keycode === 27)
         {
             galleryClose();
         }
-        if($keycode == 37)
+        if($keycode === 37)
         {
             galleryNavigate(-1);
         }
-        if($keycode == 39)
+        if($keycode === 39)
         {
             galleryNavigate(1);
         }
 
-        if(doesGalleryListExist())
+        if($keycode === 38 || $keycode === 33)
         {
-            if($keycode == 38 || $keycode == 33)
-            {
-                galleryNavigate(-1);
-            }
+            galleryNavigate(-1);
+        }
 
-            if($keycode == 40 || $keycode == 34)
-            {
-                galleryNavigate(1);
-            }
+        if($keycode === 40 || $keycode === 34)
+        {
+            galleryNavigate(1);
         }
     }
 
@@ -350,36 +339,26 @@ function galleryClose()
 
 function isGalleryListVisible()
 {
-    if($(document).find('#gallery-list').is(':visible'))
-    {
-        return true;
-    } else {
-        return false;
-    }
+    return $(document).find('#gallery-list').is(':visible');
 }
 
 function doesGalleryListExist()
 {
-    if($(document).find('#gallery-list').length > 0)
-    {
-        return true;
-    } else {
-        return false;
-    }
+    return $(document).find('#gallery-list').length > 0;
 }
 
 function hideGalleryList()
 {
-    $list_container = $(document).find('#gallery-list');
+    $listContainer = $(document).find('#gallery-list');
 
     if(isGalleryListVisible())
     {
-        $list_container.hide();
+        $listContainer.hide();
 
-        $list_toggle_button = $(document).find('#gallery-toggle-list');
+        $listToggleButton = $(document).find('#gallery-toggle-list');
 
-        $list_toggle_button.attr('onclick', 'showGalleryList();');
-        $list_toggle_button.text('[List+]');
+        $listToggleButton.attr('onclick', 'showGalleryList();');
+        $listToggleButton.text('[List+]');
 
         $variables['galleryListShow'] = false;
     }
@@ -387,24 +366,30 @@ function hideGalleryList()
 
 function showGalleryList()
 {
-    $list_toggle_button = $(document).find('#gallery-toggle-list');
+    $listToggleButton = $(document).find('#gallery-toggle-list');
 
     $variables['galleryListShow'] = true;
 
-    if(doesGalleryListExist() && isGalleryListVisible() == false)
+    if(doesGalleryListExist() && isGalleryListVisible() === false)
     {
-        $(document).find('#gallery-list').show();
+        $list = $(document).find('#gallery-list'); $list.show();
 
-        $list_toggle_button.text('[List-]');
-        $list_toggle_button.attr('onclick', 'hideGalleryList();');
+        $listToggleButton.text('[List-]').attr('onclick', 'hideGalleryList();');
+
+        $selectedItem = $list.find('.selected').first();
+
+        if($selectedItem.length > 0 && !isScrolledIntoView($selectedItem, $selectedItem.height()))
+        {
+            $list.scrollTo($selectedItem);
+        }
 
         return true;
     }
 
-    if(galleryIsVisible() && doesGalleryListExist() == false)
+    if(galleryIsVisible() && doesGalleryListExist() === false)
     {
-        $list_toggle_button.text('[List-]');
-        $list_toggle_button.attr('onclick', 'hideGalleryList();');
+        $listToggleButton.text('[List-]');
+        $listToggleButton.attr('onclick', 'hideGalleryList();');
 
         $table = '<table cellspacing="0"><tbody></tbody></table>';
 
@@ -439,31 +424,19 @@ function setGalleryListSelected($index)
 {
     $list = $(document).find('#gallery-list');
 
-    $x = $list.find('table > tbody').find('tr');
+    $listItems = $list.find('table > tbody').find('tr > td');
 
-    $current = $x.eq($index).find('td').first();
-
-    $x.each(function()
-    {
-        $y = $(this).find('td').first();
-
-        if($y.hasClass('selected'))
-        {
-            $y.removeClass('selected');
-        }
-    });
+    $current = $listItems.eq($index).first();
 
     if($current != undefined)
     {
         if(!isScrolledIntoView($current, $current.height()))
         {
-            $y = $list.scrollTop() + ($current.offset().top - $list.offset().top);
-
             $list.scrollTo($current);
         }
     }
 
-    $current.addClass('selected');
+    $listItems.removeClass('selected'); $current.addClass('selected');
 }
 
 function waitForVideo($video, $pseudo)
@@ -582,7 +555,7 @@ function getItemData($item)
 
     return {
         'filename' : $filename,
-        'filename_full' : $item.attr('data-raw'),
+        'filenameFull' : $item.attr('data-raw'),
         'filesize' : $parent.find('td').eq(2).html(),
         'modified' : $parent.find('td').eq(1).html(),
         'url' : $item.find('a').attr('href'),
@@ -637,14 +610,14 @@ function updateTbFileInfo($item)
     if($download.length > 0)
     {
         $download.attr({
-            'filename' : $item['filename_full'],
+            'filename' : $item['filenameFull'],
             'href' : $item['url']
         });
     }
 
     $(document).find('.tb-current-item').html($counter + $data.f(
         $item['url'],
-        $item['filename_full'],
+        $item['filenameFull'],
         $item['modified'],
         $item['filename'],
         $item['filesize']
@@ -659,7 +632,7 @@ function galleryNavigate($i, $direct)
 
     showGalleryOverlay($variables['currentItem'], undefined, true);
 
-    if(isGalleryListVisible())
+    if(doesGalleryListExist())
     {
         setGalleryListSelected($variables['currentItem']);
     }
@@ -674,27 +647,27 @@ function galleryNavigate($i, $direct)
     galleryLoadItem($variables['galleryItems'].eq($variables['currentItem']).attr('data-thumb'));
 }
 
-$shift_key = false;
+$shiftKey = false;
 
 $(document).keydown(function(e)
 {
-    $shift_key = e.shiftKey;
+    $shiftKey = e.shiftKey;
 
     if(e.keyCode == 27)
     {
-        $elem = $('#search-filter');
+        $searchFilter = $('#search-filter');
 
-        if($elem.is(':visible') && $elem.find('input').is(':focus'))
+        if($searchFilter.is(':visible') && $searchFilter.find('input').is(':focus'))
         {
             toggleFilter();
         }
     }
 
-    if(e.keyCode == 70 && $shift_key == true)
+    if(e.keyCode == 70 && $shiftKey == true)
     {
-        $elem = $('#search-filter');
+        $searchFilter = $('#search-filter');
 
-        if($elem.is(':visible') && $elem.find('input').is(':focus'))
+        if($searchFilter.is(':visible') && $searchFilter.find('input').is(':focus'))
         {
             return true;
         }
@@ -714,7 +687,7 @@ $(document).keydown(function(e)
 
 $(document).keyup(function(e)
 {
-    $shift_key = e.shiftKey;
+    $shiftKey = e.shiftKey;
 
     if(galleryIsVisible())
     {
@@ -898,7 +871,7 @@ function showThumbnail($trigger)
 {
     $item = getItemData($trigger);
 
-    $variables['lastPreview'] = $item['filename_full'];
+    $variables['lastPreview'] = $item['filenameFull'];
 
     $container = $(document).find('#thumbnail-container');
 
@@ -937,7 +910,7 @@ function showThumbnail($trigger)
 
 function hideThumbnail()
 {
-    $container = $(document).find('#thumbnail-container');
+    $container = $('#thumbnail-container');
 
     $container.html(''); $container.hide(); $variables['lastAdjusted'] = undefined;
 }
@@ -1010,6 +983,8 @@ function showGalleryOverlay($start, $show_list, $navigate)
     {
         showGalleryList();
     }
+
+    hideThumbnail();
 }
 
 $(document).on('click', '.preview > a', function(e)
@@ -1305,20 +1280,25 @@ function filerTable($query, $input)
 
 function toggleFilter()
 {
-    $elem = $('#search-filter');
-
-    if($elem.length > 0)
+    if(galleryIsVisible())
     {
-        $elem.toggle();
+        return false;
+    }
 
-        if($elem.is(':visible')) { $elem.find('input').get(0).focus(); }
+    $searchFilter = $('#search-filter');
+
+    if($searchFilter.length > 0)
+    {
+        $searchFilter.toggle();
+
+        if($searchFilter.is(':visible')) { $searchFilter.find('input').get(0).focus(); }
     } else {
-        $filter = $(document.createElement('div')).attr('id', 'search-filter');
+        $searchFilter = $(document.createElement('div')).attr('id', 'search-filter');
 
-        $filter.append('<div><input type="text" placeholder="Search .."></div>');
-        $filter.append('<span></span>').append('<div id="search-filter-close"><span onclick="toggleFilter();">[X]</span></div>');
+        $searchFilter.append('<div><input type="text" placeholder="Search .."></div>');
+        $searchFilter.append('<span></span>').append('<div id="search-filter-close"><span onclick="toggleFilter();">[X]</span></div>');
 
-        $('body').append($filter); $('#search-filter input').get(0).focus();
+        $('body').append($searchFilter); $('#search-filter input').get(0).focus();
     }
 }
 
@@ -1349,6 +1329,8 @@ $(document).ready(function()
 {
     $('th.sortable').click(function()
     {
+        $variables['currentItem'] = 0;
+
         /* slightly modified version of this answer: https://stackoverflow.com/a/19947532 */
 
         var table = $(this).parents('table').eq(0);
