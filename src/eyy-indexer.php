@@ -1,92 +1,48 @@
 <?php
-
 class indexer
 {
-	CONST VERSION = "1.0.0";
+	CONST VERSION = "1.0.2";
 
-	protected $PREVIEW_EXSTS = array(
-		'jpg', 'jpeg', 'png', 'gif', 'mp4', 'webm', 'ico', 'svg', 'bmp'
-	);
-
-	protected $IGNORED_DIRS = array();
-
-	protected $IGNORED_FILES = array(
-		'index.php', 'indexer.php'
-	);
-
-	protected $IGNORED_EXTS = array();
-
-	protected $DISABLED_DIRS = array();
-
-	protected $LINKS = array();
-
-	protected $SHOW_VERSION = false;
-
-	protected $SHOW_WGET = true;
-
-	protected $CUSTOM_ERROR_PAGE = '';
-
-	function __construct($a = array(), $path = NULL)
+	function __construct($path = '', $config = NULL)
 	{
-		if(is_array($a)) { $this->setOptions($a); }
-
     	$this->newest = 0;
 
     	$this->error = $this->forbidden = false;
 
-    	$this->current_path_safe = '';
+    	$this->currentPathSafe = '';
 
-    	if($path != NULL) { $this->setPath($path); } else { $this->setPath(''); }
-	}
-
-	function setOptions($options)
-	{
-    	foreach(array_keys($options) as $key)
+    	if($config !== NULL)
     	{
-    		$validOptions = array(
-    			'PREVIEW_EXSTS',
-    			'IGNORED_DIRS',
-    			'IGNORED_FILES',
-    			'IGNORED_EXTS',
-    			'DISABLED_DIRS',
-    			'LINKS',
-    			'SHOW_VERSION',
-    			'SHOW_WGET',
-    			'CUSTOM_ERROR_PAGE'
-    		);
-
-    		foreach($validOptions as $e)
+    		if(is_string($config) && is_file($config))
     		{
-    			if(strtoupper($key) == $e)
-    			{
-    				if(gettype($this->{$e}) == gettype($options[$key]))
-    				{
-    					$this->{$e} = $options[$key];
-    				} else {
-    					$this->alertInvalidSetting($e, $this->{$e});
-    				}
-    			}
+    			require_once($config); $this->configFile = $config;
     		}
     	}
 
-    	if(!empty($this->IGNORED_DIRS))
-    	{
-    		$this->IGNORED_DIRS = array_map('strtolower', $this->IGNORED_DIRS);
-    	}
+    	$this->classDir = pathinfo(__FILE__, PATHINFO_DIRNAME);
 
-    	if(!empty($this->IGNORED_FILES))
-    	{
-    		$this->IGNORED_FILES = array_map('strtolower', $this->IGNORED_FILES);
-    	}
+		if(!isset($this->configFile) && !is_dir($this->classDir))
+		{
+			$this->classDir = false;
+		} else {
+			$this->configFile = (rtrim($this->classDir, '/') . '/' . 'eyy-indexer-config.php');
+
+			if(is_file($this->configFile))
+			{
+				require_once($this->configFile);
+			} else {
+				$this->configFile = false;
+			}
+		}
+
+    	$this->setPath($path);
 	}
 
 	function makePathClickable($path)
 	{
-		$path = rtrim($path, '/');
+		$split = explode('/', rtrim($path, '/'));
 
-		$split = explode('/', $path);
-
-		$b = $op = (string) NULL;
+		$b = $op = '';
 
 		foreach($split as $directory)
 		{
@@ -101,7 +57,7 @@ class indexer
 					$op .= sprintf('/<a href="%s">%s</a>', $b, $directory);
 				}
 			} else {
-				return '/';
+				return '<a href="/">/</a>';
 			}
 		}
 
@@ -110,22 +66,19 @@ class indexer
 
 	function getTitle()
 	{
-    	if($this->current_path == '' || $this->current_path == '.')
+    	if($this->currentPath == '' || $this->currentPath == '.')
     	{
-    		return 'Indexer // Viewing /';
+    		return 'Indexer // Index of /';
     	} else {
-    		return 'Indexer // Viewing /' . $this->current_path_safe;
+    		return 'Indexer // Index of /' . $this->currentPathSafe;
     	}
 	}
 
 	function createUpper($timestamp = '')
 	{
-    	if(!empty($timestamp))
+    	if(!empty($timestamp) && $timestamp > 0)
     	{
-    		if($timestamp > 0)
-    		{
-    			$timestamp = '[Newest: <span title="' . date('l, F jS Y H:i:s', $this->newest) . '">' . date('d/m/y H:i:s', $this->newest) . '</span>]';
-    		}
+    		$timestamp = '[Newest: <span title="' . date('l, F jS Y H:i:s', $this->newest) . '">' . date('d/m/y H:i:s', $this->newest) . '</span>]';
     	} else {
     		$current_time = time();
 
@@ -134,9 +87,9 @@ class indexer
 
     	$upper_urls = '';
 
-    	if(is_array($this->LINKS) && count($this->LINKS) > 0)
+    	if(defined('LINKS') && is_array(LINKS) && count(LINKS) > 0)
     	{
-    		foreach($this->LINKS as $key => $value)
+    		foreach(LINKS as $key => $value)
     		{
     			if(is_string($key) && is_string($value))
     			{
@@ -159,7 +112,9 @@ class indexer
 	{
 		$path = trim(ltrim($path, '/'),  '/');
 
-		$this->current_path = $this->getCurrentPath($path);
+		$this->currentPath = $this->getCurrentPath($path);
+
+		$this->currentPathReal = realpath($this->currentPath);
 
 		$stack = debug_backtrace();
 
@@ -167,18 +122,18 @@ class indexer
 
 		# Check if the requested path is above/equal to the scripts directory to avoid backwards directory traversal.
 
-		if(substr(realpath($this->current_path), 0, strlen($basePath)) !== $basePath)
+		if(substr($this->currentPathReal, 0, strlen($basePath)) !== $basePath)
 		{
 			$this->error = true;
 		}
 
 		# Check if current directory is disabled.
 
-		if(count($this->DISABLED_DIRS) > 0)
+		if(defined('DISABLED__DIRECTORIES') && is_array(DISABLED__DIRECTORIES) && count(DISABLED__DIRECTORIES) > 0)
 		{
 			$this->currentDir = rtrim($path, '/');
 
-			foreach($this->DISABLED_DIRS as $x)
+			foreach(DISABLED__DIRECTORIES as $x)
 			{
 				if($this->currentDir == ltrim(rtrim($x, '/'), '/'))
 				{
@@ -187,34 +142,34 @@ class indexer
 			}
 		}
 
-		$this->current_path_safe = $this->makeSafe($path);
+		$this->currentPathSafe = htmlentities($path, ENT_QUOTES, 'UTF-8');
 
-		return $this->current_path_safe;
+		return $this->currentPathSafe;
 	}
 
-	function getIndex($get_path = NULL)
+	function getIndex($getPath = NULL)
 	{
-		if(!isset($this->current_path))
+		if(!isset($this->currentPath))
 		{
-			if($get_path != NULL)
+			if($getPath != NULL)
 			{
-				$this->setPath($get_path);
+				$this->setPath($getPath);
 			} else {
 				return $this->showError();
 			}
 		}
 
-		if($this->forbidden == true)
+		if($this->forbidden === true)
 		{
 			return $this->showForbidden();
 		}
 
-		if($this->error == true)
+		if($this->error === true)
 		{
 			return $this->showError();
 		}
 
-		$out = PHP_EOL . '      <div class="table-header">Index of <span>' . $this->makePathClickable($this->current_path_safe) . '</span></div>';
+		$out = PHP_EOL . '      <div class="table-header">Index of <span>' . $this->makePathClickable($this->currentPathSafe) . '</span></div>';
 
 		$out .= PHP_EOL . '      <table cellspacing="0" id="indexer-files-table">
 		<tr>
@@ -224,39 +179,72 @@ class indexer
 		  <th>Options</th>
 		</tr>' . PHP_EOL;
 
-		$parentDir = dirname($this->current_path);
+		$parentDir = dirname($this->currentPath);
 
 		if($parentDir == '.') { $parentDir = ''; }
 
-		if(!empty($this->current_path))
+		if(!empty($this->currentPath))
 		{
-			$out .= sprintf("
-        <tr><td class=\"parent\"><a href=\"/%s\">%s</a></td><td>-</td><td>-</td><td>-</td></tr>",
-				$this->makeSafe($parentDir),
+			$out .= sprintf('
+        <tr><td class="parent"><a href="/%s">%s</a></td><td>-</td><td>-</td><td>-</td></tr>',
+				htmlentities($parentDir, ENT_QUOTES, 'UTF-8'),
 				'[Parent Directory]'
 			) . PHP_EOL. PHP_EOL;
 		}
 
-		$filesArr = $dirsArr = array(); $has_files = false;
+		$__files = $__directories = array(); $hasFiles = false;
 
-		if($this->current_path != false)
+		if($this->currentPath != false)
 		{
-			$files = $this->getFiles(realpath($this->current_path));
+			$files = isset($this->currentPathReal) ? $this->getFiles($this->currentPathReal) :
+			$this->getFiles(realpath($this->currentPath));
 
 			if(is_array($files))
 			{
+				$ignored = array(
+					'directories' => array(),
+					'filenames' => array(),
+					'extensions' => array()
+				);
+
+				if(defined('IGNORED__DIRECTORIES') && is_array(IGNORED__DIRECTORIES) &&
+					count(IGNORED__DIRECTORIES) > 0)
+				{
+					$ignored['directories'] = array_map('strtolower', IGNORED__DIRECTORIES);
+				}
+
+				if(defined('IGNORED_FILENAMES') && is_array(IGNORED_FILENAMES) &&
+					count(IGNORED_FILENAMES) > 0)
+				{
+					$ignored['filenames'] = array_map('strtolower', IGNORED_FILENAMES);
+				}
+
+				if(defined('IGNORED_EXSTENSIONS') && is_array(IGNORED_EXSTENSIONS) &&
+					count(IGNORED_EXSTENSIONS) > 0)
+				{
+					$ignored['extensions'] = array_map('strtolower', IGNORED_EXSTENSIONS);
+				}
+
 				foreach($files as $file)
 				{
-					if(is_dir($this->current_path . '/' . $file))
+					if(is_dir($this->currentPath . '/' . $file))
 					{
-						if(!in_array(strtolower($file), $this->IGNORED_DIRS) && substr($file, 0, 1) != '.')
+						if(!in_array(strtolower($file), $ignored['directories']) && substr($file, 0, 1) != '.')
 						{
-							array_push($dirsArr, array('currentPath' => $this->current_path, 'file' => $file));
+							array_push($__directories, array('currentPath' => $this->currentPath, 'file' => $file));
 						}
 					} else {
-						if(!in_array(strtolower($file), $this->IGNORED_FILES) && substr($file, 0, 1) != '.')
+						if(!in_array(strtolower($file), $ignored['filenames']) && substr($file, 0, 1) != '.')
 						{
-							array_push($filesArr, array('currentPath' => $this->current_path, 'file' => $file));
+							if(!count($ignored['extensions']) > 0)
+							{
+								array_push($__files, array('currentPath' => $this->currentPath, 'file' => $file));
+							} else {
+								if(!in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), $ignored['extensions']))
+								{
+									array_push($__files, array('currentPath' => $this->currentPath, 'file' => $file));
+								}
+							}
 						}
 					}
 				}
@@ -264,20 +252,21 @@ class indexer
 
 			$totalSize = 0;
 
-			foreach($dirsArr as $entry)
+			foreach($__directories as $directory)
 			{
-				$data = $this->constructFileHtml($entry['currentPath'], $entry['file']);
+				$data = $this->constructFileHtml($directory['currentPath'], $directory['file']);
 				$out .= $data['html'];
 			}
-			foreach($filesArr as $entry)
+
+			foreach($__files as $file)
 			{
-				$data = $this->constructFileHtml($entry['currentPath'], $entry['file']);
+				$data = $this->constructFileHtml($file['currentPath'], $file['file']);
 				$out .= $data['html'];
 				$totalSize = ($totalSize + $data['filesize']);
 
-				$extension = pathinfo($entry['file'], PATHINFO_EXTENSION);
+				$extension = pathinfo($file['file'], PATHINFO_EXTENSION);
 
-				$has_files = true;
+				$hasFiles = true;
 			}
 
 		} else {
@@ -287,34 +276,30 @@ class indexer
 		$out .=  '     </table>
       <div class="bottom">';
 
-		if($has_files == true && $this->SHOW_WGET == true)
+		if($hasFiles === true && defined('SHOW_WGET') && SHOW_WGET === true)
 		{
 			$out .= '<span id="wget" class="no-select">[+wget]</span> - ';
 		}
 
-		$file_count_total = count($filesArr); $filesize_total = $this->readableFilesize($totalSize);
+		$fileCountTotal = count($__files); $filesizeTotal = $this->readableFilesize($totalSize);
+		$fileCountSpan = '<span id="file-count-bottom" data-total="' . $fileCountTotal . '">' . $fileCountTotal . '</span>';
+		$totalSizeSpan = '<span id="filesize-bottom" data-total="' . $filesizeTotal . '">' . $filesizeTotal . '</span>';
 
-		$file_count_span = '<span id="file-count-bottom" data-total="' . $file_count_total . '">' . $file_count_total . '</span>';
+		$out .= 'Showing ' . $fileCountSpan . ' files and ' . count($__directories) . ' directories' .
+		($fileCountTotal > 0 ? (' - Total Size ' . $totalSizeSpan) : '');
 
-		$total_size_span = '<span id="filesize-bottom" data-total="' . $filesize_total . '">' . $filesize_total . '</span>';
-
-		if($file_count_total > 0)
+		if(defined('SHOW_VERSION') && SHOW_VERSION === true)
 		{
-			$out .= 'Showing ' . $file_count_span . ' files and ' . count($dirsArr) . ' directories - Total Size ' . $total_size_span;
-		} else {
-			$out .= 'Showing ' . $file_count_span . ' files and ' . count($dirsArr) . ' directories';
+			$out .= ' - v' . self::VERSION;
 		}
-
-		if($this->SHOW_VERSION == true) { $out .= ' - v. ' . self::VERSION; }
 
 		$out .= ' ..';
 
-        if($has_files == true && $this->SHOW_WGET === true)
+        if($hasFiles === true && defined('SHOW_WGET') && SHOW_WGET === true)
         {
         	$out .= '
-          <div class="command wget" data-path="' . $this->current_path_safe . '">Javascript is required.</div>';
-        	$out .= '
-          <div class="command-bottom"><div class="copy wget no-select">[Copy to clipboard]</div>
+        <div class="command wget" data-path="' . $this->currentPathSafe . '">Javascript is required.</div>
+        <div class="command-bottom"><div class="copy wget no-select">[Copy to clipboard]</div>
       </div>';
         }
 
@@ -324,108 +309,83 @@ class indexer
 		return $this->createUpper($this->newest) . $out;
 	}
 
-	function makeSafe($s)
-	{
-		return htmlentities($s, ENT_QUOTES, 'utf-8');
-	}
-
 	function constructFileHtml($path, $file)
 	{
 		$path = preg_replace('#/+#','/', $path);
 
-		if($this->endsWith($path, '/') == false) { $path = ($path . '/'); }
-
-		$file_info = $this->getFileInfo($path, $file);
-
-		if(is_dir($path . $file))
+		if($this->endsWith($path, '/') == false)
 		{
-			$item_class = 'item-dir';
-		} else {
-			$item_class = 'item';
-
-			if(in_array($file_info['extension'], array('7z', 'zip', 'rar', 'tar', 'tar.gz', 'tgz', 'tar.bz2')))
-			{
-				$item_class = 'item file-archive';
-			}
+			$path = ($path . '/');
 		}
 
-		if(in_array($file_info['extension'], $this->PREVIEW_EXSTS))
+		$__extensions = array();
+
+		if(defined('PREVIEW_EXSTENSIONS') && is_array(PREVIEW_EXSTENSIONS) && count(PREVIEW_EXSTENSIONS) > 0)
 		{
-			$skeleton =
-			'        <tr class="' . $item_class . '">
-		  <td data-raw="%s" data-thumb="/' . ($path . $file) . '" class="preview">%s</td>
-		  <td data-raw="%s">%s</td>
-		  <td data-raw="%s">%s</td>
-		  <td class="download">%s</td>
-		</tr>' . PHP_EOL . PHP_EOL;
-		} else {
-			$skeleton =
-			'        <tr class="' . $item_class . '">
-		  <td data-raw="%s">%s</td>
-		  <td data-raw="%s">%s</td>
-		  <td data-raw="%s">%s</td>
-		  <td>%s</td>
-		</tr>' . PHP_EOL . PHP_EOL;
+			$__extensions = array_map('strtolower', PREVIEW_EXSTENSIONS);
 		}
+
+		$itemPath = ($path . $file); $isDir = is_dir($itemPath); $itemPreview = false;
+
+		$itemExtension = strtolower(pathinfo($itemPath, PATHINFO_EXTENSION));
+
+		if(!$isDir)
+		{
+			$itemPreview = in_array($itemExtension, $__extensions) ? true : false;
+		}
+
+		$fileInfo = $this->getFileInfo($itemPath, $file, $isDir, $itemExtension);
+
+		$skeleton =
+			'        <tr class="' . ($isDir ? 'item-dir' : 'item') . '">
+		  <td data-raw="%s"' . ($itemPreview ? ' data-thumb="/' . $itemPath . '" class="preview"' : '') . '>%s</td>
+		  <td data-raw="%s">%s</td>
+		  <td data-raw="%s">%s</td>
+		  <td' . ($isDir ? '' : ' class="download"') . '>%s</td>
+		</tr>' . PHP_EOL . PHP_EOL;
 
 		return array(
-			"html" => sprintf(
+			'html' => sprintf(
 			  $skeleton,
-			  $file_info['raw_data']['filename_full'], $file_info['file_link'],
-			  $file_info['raw_data']['file_modified'], $file_info['file_modified'],
-			  $file_info['raw_data']['filesize_raw'], $file_info['filesize'],
-			  $file_info['file_direct_download']
-		), "filesize" => $file_info['filesize_raw']);
+			  $fileInfo['rawData']['filenameFull'], $fileInfo['fileLink'],
+			  $fileInfo['rawData']['fileModified'], $fileInfo['fileModified'],
+			  $fileInfo['rawData']['filesizeRaw'], $fileInfo['filesize'],
+			  $fileInfo['fileDirectDownload']
+		), 'filesize' => $fileInfo['filesizeRaw']);
 	}
 
 	function shortenFilename($s, $cutoff = 30)
 	{
 		$halved = ($cutoff / 2) - 1;
 
-		if(mb_strlen($s) > $cutoff) {
-			return sprintf("%s .. %s", mb_substr($s, 0, $halved), mb_substr($s, ($halved) - ($halved * 2)));
-		} else {
-			return $s;
-		}
+		return mb_strlen($s) > $cutoff ? sprintf('%s .. %s', mb_substr($s, 0, $halved), mb_substr($s, ($halved) - ($halved * 2))) :
+		$s;
 
 	}
 
-	function getFileInfo($path, $file)
+	function getFileInfo($filePath, $file, $isDir, $itemExtension)
 	{
-		$name_shortened = $this->shortenFilename($file, 30);
+		$nameShortened = $this->shortenFilename($file, 30);
 
-		if(is_dir($path . $file))
-		{
-			$fileSize = '-';
-			$filesize_raw = 0;
-			$file_link = sprintf("<span class=\"directory\"><a href=\"/%s\">[%s]</a></span>",
-				$path . $file,
-				$name_shortened);
-			$direct_link = '-';
-		} else {
-			$filesize_raw = filesize($path . $file);
+        $fileLink = $isDir ? sprintf(
+        	'<span class="directory"><a href="/%s">[%s]</a></span>', $filePath, $nameShortened) :
+            sprintf('<a href="/%s">%s</a>', $filePath, $nameShortened);
 
-			if($filesize_raw < 0) { $filesize_raw = -1; }
-
-			$fileSize = $this->readableFilesize($filesize_raw);
-			$file_link = sprintf("<a href=\"/%s\">%s</a>", $path . $file, $name_shortened);
-			$direct_link = '<a href="/' . ($path . $file) . '" download filename="' . $file . '">[Download]</a>';
-		}
-
-        $raw_data = array(
-        	'filename_full' => $file,
-        	'filesize_raw' => $filesize_raw,
-        	'file_modified' => filemtime($path . $file),
-        );
+        $filesizeRaw = $isDir ? 0 : filesize($filePath);
+        $directLink = $isDir ? '-' : '<a href="/' . ($filePath) . '" download filename="' . $file . '">[Download]</a>';
 
 		return array(
-			'filesize' => $fileSize,
-			'filesize_raw' => $filesize_raw,
-			'extension' => strtolower(pathinfo($path . $file, PATHINFO_EXTENSION)),
-			'file_link' => $file_link,
-			'file_modified' => $this->formatTimestamp(filemtime($path . $file)),
-			'file_direct_download' => $direct_link,
-			'raw_data' => $raw_data,
+			'filesize' => $isDir ? '-' : $this->readableFilesize($filesizeRaw),
+			'filesizeRaw' => $filesizeRaw < 0 ? -1 : $filesizeRaw,
+			'extension' => $itemExtension,
+			'fileLink' => $fileLink,
+			'fileModified' => $this->formatTimestamp(filemtime($filePath)),
+			'fileDirectDownload' => $directLink,
+			'rawData' => array(
+        		'filenameFull' => $file,
+        		'filesizeRaw' => $filesizeRaw < 0 ? -1 : $filesizeRaw,
+        		'fileModified' => filemtime($filePath),
+        	),
 		);
 	}
 
@@ -436,43 +396,21 @@ class indexer
 
 	function showError()
 	{
-		if(!empty($this->CUSTOM_ERROR_PAGE))
-		{
-			if(is_file($this->CUSTOM_ERROR_PAGE))
-			{
-				include($this->CUSTOM_ERROR_PAGE); die();
-			} else {
-				return $this->createUpper() . '<h1 style="margin-top:15px; margin-bottom:10px; font-size: 12pt;">Error</h1><span>This directory is either inaccessible or invalid.</span>';
-			}
-		} else {
-			return $this->createUpper() . '<h1 style="margin-top:15px; margin-bottom:10px; font-size: 12pt;">Error</h1><span>This directory is either inaccessible or invalid.</span>';
-		}
-	}
-
-	function alertInvalidSetting($x, $y)
-	{
-		echo sprintf(
-			"<p style=\"font-size:12px;\"><span style=\"font-weight:bold;\">ALERT</span>: Invalid setting detected! '%s' is type '%s' but it should be type '%s'.</p>",
-			$x, gettype($x), gettype($y)
-		);
+		return $this->createUpper() . '<h1 style="margin-top:15px; margin-bottom:10px; font-size: 12pt;">Error</h1><span>This directory is either inaccessible or invalid.</span>';
 	}
 
 	function getCurrentPath($getDir)
 	{
-
 		if(strpos($getDir, '//') !== false) { return false; }
 
-		if(empty($getDir) || isset($getDir) == false)
-		{
-			return '.';
-		} else {
-			return file_exists($getDir) ? $getDir : false;
-		}
+		if(empty($getDir) || isset($getDir) == false) { return '.'; }
+
+		return file_exists($getDir) ? $getDir : false;
 	}
 
 	function getFiles($dir)
 	{
-		if(file_exists($dir)) { return scandir($dir); } else { return false; }
+		return file_exists($dir) ? scandir($dir) : false;
 	}
 
 	function startsWith($haystack, $needle) {

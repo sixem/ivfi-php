@@ -1,18 +1,15 @@
 <?php
-require_once('../src/eyy-indexer.php');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-$options = array(
-  'IGNORED_FILES' => array('indexer.php', 'index.php')
-);
+require_once('../src/eyy-indexer.php');
 
 if(isset($_GET['dir']) && !empty($_GET['dir']))
 {
-  $indexer = new indexer($options, $_GET['dir']);
+  $indexer = new indexer($_GET['dir']);
 } else {
-  if(isset($_SERVER['REQUEST_URI']))
-  {
-    $indexer = new indexer($options, urldecode($_SERVER['REQUEST_URI']));
-  }
+  $indexer = new indexer(urldecode($_SERVER['REQUEST_URI']));
 }
 ?>
 <!DOCTYPE HTML>

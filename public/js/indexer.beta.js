@@ -480,11 +480,11 @@ function galleryLoadItem($source)
 {
     $ext = $source.split('.').pop().toLowerCase();
 
-    $video_container = $('.gallery-item-container').find('#video-container');
+    $videoContainer = $('.gallery-item-container').find('#video-container');
 
-    if($video_container.find('source').length > 0)
+    if($videoContainer.find('source').length > 0)
     {
-        $video_container.find('video').get(0).pause();
+        $videoContainer.find('video').get(0).pause();
     }
 
     if(arrayContains($ext, $extensions['image']))
@@ -506,7 +506,7 @@ function galleryLoadItem($source)
 
             $('.gallery-item-container > #image-container').show();
 
-            $video_container.hide();
+            $videoContainer.hide();
         });
 
         $img.src = $source;
@@ -516,7 +516,7 @@ function galleryLoadItem($source)
     {
         $variables['currentItemType'] = 2;
 
-        if($video_container.length == 0)
+        if($videoContainer.length == 0)
         {
             $('.gallery-item-container').append('<div id="video-container"><video controls loop><source src=""></video></div>');
 
@@ -753,28 +753,28 @@ $(document).on('click', '.copy.wget', function()
 {
     copyToClipboard('.bottom > .command.wget');
 
-    $fade_time = 150;
+    $fadeTime = 150;
 
-    $(this).fadeOut($fade_time);
+    $(this).fadeOut($fadeTime);
 
     $(this).promise().done(function()
     {
         $(this).css('color', '#32c232');
         $(this).text('[Copied to clipboard!]');
-        $(this).fadeIn($fade_time);
+        $(this).fadeIn($fadeTime);
     });
 
     setTimeout(function ()
     {
-        $elem_this = $('.copy.wget');
+        $thisElement = $('.copy.wget');
 
-        $elem_this.fadeOut($fade_time);
+        $thisElement.fadeOut($fadeTime);
 
-        $elem_this.promise().done(function()
+        $thisElement.promise().done(function()
         {
-            $elem_this.css('color', $('.bottom').css('color'));
-            $elem_this.text('[Copy to clipboard]');
-            $elem_this.fadeIn($fade_time);
+            $thisElement.css('color', $('.bottom').css('color'));
+            $thisElement.text('[Copy to clipboard]');
+            $thisElement.fadeIn($fadeTime);
         });
     }, 5000);
 });
@@ -847,11 +847,11 @@ function adjustThumbnail($container)
     {
         $container.show();
 
-        $container_media = $container.find('img, video');
+        $mediaContainer = $container.find('img, video');
 
-        $container_media.css('max-width', (($(window).width() - $container.position()['left']) - 25)+'px');
+        $mediaContainer.css('max-width', (($(window).width() - $container.position()['left']) - 25)+'px');
 
-        $y = ($container.outerHeight() / 100) * (($container_media.attr('data-offset') - $(window).scrollTop()) / $(window).height()) * 100;
+        $y = ($container.outerHeight() / 100) * (($mediaContainer.attr('data-offset') - $(window).scrollTop()) / $(window).height()) * 100;
 
         $container.css('top', $container.css('top').replace(/[^-\d\.]/g, '') - $y);
 
@@ -867,9 +867,11 @@ function adjustThumbnail($container)
     });
 }
 
+$thumbnailIsLoading = false;
+
 function showThumbnail($trigger)
 {
-    $item = getItemData($trigger);
+    $item = getItemData($trigger); $thumbnailIsLoading = true;
 
     $variables['lastPreview'] = $item['filenameFull'];
 
@@ -915,16 +917,21 @@ function hideThumbnail()
     $container.html(''); $container.hide(); $variables['lastAdjusted'] = undefined;
 }
 
-function showGalleryOverlay($start, $show_list, $navigate)
+function showGalleryOverlay($start, $showList, $navigate)
 {
     hideThumbnail();
 
-    if($show_list == undefined && $variables['galleryListShow'] != undefined)
+    if($thumbnailIsLoading === true)
     {
-        $show_list = $variables['galleryListShow'];
+        hideProgressBar(250); $thumbnailIsLoading = false;
     }
 
-    $start = $start || 0; $show_list = $show_list || false; $navigate = $navigate || false;
+    if($showList == undefined && $variables['galleryListShow'] != undefined)
+    {
+        $showList = $variables['galleryListShow'];
+    }
+
+    $start = $start || 0; $showList = $showList || false; $navigate = $navigate || false;
 
     $variables['galleryItems'] = $('#indexer-files-table .item:visible .preview');;
 
@@ -972,6 +979,8 @@ function showGalleryOverlay($start, $show_list, $navigate)
         }
 
         applySwipeEventListeners();
+
+        if($timer !== undefined) { clearTimeout($timer); hideThumbnail(); };
     }
 
     if($navigate != true)
@@ -979,12 +988,10 @@ function showGalleryOverlay($start, $show_list, $navigate)
         galleryLoadItem($variables['galleryItems'].eq($variables['currentItem']).attr('data-thumb'));
     }
 
-    if($show_list)
+    if($showList)
     {
         showGalleryList();
     }
-
-    hideThumbnail();
 }
 
 $(document).on('click', '.preview > a', function(e)
@@ -1026,36 +1033,41 @@ $(document).on('mouseenter', '.preview > a', function()
 $(document).on('mouseleave', '.preview > a', function()
 {
     clearTimeout($timer); hideThumbnail();
+
+    if($thumbnailIsLoading === true)
+    {
+        hideProgressBar(250); $thumbnailIsLoading = false;
+    }
 });
 
-$scroll_break = false;
+$scrollBreak = false;
 
 function scrollEventBreak()
 {
-    $scroll_break = false;
+    $scrollBreak = false;
 }
 
 $(document).on('DOMMouseScroll mousewheel', '.gallery-item-container', function(e)
 {
     if(e.originalEvent.detail > 0 || e.originalEvent.wheelDelta < 0)
     {
-        if($scroll_break === false)
+        if($scrollBreak === false)
         {
             galleryNavigate(1);
 
             if($options['gallery.ScrollInterval'] > 0)
             {
-                $scroll_break = true; setTimeout(scrollEventBreak, $options['gallery.ScrollInterval']);
+                $scrollBreak = true; setTimeout(scrollEventBreak, $options['gallery.ScrollInterval']);
             }
         }
     } else {
-        if($scroll_break === false)
+        if($scrollBreak === false)
         {
             galleryNavigate(-1);
 
             if($options['gallery.ScrollInterval'] > 0)
             {
-                $scroll_break = true; setTimeout(scrollEventBreak, $options['gallery.ScrollInterval']);
+                $scrollBreak = true; setTimeout(scrollEventBreak, $options['gallery.ScrollInterval']);
             }
         }
     }
@@ -1164,7 +1176,10 @@ function loadPreviewImage($url, $offset, $container)
     })
     .then($imgSrc =>
     {
-        $container.append('<img src="{0}" onload="adjustThumbnail();" data-offset="{1}">'.f($imgSrc, $offset));
+        if($thumbnailIsLoading === true)
+        {
+            $container.append('<img src="{0}" onload="adjustThumbnail();" data-offset="{1}">'.f($imgSrc, $offset));
+        }
         hideProgressBar(250);
     }, $xhr => {
         console.log($xhr); hideProgressBar(250);
@@ -1214,17 +1229,17 @@ function filerTable($query, $input)
 
     $status = $input.parents('#search-filter').find('span').first(); $status.html('');
 
-    $variables['currentItem'] = 0; $syntax_error = false;
+    $variables['currentItem'] = 0; $syntaxError = false;
 
     if($input != undefined) { $input.removeClass('error'); }
 
-    $hidden = $total_size = 0; $table_items = $('#indexer-files-table .item');
+    $hidden = $totalSize = 0; $tableItems = $('#indexer-files-table .item');
 
-    $table_items.each(function()
+    $tableItems.each(function()
     {
-        $attrs = $(this).find('td');
+        $attributes = $(this).find('td');
 
-        $filename = $attrs.first().attr('data-raw'); $filesize = $attrs.eq(2).attr('data-raw');
+        $filename = $attributes.first().attr('data-raw'); $filesize = $attributes.eq(2).attr('data-raw');
 
         if($filename != undefined)
         {
@@ -1234,15 +1249,15 @@ function filerTable($query, $input)
                 {
                     $(this).hide(); $hidden++;
                 } else {
-                    $(this).show(); if($.isNumeric($filesize)) { $total_size = ($total_size + parseInt($filesize)); }
+                    $(this).show(); if($.isNumeric($filesize)) { $totalSize = ($totalSize + parseInt($filesize)); }
                 }
             } catch (e)
             {
                 if($input != undefined)
                 {
-                    $input.addClass('error'); $status.html('Syntax error :/'); $table_items.show();
+                    $input.addClass('error'); $status.html('Syntax error :/'); $tableItems.show();
 
-                    $syntax_error = true; return false;
+                    $syntaxError = true; return false;
                 }
             }
         }
@@ -1250,21 +1265,21 @@ function filerTable($query, $input)
 
     if($hidden > 0)
     {
-        $('#file-count-bottom').html(($table_items.length - $hidden) + '/' + $table_items.length)
+        $('#file-count-bottom').html(($tableItems.length - $hidden) + '/' + $tableItems.length)
     } else {
         $('#file-count-bottom').html($('#file-count-bottom').attr('data-total'));
     }
 
-    if($total_size > 0)
+    if($totalSize > 0)
     {
         if($hidden == 0)
         {
             $('#filesize-bottom').html($('#filesize-bottom').attr('data-total'));
         } else {
-            $('#filesize-bottom').html(getReadableFileSizeString($total_size));
+            $('#filesize-bottom').html(getReadableFileSizeString($totalSize));
         }
     } else {
-        if(($table_items.length - $hidden) == 0)
+        if(($tableItems.length - $hidden) == 0)
         {
             $('#filesize-bottom').html('0 kB');
         } else {
@@ -1272,9 +1287,9 @@ function filerTable($query, $input)
         }
     }
 
-    if($syntax_error == false)
+    if($syntaxError == false)
     {
-        $status.html('Showing ' + ($table_items.length - $hidden) + ' matches ..');
+        $status.html('Showing ' + ($tableItems.length - $hidden) + ' matches ..');
     }
 }
 
@@ -1291,7 +1306,13 @@ function toggleFilter()
     {
         $searchFilter.toggle();
 
-        if($searchFilter.is(':visible')) { $searchFilter.find('input').get(0).focus(); }
+        if($searchFilter.is(':visible'))
+        {
+            $searchFilter.find('input').get(0).focus();
+            $('body').css('padding-bottom', $searchFilter.innerHeight() + 'px');
+        } else {
+            $('body').css('padding-bottom', '0px');
+        }
     } else {
         $searchFilter = $(document.createElement('div')).attr('id', 'search-filter');
 
@@ -1299,6 +1320,8 @@ function toggleFilter()
         $searchFilter.append('<span></span>').append('<div id="search-filter-close"><span onclick="toggleFilter();">[X]</span></div>');
 
         $('body').append($searchFilter); $('#search-filter input').get(0).focus();
+
+        $('body').css('padding-bottom', $searchFilter.innerHeight() + 'px');
     }
 }
 

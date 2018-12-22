@@ -1,6 +1,6 @@
 These are basic setup examples of what an Apache config could look like.
 
-#### Using the DirectoryIndex.
+#### Using the DirectoryIndex (Recommended).
 
 ```
 <VirtualHost *:80>

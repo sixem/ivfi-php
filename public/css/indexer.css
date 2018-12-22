@@ -335,16 +335,6 @@ table
     color: #e73030;
 }
 
-.file-archive td:first-child a, .file-archive td:first-child a:link
-{
-  color: #e4c21d;
-}
-
-.file-archive td:first-child a:visited
-{
-    color: #ffc500;
-}
-
 tr th
 {
   text-align: left;
@@ -426,9 +416,22 @@ tr .download
   padding-right: 0px;
 }
 
+#indexer-files-table
+{
+  max-width: 560px;
+}
+
 #indexer-files-table th:first-child
 {
   width:49%;
+}
+
+#indexer-files-table tr td:first-child
+{
+  max-width:0px!important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: transparent;
 }
 
 #indexer-files-table th:nth-child(2)

@@ -1,4 +1,4 @@
-# eyy-indexer <img src="https://img.shields.io/badge/version-1.0.1-brightgreen.svg?sanitize=true">
+# eyy-indexer <img src="https://img.shields.io/badge/version-1.0.2-brightgreen.svg?sanitize=true">
 This is a simple file directory indexer / lister script written in PHP, with some help from Javascript and jQuery as well.
 
 This Indexer is designed to be a more image and video friendly Indexer while still having most of the basic functions of any other Indexer or Directory Lister. It is also designed to have a retro and simple feel to it which is why it doesn't use any fancy fonts or icon packs.
@@ -23,7 +23,7 @@ The search filter can be used to search for filenames or filetypes in the curren
 + File attributes (date modified and size).
 + Direct download links.
 + Clickable path for easy navigation.
-+ Wget command for downloading the files of the current directory.
++ Displays a Wget command for downloading the files from the current directory.
 + Mobile support (Work in progress).
 
 # Setup (Apache)
@@ -46,10 +46,9 @@ RewriteEngine On
 RewriteRule ^/indexer.php(.*)$ - [R=404,L]
 ```
 
-*This requires the rewrite module to be enabled (`sudo a2enmod rewrite`).*
+*Note: This requires the rewrite module to be enabled (`sudo a2enmod rewrite`).*
 
 ### Alternative setup
-
 You can also use the script by using rewrites. You can rewrite certain or all URLs to the Indexer by passing them via the `GET` parameter. You can see [example-apache-configs.md](https://github.com/sixem/eyy-indexer/blob/master/example-apache-configs.md) for an example of how this can be done.
 
 ### Other Web Servers
@@ -61,29 +60,13 @@ mbstring provides multibyte specific string functions that help you deal with mu
 
 It can (usually) be installed via your package manager (`sudo apt-get install php-*mbstring`).
 
-# Options
-You can pass an array of options to the Indexer when initializing it. Example:
+# Configuration
+There are options in [/src/eyy-indexer-config.php](https://github.com/sixem/eyy-indexer/blob/master/src/eyy-indexer-config.php) which can be customized.
 
+You can pass a custom location for a config file by passing it as a second parameter when initializing the script.
 ```
-$options = array('SHOW_VERSION' => true, 'IGNORED_EXTS' => array('exe', 'php'));
-$indexer = new indexer($options, '/images');
+$indexer = new indexer('/', '/var/www/custom/location/config.php');
 ```
-
-*Note: Some of these options may have default values, setting a new value will not add to the existing ones but instead overwrite them.*
-#### PREVIEW_EXSTS *(Array)*
-Decides what image and video extensions should have a hoverable preview. This will also decide what files will show up in the Gallery. Default: `'jpg', 'jpeg', 'png', 'gif', 'mp4', 'webm', 'ico', 'svg', 'bmp'`.
-#### IGNORED_DIRS *(Array)*
-What directory names should be ignored. Names only.
-#### IGNORED_FILES *(Array)*
-What file names should be ignored. Names only. Default: `'index.php', 'indexer.php'`.
-#### LINKS *(Array)*
-Set custom link(s) at the top of the page. Passed as an array of keys and values. Default: `'Home' => '/'`.
-#### DISABLED_DIRS *(Array)*
-What paths should be disabled. This will show a forbidden error when attempting to access them.
-#### SHOW_VERSION *(Boolean)*
-Whether or not to display a version label at the bottom of the page. Default: `false`.
-#### SHOW_WGET *(Boolean)*
-Whether or not to display a wget command at the bottom of the page. This will display a simple command that can be used to download the contents of the current directory. Default: `true`.
 
 # Plugins used
 ### [jquery.scrollTo](https://github.com/flesler/jquery.scrollTo)
