@@ -25,11 +25,20 @@ The search filter can be used to search for filenames or filetypes in the curren
 + Clickable path for easy navigation.
 + Displays a Wget command for downloading the files from the current directory.
 + Mobile support (Work in progress).
-
-# Setup (Apache)
+# Setup
 Place the [/public/](https://github.com/sixem/eyy-indexer/blob/master/public/) files in your root web directory. The [/src/](https://github.com/sixem/eyy-indexer/blob/master/src/) files are recommended to be placed in a folder below your root directory called `src`, but you can place it wherever you want to, just remember that the [/public/indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php) is set up to read from `../src/eyy-indexer.php` so you will have to update that if you are using a custom location for the [/src/eyy-indexer.php
 ](https://github.com/sixem/eyy-indexer/blob/master/src/eyy-indexer.php).
+## Nginx
+To use this script for all directories without a default Index you need append `/indexer.php` to the end of your `index` line in your server configuration. This will tell Nginx to look for any of your default indexes and if none are found it'll then use the Indexer.
 
+Example usage:
+```
+server {
+        index index.html index.htm index.php /indexer.php;
+}
+
+```
+## Apache
 In order to automatically use this script you need to edit your Apache configuration. To do that you can place this line in your Apache configuration:
 
 ```
@@ -48,11 +57,8 @@ RewriteRule ^/indexer.php(.*)$ - [R=404,L]
 
 *Note: This requires the rewrite module to be enabled (`sudo a2enmod rewrite`).*
 
-### Alternative setup
+#### Alternative setup
 You can also use the script by using rewrites. You can rewrite certain or all URLs to the Indexer by passing them via the `GET` parameter. You can see [example-apache-configs.md](https://github.com/sixem/eyy-indexer/blob/master/example-apache-configs.md) for an example of how this can be done.
-
-### Other Web Servers
-This script should be usable on all web servers supporting PHP but i have only tested it on Apache so far. I'd imagine that adapting the methods seen above to work with other web servers shouldn't be too hard.
 
 # Requirements
 ### [mbstring](https://secure.php.net/manual/en/mbstring.installation.php)

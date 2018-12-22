@@ -35,6 +35,15 @@ class indexer
 			}
 		}
 
+		$requestedPath = ltrim($path, '/');
+
+		if(is_file($requestedPath))
+		{
+			$dirName = dirname($requestedPath);
+
+			$path = is_dir($dirName) ? $dirName : $path;
+		}
+
     	$this->setPath($path);
 	}
 
@@ -46,7 +55,7 @@ class indexer
 
 		foreach($split as $directory)
 		{
-			if(!empty($directory))
+			if(!empty($directory) && $directory !== '.')
 			{
 				$b .= '/' . $directory;
 

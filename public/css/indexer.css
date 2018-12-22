@@ -51,7 +51,7 @@ a:visited
 .content-main
 {
   font-size: 10pt;
-  width: 560px;
+  width: 560px!important;
   height: auto;
   max-height: 100%;
   max-width: 100%;
