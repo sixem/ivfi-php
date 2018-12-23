@@ -35,6 +35,8 @@ class indexer
 			}
 		}
 
+		$this->previewsExtensions = $this->getPreviewExtensions();
+
 		$requestedPath = ltrim($path, '/');
 
 		if(is_file($requestedPath))
@@ -45,6 +47,16 @@ class indexer
 		}
 
     	$this->setPath($path);
+	}
+
+	function getPreviewExtensions()
+	{
+		if(defined('PREVIEW_EXSTENSIONS') && is_array(PREVIEW_EXSTENSIONS) && count(PREVIEW_EXSTENSIONS) > 0)
+		{
+			return array_map('strtolower', PREVIEW_EXSTENSIONS);
+		} else {
+			return array();
+		}
 	}
 
 	function makePathClickable($path)
@@ -138,13 +150,24 @@ class indexer
 
 		# Check if current directory is disabled.
 
-		if(defined('DISABLED__DIRECTORIES') && is_array(DISABLED__DIRECTORIES) && count(DISABLED__DIRECTORIES) > 0)
+		if(defined('DISABLED_DIRECTORIES') && is_array(DISABLED_DIRECTORIES) && count(DISABLED_DIRECTORIES) > 0)
 		{
 			$this->currentDir = rtrim($path, '/');
 
-			foreach(DISABLED__DIRECTORIES as $x)
+			$this->currentDir = ($this->currentDir == '.' ? '/' : $this->currentDir);
+
+			foreach(DISABLED_DIRECTORIES as $x)
 			{
-				if($this->currentDir == ltrim(rtrim($x, '/'), '/'))
+				$x = ($x == '.' ? '/' : $x);
+
+				if(strlen($x) > 1)
+				{
+					$x = ltrim(rtrim($x, '/'), '/');
+				}
+
+				$this->currentDir = ($this->currentDir == '.' ? '/' : $this->currentDir);
+
+				if($this->currentDir == $x)
 				{
 					$this->forbidden = true;
 				}
@@ -327,21 +350,16 @@ class indexer
 			$path = ($path . '/');
 		}
 
-		$__extensions = array();
-
-		if(defined('PREVIEW_EXSTENSIONS') && is_array(PREVIEW_EXSTENSIONS) && count(PREVIEW_EXSTENSIONS) > 0)
-		{
-			$__extensions = array_map('strtolower', PREVIEW_EXSTENSIONS);
-		}
-
 		$itemPath = ($path . $file); $isDir = is_dir($itemPath); $itemPreview = false;
 
 		$itemExtension = strtolower(pathinfo($itemPath, PATHINFO_EXTENSION));
 
 		if(!$isDir)
 		{
-			$itemPreview = in_array($itemExtension, $__extensions) ? true : false;
+			$itemPreview = in_array($itemExtension, $this->previewsExtensions) ? true : false;
 		}
+
+        $itemPath = ($path === './' ? ltrim($itemPath, './') : $itemPath);
 
 		$fileInfo = $this->getFileInfo($itemPath, $file, $isDir, $itemExtension);
 
