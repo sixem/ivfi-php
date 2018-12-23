@@ -19,9 +19,11 @@ $extensions = {
 };
 
 $options = {
-    'indexer.UseXMLHttpRequest' : true,
-    'gallery.Hover.ShowImageOptions' : true,
-    'gallery.ScrollInterval' : 0
+    'indexer.useXMLHttpRequest' : true,
+    'indexer.videoPreview.volume' : 0,
+    'indexer.videoPreview.adjustInterval' : 2,
+    'gallery.hover.showImageOptions' : true,
+    'gallery.scrollInterval' : 0
 };
 
 function isMobileDevice()
@@ -138,7 +140,7 @@ function applySwipeEventListeners()
 
 function applyReverseSearchOptions($source)
 {
-    if($options['gallery.Hover.ShowImageOptions'])
+    if($options['gallery.hover.showImageOptions'])
     {
         $reverseOptions = $.map(getReverseImageSearchOptions(document.location.origin + $source), function($url, $site)
         {
@@ -441,6 +443,8 @@ function setGalleryListSelected($index)
 
 function waitForVideo($video, $pseudo)
 {
+    console.log(123);
+
     if($pseudo == undefined){ $pseudo = false; }
 
     function checkLoad()
@@ -705,7 +709,7 @@ $(document).on('click', '#gallery-container',function(e)
 
 $(document).on('mouseenter', '#image-container, #video-container',function(e)
 {
-    if($options['gallery.Hover.ShowImageOptions'])
+    if($options['gallery.hover.showImageOptions'])
     {
         $('.tb-reverse-search-container').stop(); $('.tb-reverse-search-container').fadeIn(88);
     }
@@ -713,7 +717,7 @@ $(document).on('mouseenter', '#image-container, #video-container',function(e)
 
 $(document).on('mouseleave', '#image-container, #video-container',function(e)
 {
-    if($options['gallery.Hover.ShowImageOptions'])
+    if($options['gallery.hover.showImageOptions'])
     {
         $('.tb-reverse-search-container').stop(); $('.tb-reverse-search-container').fadeOut(88);
     }
@@ -825,6 +829,29 @@ function createThumbnailContainer()
     return $(document).find('#thumbnail-container');
 }
 
+$isVideoPreviewPlaying = false; $videoPreview = undefined; $videoPreviewVolumeChanged = false;
+
+function videoHasAudio($video)
+{
+    if($video.prop('mozHasAudio') !== undefined)
+    {
+        if($video.prop('mozHasAudio') === true)
+        {
+            return true;
+        }
+    }
+    
+    if($video.prop('webkitAudioDecodedByteCount') !== undefined)
+    {
+        if($video.prop('webkitAudioDecodedByteCount') > 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function adjustThumbnail($container)
 {
     $container = $(document).find('#thumbnail-container');
@@ -838,6 +865,15 @@ function adjustThumbnail($container)
         if($child.is('video'))
         {
             $src = $child.find('source').attr('src');
+
+            $child.get(0).play(); /* Fixes chrome autoplay issue */
+
+            if(videoHasAudio($child))
+            {
+                $isVideoPreviewPlaying = true; $videoPreview = $child;
+            } else {
+                $isVideoPreviewPlaying = false; $videoPreview = undefined;
+            }
         } else {
             $src = undefined;
         }
@@ -887,13 +923,12 @@ function showThumbnail($trigger)
     $x = getElementPositions($trigger);
 
     $container.css({
-        'left' : ($x['left'] + $x['width'] + 15),
-        'top' : $x['top']
+        'left' : ($x['left'] + $x['width'] + 15), 'top' : $x['top']
     });
 
     if(arrayContains($item['ext'], $extensions['image']))
     {
-        if($options['indexer.UseXMLHttpRequest'])
+        if($options['indexer.useXMLHttpRequest'])
         {
             loadPreviewImage($item['url'], Math.round($x['top']), $container);
         } else {
@@ -902,8 +937,8 @@ function showThumbnail($trigger)
     } else {
         if(arrayContains($item['ext'], $extensions['video']))
         {
-            $v = '<video loop autoplay oncanplay="adjustThumbnail(); this.volume=0;" data-offset="'+Math.round($x['top'])+'">'+
-            '<source src="'+$item['url']+'"></video>';
+            $v = '<video loop autoplay oncanplay="adjustThumbnail(); this.volume=' + ($options['indexer.videoPreview.volume'] / 100) +
+            ';" data-offset="'+Math.round($x['top'])+'"><source src="'+$item['url']+'"></video>';
 
             $container.append($v);
         }
@@ -915,6 +950,17 @@ function hideThumbnail()
     $container = $('#thumbnail-container');
 
     $container.html(''); $container.hide(); $variables['lastAdjusted'] = undefined;
+
+    if($isVideoPreviewPlaying)
+    {
+        $isVideoPreviewPlaying = false; $videoPreview = undefined;
+
+        if($videoPreviewVolumeChanged)
+        {
+            setOptions('indexer.videoPreview.volume', $options['indexer.videoPreview.volume']);
+            $videoPreviewVolumeChanged = false;
+        }
+    }
 }
 
 function showGalleryOverlay($start, $showList, $navigate)
@@ -1047,6 +1093,35 @@ function scrollEventBreak()
     $scrollBreak = false;
 }
 
+$(document).on('DOMMouseScroll mousewheel', '.preview a', function(e)
+{
+    if($isVideoPreviewPlaying)
+    {
+        e.preventDefault(); $currentVolume = $options['indexer.videoPreview.volume'];
+
+        if(e.originalEvent.detail > 0 || e.originalEvent.wheelDelta < 0)
+        {
+            $currentVolume = ($currentVolume - $options['indexer.videoPreview.adjustInterval']);
+        } else {
+            $currentVolume = ($currentVolume + $options['indexer.videoPreview.adjustInterval']);
+        }
+
+        $currentVolume = ($currentVolume > 100 ? 100 : $currentVolume);
+        $currentVolume = ($currentVolume < 0 ? 0 : $currentVolume);
+
+        if($currentVolume <= 100 && $currentVolume >= 0)
+        {
+            $options['indexer.videoPreview.volume'] = $currentVolume;
+
+            if($videoPreview !== undefined)
+            {
+                $videoPreviewVolumeChanged = true;
+                $videoPreview.prop('volume', ($options['indexer.videoPreview.volume'] / 100));
+            }
+        }
+    }
+});
+
 $(document).on('DOMMouseScroll mousewheel', '.gallery-item-container', function(e)
 {
     if(e.originalEvent.detail > 0 || e.originalEvent.wheelDelta < 0)
@@ -1055,9 +1130,9 @@ $(document).on('DOMMouseScroll mousewheel', '.gallery-item-container', function(
         {
             galleryNavigate(1);
 
-            if($options['gallery.ScrollInterval'] > 0)
+            if($options['gallery.scrollInterval'] > 0)
             {
-                $scrollBreak = true; setTimeout(scrollEventBreak, $options['gallery.ScrollInterval']);
+                $scrollBreak = true; setTimeout(scrollEventBreak, $options['gallery.scrollInterval']);
             }
         }
     } else {
@@ -1065,9 +1140,9 @@ $(document).on('DOMMouseScroll mousewheel', '.gallery-item-container', function(
         {
             galleryNavigate(-1);
 
-            if($options['gallery.ScrollInterval'] > 0)
+            if($options['gallery.scrollInterval'] > 0)
             {
-                $scrollBreak = true; setTimeout(scrollEventBreak, $options['gallery.ScrollInterval']);
+                $scrollBreak = true; setTimeout(scrollEventBreak, $options['gallery.scrollInterval']);
             }
         }
     }
@@ -1186,28 +1261,6 @@ function loadPreviewImage($url, $offset, $container)
     });
 }
 
-function loadOptions()
-{
-    $keys = [];
-
-    $.each($options, function($index, $value)
-    {
-        $keys.push($index);
-    });
-
-    $.each($keys, function($index, $value)
-    {
-        $key = getLocalStorageKey($value);
-
-        if($key !== null)
-        {
-            $options[$value] = $key;
-        }
-    });
-
-    console.log($options);
-}
-
 function getReadableFileSizeString(fileSizeInBytes)
 {
     /* https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string */
@@ -1245,7 +1298,7 @@ function filerTable($query, $input)
         {
             try
             {
-                if(!($filename).match($query, 'i'))
+                if(!($filename).match(new RegExp($query, 'i')))
                 {
                     $(this).hide(); $hidden++;
                 } else {
@@ -1347,6 +1400,33 @@ $(window).on('load', function()
 
     loadOptions();
 });
+
+function setOptions($key, $value)
+{
+  localStorage.setItem($key, $value);
+}
+
+function loadOptions()
+{
+    $keys = [];
+
+    $.each($options, function($index, $value)
+    {
+        $keys.push($index);
+    });
+
+    $.each($keys, function($index, $value)
+    {
+        $key = getLocalStorageKey($value);
+
+        if($key !== null)
+        {
+            $options[$value] = $key;
+        }
+    });
+
+    console.log($options);
+}
 
 $(document).ready(function()
 {

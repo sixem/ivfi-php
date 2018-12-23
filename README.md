@@ -1,4 +1,4 @@
-# eyy-indexer <img src="https://img.shields.io/badge/version-1.0.2-brightgreen.svg?sanitize=true">
+# eyy-indexer <a href="https://github.com/sixem/eyy-indexer/releases"><img src="https://img.shields.io/badge/version-1.0.2-brightgreen.svg?sanitize=true"></a>
 This is a simple file directory indexer / lister script written in PHP, with some help from Javascript and jQuery as well.
 
 This Indexer is designed to be a more image and video friendly Indexer while still having most of the basic functions of any other Indexer or Directory Lister. It is also designed to have a retro and simple feel to it which is why it doesn't use any fancy fonts or icon packs.
@@ -26,15 +26,26 @@ The search filter can be used to search for filenames or filetypes in the curren
 + Displays a Wget command for downloading the files from the current directory.
 + Mobile support (Work in progress).
 # Setup
+*Note: This setup is for the very last commits. If you are using one of the stable releases and there has been any commits since then, then please refer to the README file that comes with that release instead.*
+
 Place the [/public/](https://github.com/sixem/eyy-indexer/blob/master/public/) files in your root web directory. The [/src/](https://github.com/sixem/eyy-indexer/blob/master/src/) files are recommended to be placed in a folder below your root directory called `src`, but you can place it wherever you want to, just remember that the [/public/indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php) is set up to read from `../src/eyy-indexer.php` so you will have to update that if you are using a custom location for the [/src/eyy-indexer.php
 ](https://github.com/sixem/eyy-indexer/blob/master/src/eyy-indexer.php).
 ## Nginx
-To use this script for all directories without a default Index you need append `/indexer.php` to the end of your `index` line in your server configuration. This will tell Nginx to look for any of your default indexes and if none are found it'll then use the Indexer.
+To use this script for all directories without a default index you need append `/indexer.php` to the end of your `index` line in your server configuration. This will tell Nginx to look for any of your default indexes and if none are found it'll then use the Indexer instead.
 
 Example usage:
 ```
 server {
         index index.html index.htm index.php /indexer.php;
+}
+
+```
+Alternatively, you can only make it work for certain directories:
+```
+server {
+        location ~ ^/(videos|images)/ {
+                index index.html index.htm index.php /indexer.php;
+        }
 }
 
 ```

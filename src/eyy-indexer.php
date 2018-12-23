@@ -85,13 +85,13 @@ class indexer
 		return $op;
 	}
 
-	function getTitle()
+	function getTitle($title = 'Indexer')
 	{
     	if($this->currentPath == '' || $this->currentPath == '.')
     	{
-    		return 'Indexer // Index of /';
+    		return $title . ' // Index of /';
     	} else {
-    		return 'Indexer // Index of /' . $this->currentPathSafe;
+    		return $title . ' // Index of /' . $this->currentPathSafe;
     	}
 	}
 
