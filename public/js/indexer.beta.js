@@ -13,17 +13,14 @@ $variables = {
     'isMobile' : false
 };
 
-$extensions = {
-    'image' : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'],
-    'video' : ['mp4', 'webm']
-};
-
+/* - Indexer settings.
+Can be set as key/value in local storage and it'll be loaded from there instead (These are default values) */
 $options = {
-    'indexer.useXMLHttpRequest' : true,
-    'indexer.videoPreview.volume' : 0,
-    'indexer.videoPreview.adjustInterval' : 2,
-    'gallery.hover.showImageOptions' : true,
-    'gallery.scrollInterval' : 0
+    'indexer.useXMLHttpRequest' : true, /* Use XML requests when previewing images */
+    'indexer.videoPreview.volume' : 0, /* Default video preview volume (Assuming no saved volume is stored) */
+    'indexer.videoPreview.adjustInterval' : 1.5, /* Adjustment interval for video preview volume in percentage */
+    'gallery.hover.showImageOptions' : true, /* Show reverse search options on images in gallery mode */
+    'gallery.scrollInterval' : 0 /* Break inbetween gallery scroll navigation events (milliseconds) */
 };
 
 function isMobileDevice()
@@ -443,8 +440,6 @@ function setGalleryListSelected($index)
 
 function waitForVideo($video, $pseudo)
 {
-    console.log(123);
-
     if($pseudo == undefined){ $pseudo = false; }
 
     function checkLoad()
@@ -491,7 +486,7 @@ function galleryLoadItem($source)
         $videoContainer.find('video').get(0).pause();
     }
 
-    if(arrayContains($ext, $extensions['image']))
+    if(arrayContains($ext, ['jpg','jpeg','gif','png','ico','svg','bmp']))
     {
         $variables['currentItemType'] = 1;
 
@@ -516,7 +511,7 @@ function galleryLoadItem($source)
         $img.src = $source;
     }
 
-    if(arrayContains($ext, $extensions['video']))
+    if(arrayContains($ext, ['mp4','webm']))
     {
         $variables['currentItemType'] = 2;
 
@@ -631,6 +626,14 @@ function updateTbFileInfo($item)
 function galleryNavigate($i, $direct)
 {
     $direct = $direct || false; if($variables['galleryIsBusy'] == true) { return false; }
+
+    if($i !== 0 && $direct !== true)
+    {
+        if($variables['galleryItems'].length <= 1)
+        {
+            return false;
+        }
+    }
 
     setCurrentItem($i, $direct);
 
@@ -840,7 +843,7 @@ function videoHasAudio($video)
             return true;
         }
     }
-    
+
     if($video.prop('webkitAudioDecodedByteCount') !== undefined)
     {
         if($video.prop('webkitAudioDecodedByteCount') > 0)
@@ -905,6 +908,12 @@ function adjustThumbnail($container)
 
 $thumbnailIsLoading = false;
 
+function getCurrentVolume()
+{
+    /* oncanplay event triggers on every loop so this function gets the live volume instead of a static set volume */
+    return $options['indexer.videoPreview.volume'] / 100;
+}
+
 function showThumbnail($trigger)
 {
     $item = getItemData($trigger); $thumbnailIsLoading = true;
@@ -926,7 +935,7 @@ function showThumbnail($trigger)
         'left' : ($x['left'] + $x['width'] + 15), 'top' : $x['top']
     });
 
-    if(arrayContains($item['ext'], $extensions['image']))
+    if(arrayContains($item['ext'], ['jpg','jpeg','gif','png','ico','svg','bmp']))
     {
         if($options['indexer.useXMLHttpRequest'])
         {
@@ -935,10 +944,9 @@ function showThumbnail($trigger)
             $container.append('<img src="{0}" onload="adjustThumbnail();" data-offset="{1}">'.f($item['url'], Math.round($x['top'])));
         }
     } else {
-        if(arrayContains($item['ext'], $extensions['video']))
+        if(arrayContains($item['ext'], ['mp4','webm']))
         {
-            $v = '<video loop autoplay oncanplay="adjustThumbnail(); this.volume=' + ($options['indexer.videoPreview.volume'] / 100) +
-            ';" data-offset="'+Math.round($x['top'])+'"><source src="'+$item['url']+'"></video>';
+            $v = '<video loop autoplay oncanplay="adjustThumbnail(); this.volume=getCurrentVolume();" data-offset="'+Math.round($x['top'])+'"><source src="'+$item['url']+'"></video>';
 
             $container.append($v);
         }
@@ -1269,8 +1277,7 @@ function getReadableFileSizeString(fileSizeInBytes)
     var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
 
     do {
-        fileSizeInBytes = fileSizeInBytes / 1024;
-        i++;
+        fileSizeInBytes = fileSizeInBytes / 1024; i++;
     } while (fileSizeInBytes > 1024);
 
     return Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i];
@@ -1348,10 +1355,7 @@ function filerTable($query, $input)
 
 function toggleFilter()
 {
-    if(galleryIsVisible())
-    {
-        return false;
-    }
+    if(galleryIsVisible()) { return false; }
 
     $searchFilter = $('#search-filter');
 

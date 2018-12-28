@@ -9,7 +9,7 @@ These are basic setup examples of what an Apache config could look like.
 
     DocumentRoot "/var/www/website/public"
     DirectoryIndex index.php index.html index.htm /indexer.php
-<VirtualHost *:443>
+</VirtualHost>
 ```
 
 #### Using rewrites to redirect all directories without an index (php, html and htm) to the Indexer.
@@ -27,7 +27,7 @@ These are basic setup examples of what an Apache config could look like.
     RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME}/index\.(php|html|htm) !-f
     RewriteCond %{DOCUMENT_ROOT}%{REQUEST_FILENAME} -d
     RewriteRule ^/(.*)$ /indexer.php?dir=$1 [QSA,L]
-<VirtualHost *:443>
+</VirtualHost>
 ```
 
 
@@ -49,5 +49,5 @@ This will only enable it for the selected directories: `/images`, `/videos` and 
     RewriteRule ^/((?:images|videos|a/directory)/?(.*))$ /indexer.php?dir=$1 [QSA,L]
 
     RewriteRule ^/indexer.php(.*)$ - [R=404,L]
-<VirtualHost *:443>
+</VirtualHost>
 ```

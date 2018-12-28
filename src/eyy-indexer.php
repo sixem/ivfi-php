@@ -1,7 +1,7 @@
 <?php
 class indexer
 {
-	CONST VERSION = "1.0.2";
+	CONST VERSION = '1.0.3';
 
 	function __construct($path = '', $config = NULL)
 	{
