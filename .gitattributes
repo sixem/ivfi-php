@@ -1,0 +1,5 @@
+public/fonts/* linguist-vendored=true
+
+public/js/jquery.min.js linguist-vendored=true
+public/js/scrollTo.min.js linguist-vendored=true
+public/js/tocca.min.js linguist-vendored=true
