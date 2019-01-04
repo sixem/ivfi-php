@@ -239,10 +239,10 @@ class indexer
 					'extensions' => array()
 				);
 
-				if(defined('IGNORED__DIRECTORIES') && is_array(IGNORED__DIRECTORIES) &&
-					count(IGNORED__DIRECTORIES) > 0)
+				if(defined('IGNORED_DIRECTORIES') && is_array(IGNORED_DIRECTORIES) &&
+					count(IGNORED_DIRECTORIES) > 0)
 				{
-					$ignored['directories'] = array_map('strtolower', IGNORED__DIRECTORIES);
+					$ignored['directories'] = array_map('strtolower', IGNORED_DIRECTORIES);
 				}
 
 				if(defined('IGNORED_FILENAMES') && is_array(IGNORED_FILENAMES) &&
