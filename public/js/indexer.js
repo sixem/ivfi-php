@@ -1,4 +1,4 @@
-/* indexer.js [https://github.com/sixem/eyy-indexer] */
+// indexer.js [https://github.com/sixem/eyy-indexer]
 
 $variables = {
     'currentItem' : 0,
@@ -13,14 +13,14 @@ $variables = {
     'isMobile' : false
 };
 
-/* - Indexer settings.
-Can be set as key/value in local storage and it'll be loaded from there instead (These are default values) */
+// Indexer settings.
+// Can be set as key/value in local storage and it'll be loaded from there instead (These are default values)
 $options = {
-    'indexer.useXMLHttpRequest' : true, /* Use XML requests when previewing images */
-    'indexer.videoPreview.volume' : 0, /* Default video preview volume (Assuming no saved volume is stored) */
-    'indexer.videoPreview.adjustInterval' : 1.5, /* Adjustment interval for video preview volume in percentage */
-    'gallery.hover.showImageOptions' : true, /* Show reverse search options on images in gallery mode */
-    'gallery.scrollInterval' : 0 /* Break inbetween gallery scroll navigation events (milliseconds) */
+    'indexer.useXMLHttpRequest' : true, // Use XML requests when previewing images
+    'indexer.videoPreview.volume' : 0, // Default video preview volume (Assuming no saved volume is stored)
+    'indexer.videoPreview.adjustInterval' : 1.5, // Adjustment interval for video preview volume in percentage
+    'gallery.hover.showImageOptions' : true, // Show reverse search options on images in gallery mode
+    'gallery.scrollInterval' : 0 // Break inbetween gallery scroll navigation events (milliseconds)
 };
 
 function isMobileDevice()
@@ -107,9 +107,9 @@ function isScrolledIntoView($elem, $offset)
 function getReverseImageSearchOptions($url)
 {
     return {
-        'Google': 'https://www.google.com/searchbyimage?image_url=' + $url + '&safe=off',
-        'Yandex': 'https://www.yandex.com/images/search?rpt=imageview&img_url=' + $url,
-        'IQDB': 'https://iqdb.org/?url=' + $url
+        'Google': 'https://www.google.com/searchbyimage?image_url=' + encodeURIComponent($url) + '&safe=off',
+        'Yandex': 'https://yandex.com/images/search?source=collections&&url=' + encodeURIComponent($url) + '&rpt=imageview',
+        'IQDB': 'https://iqdb.org/?url=' + encodeURIComponent($url)
     };
 }
 
@@ -117,7 +117,7 @@ function applySwipeEventListeners()
 {
     if($variables['isMobile'] == true)
     {
-        $container = $(document).find('.gallery-item-container');
+        $container = $('.gallery-item-container');
 
         if($container.length > 0)
         {
@@ -169,9 +169,7 @@ function isEmpty(value)
 
 function disableMainScrolling($state)
 {
-    $main = $('body').find('.content-main');
-
-    $x = $(window).innerWidth - $(document).width();
+    $main = $('.content-main');
 
     if($state)
     {
@@ -187,7 +185,7 @@ function disableMainScrolling($state)
         $main.css({
             'overflow' : 'hidden',
             'margin-top' : '0px',
-            'padding-right' : $x + 'px'
+            'padding-right' : ($(window).innerWidth() - $(document).width()) + 'px'
         });
     } else {
         $('html, body').css({
@@ -212,28 +210,28 @@ function disableMainScrolling($state)
 
 function adjustGalleryItems()
 {
-    $variables['topbarHeight'] = $(document).find('.gallery-topbar').outerHeight();
+    $variables['topbarHeight'] = $('.gallery-topbar').outerHeight();
 
-    $list = $(document).find('#gallery-list');
+    $list = $('#gallery-list');
 
     if($list.length > 0)
     {
         $list.css(
             {
                 'height' : 'calc(100vh - ' + ($variables['topbarHeight'] + 2) + 'px)',
-                'margin-top' : '0 px'
+                'margin-top' : '0px'
             }
         );
     }
 
-    $(document).find('#gallery-container').css({
+    $('#gallery-container').css({
         'margin-top' : $variables['topbarHeight'] + 'px',
         'height' : 'calc(100vh - ' + $variables['topbarHeight'] + 'px'
     });
 
     if($variables['isMobile'])
     {
-        $navigationBars = $(document).find('.navigation-overlay-left, .navigation-overlay-right');
+        $navigationBars = $('.navigation-overlay-left, .navigation-overlay-right');
 
         $navigationBars.css({
             'margin-top' : $variables['topbarHeight'] + 'px',
@@ -254,14 +252,14 @@ function galleryLoading($state)
             {
                 $('body').append('<div id="gallery-loader">Loading ..</div>');
 
-                $y = $(document).find('.navigation-overlay-left');
+                $y = $('.navigation-overlay-left');
 
                 if($y.length > 0)
                 {
                     $('#gallery-loader').css('left', $y.innerWidth() + 'px');
                 }
             } else {
-                $(document).find('.tb-items > div').prepend('<span id="gallery-loader">[Loading ..]</span>');
+                $('.tb-items > div').prepend('<span id="gallery-loader">[Loading ..]</span>');
             }
         }
 
@@ -288,7 +286,7 @@ jQuery.expr.filters.offscreen = function($el)
 
 function galleryIsVisible()
 {
-    return $(document).find('#gallery-container').length > 0;
+    return $('#gallery-container').length > 0;
 }
 
 function galleryHandleKey($keycode)
@@ -338,23 +336,23 @@ function galleryClose()
 
 function isGalleryListVisible()
 {
-    return $(document).find('#gallery-list').is(':visible');
+    return $('#gallery-list').is(':visible');
 }
 
 function doesGalleryListExist()
 {
-    return $(document).find('#gallery-list').length > 0;
+    return $('#gallery-list').length > 0;
 }
 
 function hideGalleryList()
 {
-    $listContainer = $(document).find('#gallery-list');
+    $listContainer = $('#gallery-list');
 
     if(isGalleryListVisible())
     {
         $listContainer.hide();
 
-        $listToggleButton = $(document).find('#gallery-toggle-list');
+        $listToggleButton = $('#gallery-toggle-list');
 
         $listToggleButton.attr('onclick', 'showGalleryList();');
         $listToggleButton.text('[List+]');
@@ -365,13 +363,13 @@ function hideGalleryList()
 
 function showGalleryList()
 {
-    $listToggleButton = $(document).find('#gallery-toggle-list');
+    $listToggleButton = $('#gallery-toggle-list');
 
     $variables['galleryListShow'] = true;
 
     if(doesGalleryListExist() && isGalleryListVisible() === false)
     {
-        $list = $(document).find('#gallery-list'); $list.show();
+        $list = $('#gallery-list'); $list.show();
 
         $listToggleButton.text('[List-]').attr('onclick', 'hideGalleryList();');
 
@@ -392,7 +390,7 @@ function showGalleryList()
 
         $table = '<table cellspacing="0"><tbody></tbody></table>';
 
-        $container = $(document).find('#gallery-container').first();
+        $container = $('#gallery-container');
         $container.find('.gallery-current-item').append('<div id="gallery-list">' + $table + '</div>');
 
         $('#indexer-files-table .item:visible').each(function()
@@ -421,7 +419,7 @@ $(document).on('click', '#gallery-list > table > tbody > tr', function()
 
 function setGalleryListSelected($index)
 {
-    $list = $(document).find('#gallery-list');
+    $list = $('#gallery-list');
 
     $listItems = $list.find('table > tbody').find('tr > td');
 
@@ -448,7 +446,7 @@ function waitForVideo($video, $pseudo)
         {
             galleryLoading(false);
 
-            $container = $(document).find('#video-container');
+            $container = $('#video-container');
 
             if($pseudo == false)
             {
@@ -479,7 +477,7 @@ function galleryLoadItem($source)
 {
     $ext = $source.split('.').pop().toLowerCase();
 
-    $videoContainer = $('.gallery-item-container').find('#video-container');
+    $videoContainer = $('.gallery-item-container #video-container');
 
     if($videoContainer.find('source').length > 0)
     {
@@ -490,7 +488,7 @@ function galleryLoadItem($source)
     {
         $variables['currentItemType'] = 1;
 
-        if($('.gallery-item-container').find('#image-container').length == 0)
+        if($('.gallery-item-container #image-container').length == 0)
         {
             $('.gallery-item-container').append('<div id="image-container"><img src=""></div>');
         }
@@ -519,13 +517,13 @@ function galleryLoadItem($source)
         {
             $('.gallery-item-container').append('<div id="video-container"><video controls loop><source src=""></video></div>');
 
-            $video = $(document).find('#video-container').find('video');
+            $video = $('#video-container video');
             $video.find('source').attr('src', $source);
             $video.load();
 
             waitForVideo($video, false);
         } else {
-            $container = $(document).find('#video-container');
+            $container = $('#video-container');
 
             $container.find('.pseudo').remove();
 
@@ -604,7 +602,7 @@ function updateTbFileInfo($item)
     $data = '<a target="_blank" href="{0}" class="tb-filename" data-filename-full="{1}" data-last-modified="{2}">{3}</a> | '+
     '<span class="tb-filesize">{4}</span>';
 
-    $download = $(document).find('.tb-download');
+    $download = $('.tb-download');
 
     if($download.length > 0)
     {
@@ -614,7 +612,7 @@ function updateTbFileInfo($item)
         });
     }
 
-    $(document).find('.tb-current-item').html($counter + $data.f(
+    $('.tb-current-item').html($counter + $data.f(
         $item['url'],
         $item['filenameFull'],
         $item['modified'],
@@ -646,7 +644,7 @@ function galleryNavigate($i, $direct)
 
     galleryLoading(true);
 
-    if($('#gallery-container').find('.gallery-item-container').length > 0)
+    if($('#gallery-container .gallery-item-container').length > 0)
     {
         updateTbFileInfo(getItemData($variables['galleryItems'].eq($variables['currentItem'])));
     }
@@ -747,7 +745,7 @@ $(document).on('click', '#view-gallery', function()
         return false;
     }
 
-    if($('body').find('#gallery-container').length === 0)
+    if($('#gallery-container').length === 0)
     {
         $('body').prepend('<div id="gallery-container"></div>');
         disableMainScrolling(true);
@@ -829,7 +827,7 @@ function createThumbnailContainer()
 {
     $('body').prepend('<div id="thumbnail-container"></div>');
 
-    return $(document).find('#thumbnail-container');
+    return $('#thumbnail-container');
 }
 
 $isVideoPreviewPlaying = false; $videoPreview = undefined; $videoPreviewVolumeChanged = false;
@@ -857,7 +855,7 @@ function videoHasAudio($video)
 
 function adjustThumbnail($container)
 {
-    $container = $(document).find('#thumbnail-container');
+    $container = $('#thumbnail-container');
 
     $child = $container.children().first();
 
@@ -869,7 +867,7 @@ function adjustThumbnail($container)
         {
             $src = $child.find('source').attr('src');
 
-            $child.get(0).play(); /* Fixes chrome autoplay issue */
+            $child.get(0).play(); // Fixes chrome autoplay issue
 
             if(videoHasAudio($child))
             {
@@ -910,7 +908,7 @@ $thumbnailIsLoading = false;
 
 function getCurrentVolume()
 {
-    /* oncanplay event triggers on every loop so this function gets the live volume instead of a static set volume */
+    // oncanplay event triggers on every loop so this function gets the live volume instead of a static set volume
     return $options['indexer.videoPreview.volume'] / 100;
 }
 
@@ -920,9 +918,9 @@ function showThumbnail($trigger)
 
     $variables['lastPreview'] = $item['filenameFull'];
 
-    $container = $(document).find('#thumbnail-container');
+    $container = $('#thumbnail-container');
 
-    if($(document).find('#thumbnail-container').length == 0)
+    if($('#thumbnail-container').length == 0)
     {
         $container = createThumbnailContainer();
     }
@@ -1013,7 +1011,7 @@ function showGalleryOverlay($start, $showList, $navigate)
 
     $item = getItemData($variables['galleryItems'].eq($variables['currentItem']));
 
-    if($('#gallery-container').find('.gallery-item-container').length == 0)
+    if($('#gallery-container .gallery-item-container').length == 0)
     {
         $np = '<span class="tb-current-item"></span><div class="tb-right">'+
         '<a class="tb-download" href="{0}" download="" filename="{1}">[Download]</a>'.f($item['url'], $item['filename'])+
@@ -1211,7 +1209,7 @@ function loadImage($imageUrl, onprogress)
 
 function showProgressBar()
 {
-    $progress = $('body').find('#progress-bar');
+    $progress = $('#progress-bar');
 
     if($progress.length > 0)
     {
@@ -1219,7 +1217,7 @@ function showProgressBar()
     } else {
         $('body').prepend('<progress id="progress-bar" value="0" max="100"></progress>');
 
-        $progress = $('body').find('#progress-bar');
+        $progress = $('#progress-bar');
     }
 
     $progress.stop().fadeIn(250);
@@ -1229,7 +1227,7 @@ function showProgressBar()
 
 function hideProgressBar($fade)
 {
-    $progress = $('body').find('#progress-bar');
+    $progress = $('#progress-bar');
 
     if($progress.length > 0)
     {
@@ -1271,7 +1269,7 @@ function loadPreviewImage($url, $offset, $container)
 
 function getReadableFileSizeString(fileSizeInBytes)
 {
-    /* https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string */
+    // https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string
 
     var i = -1;
     var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
@@ -1388,7 +1386,7 @@ $(window).on('load', function()
     {
         $('.upper-container').after('<div id="view-gallery" class="gallery-mode">[Gallery Mode]</div>');
 
-        $(document).find('#view-gallery').show();
+        $('#view-gallery').show();
 
         if(isMobileDevice())
         {
@@ -1397,8 +1395,8 @@ $(window).on('load', function()
 
         if($variables['isMobile'])
         {
-            $('body').find('#view-gallery').wrap('<div class="upper-extras"></div>');
-            $('body').find('.upper-extras').prepend('<div onclick="toggleFilter();">[Search Filter]</div>');
+            $('#view-gallery').wrap('<div class="upper-extras"></div>');
+            $('.upper-extras').prepend('<div onclick="toggleFilter();">[Search Filter]</div>');
         }
     }
 
@@ -1438,7 +1436,7 @@ $(document).ready(function()
     {
         $variables['currentItem'] = 0;
 
-        /* slightly modified version of this answer: https://stackoverflow.com/a/19947532 */
+        // slightly modified version of this answer: https://stackoverflow.com/a/19947532
 
         var table = $(this).parents('table').eq(0);
         var rows = table.find('tr.item').toArray().sort(comparer($(this).index()));
@@ -1474,7 +1472,7 @@ $(document).ready(function()
     {
         $list = [];
 
-        $element = $('body').find('.bottom > .command');
+        $element = $('.bottom > .command');
 
         $domain = document.location.origin + '/' + $element.attr('data-path');
 
@@ -1503,9 +1501,9 @@ $(document).ready(function()
         {
             $element.html('wget -r -np -nH -nd -e robots=off --accept "' + $list.join() + '" "' + $domain + '"');
         } else {
-            $('body').find('#wget, .command, .command-bottom').remove();
+            $('#wget, .command, .command-bottom').remove();
         }
     } else {
-        $('body').find('#wget, .command, .command-bottom').remove();
+        $('#wget, .command, .command-bottom').remove();
     }
 });

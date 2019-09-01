@@ -1,9 +1,8 @@
 <?php
-/*
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-*/
+
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 
 require_once('../src/eyy-indexer.php');
 
@@ -25,7 +24,7 @@ if(isset($_GET['dir']) && !empty($_GET['dir']))
     <script src="/js/jquery.min.js"></script>
     <script src="/js/scrollTo.min.js"></script>
     <script src="/js/tocca.min.js"></script>
-    <script src="/js/indexer.beta.js"></script>
+    <script src="/js/indexer.min.js"></script>
 
     <link rel="stylesheet" href="/css/indexer.css">
     <link rel="shortcut icon" href="/favicon.ico">

@@ -1,4 +1,4 @@
-# eyy-indexer <a href="https://github.com/sixem/eyy-indexer/releases"><img src="https://img.shields.io/badge/version-1.0.4-brightgreen.svg?sanitize=true"></a>
+# eyy-indexer <a href="https://github.com/sixem/eyy-indexer/releases"><img src="https://img.shields.io/badge/version-1.0.5-brightgreen.svg?sanitize=true"></a>
 This is a simple file directory indexer / lister script written in PHP, with some help from Javascript and jQuery as well.
 
 This Indexer is designed to be a more image and video friendly Indexer while still having most of the basic functions of any other Indexer or Directory Lister. It is also designed to have a retro and simple feel to it which is why it doesn't use any fancy fonts or icon packs.
@@ -30,6 +30,13 @@ The search filter can be used to search for filenames or filetypes in the curren
 
 Place the [/public/](https://github.com/sixem/eyy-indexer/blob/master/public/) files in your root web directory. The [/src/](https://github.com/sixem/eyy-indexer/blob/master/src/) files are recommended to be placed in a folder below your root directory called `src`, but you can place it wherever you want to, just remember that the [/public/indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php) is set up to read from `../src/eyy-indexer.php` so you will have to update that if you are using a custom location for the [/src/eyy-indexer.php
 ](https://github.com/sixem/eyy-indexer/blob/master/src/eyy-indexer.php).
+
+## Requirements
+### [mbstring](https://secure.php.net/manual/en/mbstring.installation.php)
+mbstring provides multibyte specific string functions that help you deal with multibyte encodings in PHP.
+
+It can (usually) be installed via your package manager (`sudo apt-get install php-*mbstring`).
+
 ## Nginx
 To use this script for all directories without a default index you need append `/indexer.php` to the end of your `index` line in your server configuration. This will tell Nginx to look for any of your default indexes and if none are found it'll then use the Indexer instead.
 
@@ -70,12 +77,6 @@ RewriteRule ^/indexer.php(.*)$ - [R=404,L]
 
 #### Alternative setup
 You can also use the script by using rewrites. You can rewrite certain or all URLs to the Indexer by passing them via the `GET` parameter. You can see [example-apache-configs.md](https://github.com/sixem/eyy-indexer/blob/master/example-apache-configs.md) for an example of how this can be done.
-
-# Requirements
-### [mbstring](https://secure.php.net/manual/en/mbstring.installation.php)
-mbstring provides multibyte specific string functions that help you deal with multibyte encodings in PHP.
-
-It can (usually) be installed via your package manager (`sudo apt-get install php-*mbstring`).
 
 # Configuration
 There are options in [/src/eyy-indexer-config.php](https://github.com/sixem/eyy-indexer/blob/master/src/eyy-indexer-config.php) which can be customized.
