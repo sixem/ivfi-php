@@ -448,6 +448,11 @@ function waitForVideo($video, $pseudo)
 
             $container = $('#video-container');
 
+            if($.isNumeric($variables['topbarHeight']))
+            {
+                $video.css('max-height', 'calc(100vh - ' + $variables['topbarHeight'] + 'px');
+            }
+
             if($pseudo == false)
             {
                 $video.show(); $container.show();
@@ -497,7 +502,14 @@ function galleryLoadItem($source)
 
         $($img).on('load', function()
         {
-            $('.gallery-item-container > #image-container > img').attr('src', $img.src);
+            $img_el = $('.gallery-item-container > #image-container > img');
+
+            $img_el.attr('src', $img.src);
+
+            if($.isNumeric($variables['topbarHeight']))
+            {
+                $img_el.css('max-height', 'calc(100vh - ' + $variables['topbarHeight'] + 'px');
+            }
 
             galleryLoading(false);
 
