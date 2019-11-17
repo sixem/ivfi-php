@@ -5,7 +5,7 @@ This Indexer is designed to be a more image and video friendly Indexer while sti
 
 JavaScript is not required for the Indexer but it is needed for extra functionality (gallery mode, hover previews etc.).
 
-You can visit the [demo](https://eyy.co/indexer-demo/) to view the indexer in action.
+You can visit the [demo](https://five.sh/demo/indexer-demo/) to view the indexer in action.
 
 *Note: The demo will use the latest release which does not necessarily include the latest commits.*
 
