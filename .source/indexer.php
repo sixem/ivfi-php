@@ -42,7 +42,7 @@ $config = array(
         )
     ),
     'footer' => true,
-    'debug' => false
+    'debug' => true
 );
 
 if($config['footer'] === true)
