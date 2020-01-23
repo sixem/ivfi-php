@@ -1,5 +1,9 @@
-public/fonts/* linguist-vendored=true
+public/indexer/fonts/* linguist-vendored=true
 
-public/js/jquery.min.js linguist-vendored=true
-public/js/scrollTo.min.js linguist-vendored=true
-public/js/tocca.min.js linguist-vendored=true
+public/indexer/js/jquery.js linguist-vendored=true
+public/indexer/js/modernizr-mq.js linguist-vendored=true
+
+.source/indexer/fonts/* linguist-vendored=true
+
+.source/indexer/js/jquery.js linguist-vendored=true
+.source/indexer/js/modernizr-mq.js linguist-vendored=true

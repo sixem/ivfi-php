@@ -55,16 +55,6 @@ DirectoryIndex index.php index.html index.htm /indexer.php
 
 This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist.
 
-If you want to disable direct access to the Indexer you can add these lines to your Apache configuration:
-
-
-```
-RewriteEngine On
-RewriteRule ^/indexer.php(.*)$ - [R=404,L]
-```
-
-*Note: This requires the rewrite module to be enabled (`sudo a2enmod rewrite`).*
-
 # Configuration
 There is an array of options at the very top of [indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php) which can be customized.
 

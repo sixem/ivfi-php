@@ -5,7 +5,7 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  1.1.0
+ * @version  1.1.1
  */
 
 $config = array(
@@ -41,6 +41,7 @@ $config = array(
             'mp4'
         )
     ),
+    'allow_direct_access' => false,
     'footer' => true,
     'debug' => false
 );
@@ -52,17 +53,17 @@ if($config['footer'] === true)
 
 if($config['debug'] === true)
 {
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
+  ini_set('display_errors', 1);
+  ini_set('display_startup_errors', 1);
 
-    error_reporting(E_ALL);
+  error_reporting(E_ALL);
 }
 
 class Indexer
 {
   public $path;
 
-  private $relative, $requested;
+  private $relative, $requested, $types, $allow_direct;
 
   function __construct($path, $options = array())
   {
@@ -75,6 +76,8 @@ class Indexer
       $this->relative = dirname(__FILE__);
     }
 
+    $this->allow_direct = isset($options['allow_direct_access']) ? $options['allow_direct_access'] : true;
+
     $this->path = rtrim(self::joinPaths($this->relative, $requested), '/');
 
     if(is_dir($this->path))
@@ -83,10 +86,27 @@ class Indexer
       {
         $this->requested = $requested;
       } else {
-        self::quit('requested path is below the public working directory.');
+        throw new Exception('requested path is below the public working directory.');
       }
     } else {
-      self::quit('invalid path. path does not exist.');
+      if(is_file($this->path))
+      {
+        if($this->allow_direct === false)
+        {
+          http_response_code(403); die('Forbidden');
+        }
+
+        $this->path = dirname($this->path);
+
+        if(self::isAboveCurrent($this->path, $this->relative))
+        {
+          $this->requested = dirname($requested);
+        } else {
+          throw new Exception('requested path (is_file) is below the public working directory.');
+        }
+      } else {
+        throw new Exception('invalid path. path does not exist.');
+      }
     }
 
     if(isset($options['extensions']))
@@ -97,6 +117,18 @@ class Indexer
         {
           foreach($options['extensions'][$type] as $extension) $this->types[strtolower($extension)] = $type;
         }
+    } else {
+        $this->types = array(
+            'jpg' => 'image',
+            'jpeg' => 'image',
+            'gif' => 'image',
+            'png' => 'image',
+            'ico' => 'image',
+            'svg' => 'image',
+            'bmp' => 'image',
+            'webm' => 'video',
+            'mp4' => 'video'
+        );
     }
 
     if(isset($options['format']['sizes']) && $options['format']['sizes'] !== NULL)
@@ -137,12 +169,10 @@ class Indexer
 
       if(is_dir($path))
       {
-        array_push($data['directories'], array($path, $file));
-        continue;
+        array_push($data['directories'], array($path, $file)); continue;
       } else if(file_exists($path))
       {
-        array_push($data['files'], array($path, $file));
-        continue;
+        array_push($data['files'], array($path, $file)); continue;
       }
     }
 
@@ -242,21 +272,9 @@ class Indexer
 
   private function getFileType($filename)
   {
-    $types = isset($this->types) ? $this->types : array(
-      'jpg' => 'image',
-      'jpeg' => 'image',
-      'gif' => 'image',
-      'png' => 'image',
-      'ico' => 'image',
-      'svg' => 'image',
-      'bmp' => 'image',
-      'webm' => 'video',
-      'mp4' => 'video'
-    );
-
     $extension = ltrim(pathinfo($filename, PATHINFO_EXTENSION), '.');
 
-    return isset($types[$extension]) ? $types[$extension] : 'other';
+    return isset($this->types[$extension]) ? $this->types[$extension] : 'other';
   }
 
   public function makePathClickable($path)
@@ -314,25 +332,16 @@ class Indexer
     return $needle === '' || strrpos($haystack, $needle, - strlen($haystack)) !== false;
   }
 
-  private function joinPaths()
+  private function joinPaths(...$params)
   {
     $paths = array();
 
-    foreach(func_get_args() as $arg)
+    foreach($params as $param)
     {
-        if($arg !== '')
-        {
-          $paths[] = $arg;
-        }
+        if($param !== '') $paths[] = $param;
     }
 
-    return preg_replace('#/+#','/',join('/', $paths));
-  }
-
-  private function quit($message)
-  {
-    throw new Exception($message);
-    exit;
+    return preg_replace('#/+#','/', join('/', $paths));
   }
 }
 
@@ -345,7 +354,8 @@ $indexer = new Indexer(
         'format' => array(
             'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
         ),
-        'extensions' => $config['extensions']
+        'extensions' => $config['extensions'],
+        'allow_direct_access' => $config['allow_direct_access']
     )
 );
 
