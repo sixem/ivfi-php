@@ -5,14 +5,25 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  1.1.1
+ * @version  1.1.2
  */
 
 $config = array(
     'format' => array(
         'title' => 'Index of %s',
         'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')
-    ), 
+    ),
+    'icon' => array(
+        'path' => '/favicon.png',
+        'mime' => 'image/png'
+    ),
+    'sorting' => array(
+        'enabled' => false,
+        'order' => SORT_ASC,
+        'types' => 0,
+        'sort_by' => 'name',
+        'use_mbstring' => false
+    ),
     'gallery' => array(
         'enabled' => true,
         'fade' => 0,
@@ -27,19 +38,8 @@ $config = array(
         'cursor_indicator' => true
     ),
     'extensions' => array(
-        'image' => array(
-            'jpg',
-            'jpeg',
-            'gif',
-            'png',
-            'ico',
-            'svg',
-            'bmp'
-        ),
-        'video' => array(
-            'webm',
-            'mp4'
-        )
+        'image' => array('jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'),
+        'video' => array('webm', 'mp4')
     ),
     'allow_direct_access' => false,
     'footer' => true,
@@ -94,15 +94,15 @@ class Indexer
         if($this->allow_direct === false)
         {
           http_response_code(403); die('Forbidden');
-        }
-
-        $this->path = dirname($this->path);
-
-        if(self::isAboveCurrent($this->path, $this->relative))
-        {
-          $this->requested = dirname($requested);
         } else {
-          throw new Exception('requested path (is_file) is below the public working directory.');
+          $this->path = dirname($this->path);
+
+          if(self::isAboveCurrent($this->path, $this->relative))
+          {
+            $this->requested = dirname($requested);
+          } else {
+            throw new Exception('requested path (is_file) is below the public working directory.');
+          }
         }
       } else {
         throw new Exception('invalid path. path does not exist.');
@@ -139,7 +139,7 @@ class Indexer
     }
   }
 
-  public function buildTable()
+  public function buildTable($sorting = false, $sort_items = 0, $sort_type = 'modified', $use_mb = false)
   {
     $op = sprintf(
       '<tr class="parent"><td><a href="%s">[Parent Directory]</a></td><td>-</td><td>-</td><td>-</td></tr>',
@@ -176,37 +176,75 @@ class Indexer
       }
     }
 
+    if($use_mb === true && !function_exists('mb_strtolower'))
+    {
+      http_response_code(500);
+
+      die(
+        'Error (mb_strtolower is not defined): In order to use mbstring, you\'ll need to ' .
+        '<a href="https://www.php.net/manual/en/mbstring.installation.php">install</a> ' .
+        'it first.'
+      );
+    }
+
+    foreach($data['directories'] as $index => $dir)
+    {
+      $data['directories'][$index]['name'] = $use_mb === true ? mb_strtolower($dir[1], 'UTF-8') : strtolower($dir[1]);
+      $data['directories'][$index]['modified'] = self::getModified($dir[0]);
+      $data['directories'][$index]['type'] = 'directory';
+      $data['directories'][$index]['size'] = 0;
+    }
+
+    foreach($data['files'] as $index => $file)
+    {
+      $data['files'][$index]['name'] = $use_mb === true ? mb_strtolower($file[1], 'UTF-8') : strtolower($file[1]);
+      $data['files'][$index]['type'] = self::getFileType($file[1]);
+      $data['files'][$index]['size'] = self::getSize($file[0]);
+      $data['files'][$index]['modified'] = self::getModified($file[0]);
+      $data['files'][$index]['path'] = rtrim(self::joinPaths($this->requested, $file[1]), '/');
+    }
+
+    if($sorting)
+    {
+      if($sort_items === 0 || $sort_items === 1)
+      {
+        array_multisort(
+          array_column($data['files'], $sort_type),
+          $sorting,
+          $data['files']
+        );
+      }
+
+      if($sort_items === 0 || $sort_items === 2)
+      {
+        array_multisort(
+          array_column($data['directories'], $sort_type),
+          $sorting,
+          $data['directories']
+        );
+      }
+    }
+
     foreach($data['directories'] as $dir)
     {
-      $attr = array(
-        'modified' => self::getModified($dir[0])
-      );
-
       $op .= sprintf(
         '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td>%s</td><td>-</td><td>-</td></tr>',
-        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $attr['modified'][1]
+        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][1]
       );
 
-      if($data['recent']['directory'] === 0 || $attr['modified'][0] > $data['recent']['directory'])
+      if($data['recent']['directory'] === 0 || $dir['modified'][0] > $data['recent']['directory'])
       {
-        $data['recent']['directory'] = $attr['modified'][0];
+        $data['recent']['directory'] = $dir['modified'][0];
       }
     }
 
     foreach($data['files'] as $file)
     {
-      $attr = array(
-        'filetype' => self::getFileType($file[1]),
-        'size' => self::getSize($file[0]),
-        'modified' => self::getModified($file[0]),
-        'path' => rtrim(self::joinPaths($this->requested, $file[1]), '/')
-      );
+      $data['size']['total'] = ($data['size']['total'] + $file['size'][0]);
 
-      $data['size']['total'] = ($data['size']['total'] + $attr['size'][0]);
-
-      if($data['recent']['file'] === 0 || $attr['modified'][0] > $data['recent']['file'])
+      if($data['recent']['file'] === 0 || $file['modified'][0] > $data['recent']['file'])
       {
-        $data['recent']['file'] = $attr['modified'][0];
+        $data['recent']['file'] = $file['modified'][0];
       }
 
       $op .= sprintf(
@@ -216,22 +254,22 @@ class Indexer
 
       $op .= sprintf(
         '<a%shref="%s">%s</a></td>',
-        (($attr['filetype'] === 'image' || $attr['filetype'] === 'video' ? true : false) ? ' class="preview" ' : ' '), $attr['path'], $file[1]
+        (($file['type'][0] === 'image' || $file['type'][0] === 'video' ? true : false) ? ' class="preview" ' : ' '), $file['path'], $file[1]
       );
 
       $op .= sprintf(
         '<td data-raw="%d">%s</td>',
-        $attr['modified'][0], $attr['modified'][1]
+        $file['modified'][0], $file['modified'][1]
       );
 
       $op .= sprintf(
         '<td data-raw="%d">%s</td>',
-        $attr['size'][0] === -1 ? 0 : $attr['size'][0], $attr['size'][1]
+        $file['size'][0] === -1 ? 0 : $file['size'][0], $file['size'][1]
       );
 
       $op .= sprintf(
         '<td data-raw="%s" class="download"><a href="%s" download="" filename="%s">%s</a></td></tr>',
-        $attr['filetype'], $attr['path'], $file[1], ('<span data-view="mobile">[Save]</span><span data-view="desktop">[Download]</span>')
+        $file['type'][0], $file['path'], $file[1], ('<span data-view="mobile">[Save]</span><span data-view="desktop">[Download]</span>')
       );
     }
 
@@ -272,9 +310,9 @@ class Indexer
 
   private function getFileType($filename)
   {
-    $extension = ltrim(pathinfo($filename, PATHINFO_EXTENSION), '.');
+    $extension = strtolower(ltrim(pathinfo($filename, PATHINFO_EXTENSION), '.'));
 
-    return isset($this->types[$extension]) ? $this->types[$extension] : 'other';
+    return array(isset($this->types[$extension]) ? $this->types[$extension] : 'other', $extension);
   }
 
   public function makePathClickable($path)
@@ -296,9 +334,9 @@ class Indexer
     return $op;
   }
 
-  private function getModified($path)
+  private function getModified($path, $stamp = NULL)
   {
-    $stamp = filemtime($path);
+    if($stamp === NULL) $stamp = filemtime($path);
 
     return array($stamp, strftime('%d/%m/%y <span data-view="desktop">%H:%m</span>', $stamp));
   }
@@ -359,7 +397,12 @@ $indexer = new Indexer(
     )
 );
 
-$contents = $indexer->buildTable();
+$contents = $indexer->buildTable(
+  $config['sorting']['enabled'] ? $config['sorting']['order'] : false,
+  $config['sorting']['enabled'] ? $config['sorting']['types'] : 0,
+  $config['sorting']['enabled'] ? strtolower($config['sorting']['sort_by']) : 'modified',
+  $config['sorting']['enabled'] ? $config['sorting']['use_mbstring'] : false
+);
 
 $data = $indexer->getLastData();
 
@@ -375,7 +418,7 @@ $counts = array(
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title><?=sprintf($config['format']['title'], $indexer->getCurrentDirectory());?></title>
-    <link rel="shortcut icon" href="/favicon.png" type="image/png">
+    <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
     <link rel="stylesheet" type="text/css" href="/indexer/css/gallery.css">
     <link rel="stylesheet" type="text/css" href="/indexer/css/main.css">
@@ -435,6 +478,12 @@ $counts = array(
     'window_margin' => $config['preview']['window_margin'],
     'cursor_indicator' => $config['preview']['cursor_indicator'],
     'static' => $config['preview']['static']
+  ),
+  'sorting' => array(
+    'enabled' => $config['sorting']['enabled'],
+    'types' => $config['sorting']['types'],
+    'sort_by' => strtolower($config['sorting']['sort_by']),
+    'order' => $config['sorting']['order'] === SORT_ASC ? 'asc' : 'desc'
   ),
   'gallery' => array(
     'enabled' => $config['gallery']['enabled'],

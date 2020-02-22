@@ -1,8 +1,9 @@
 /**
  * <eyy-indexer-main> [https://github.com/sixem/eyy-indexer]
  * 
+ * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  1.1.0
+ * @version  1.1.2
  */
 
 'use strict';
@@ -333,6 +334,12 @@ const bind = () =>
             {
                 if(state === true) e.preventDefault();
             });
+        } else if(e.keyCode === 71)
+        {
+            if(config.gallery.enabled === true)
+            {
+                load(null); toggleMenu(false);
+            }
         }
     });
 };
@@ -378,6 +385,28 @@ var debounce = (func) =>
         if(timer) clearTimeout(timer);
         timer = setTimeout(func, 100, event);
     };
+};
+
+var setAsc = () =>
+{
+    /* sets the asc property of a sorting column IF server-side sorting (asc) is enabled */
+
+    if(config.hasOwnProperty('sorting') && config.sorting.enabled && config.sorting.order === 'asc')
+    {
+        if(config.sorting.types === 0 || config.sorting.types === 1)
+        {
+            if(config.sorting.sort_by === 'name')
+            {
+                $('table th span[sortable]').eq(0).parents('th')[0].asc = true;
+            } else if(config.sorting.sort_by === 'modified')
+            {
+                $('table th span[sortable]').eq(1).parents('th')[0].asc = true;
+            } else if(config.sorting.sort_by === 'size')
+            {
+                $('table th span[sortable]').eq(2).parents('th')[0].asc = true;
+            }
+        }
+    }
 };
 
 var createMenu = () =>
@@ -429,7 +458,7 @@ document.addEventListener('DOMContentLoaded', (e) =>
 
 $(document).ready(() =>
 {
-    bind();
+    bind(); setAsc();
 
     $('.filter-container > input[type="text"]').val('');
 

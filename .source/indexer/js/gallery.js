@@ -4,8 +4,8 @@
  * A plugin for <eyy-indexer> [https://github.com/sixem/eyy-indexer]
  * 
  * Licensed under GPL-3.0
- * @author   emy [admin@eyy.co] [https://github.com/sixem/]
- * @version  0.2
+ * @author   emy [admin@eyy.co]
+ * @version  0.2 (1.1.2)
  */
 
 (function($)
@@ -518,7 +518,7 @@
 			}
 		};
 
-		main.data.key_prevent = [33, 34, 37, 38, 39, 40];
+		main.data.key_prevent = [33, 34, 37, 38, 39, 40, 71];
 
 		main.handleKey = (key, callback) =>
 		{
@@ -684,18 +684,22 @@
 
 			$(document).on('DOMMouseScroll mousewheel', 'div.gallery-container .media', (e) =>
 			{
-				if(main.data.scrollbreak === true) return false;
+				if(main.settings.scroll_interval > 0 && main.data.scrollbreak === true) return false;
 
 				main.navigate(null, (e.originalEvent.detail > 0 || e.originalEvent.wheelDelta < 0) ? 1 : -1);
 
-				main.data.scrollbreak = true;
+				if(main.settings.scroll_interval > 0)
+				{
+					main.data.scrollbreak = true;
 
-				setTimeout(() => main.scrollBreak(), main.settings.scroll_interval);
+					setTimeout(() => main.scrollBreak(), main.settings.scroll_interval);
+				}
 			});
 
 			$(document).on('keydown', $.fn, (e) =>
 			{
 				if(main.data.key_prevent.includes(e.keyCode)) e.preventDefault();
+				if(e.keyCode === 71) main.show(false);
 			});
 
 			$(document).on('keyup', $.fn, (e) =>
