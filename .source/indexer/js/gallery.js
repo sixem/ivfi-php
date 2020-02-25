@@ -5,12 +5,12 @@
  * 
  * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  0.2 (1.1.2)
+ * @version  0.2 (1.1.3)
  */
 
 (function($)
 {
-	'use strict';
+    'use strict';
 
     $.fn.gallery = function(items, options = {})
     {
@@ -406,7 +406,12 @@
 
 					source.attr('src', src);
 
-					video.show(); video[0].load();
+					video[0].load();
+
+					video[0].addEventListener('loadeddata', () =>
+					{
+						video.show();
+					}, false);
 				}
 
 				main.container.find(`.media .wrapper ${type === 0 ? 'video' : 'img'}`).hide();
@@ -752,9 +757,9 @@
 
 			var top = $('<div/>', {class : 'bar'}).appendTo(main.container);
 
-			$('<div/>', {class : 'left'}).appendTo(top);
+			$('<div/>', { class : 'left' }).appendTo(top);
 
-			main.barConstruct($('<div/>', {class : 'right'}).appendTo(top));
+			main.barConstruct($('<div/>', { class : 'right' }).appendTo(top));
 
 			var content = $('<div/>', {
 				class : 'content-container'

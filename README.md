@@ -1,6 +1,6 @@
-# eyy-indexer <a href="https://github.com/sixem/eyy-indexer/releases"><img src="https://img.shields.io/badge/version-1.1.2-brightgreen.svg?sanitize=true"></a>
+# eyy-indexer <a href="https://github.com/sixem/eyy-indexer/releases"><img src="https://img.shields.io/badge/version-1.1.3-brightgreen.svg?sanitize=true"></a>
 
-This is a simple file directory indexer / lister script written in PHP with some help from Javascript.
+This is a simple file directory indexer / lister script written in PHP with some help from JavaScript.
 
 This Indexer is designed to be a more image and video friendly Indexer while still having most of the basic functions of any other Indexer or Directory Lister. It is also designed to have a retro and simple feel to it which is why it doesn't use any fancy CSS or icon packs.
 
@@ -23,7 +23,7 @@ The search filter can be used to search for filenames or filetypes in the curren
 + Direct download links.
 + Clickable path for easy navigation.
 + A copyable wget command for downloading the files from the current directory.
-+ Mobile support
++ Mobile support.
 
 # Setup
 Place the files from the [/public/](https://github.com/sixem/eyy-indexer/blob/master/public/) directory into your root web directory.

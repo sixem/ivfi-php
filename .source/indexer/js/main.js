@@ -3,7 +3,7 @@
  * 
  * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  1.1.2
+ * @version  1.1.3
  */
 
 'use strict';
@@ -230,7 +230,9 @@ const applyFilter = (query) =>
 
         if(data.reset)
         {
-            item.css('display', ''); return true;
+            item.css('display', '');
+
+            return true;
         }
 
         var is_file = item.hasClass('file');
@@ -263,15 +265,21 @@ const applyFilter = (query) =>
     }
 
     top.size.text(
-        (data.reset) ? lister.defaults.top_values.size : getReadableSize(data.size)
+        (data.reset) ? 
+        lister.defaults.top_values.size : 
+        getReadableSize(data.size)
     );
 
     top.files.text(
-        (data.reset) ? lister.defaults.top_values.files : `${data.shown.files} file${data.shown.files === 1 ? '' : 's'}`
+        (data.reset) ? 
+        lister.defaults.top_values.files : 
+        `${data.shown.files} file${data.shown.files === 1 ? '' : 's'}`
     );
 
     top.directories.text(
-        (data.reset) ? lister.defaults.top_values.directories : `${data.shown.directories} ${data.shown.directories === 1 ? 'directory' : 'directories'}`
+        (data.reset) ? 
+        lister.defaults.top_values.directories : 
+        `${data.shown.directories} ${data.shown.directories === 1 ? 'directory' : 'directories'}`
     );
 
     let option = $('body > div.menu > #gallery');
@@ -338,7 +346,13 @@ const bind = () =>
         {
             if(config.gallery.enabled === true)
             {
-                load(null); toggleMenu(false);
+                var container = $('.filter-container');
+
+                if(container.is(':visible') === false ||
+                    !container.find('input[type="text"]').is(':focus'))
+                {
+                    load(null); toggleMenu(false);
+                }
             }
         }
     });
@@ -468,7 +482,6 @@ $(document).ready(() =>
 
     menu.css({
         top : $('body > div.top-bar').outerHeight() + 'px',
-        width : (menu.outerWidth()) + 'px',
         visibility : 'unset',
         display : 'none'
     });
