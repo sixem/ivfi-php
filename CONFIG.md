@@ -62,5 +62,6 @@ This basically means that the extensions included here will have previews and wi
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `allow_direct_access` | Boolean | `false` | Whether direct access to the `indexer.php` should be allowed or not.
+| `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
 | `footer` | Boolean | `true` | Whether there should be a simple footer below the list of files or not.
 | `debug` | Boolean | `false` | Enables PHP debugging and `console.log` info messages.
