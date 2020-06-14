@@ -42,6 +42,7 @@ $config = array(
         'video' => array('webm', 'mp4')
     ),
     'allow_direct_access' => false,
+    'path_checking' => 'strict',
     'footer' => true,
     'debug' => false
 );
@@ -86,7 +87,18 @@ class Indexer
       {
         $this->requested = $requested;
       } else {
-        throw new Exception('requested path is below the public working directory.');
+        if($options['path_checking'] === 'strict' || $options['path_checking'] !== 'weak')
+        {
+          throw new Exception('requested path (is_dir) is below the public working directory. (1)');
+        } else if($options['path_checking'] === 'weak')
+        {
+          if(self::isAboveCurrent($this->path, $this->relative, false) || is_link($this->path))
+          {
+            $this->requested = $requested;
+          } else {
+            throw new Exception('requested path (is_dir) is below the public working directory. (2)');
+          }
+        }
       }
     } else {
       if(is_file($this->path))
@@ -293,9 +305,41 @@ class Indexer
     return scandir($this->path);
   }
 
-  private function isAboveCurrent($path, $base)
+  private function removeDotSegments($input)
   {
-    return self::startsWith(realpath($path), realpath($base));
+    $output = '';
+
+    while($input !== '')
+    {
+      if(($prefix = substr($input, 0, 3)) == '../' || ($prefix = substr($input, 0, 2)) == './')
+      {
+        $input = substr($input, strlen($prefix));
+      } else if(($prefix = substr($input, 0, 3)) == '/./' || ($prefix = $input) == '/.')
+      {
+        $input = '/' . substr($input, strlen($prefix));
+      } else if (($prefix = substr($input, 0, 4)) == '/../' || ($prefix = $input) == '/..')
+      {
+        $input = '/' . substr($input, strlen($prefix));
+        $output = substr($output, 0, strrpos($output, '/'));
+      } else if($input == '.' || $input == '..')
+      {
+        $input = '';
+      } else
+      {
+        $pos = strpos($input, '/');
+        if($pos === 0) $pos = strpos($input, '/', $pos+1);
+        if($pos === false) $pos = strlen($input);
+        $output .= substr($input, 0, $pos);
+        $input = (string) substr($input, $pos);
+      }
+    }
+
+    return $output;
+  }
+
+  private function isAboveCurrent($path, $base, $use_realpath = true)
+  {
+    return self::startsWith($use_realpath ? realpath($path) : self::removeDotSegments($path), $use_realpath ? realpath($base) : self::removeDotSegments($base));
   }
 
   public function getLastData()
@@ -393,6 +437,7 @@ $indexer = new Indexer(
             'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
         ),
         'extensions' => $config['extensions'],
+        'path_checking' => strtolower($config['path_checking']),
         'allow_direct_access' => $config['allow_direct_access']
     )
 );
