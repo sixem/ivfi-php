@@ -1,4 +1,4 @@
-# eyy-indexer <a href="https://github.com/sixem/eyy-indexer/releases"><img src="https://img.shields.io/badge/version-1.1.3-brightgreen.svg?sanitize=true"></a>
+# eyy-indexer <a href="https://github.com/sixem/eyy-indexer/releases"><img src="https://img.shields.io/badge/version-1.1.4-brightgreen.svg?sanitize=true"></a>
 
 This is a simple file directory indexer / lister script written in PHP with some help from JavaScript.
 

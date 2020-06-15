@@ -3,7 +3,7 @@
  * 
  * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  1.1.3
+ * @version  1.1.4
  */
 
 'use strict';
@@ -16,13 +16,25 @@ const lister = {
     defaults : {}
 };
 
-$(document).on('click', 'body > .top-bar > div.extend', (e) => toggleMenu());
-$(document).on('click', '.filter-container > div.close > span', (e) => toggleFilter());
-$(document).on('input', '.filter-container > div input[type="text"]', (e) => applyFilter($(e.currentTarget).val()));
+$(document).on('click', 'body > .top-bar > div.extend', (e) =>
+{
+    toggleMenu();
+});
+
+$(document).on('click', '.filter-container > div.close > span', (e) =>
+{
+    toggleFilter();
+});
+
+$(document).on('input', '.filter-container > div input[type="text"]', (e) =>
+{
+    applyFilter($(e.currentTarget).val());
+});
 
 $(document).on('click', 'body > div.menu #filter', (e) =>
 {
-    toggleFilter(); toggleMenu();
+    toggleFilter();
+    toggleMenu();
 });
 
 const fallbackCopyTextToClipboard = (text) =>
@@ -35,7 +47,8 @@ const fallbackCopyTextToClipboard = (text) =>
 
     document.body.appendChild(area);
 
-    area.focus(); area.select();
+    area.focus();
+    area.select();
 
     try
     {
@@ -56,9 +69,9 @@ const copyTextToClipboard = (text) =>
     if(!navigator.clipboard)
     {
         fallbackCopyTextToClipboard(text);
-
         return;
     }
+
     navigator.clipboard.writeText(text).then(() =>
     {
         if(config.debug) console.log('async', 'copying to clipboard was successful.');
@@ -74,10 +87,9 @@ const getReadableSize = (bytes) =>
 
     if(bytes === 0) return '0.00 B';
 
-    var i = -1;
-    var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+    var i = -1, byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
 
-    do {
+    do{
         bytes = bytes / 1024; i++;
     } while (bytes > 1024);
 
@@ -87,7 +99,6 @@ const getReadableSize = (bytes) =>
 const getCellValue = (row, index) =>
 {
     var attribute = $(row).children('td').eq(index).data('raw');
-
     return attribute !== undefined ? attribute : $(row).children('td').eq(index).text();
 };
 
@@ -112,17 +123,13 @@ const getTableItems = () =>
 
         if(parent.is(':hidden')) return true;
 
-        var url = item.attr('href');
-        var name = item.closest('td').data('raw');
-        var size = parent.find('td').eq(2).text();
+        var url = item.attr('href'),
+        name = item.closest('td').data('raw'),
+        size = parent.find('td').eq(2).text();
 
         if(typeof url !== 'undefined' && typeof name !== 'undefined')
         {
-            items.push({
-                name : name,
-                url : url,
-                size : size
-            })
+            items.push({ name, url, size });
         }
     });
 
@@ -132,35 +139,18 @@ const getTableItems = () =>
 const toggleMenu = (state = null) =>
 {
     var menu = $('body > div.menu');
-
     menu.css('display', (state === true || state === false) ? (state ? 'inline-block' : 'none') : (menu.is(':hidden') ? 'inline-block' : 'none'));
-
     $('body > .top-bar > div.extend').html(menu.is(':hidden') ? '+' : '-');
 
     return menu.is(':hidden');
-};
-
-const generateWGet = () =>
-{
-    var url = window.location.href, extensions = [];
-
-    $('tr.file td:first-child a:visible').each((index, item) =>
-    {
-        item = $(item);
-
-        var extension = item.text().split('.').pop().toLowerCase().trim();
-
-        if(!extensions.includes(extension)) extensions.push(extension);
-    });
-
-    return `wget -r -np -nH -nd -e robots=off --accept "${extensions.join(',')}" "${url}"`;
 };
 
 if(config.gallery.enabled === true)
 {
     $(document).on('click', 'body > div.menu #gallery', (e) =>
     {
-        load(null); toggleMenu(false);
+        load(null);
+        toggleMenu(false);
     });
 
     $(document).on('click', 'tbody tr.file a.preview', (e) =>
@@ -179,30 +169,76 @@ if(config.gallery.enabled === true)
     });
 }
 
-var timeout_copy = null;
-
 $(document).on('click', 'body > div.menu #copy', (e) =>
 {
-    var target = $(e.currentTarget);
+    var wget = () =>
+    {
+        var url = window.location.href, extensions = [];
 
-    copyTextToClipboard(generateWGet());
+        $('tr.file td:first-child a:visible').each((index, item) =>
+        {
+            item = $(item);
+            var extension = item.text().split('.').pop().toLowerCase().trim();
+            if(!extensions.includes(extension)) extensions.push(extension);
+        });
 
-    toggleMenu(false);
+        return `wget -r -np -nH -nd -e robots=off --accept "${extensions.join(',')}" "${url}"`;
+    };
+
+    copyTextToClipboard(wget()); toggleMenu(false);
 });
 
 $(document).on('click', 'table th span[sortable]', (e) =>
 {
-    var column = !$(e.currentTarget).is('th') ? $(e.currentTarget).parents('th')[0] : e.currentTarget;
+    var parent = $(e.currentTarget).parents('th'), index = parent.index();
+    var column = !$(e.currentTarget).is('th') ? parent[0] : e.currentTarget;
     var table = $(column).parents('table').eq(0);
-    var rows = table.find('tbody tr.file').toArray().sort(comparer($(column).index()));
+
+    var rows = {
+        directories : table.find('tbody tr.directory').toArray(),
+        files : table.find('tbody tr.file').toArray()
+    };
+
+    // set a skip directory var if we're only sorting sizes or types (as they should be unaffected by these).
+    var skip_directories = (config.sorting.hasOwnProperty('sort_by') && (index === 2 || index === 3))
+
+    if(config.sorting.types === 0 || config.sorting.types === 2)
+    {
+        if(!skip_directories) rows.directories.sort(comparer($(column).index()))
+    }
+
+    if(config.sorting.types === 0 || config.sorting.types === 1)
+    {
+        rows.files.sort(comparer($(column).index()))
+    }
 
     column.asc = !column.asc;
 
-    if(!column.asc) rows = rows.reverse();
+    Cookies.set('ei-sort_ascending', column.asc ? 1 : 0, {
+        sameSite : 'lax'
+    });
 
-    for(var i = 0; i < rows.length; i++) table.append(rows[i]);
+    Cookies.set('ei-sort_row', index, {
+        sameSite : 'lax'
+    });
 
-    lister.refresh = true; lister.selected = null;
+    if(!column.asc)
+    {
+        if(config.sorting.types === 0 || config.sorting.types === 2)
+        {
+            if(!skip_directories) rows.directories = rows.directories.reverse();
+        }
+
+        if(config.sorting.types === 0 || config.sorting.types === 1)
+        {
+            rows.files = rows.files.reverse();
+        }
+    }
+
+    Object.keys(rows).forEach((key) => rows[key].forEach((item) => table.append(item)));
+
+    lister.refresh = true;
+    lister.selected = null;
 
     $('tbody tr.last').removeClass('last');
 });
@@ -231,13 +267,11 @@ const applyFilter = (query) =>
         if(data.reset)
         {
             item.css('display', '');
-
             return true;
         }
 
-        var is_file = item.hasClass('file');
-
-        var match = (item.find('td:eq(0)').attr('data-raw')).match(new RegExp(query, 'i'));
+        var is_file = item.hasClass('file'),
+        match = (item.find('td:eq(0)').attr('data-raw')).match(new RegExp(query, 'i'));
 
         item.css('display', match ? '' : 'none');
 
@@ -251,7 +285,9 @@ const applyFilter = (query) =>
         (match) ? ((is_file) ? data.shown.files++ : data.shown.directories++) : ((is_file) ? data.hidden.files++ : data.hidden.directories++);
     });
 
-    let top = { container : $('body > div.top-bar') };
+    let top = {
+        container : $('body > div.top-bar')
+    };
 
     ['size', 'files', 'directories'].forEach((s) => top[s] = top.container.find(`[data-count="${s}"]`));
 
@@ -335,7 +371,8 @@ const bind = () =>
     {
         if(e.shiftKey && e.keyCode === 70)
         {
-            e.preventDefault(); toggleFilter();
+            e.preventDefault();
+            toggleFilter();
         } else if(e.keyCode === 27)
         {
             hideOverlays((state) =>
@@ -351,7 +388,8 @@ const bind = () =>
                 if(container.is(':visible') === false ||
                     !container.find('input[type="text"]').is(':focus'))
                 {
-                    load(null); toggleMenu(false);
+                    load(null);
+                    toggleMenu(false);
                 }
             }
         }
@@ -361,17 +399,13 @@ const bind = () =>
 const load = (index = 0) =>
 {
     if(config.debug) console.log('load', index);
-
     if(!config.gallery.enabled) return false;
 
     if(lister.gallery && lister.gallery !== false)
     {
         let items = lister.refresh ? getTableItems() : null;
-
         if(items !== null && items.length === 0) return false;
-
         lister.gallery.show(true, index === null ? lister.gallery.data.selected.index : index, items);
-
         if(lister.refresh) lister.refresh = false;
 
         return;
@@ -390,7 +424,7 @@ const load = (index = 0) =>
     if(lister.gallery !== false) $(lister.gallery).on('unbound', (e, state) => bind());
 };
 
-var debounce = (func) =>
+const debounce = (func) =>
 {
     var timer;
 
@@ -401,29 +435,32 @@ var debounce = (func) =>
     };
 };
 
-var setAsc = () =>
+const setSorting = () =>
 {
-    /* sets the asc property of a sorting column IF server-side sorting (asc) is enabled */
-
-    if(config.hasOwnProperty('sorting') && config.sorting.enabled && config.sorting.order === 'asc')
+    if(config.hasOwnProperty('sorting') && config.sorting.enabled)
     {
         if(config.sorting.types === 0 || config.sorting.types === 1)
         {
+            var asc = (config.sorting.order === 'asc' ? true : false);
+
             if(config.sorting.sort_by === 'name')
             {
-                $('table th span[sortable]').eq(0).parents('th')[0].asc = true;
+                $('table th span[sortable]').eq(0).parents('th')[0].asc = asc;
             } else if(config.sorting.sort_by === 'modified')
             {
-                $('table th span[sortable]').eq(1).parents('th')[0].asc = true;
+                $('table th span[sortable]').eq(1).parents('th')[0].asc = asc;
             } else if(config.sorting.sort_by === 'size')
             {
-                $('table th span[sortable]').eq(2).parents('th')[0].asc = true;
+                $('table th span[sortable]').eq(2).parents('th')[0].asc = asc;
+            } else if(config.sorting.sort_by === 'type')
+            {
+                $('table th span[sortable]').eq(3).parents('th')[0].asc = asc;
             }
         }
     }
 };
 
-var createMenu = () =>
+const createMenu = () =>
 {
     let container = $('<div/>', {
         class : 'menu'
@@ -460,6 +497,58 @@ var createMenu = () =>
     return container;
 };
 
+const setDates = () =>
+{
+    let getOffset = () =>
+    {
+        let date = new Date();
+        return date.getTimezoneOffset();
+    };
+
+    let formatDate = (ts) =>
+    {
+        var convert = (i) => i < 10 ? '0' + i : i, date = new Date(ts * 1000);
+
+        return [
+            `${convert(date.getDate())}/${convert(date.getMonth()+1)}/${date.getFullYear().toString().substring(2)}`,
+            `${convert(date.getHours())}:${convert(date.getMinutes())}`
+        ];
+    };
+
+    let apply = () =>
+    {
+        $('tbody tr.directory > td:nth-child(2), tbody tr.file > td:nth-child(2)').each((index, item) =>
+        {
+            item = $(item);
+
+            if(item[0].hasAttribute('data-raw'))
+            {
+                var [short, full] = formatDate(item.attr('data-raw'));
+
+                item.html(short).append($('<span/>', {
+                    'data-view' : 'desktop',
+                    text : ' ' + full
+                }));
+            }
+        });
+    };
+
+    var offset = getOffset(), cookie = Cookies.get('ei-client_timezone_offset');
+
+    if(cookie == null || cookie != offset)
+    {
+        Cookies.set('ei-client_timezone_offset', offset, {
+            sameSite : 'lax'
+        });
+
+        apply();
+    }
+};
+
+setDates(); setSorting();
+
+if(config.debug) console.log('sorting', config.sorting);
+
 window.addEventListener('resize', debounce((e) =>
 {
     config.mobile = Modernizr.mq('(max-width: 640px)');
@@ -472,7 +561,7 @@ document.addEventListener('DOMContentLoaded', (e) =>
 
 $(document).ready(() =>
 {
-    bind(); setAsc();
+    bind();
 
     $('.filter-container > input[type="text"]').val('');
 

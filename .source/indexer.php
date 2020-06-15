@@ -5,7 +5,7 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  1.1.3
+ * @version  1.1.4
  */
 
 $config = array(
@@ -42,6 +42,7 @@ $config = array(
         'video' => array('webm', 'mp4')
     ),
     'allow_direct_access' => false,
+    'path_checking' => 'strict',
     'footer' => true,
     'debug' => true
 );
@@ -62,7 +63,6 @@ if($config['debug'] === true)
 class Indexer
 {
   public $path;
-
   private $relative, $requested, $types, $allow_direct;
 
   function __construct($path, $options = array())
@@ -86,7 +86,18 @@ class Indexer
       {
         $this->requested = $requested;
       } else {
-        throw new Exception('requested path is below the public working directory.');
+        if($options['path_checking'] === 'strict' || $options['path_checking'] !== 'weak')
+        {
+          throw new Exception("requested path (is_dir) is below the public working directory. (mode: {$options['path_checking']})");
+        } else if($options['path_checking'] === 'weak')
+        {
+          if(self::isAboveCurrent($this->path, $this->relative, false) || is_link($this->path))
+          {
+            $this->requested = $requested;
+          } else {
+            throw new Exception("requested path (is_dir) is below the public working directory. (mode: {$options['path_checking']})");
+          }
+        }
       }
     } else {
       if(is_file($this->path))
@@ -141,12 +152,23 @@ class Indexer
 
   public function buildTable($sorting = false, $sort_items = 0, $sort_type = 'modified', $use_mb = false)
   {
-    $op = sprintf(
-      '<tr class="parent"><td><a href="%s">[Parent Directory]</a></td><td>-</td><td>-</td><td>-</td></tr>',
-      dirname(self::getCurrentDirectory())
+    $cookies = array(
+      'client_timezone_offset' => intval(self::getCookie('ei-client_timezone_offset', 0))
     );
 
+    $script_name = basename(__FILE__);
+    $directory = self::getCurrentDirectory();
     $files = self::getFiles();
+    $is_base = ($directory === '/');
+
+    $op = sprintf(
+      '<tr class="parent"><td><a href="%s">[Parent Directory]</a></td><td>-</td><td>-</td><td>-</td></tr>',
+      dirname($directory)
+    );
+
+    $timezone = array(
+      'offset' => $cookies['client_timezone_offset'] > 0 ? -$cookies['client_timezone_offset'] : abs($cookies['client_timezone_offset']) * 60
+    );
 
     $data = array(
       'files' => array(),
@@ -169,9 +191,11 @@ class Indexer
 
       if(is_dir($path))
       {
+        if($is_base && $file === 'indexer') continue;
         array_push($data['directories'], array($path, $file)); continue;
       } else if(file_exists($path))
       {
+        if($is_base && $file === $script_name) continue;
         array_push($data['files'], array($path, $file)); continue;
       }
     }
@@ -190,7 +214,7 @@ class Indexer
     foreach($data['directories'] as $index => $dir)
     {
       $data['directories'][$index]['name'] = $use_mb === true ? mb_strtolower($dir[1], 'UTF-8') : strtolower($dir[1]);
-      $data['directories'][$index]['modified'] = self::getModified($dir[0]);
+      $data['directories'][$index]['modified'] = self::getModified($dir[0], NULL, $timezone['offset']);
       $data['directories'][$index]['type'] = 'directory';
       $data['directories'][$index]['size'] = 0;
     }
@@ -200,7 +224,7 @@ class Indexer
       $data['files'][$index]['name'] = $use_mb === true ? mb_strtolower($file[1], 'UTF-8') : strtolower($file[1]);
       $data['files'][$index]['type'] = self::getFileType($file[1]);
       $data['files'][$index]['size'] = self::getSize($file[0]);
-      $data['files'][$index]['modified'] = self::getModified($file[0]);
+      $data['files'][$index]['modified'] = self::getModified($file[0], NULL, $timezone['offset']);
       $data['files'][$index]['path'] = rtrim(self::joinPaths($this->requested, $file[1]), '/');
     }
 
@@ -228,8 +252,8 @@ class Indexer
     foreach($data['directories'] as $dir)
     {
       $op .= sprintf(
-        '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td>%s</td><td>-</td><td>-</td></tr>',
-        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][1]
+        '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td data-raw="%s">%s</td><td>-</td><td>-</td></tr>',
+        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][0], $dir['modified'][1]
       );
 
       if($data['recent']['directory'] === 0 || $dir['modified'][0] > $data['recent']['directory'])
@@ -279,7 +303,7 @@ class Indexer
     {
       if($data['recent'][$type] > 0)
       {
-        $data['recent'][$type] = strftime('%d/%m/%y %H:%m', $data['recent'][$type]);
+        $data['recent'][$type] = self::formatDate('d/m/y H:i', $data['recent'][$type], $timezone['offset']);
       }
     }
 
@@ -293,9 +317,41 @@ class Indexer
     return scandir($this->path);
   }
 
-  private function isAboveCurrent($path, $base)
+  private function removeDotSegments($input)
   {
-    return self::startsWith(realpath($path), realpath($base));
+    $output = '';
+
+    while($input !== '')
+    {
+      if(($prefix = substr($input, 0, 3)) == '../' || ($prefix = substr($input, 0, 2)) == './')
+      {
+        $input = substr($input, strlen($prefix));
+      } else if(($prefix = substr($input, 0, 3)) == '/./' || ($prefix = $input) == '/.')
+      {
+        $input = '/' . substr($input, strlen($prefix));
+      } else if (($prefix = substr($input, 0, 4)) == '/../' || ($prefix = $input) == '/..')
+      {
+        $input = '/' . substr($input, strlen($prefix));
+        $output = substr($output, 0, strrpos($output, '/'));
+      } else if($input == '.' || $input == '..')
+      {
+        $input = '';
+      } else
+      {
+        $pos = strpos($input, '/');
+        if($pos === 0) $pos = strpos($input, '/', $pos+1);
+        if($pos === false) $pos = strlen($input);
+        $output .= substr($input, 0, $pos);
+        $input = (string) substr($input, $pos);
+      }
+    }
+
+    return $output;
+  }
+
+  private function isAboveCurrent($path, $base, $use_realpath = true)
+  {
+    return self::startsWith($use_realpath ? realpath($path) : self::removeDotSegments($path), $use_realpath ? realpath($base) : self::removeDotSegments($base));
   }
 
   public function getLastData()
@@ -305,7 +361,14 @@ class Indexer
 
   public function getCurrentDirectory()
   {
-    return ($this->requested === '/' || $this->requested === '\\') ? $this->requested : rtrim($this->requested, '/');
+    $requested = trim($this->requested);
+
+    if($requested === '/' || $requested === '\\' || empty($requested))
+    {
+      return '/';
+    } else {
+      return $requested[strlen($requested) - 1] === '/' ? rtrim($requested, '/') . '/' : rtrim($requested, '/');
+    }
   }
 
   private function getFileType($filename)
@@ -334,11 +397,21 @@ class Indexer
     return $op;
   }
 
-  private function getModified($path, $stamp = NULL)
+  private function getModified($path, $stamp = NULL, $modifier = 0)
   {
     if($stamp === NULL) $stamp = filemtime($path);
 
-    return array($stamp, strftime('%d/%m/%y <span data-view="desktop">%H:%m</span>', $stamp));
+    return array($stamp, self::formatDate('d/m/y <\s\p\a\n \d\a\t\a-\v\i\e\w="\d\e\s\k\t\o\p">H:i</\s\p\a\n>', $stamp, $modifier));
+  }
+
+  private function formatDate($format, $stamp, $modifier = 0)
+  {
+    return gmdate($format, $stamp + $modifier);
+  }
+
+  private function getCookie($key, $default = NULL)
+  {
+    return isset($_COOKIE[$key]) ? $_COOKIE[$key] : $default;
   }
 
   private function getSize($path)
@@ -354,11 +427,14 @@ class Indexer
   {
     if($bytes === -1) return '-';
 
-    if($bytes > 104857600) $decimals = 0;
-
     $factor = floor((strlen($bytes) - 1) / 3);
 
     $x = @$this->sizes[$factor];
+
+    if($bytes > 104857600 || $factor == 0)
+    {
+      $decimals = 0;
+    }
 
     if($x === $this->sizes[1]) $decimals = 0;
 
@@ -383,25 +459,66 @@ class Indexer
   }
 }
 
+$cookies = array(
+  'sort_row' => isset($_COOKIE['ei-sort_row']) ? $_COOKIE['ei-sort_row'] : NULL,
+  'sort_ascending' => isset($_COOKIE['ei-sort_ascending']) ? $_COOKIE['ei-sort_ascending'] : NULL
+);
+
+$sorting = array(
+  'enabled' => $config['sorting']['enabled'],
+  'order' => $config['sorting']['order'],
+  'types' => $config['sorting']['types'],
+  'sort_by' => strtolower($config['sorting']['sort_by'])
+);
+
+if($cookies['sort_row'] !== NULL)
+{
+  switch(intval($cookies['sort_row']))
+  {
+    case 0: $sorting['sort_by'] = 'name'; break;
+    case 1: $sorting['sort_by'] = 'modified'; break;
+    case 2: $sorting['sort_by'] = 'size'; break;
+    case 3: $sorting['sort_by'] = 'type'; break;
+  }
+}
+
+if($cookies['sort_ascending'] !== NULL)
+{
+  $sorting['order'] = (boolval($cookies['sort_ascending']) === true ? SORT_ASC : SORT_DESC);
+}
+
+if($cookies['sort_ascending'] !== NULL || $cookies['sort_row'] !== NULL)
+{
+  $sorting['enabled'] = true;
+}
+
+if(isset($_SERVER['INDEXER_BASE_PATH']))
+{
+  $base_path = $_SERVER['INDEXER_BASE_PATH'];
+} else {
+  $base_path = dirname(__FILE__);
+}
+
 $indexer = new Indexer(
     urldecode($_SERVER['REQUEST_URI']),
     array(
         'path' => array(
-            'relative' => dirname(__FILE__)
+            'relative' => $base_path
         ),
         'format' => array(
             'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
         ),
         'extensions' => $config['extensions'],
+        'path_checking' => strtolower($config['path_checking']),
         'allow_direct_access' => $config['allow_direct_access']
     )
 );
 
 $contents = $indexer->buildTable(
-  $config['sorting']['enabled'] ? $config['sorting']['order'] : false,
-  $config['sorting']['enabled'] ? $config['sorting']['types'] : 0,
-  $config['sorting']['enabled'] ? strtolower($config['sorting']['sort_by']) : 'modified',
-  $config['sorting']['enabled'] ? $config['sorting']['use_mbstring'] : false
+  $sorting['enabled'] ? $sorting['order'] : false,
+  $sorting['enabled'] ? $sorting['types'] : 0,
+  $sorting['enabled'] ? strtolower($sorting['sort_by']) : 'modified',
+  $sorting['enabled'] ? $config['sorting']['use_mbstring'] : false
 );
 
 $data = $indexer->getLastData();
@@ -420,8 +537,7 @@ $counts = array(
     <title><?=sprintf($config['format']['title'], $indexer->getCurrentDirectory());?></title>
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
-    <link rel="stylesheet" type="text/css" href="/indexer/css/gallery.css">
-    <link rel="stylesheet" type="text/css" href="/indexer/css/main.css">
+    <link rel="stylesheet" type="text/css" href="/indexer/css/style.css">
 
   </head>
 
@@ -466,8 +582,7 @@ $counts = array(
 
 <!-- [https://github.com/sixem/eyy-indexer] --> 
 
-<script type="text/javascript" src="/indexer/js/jquery.js"></script>
-<script type="text/javascript" src="/indexer/js/modernizr-mq.js"></script>
+<script type="text/javascript" src="/indexer/js/vendors.js"></script>
 <script type="text/javascript" src="/indexer/js/gallery.js"></script>
 <script type="text/javascript" src="/indexer/js/preview.js"></script>
 
@@ -480,10 +595,10 @@ $counts = array(
     'static' => $config['preview']['static']
   ),
   'sorting' => array(
-    'enabled' => $config['sorting']['enabled'],
-    'types' => $config['sorting']['types'],
-    'sort_by' => strtolower($config['sorting']['sort_by']),
-    'order' => $config['sorting']['order'] === SORT_ASC ? 'asc' : 'desc'
+    'enabled' => $sorting['enabled'],
+    'types' => $sorting['types'],
+    'sort_by' => strtolower($sorting['sort_by']),
+    'order' => $sorting['order'] === SORT_ASC ? 'asc' : 'desc'
   ),
   'gallery' => array(
     'enabled' => $config['gallery']['enabled'],

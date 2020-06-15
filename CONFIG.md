@@ -17,7 +17,7 @@ These options can be found at the top of the [indexer.php](https://github.com/si
 | `mime` | String | `image/png` | Favicon [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
 
 ## Sorting
-Sorts the items on the server-side before the page is rendered.
+Default sorting settings. Once the user sorts the items themselves, then those settings will be active for them instead.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
