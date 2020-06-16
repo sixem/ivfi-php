@@ -167,7 +167,7 @@ class Indexer
     );
 
     $timezone = array(
-      'offset' => $cookies['client_timezone_offset'] > 0 ? -$cookies['client_timezone_offset'] : abs($cookies['client_timezone_offset']) * 60
+      'offset' => $cookies['client_timezone_offset'] > 0 ? -$cookies['client_timezone_offset'] * 60 : abs($cookies['client_timezone_offset']) * 60
     );
 
     $data = array(
