@@ -41,6 +41,10 @@ $config = array(
         'image' => array('jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'),
         'video' => array('webm', 'mp4')
     ),
+    'filter' => array(
+        'file' => false,
+        'directory' => false
+    ),
     'allow_direct_access' => false,
     'path_checking' => 'strict',
     'footer' => true,
@@ -142,6 +146,16 @@ class Indexer
         );
     }
 
+    if(isset($options['filter']) && is_array($options['filter']))
+    {
+      $this->filter = $options['filter'];
+    } else {
+      $this->filter = array(
+        'file' => false,
+        'directory' =>  false
+      );
+    }
+
     if(isset($options['format']['sizes']) && $options['format']['sizes'] !== NULL)
     {
       $this->sizes = $options['format']['sizes'];
@@ -194,11 +208,25 @@ class Indexer
 
       if(is_dir($path))
       {
-        if($is_base && $file === 'indexer') continue;
+        if($is_base && $file === 'indexer')
+        {
+          continue;
+        } else if($this->filter['directory'] !== false && !preg_match($this->filter['directory'], $file))
+        {
+          continue;
+        }
+
         array_push($data['directories'], array($path, $file)); continue;
       } else if(file_exists($path))
       {
-        if($is_base && $file === $script_name) continue;
+        if($is_base && $file === $script_name)
+        {
+          continue;
+        } else if($this->filter['file'] !== false && !preg_match($this->filter['file'], $file))
+        {
+          continue;
+        }
+
         array_push($data['files'], array($path, $file)); continue;
       }
     }
@@ -558,6 +586,7 @@ try
           'format' => array(
               'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
           ),
+          'filter' => $config['filter'],
           'extensions' => $config['extensions'],
           'path_checking' => strtolower($config['path_checking']),
           'allow_direct_access' => $config['allow_direct_access']

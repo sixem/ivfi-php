@@ -58,6 +58,18 @@ This basically means that the extensions included here will have previews and wi
 | `image` | Array | `'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'` | Extensions marked as `image`.
 | `video` | Array | `'webm', 'mp4'` | Extensions marked as `video`.
 
+## Filter
+This option can be used if you want to filter the files or directories.
+
+For example, setting `file` to `/.*\.jpg/` will only include `.jpg` files when reading the directory files.
+
+Setting the value to `false` will disable the filter.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `file` | String | `false` | A `regexp` filter for what files should be included.
+| `directory` | String | `false` | A `regexp` filter for what directories should be included.
+
 ## Other
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -65,3 +77,11 @@ This basically means that the extensions included here will have previews and wi
 | `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
 | `footer` | Boolean | `true` | Whether there should be a simple footer below the list of files or not.
 | `debug` | Boolean | `false` | Enables PHP debugging and `console.log` info messages.
+
+# Advanced
+Advanced settings that are not a part of the default configuration.
+## Server
+You can set some server variables (`$_SERVER`) to modify how the script works.
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `INDEXER_BASE_PATH` | String | NULL | Overrides the default base directory of the script. Can be used if you are dealing with a dynamic `root` path, for example.
