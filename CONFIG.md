@@ -17,7 +17,7 @@ These options can be found at the top of the [indexer.php](https://github.com/si
 | `mime` | String | `image/png` | Favicon [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
 
 ## Sorting
-Sorts the items on the server-side before the page is rendered.
+Default sorting settings. Once the client sorts the items themselves, then those settings will be active for them instead.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -58,6 +58,18 @@ This basically means that the extensions included here will have previews and wi
 | `image` | Array | `'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'` | Extensions marked as `image`.
 | `video` | Array | `'webm', 'mp4'` | Extensions marked as `video`.
 
+## Filter
+This option can be used if you want to filter the files or directories using `regular expressions`.
+
+For example, setting `file` to `/^.{1,10}\.(jpg|png)$/` will only include `.jpg` and `.png` files with a filename between `1 - 10` characters in length when reading the directory files.
+
+Setting the value to `false` will disable the filter.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `file` | Boolean / String | `false` | A `regexp` filter for what files should be included.
+| `directory` | Boolean / String | `false` | A `regexp` filter for what directories should be included.
+
 ## Other
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -65,3 +77,11 @@ This basically means that the extensions included here will have previews and wi
 | `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
 | `footer` | Boolean | `true` | Whether there should be a simple footer below the list of files or not.
 | `debug` | Boolean | `false` | Enables PHP debugging and `console.log` info messages.
+
+# Advanced
+Advanced settings that are not a part of the regular configuration.
+## Server
+You can set some server variables (`$_SERVER`) to modify how the script works.
+| Key | Type | Description |
+|-----|------|-------------|
+| `INDEXER_BASE_PATH` | String | Overrides the default base directory of the script. Can be used if you are dealing with a dynamic `root` path or if you want to place the script outside of the `root` directory, for example.

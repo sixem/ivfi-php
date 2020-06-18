@@ -1,4 +1,4 @@
-# eyy-indexer <a href="https://github.com/sixem/eyy-indexer/releases"><img src="https://img.shields.io/badge/version-1.1.3-brightgreen.svg?sanitize=true"></a>
+# eyy-indexer <a href="https://github.com/sixem/eyy-indexer/releases"><img src="https://img.shields.io/badge/version-1.1.4-brightgreen.svg?sanitize=true"></a>
 
 This is a simple file directory indexer / lister script written in PHP with some help from JavaScript.
 
@@ -18,6 +18,8 @@ A gallery mode where you can view images and videos of the current directory wit
 Displays a preview of the image or video when hovering over the name.
 #### **Search Filter**
 The search filter can be used to search for filenames or filetypes in the current directory. Usage (Desktop): `Shift + F`.
+#### **Customizable**
+This script can be customized in a number of ways. (See: [Configuration](#configuration))
 #### **And more ..**
 + File attributes (date modified and size).
 + Direct download links.
@@ -57,7 +59,7 @@ DirectoryIndex index.php index.html index.htm /indexer.php
 This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist.
 
 # Configuration
-The Indexer can be customized in a few ways by editing the config available inside of the [indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php).
+The Indexer can be customized by editing the config available inside of the [indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php).
 
 You can read the [CONFIG.md](https://github.com/sixem/eyy-indexer/blob/master/CONFIG.md) to see a more detailed overview of the available options.
 
