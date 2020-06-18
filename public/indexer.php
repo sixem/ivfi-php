@@ -77,8 +77,8 @@ class Indexer
     }
 
     $this->allow_direct = isset($options['allow_direct_access']) ? $options['allow_direct_access'] : true;
-
     $this->path = rtrim(self::joinPaths($this->relative, $requested), '/');
+    $this->timestamp = time();
 
     if(is_dir($this->path))
     {
@@ -88,14 +88,14 @@ class Indexer
       } else {
         if($options['path_checking'] === 'strict' || $options['path_checking'] !== 'weak')
         {
-          throw new Exception("requested path (is_dir) is below the public working directory. (mode: {$options['path_checking']})");
+          throw new Exception("requested path (is_dir) is below the public working directory. (mode: {$options['path_checking']})", 1);
         } else if($options['path_checking'] === 'weak')
         {
           if(self::isAboveCurrent($this->path, $this->relative, false) || is_link($this->path))
           {
             $this->requested = $requested;
           } else {
-            throw new Exception("requested path (is_dir) is below the public working directory. (mode: {$options['path_checking']})");
+            throw new Exception("requested path (is_dir) is below the public working directory. (mode: {$options['path_checking']})", 2);
           }
         }
       }
@@ -112,11 +112,11 @@ class Indexer
           {
             $this->requested = dirname($requested);
           } else {
-            throw new Exception('requested path (is_file) is below the public working directory.');
+            throw new Exception('requested path (is_file) is below the public working directory.', 3);
           }
         }
       } else {
-        throw new Exception('invalid path. path does not exist.');
+        throw new Exception('invalid path. path does not exist.', 4);
       }
     }
 
@@ -170,6 +170,9 @@ class Indexer
       'offset' => $cookies['client_timezone_offset'] > 0 ? -$cookies['client_timezone_offset'] * 60 : abs($cookies['client_timezone_offset']) * 60
     );
 
+    $offset_hours = (($timezone['offset'] / 60) / 60);
+    $timezone['readable'] = ('UTC' . ($offset_hours > 0 ? '+' : '') . $offset_hours);
+
     $data = array(
       'files' => array(),
       'directories' => array(),
@@ -213,19 +216,23 @@ class Indexer
 
     foreach($data['directories'] as $index => $dir)
     {
-      $data['directories'][$index]['name'] = $use_mb === true ? mb_strtolower($dir[1], 'UTF-8') : strtolower($dir[1]);
-      $data['directories'][$index]['modified'] = self::getModified($dir[0], NULL, $timezone['offset']);
-      $data['directories'][$index]['type'] = 'directory';
-      $data['directories'][$index]['size'] = 0;
+      $item = &$data['directories'][$index];
+
+      $item['name'] = $use_mb === true ? mb_strtolower($dir[1], 'UTF-8') : strtolower($dir[1]);
+      $item['modified'] = self::getModified($dir[0], $timezone['offset']);
+      $item['type'] = 'directory';
+      $item['size'] = 0;
     }
 
     foreach($data['files'] as $index => $file)
     {
-      $data['files'][$index]['name'] = $use_mb === true ? mb_strtolower($file[1], 'UTF-8') : strtolower($file[1]);
-      $data['files'][$index]['type'] = self::getFileType($file[1]);
-      $data['files'][$index]['size'] = self::getSize($file[0]);
-      $data['files'][$index]['modified'] = self::getModified($file[0], NULL, $timezone['offset']);
-      $data['files'][$index]['path'] = rtrim(self::joinPaths($this->requested, $file[1]), '/');
+      $item = &$data['files'][$index];
+
+      $item['name'] = $use_mb === true ? mb_strtolower($file[1], 'UTF-8') : strtolower($file[1]);
+      $item['type'] = self::getFileType($file[1]);
+      $item['size'] = self::getSize($file[0]);
+      $item['modified'] = self::getModified($file[0], $timezone['offset']);
+      $item['path'] = rtrim(self::joinPaths($this->requested, $file[1]), '/');
     }
 
     if($sorting)
@@ -251,9 +258,11 @@ class Indexer
 
     foreach($data['directories'] as $dir)
     {
+      $modtitle = $dir['modified'][2] ? "{$dir['modified'][2]} ({$timezone['readable']})" : '';
+
       $op .= sprintf(
-        '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td data-raw="%s">%s</td><td>-</td><td>-</td></tr>',
-        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][0], $dir['modified'][1]
+        '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td data-raw="%s"><span title="%s">%s</span></td><td>-</td><td>-</td></tr>',
+        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][0], $modtitle, $dir['modified'][1]
       );
 
       if($data['recent']['directory'] === 0 || $dir['modified'][0] > $data['recent']['directory'])
@@ -264,6 +273,8 @@ class Indexer
 
     foreach($data['files'] as $file)
     {
+      $modtitle = $file['modified'][2] ? "{$file['modified'][2]} ({$timezone['readable']})" : '';
+
       $data['size']['total'] = ($data['size']['total'] + $file['size'][0]);
 
       if($data['recent']['file'] === 0 || $file['modified'][0] > $data['recent']['file'])
@@ -282,8 +293,8 @@ class Indexer
       );
 
       $op .= sprintf(
-        '<td data-raw="%d">%s</td>',
-        $file['modified'][0], $file['modified'][1]
+        '<td data-raw="%d"><span title="%s">%s</span></td>',
+        $file['modified'][0], $modtitle, $file['modified'][1]
       );
 
       $op .= sprintf(
@@ -397,16 +408,53 @@ class Indexer
     return $op;
   }
 
-  private function getModified($path, $stamp = NULL, $modifier = 0)
+  private function formatSince($seconds)
   {
-    if($stamp === NULL) $stamp = filemtime($path);
+    if($seconds === 0) { return 'Now'; } else if($seconds < 0) { return false; }
 
-    return array($stamp, self::formatDate('d/m/y <\s\p\a\n \d\a\t\a-\v\i\e\w="\d\e\s\k\t\o\p">H:i</\s\p\a\n>', $stamp, $modifier));
+    $t = array(
+      'year' => 31556926,
+      'month' => 2629743,
+      'week' => 604800,
+      'day' => 86000,
+      'hour' => 3600,
+      'minute' => 60,
+      'second' => 1
+    );
+
+    $index = 0; $count = count($t) - 1; $keys = array_keys($t);
+
+    foreach($t as $key => $i)
+    {
+      $index++;
+
+      if($seconds <= $i) continue;
+
+      $n = $count >= $index ? $keys[$index] : NULL;
+      $f = floor($seconds / $i);
+      $s = $n ? floor(($seconds - ($f * $i)) / $t[$n]) : 0;
+
+      return $f . ' ' . $key . ($f == 1 ? '' : 's') .
+      ($s > 0 ? (' and ' . $s . ' ' . $n . ($s == 1 ? '' : 's')) : '') . ' ago';
+    }
+
+    return false;
   }
 
   private function formatDate($format, $stamp, $modifier = 0)
   {
     return gmdate($format, $stamp + $modifier);
+  }
+
+  private function getModified($path, $modifier = 0)
+  {
+    $stamp = filemtime($path);
+
+    return array(
+      $stamp,
+      self::formatDate('d/m/y <\s\p\a\n \d\a\t\a-\v\i\e\w="\d\e\s\k\t\o\p">H:i\<\/\s\p\a\n\>', $stamp, $modifier),
+      self::formatSince($this->timestamp - $stamp)
+    );
   }
 
   private function getCookie($key, $default = NULL)
@@ -452,7 +500,7 @@ class Indexer
 
     foreach($params as $param)
     {
-        if($param !== '') $paths[] = $param;
+      if($param !== '') $paths[] = $param;
     }
 
     return preg_replace('#/+#','/', join('/', $paths));
@@ -499,20 +547,35 @@ if(isset($_SERVER['INDEXER_BASE_PATH']))
   $base_path = dirname(__FILE__);
 }
 
-$indexer = new Indexer(
-    urldecode($_SERVER['REQUEST_URI']),
-    array(
-        'path' => array(
-            'relative' => $base_path
-        ),
-        'format' => array(
-            'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
-        ),
-        'extensions' => $config['extensions'],
-        'path_checking' => strtolower($config['path_checking']),
-        'allow_direct_access' => $config['allow_direct_access']
-    )
-);
+try
+{
+  $indexer = new Indexer(
+      urldecode($_SERVER['REQUEST_URI']),
+      array(
+          'path' => array(
+              'relative' => $base_path
+          ),
+          'format' => array(
+              'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
+          ),
+          'extensions' => $config['extensions'],
+          'path_checking' => strtolower($config['path_checking']),
+          'allow_direct_access' => $config['allow_direct_access']
+      )
+  );
+} catch (Exception $e) {
+  http_response_code(500);
+
+  echo "<h3>Error:</h3><p>{$e} ({$e->getCode()})</p>";
+
+  if($e->getCode() === 1 || $e->getCode() === 2)
+  {
+    echo '<p>This error occurs when the requested directory is below the directory of the PHP file.'.
+    ($e->getCode() === 1 ? '<br/>You can try setting <b>path_checking</b> to <b>weak</b> if you are working with symbolic links etc.' : '') . '</p>';
+  }
+
+  exit('<p>Fatal error - Exiting.</p>');
+}
 
 $contents = $indexer->buildTable(
   $sorting['enabled'] ? $sorting['order'] : false,
@@ -555,10 +618,10 @@ $counts = array(
  <table>
   <thead>
     <tr>
-      <th><span sortable="true" title="Sort by filename">Filename</span></th>
-      <th><span sortable="true" title="Sort by modification date">Modified</span></th>
-      <th><span sortable="true" title="Sort by filesize">Size</span></th>
-      <th><span sortable="true" title="Sort by filetype">Options</span></th>
+      <th><span sortable="true" title="Sort by filename">Filename</span><span class="sort-indicator"></span></th>
+      <th><span sortable="true" title="Sort by modification date">Modified</span><span class="sort-indicator"></span></th>
+      <th><span sortable="true" title="Sort by filesize">Size</span><span class="sort-indicator"></span></th>
+      <th><span sortable="true" title="Sort by filetype">Options</span><span class="sort-indicator"></span></th>
     </tr>
   </thead>
 
@@ -610,6 +673,7 @@ $counts = array(
     'image' => $config['extensions']['image'],
     'video' => $config['extensions']['video']
   ),
+  'timestamp' => $indexer->timestamp,
   'debug' => $config['debug'],
   'mobile' => false
 )) . ';'); ?>

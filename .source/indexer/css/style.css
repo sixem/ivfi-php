@@ -22,11 +22,18 @@
   box-sizing: inherit;
 }
 
-.ns
+.ns,
+body > table [sortable],
+.gallery-container div.content-container .list table tr td,
+.gallery-container div.bar .right span[data-action],
+.gallery-container div.bar .right a,
+.gallery-container div.content-container .media .wrapper,
+.gallery-container div.content-container .media
 {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  user-select: none;
 }
 
 /** == main.css == **/
@@ -196,9 +203,24 @@ body > table [sortable]
 {
   cursor: pointer;
   text-decoration: underline;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
+}
+
+body > table span.sort-indicator
+{
+  cursor: default;
+  text-decoration: none;
+  margin-left: 6px;
+  display: none;
+}
+
+body > table span.sort-indicator.up::after
+{
+  content: '\2191';
+}
+
+body > table span.sort-indicator.down::after
+{
+  content: '\2193';
 }
 
 body > div.bottom
@@ -442,16 +464,6 @@ body > div.bottom a
   -ms-filter: blur(3px);
 }
 
-
-.gallery-container div.content-container .list table tr td,
-.gallery-container div.bar .right span[data-action]
-{
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
 .gallery-container
 {
   font-family: 'LiberationMonoRegular';
@@ -662,18 +674,32 @@ body > div.bottom a
   display: table-cell;
 
   background-color: #151515a6;
-  border-left: 2px solid var(--gallery-border-color);
 
-  max-width: 350px;
+  max-width: 50vw;/*350px;*/
   min-width: 275px;
   width: auto;
 
-  height: calc(100vh - var(--gallery-top-bar-height));
+  height: calc(100vh - var(--gallery-top-bar-height) - 2px);
 
   float: right;
 
   overflow-y: scroll;
   overflow-x: hidden;
+
+  border-top: 1px solid #101010b8;
+
+  position: relative;
+}
+
+.gallery-container div.content-container .list > div.drag
+{
+    content: ' ';
+    width: 5px;
+    min-height: 100%;
+    cursor: w-resize;
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    border-left: 2px solid var(--gallery-border-color);
 }
 
 .gallery-container div.content-container .list table
@@ -686,7 +712,7 @@ body > div.bottom a
 {
   padding: 5px 4px 5px 6px;
   cursor: pointer;
-  max-width: 285px;
+  max-width: 0px;
   overflow: hidden;
   white-space: nowrap; 
   text-overflow: ellipsis;
@@ -695,7 +721,7 @@ body > div.bottom a
 
 .gallery-container div.content-container .list table tr.selected td
 {
-  border-left: 3px solid #fbfcff;
+  border-left: 4px solid #fbfcff;
   background-color: #1b3b88;
 }
 
