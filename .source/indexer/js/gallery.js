@@ -849,9 +849,27 @@
 
 			try
 			{
-				main.data.list.css('width', JSON.parse(Cookies.get('ei-gallery_list-width').toLowerCase()) + 'px');
+				var width = JSON.parse(Cookies.get('ei-gallery_list-width').toLowerCase());
+
+				if(width === false)
+				{
+					width = 'auto';
+				} else if(width > (window.innerWidth / 2))
+				{
+					width = Math.floor(window.innerWidth / 2) + 'px';
+
+					Cookies.set('ei-gallery_list-width', width, {
+						sameSite : 'lax'
+					});
+				}
+
+				main.data.list.css('width', width);
 			} catch (e) {
 				console.error(e);
+
+				Cookies.set('ei-gallery_list-width', false, {
+					sameSite : 'lax'
+				});
 			}
 
 			if(!main.settings.show_list) list.hide();

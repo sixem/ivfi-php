@@ -17,7 +17,7 @@ These options can be found at the top of the [indexer.php](https://github.com/si
 | `mime` | String | `image/png` | Favicon [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
 
 ## Sorting
-Default sorting settings. Once the user sorts the items themselves, then those settings will be active for them instead.
+Default sorting settings. Once the client sorts the items themselves, then those settings will be active for them instead.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -59,16 +59,16 @@ This basically means that the extensions included here will have previews and wi
 | `video` | Array | `'webm', 'mp4'` | Extensions marked as `video`.
 
 ## Filter
-This option can be used if you want to filter the files or directories.
+This option can be used if you want to filter the files or directories using `regular expressions`.
 
-For example, setting `file` to `/.*\.jpg/` will only include `.jpg` files when reading the directory files.
+For example, setting `file` to `/^.{1,10}\.(jpg|png)$/` will only include `.jpg` and `.png` files with a filename between `1 - 10` characters in length when reading the directory files.
 
 Setting the value to `false` will disable the filter.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `file` | String | `false` | A `regexp` filter for what files should be included.
-| `directory` | String | `false` | A `regexp` filter for what directories should be included.
+| `file` | Boolean / String | `false` | A `regexp` filter for what files should be included.
+| `directory` | Boolean / String | `false` | A `regexp` filter for what directories should be included.
 
 ## Other
 | Key | Type | Default | Description |
@@ -79,9 +79,9 @@ Setting the value to `false` will disable the filter.
 | `debug` | Boolean | `false` | Enables PHP debugging and `console.log` info messages.
 
 # Advanced
-Advanced settings that are not a part of the default configuration.
+Advanced settings that are not a part of the regular configuration.
 ## Server
 You can set some server variables (`$_SERVER`) to modify how the script works.
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `INDEXER_BASE_PATH` | String | NULL | Overrides the default base directory of the script. Can be used if you are dealing with a dynamic `root` path, for example.
+| Key | Type | Description |
+|-----|------|-------------|
+| `INDEXER_BASE_PATH` | String | Overrides the default base directory of the script. Can be used if you are dealing with a dynamic `root` path or if you want to place the script outside of the `root` directory, for example.
