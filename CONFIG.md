@@ -73,6 +73,7 @@ Setting the value to `false` will disable the filter.
 ## Other
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| `themes` | Boolean | `false` | Set to a path relative to the root directory containing `.css` files. Example: `/indexer/css/themes/`.
 | `allow_direct_access` | Boolean | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
 | `footer` | Boolean | `true` | Whether there should be a simple footer below the list of files or not.

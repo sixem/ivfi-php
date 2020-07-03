@@ -1,4 +1,6 @@
 /**
+ * @license
+ * 
  * <image-preview-js> [https://github.com/sixem/image.preview.js]
  *
  * Licensed under MIT
