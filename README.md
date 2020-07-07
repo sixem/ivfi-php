@@ -1,5 +1,7 @@
-# eyy-indexer <a href="https://github.com/sixem/eyy-indexer/releases"><img src="https://img.shields.io/badge/version-1.1.5-brightgreen.svg?sanitize=true"></a>
+# eyy-indexer
 
+<a href="https://github.com/sixem/eyy-indexer/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/eyy-indexer?color=37bd44&style=for-the-badge"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/eyy-indexer?style=for-the-badge"> <img src="https://img.shields.io/github/license/sixem/eyy-indexer?style=for-the-badge"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/eyy-indexer?style=for-the-badge">  
+\
 This is a simple file directory indexer / lister script written in PHP with some help from JavaScript.
 
 This Indexer is designed to be a more image and video friendly Indexer while still having most of the basic functions of any other Indexer or Directory Lister. It is also designed to have a retro and simple feel to it which is why it doesn't use any fancy CSS or icon packs.
@@ -22,7 +24,7 @@ The search filter can be used to search for filenames or filetypes in the curren
 This script can be set up as a single file script.
 #### **Customizable**
 This script can be customized in a number of ways. (See: [Configuration](#configuration))
-#### **Some other features ..**
+#### **And more:**
 + File attributes (date modified and size).
 + Dates will match the client's timezone.
 + Persistent client-set sorting settings.
@@ -90,6 +92,9 @@ This directory contains the uncompressed (and untranspiled) source files of the 
 You can contribute by submitting a pull request to the [dev](https://github.com/sixem/eyy-indexer/tree/dev) branch.
 
 # Plugins / Libraries used
+### [js-cookie](https://github.com/js-cookie/js-cookie)
+A simple, lightweight JavaScript API for handling cookies.
+
 ### [modernizr.mq](https://github.com/Modernizr/Modernizr)
 Modernizr is a JavaScript library that detects HTML5 and CSS3 features in the user’s browser.
 

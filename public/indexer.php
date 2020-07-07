@@ -69,6 +69,16 @@ if($config['debug'] === true)
   error_reporting(E_ALL);
 }
 
+if($config['themes'] && $config['themes'][0] !== '/')
+{
+  $config['themes'] = ('/' . $config['themes']);
+}
+
+if(substr($config['themes'], -1) !== '/')
+{
+  $config['themes'] = ($config['themes'] . '/');
+}
+
 class Indexer
 {
   public $path;
@@ -140,15 +150,15 @@ class Indexer
         }
     } else {
         $this->types = array(
-            'jpg' => 'image',
-            'jpeg' => 'image',
-            'gif' => 'image',
-            'png' => 'image',
-            'ico' => 'image',
-            'svg' => 'image',
-            'bmp' => 'image',
-            'webm' => 'video',
-            'mp4' => 'video'
+          'jpg' => 'image',
+          'jpeg' => 'image',
+          'gif' => 'image',
+          'png' => 'image',
+          'ico' => 'image',
+          'svg' => 'image',
+          'bmp' => 'image',
+          'webm' => 'video',
+          'mp4' => 'video'
         );
     }
 
@@ -638,7 +648,7 @@ if($config['themes'])
 
   if(is_dir($directory))
   {
-    foreach(scandir($directory, SCANDIR_SORT_NONE) as $theme)
+    foreach(preg_grep('~\.css$~', scandir($directory, SCANDIR_SORT_NONE)) as $theme)
     {
       if($theme[0] != '.') array_push($themes, substr($theme, 0, strrpos($theme, '.')));
     }
@@ -659,7 +669,7 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
     <link rel="stylesheet" type="text/css" href="/indexer/css/style.css">
-    <?=$current_theme ? '<link rel="stylesheet" type="text/css" href="/indexer/css/themes/' . $current_theme . '.css">' . PHP_EOL : ''?>
+    <?=$current_theme ? '<link rel="stylesheet" type="text/css" href="' . $config['themes'] . $current_theme . '.css">' . PHP_EOL : ''?>
 
   </head>
 
@@ -667,9 +677,11 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
 
     <div class="top-bar">
         <div class="extend ns">&#x25BE;</div>
-        <div data-count="size"><?=$data['size']['readable'];?></div>
-        <div <?=$data['recent']['file'] !== 0 ? 'title="Newest: ' . $data['recent']['file'] . '" ' : '';?>data-count="files"><?=$counts['files'] . ($counts['files'] === 1 ? ' file' : ' files');?></div>
-        <div <?=$data['recent']['directory'] !== 0 ? 'title="Newest: ' . $data['recent']['directory'] . '" ' : '';?>data-count="directories"><?=$counts['directories'] . ($counts['directories'] === 1 ? ' directory' : ' directories');?></div>
+        <div class="directory-info">
+          <div data-count="size"><?=$data['size']['readable'];?></div>
+          <div <?=$data['recent']['file'] !== 0 ? 'title="Newest: ' . $data['recent']['file'] . '" ' : '';?>data-count="files"><?=$counts['files'] . ($counts['files'] === 1 ? ' file' : ' files');?></div>
+          <div <?=$data['recent']['directory'] !== 0 ? 'title="Newest: ' . $data['recent']['directory'] . '" ' : '';?>data-count="directories"><?=$counts['directories'] . ($counts['directories'] === 1 ? ' directory' : ' directories');?></div>
+        </div>
     </div>
 
     <div class="path">Index of <?=$indexer->makePathClickable($indexer->getCurrentDirectory());?></div>
@@ -699,7 +711,7 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
 <div class="filter-container">
     <div>
         <input type="text" placeholder="Search .." value="">
-        <div class="status"></div>
+        <div class="status" data-view="desktop"></div>
     </div>
     <div class="close">
         <span>[Close]</span>

@@ -8,17 +8,17 @@
  * @version  1.1.5
  */
 
-'use strict';
-
 (() =>
 {
+	'use strict';
+
 	const main = {
 		store  : {
 			defaults : {},
 			selection : {},
 			selected : null,
 			gallery : null,
-			refresh : false
+			refresh : false,
 		},
 		debounce : (f) =>
 		{
@@ -34,6 +34,15 @@
 				timer = setTimeout(f, 100, e);
 			};
 		},
+		checkNested : (obj, ...args) =>
+		{
+			for (var i = 0; i < args.length; i++)
+			{
+				if(!obj || !obj.hasOwnProperty(args[i])) return false;
+				obj = obj[args[i]];
+			}
+			return true;
+		},
 		getReadableSize : (bytes = 0) =>
 		{
 			/* https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string */
@@ -44,7 +53,7 @@
 
 			byteUnits.shift();
 
-			do{
+			do {
 				bytes = bytes / 1024; i++;
 			} while (bytes > 1024);
 
@@ -107,22 +116,39 @@
 		client : {
 			get : () =>
 			{
-				var client;
+				var client, keys_required = ['gallery', 'sort'], defaults = {
+					gallery : {
+						reverse_options : config.gallery.reverse_options,
+						list_alignment : 0,
+						autoplay : true
+					}
+				};
 
 				try
 				{
 					client = JSON.parse(Cookies.get('ei-client'));
-					['gallery', 'sort'].forEach((key) =>
+
+					(keys_required).forEach((key) =>
 					{
-						if(!client.hasOwnProperty(key)) client[key] = {};
+						if(!client.hasOwnProperty(key))
+						{
+							client[key] = defaults.hasOwnProperty(key) ? defaults[key] : {};
+						}
+					});
+
+					Object.keys(defaults).forEach((key) =>
+					{
+						Object.keys(defaults[key]).forEach((option) =>
+						{
+							if(!client[key].hasOwnProperty(option)) client[key][option] = defaults[key][option];
+						});
 					});
 				} catch (e) {
-					client = {
-						gallery : {},
-						sort : {}
-					};
+					var client = {};
 
-					main.client.set(client);
+					(keys_required).forEach((key) => client[key] = {});
+
+					main.client.set(Object.assign(client, defaults));
 				}
 
 				return client;
@@ -138,176 +164,298 @@
 			}
 		},
 		settings : {
+			available : () =>
+			{
+				if(config.hasOwnProperty('themes') && config.themes.pool.length > 0 ||
+					config.gallery.enabled === true)
+				{
+					return true;
+				}
+
+				return false;
+			},
+			create : {
+				option : (e, text, options = {}, title = null) =>
+				{
+					if(options.hasOwnProperty('class')) options.class = ('option ' + options.class);
+
+					var wrapper_attributes = Object.assign({
+						class : 'option'
+					}, options), text_attributes = {
+						class : 'option-text',
+						text : text
+					};
+
+					if(title) text_attributes.title = title;
+
+					return e
+					.wrap($('<div/>'))
+					.parent().wrap($('<div/>', wrapper_attributes))
+					.parent().prepend($('<div/>', text_attributes));
+				},
+				section : (id, header = null) =>
+				{
+					return $('<div/>', {
+						'class' : 'section' ,
+						'data-key' : id
+					})
+					.append($('<div/>', {
+						class : 'header',
+						text : header ? header : main.capitalize(id)
+					}));
+				},
+				select : (values, options = {}, selected = null) =>
+				{
+					var e = $('<select/>', options);
+
+					e.append(values.map((value, index) =>
+					{
+						value.text = main.capitalize(value.text);
+						var option = $('<option/>', value);
+
+						if(selected !== null)
+						{
+							if(selected(option, index, e) === true)
+							{
+								option[0].selected = true;
+								e[0].selectedIndex = index;
+							}
+						}
+
+						return option;
+					}));
+
+					return e;
+				},
+				check : (options = {}, selected = null) =>
+				{
+					var checked = (selected !== null) ? selected() : false;
+					if(checked) options.checked = '';
+					var e = $('<input/>', Object.assign(options, {
+						type : 'checkbox'
+					})); e[0].checked = checked;
+					return e;
+				}
+			},
 			close : () =>
 			{
-				[$('.focus-overlay'), $('.settings-container')].forEach((e) => e.remove());
+				$('.focus-overlay, .settings-container').remove();
+			},
+			update : {
+				theme : (theme) =>
+				{
+					main.theme.set(theme === false ? null : theme, false);
+				},
+				gallery : {
+					list_alignment : (alignment) =>
+					{
+						if(main.store.gallery)
+						{
+							var elements = [
+								'.gallery-container div.content-container .media .loader',
+								'.gallery-container div.content-container .list',
+								'.gallery-container div.content-container .list > div.drag'
+							];
+
+							elements.forEach((e) => alignment === 0 ? $(e).removeClass('reversed') : $(e).addClass('reversed'));
+							var detached = $(elements[1]).detach(), media = ('.gallery-container div.content-container .media');
+							alignment === 1 ? detached.insertBefore(media) : detached.insertAfter(media);
+							(main.store.gallery).settings.list.reverse = (alignment === 0 ? false : true);
+						}
+					},
+					reverse_options : (value) =>
+					{
+						if(main.store.gallery) main.store.gallery.settings.reverse_options = value;
+					},
+					autoplay : (value) =>
+					{
+						if(main.store.gallery) main.store.gallery.settings.autoplay = value;
+					}
+				}
+			},
+			options : {
+				gather : (container) =>
+				{
+					var elements = ['select', 'input[type="checkbox"]'], data = {};
+
+					container.find(elements.join(',')).each((i, e) =>
+					{
+						e = $(e);
+
+						if(e[0].hasAttribute('name'))
+						{
+							var id = e.attr('name'), section = e.closest('.section').attr('data-key');
+
+							if(!data.hasOwnProperty(section)) data[section] = {};
+
+							if(e.is('select'))
+							{
+								data[section][id] = e[0].selectedIndex;
+							} else if(e.is('input[type="checkbox"]'))
+							{
+								data[section][id] = e[0].checked;
+							}
+						}
+					});
+
+					return data;
+				},
+				set : (data, client = null) =>
+				{
+					if(!client) client = main.client.get();
+
+					Object.keys(data).forEach((key) =>
+					{
+						var is_main = (key === 'main');
+
+						if(!is_main && !client.hasOwnProperty(key)) client[key] = {};
+
+						Object.keys(data[key]).forEach((option) =>
+						{
+							var value = null;
+
+							switch(option)
+							{
+								case ('theme'):
+									if(data[key][option] <= (config.themes.pool.length - 1))
+										value = config.themes.pool[data[key][option]] === 'default' ? false : config.themes.pool[data[key][option]]; break;
+								default:
+									value = data[key][option]; break;
+							}
+
+							var changed = (is_main ? (client[option] !== value) : (client[key][option] !== value));
+
+							data[key][option] = { value, changed };
+
+							if(is_main)
+							{
+								client[option] = value;
+							} else {
+								client[key][option] = value;
+							}
+
+							if(changed)
+							{
+								if(is_main && main.settings.update.hasOwnProperty(option))
+								{
+									main.settings.update[option](value);
+								} else if(main.settings.update[key].hasOwnProperty(option))
+								{
+									main.settings.update[key][option](value);
+								}
+							}
+						});
+					});
+
+					if(config.debug) console.log('set settings', data);
+
+					main.client.set(client);
+
+					return data;
+				}
 			},
 			apply : (e, client = null) =>
 			{
 				if(!client) client = main.client.get();
-
-				var getValue = (selector, key) =>
-				{
-					var element = e.find(selector);
-					return (element.length > 0) ? element[0][key] : null;
-				};
-
-				var applied = {
-					theme : getValue('div.section.main > div > select#theme-select', 'selectedIndex'),
-					gallery : {
-						list_alignment : getValue('div.section.gallery > div > select#list-alignment', 'selectedIndex')
-					}
-				};
-
-				/* Save and set theme */
-				if(applied.theme && applied.theme === 0)
-				{
-					client.theme = false;
-
-					main.theme.set(null, false);
-				} else if(applied.theme <= (config.themes.pool.length - 1)) {
-					var theme = config.themes.pool[applied.theme];
-
-					main.theme.set(theme, false);
-					client.theme = theme;
-				}
-
-				/* Save gallery list alignment and apply it if the gallery is active */
-				if(applied.gallery.list_alignment && client.gallery.hasOwnProperty('list_alignment') && 
-					client.gallery.list_alignment !== applied.gallery.list_alignment && main.store.gallery)
-				{
-					var elements = [
-						'.gallery-container div.content-container .media .loader',
-						'.gallery-container div.content-container .list',
-						'.gallery-container div.content-container .list > div.drag'
-					];
-
-					elements.forEach((e) => applied.gallery.list_alignment === 0 ? $(e).removeClass('reversed') : $(e).addClass('reversed'));
-					var detached = $(elements[1]).detach(), media = ('.gallery-container div.content-container .media');
-					applied.gallery.list_alignment === 1 ? detached.insertBefore(media) : detached.insertAfter(media);
-					(main.store.gallery).settings.list.reverse = (applied.gallery.list_alignment === 0 ? false : true);
-				}
-
-				client.gallery.list_alignment = applied.gallery.list_alignment;
-
-				/* Update client cookie */
-				main.client.set(client);
+				var set = main.settings.options.set(main.settings.options.gather(e), client);
 				main.settings.close();
 			},
 			show : () =>
 			{
 				if($('.settings-container').length > 0) return;
 
-				if($('.focus-overlay').length === 0)
-				{
-					var overlay = $('<div/>', {
-						class : 'focus-overlay'
-					}).appendTo($('body'));
+				if($('.focus-overlay').length === 0) $('<div/>', { class : 'focus-overlay' })
+					.appendTo($('body')).on('click', (e) => main.settings.close());
 
-					overlay.on('click', (e) =>
-					{
-						main.settings.close();
-					});
-				}
-
-				var container = $('<div/>', {
+				let container = $('<div/>', {
 					class : 'settings-container'
 				}), client = main.client.get();
 
-				if(!client.hasOwnProperty('gallery')) client.gallery = {};
-
-				var base = () =>
+				var getMain = (section = main.settings.create.section('main'), settings = 0) =>
 				{
-					var section = $('<div/>', {
-						class : 'section main'
-					})
-					.append($('<div/>', {
-						class : 'header',
-						text : 'Main'
-					})), settings = 0;
-
 					if(config.hasOwnProperty('themes') && config.themes.pool.length > 0)
 					{
-						var theme = $('<div/>')
-						.append($('<span/>', {
-							text : 'Theme: '
-						}))
-						.append($('<select/>', {
-							id : 'theme-select'
-						}).append(config.themes.pool.map((e, i) =>
-						{
-							return $('<option/>', { value : e, text : main.capitalize(e) });
-						})));
-
-						theme.find('> select > option').each((i, e) =>
-						{
-							if((config.themes.set === null && i === 0) || e.value == config.themes.set)
+						section.append(main.settings.create.option(
+							main.settings.create.select(config.themes.pool.map((e, i) =>
 							{
-								e.selected = true; $(e).parent('select')[0].selectedIndex = i;
-							}
-						});
-
-						settings++;
-						section.append(theme);
+								return { value : e, text : e };
+							}), { name : 'theme' }, (option, index, parent) =>
+							{
+								return (config.themes.set === null && index === 0) || (option[0].value == config.themes.set);
+							}), 'Theme')); settings++;
 					}
 
 					return { settings, section };
 				};
 
-				var gallery = () =>
+				var getGallery = (section = main.settings.create.section('gallery'), settings = 0) =>
 				{
-					var section = $('<div/>', { class : 'section gallery' })
-					.append($('<div/>', { class : 'header', text : 'Gallery' })), settings = 0;
-
 					if(!config.mobile)
 					{
-						var list_alignment = $('<div/>')
-						.append($('<span/>', {
-							text : 'List Alignment: '
-						}))
-						.append($('<select/>', {
-							id : 'list-alignment'
-						}).append(['right', 'left'].map((e, i) =>
-							$('<option/>', {
-								value : ('align-' + e),
-								text : main.capitalize(e)
-							})
-						)));
-
-						if(client.gallery.hasOwnProperty('list_alignment'))
-						{
-							list_alignment.find('> select > option').each((i, e) =>
+						section.append(main.settings.create.option(
+							main.settings.create.select(['right', 'left'].map((e, i) =>
 							{
-								if(i === client.gallery.list_alignment)
-								{
-									e.selected = true; $(e).parent('select')[0].selectedIndex = i;
-								}
-							});
-						}
-
-						settings++;
-						section.append(list_alignment);
+								return { value : 'align-' + e, text : e };
+							}), { name : 'list_alignment' }, (option, index, parent) =>
+							{
+								return (index === client.gallery.list_alignment);
+							}), 'List Alignment')); settings++;
 					}
+
+					[['Reverse Search', 'reverse_options', 'Toggle visibility of reverse search options on images.'],
+					['Autoplay Videos', 'autoplay', 'Toggle autoplaying of videos.']]
+					.forEach((e) =>
+					{
+						var [label, key, description] = e;
+
+						section.append(main.settings.create.option(
+							main.settings.create.check({ name : key },
+								() => {
+									return main.checkNested(client, 'gallery', key) ? (client.gallery[key]) : config.gallery[key];
+								}), label, { class : 'interactable' }, description)); settings++;
+					});
 
 					return { settings, section };
 				};
 
-				var base = base(), gallery = gallery();
+				var sections = [getMain()];
+				if(config.gallery.enabled) sections.push(getGallery());
 
 				container.append($('<div/>', {
 					class : 'wrapper'
-				})
-				.append(base.settings > 0 ? base.section : null)
-				.append(gallery.settings > 0 ? gallery.section : null));
+				}).append(sections.map((e) => e.settings > 0 ? e.section : null).filter((e) => e !== null)));
 
-				var bottom = $('<div/>', { class : 'bottom' }).appendTo(container),
-				apply = $('<div/>', { class : 'apply ns', text : 'Apply' }).appendTo(bottom),
-				cancel = $('<div/>', { class : 'cancel ns', text : 'Cancel' }).appendTo(bottom);
+				var bottom = $('<div/>', {
+					class : 'bottom' })
+				.appendTo(container);
 
-				apply.on('click', (e) => main.settings.apply(container, client));
-				cancel.on('click', (e) => main.settings.close());
+				$('<div/>', {
+					class : 'apply ns',
+					text : 'Apply'
+				}).appendTo(bottom)
+				.on('click', (e) => main.settings.apply(container, client));
+
+				$('<div/>', {
+					class : 'cancel ns',
+					text : 'Cancel'
+				}).appendTo(bottom)
+				.on('click', (e) => main.settings.close());
 
 				$('body').append(container);
+
+				/* make option divs click event toggle the input value */
+				container.find('div.section > .option.interactable').on('mouseup', (e) =>
+				{
+					/* cancel the event if any text is selected */
+					if(window.getSelection().toString()) return;
+
+					var checkbox = $(e.currentTarget).find('input[type="checkbox"]');
+
+					if(checkbox.length > 0 && !$(e.target).is('input'))
+					{
+						checkbox[0].checked = !checkbox[0].checked; return;
+					}
+				});
 			}
 		},
 		menu : {
@@ -328,6 +476,7 @@
 					},
 				];
 
+				/* add menu item if gallery is enabled */
 				if(config.gallery.enabled === true && $('a.preview').length > 0)
 				{
 					items.unshift({
@@ -336,11 +485,15 @@
 					});
 				}
 
-				items.unshift({
-					text : '[Open] Settings',
-					id : 'settings',
-					class : 'settings'
-				});
+				/* do a light check to see if any settings are available to be changed, if so, add menu item */
+				if(main.settings.available())
+				{
+					items.unshift({
+						text : '[Open] Settings',
+						id : 'settings',
+						class : 'settings'
+					});
+				}
 
 				items.forEach((item) =>
 				{
@@ -376,7 +529,7 @@
 
 				config.themes.set = theme;
 				
-				if(theme === null | !theme)
+				if(theme === null || !theme)
 				{
 					sheets.each((i, sheet) => sheet.remove());
 
@@ -398,21 +551,26 @@
 			}
 		},
 		filter : {
-			apply : (query = null) =>
+			apply : (query = null, selector = null) =>
 			{
 				main.store.refresh = true;
 
-				if(!query)
-				{
-					query = '';
-				}
+				if(!query) query = '';
 
 				var data = {
 					reset : query === '',
-					shown : { directories : 0, files : 0 },
-					hidden : { directories : 0, files : 0 },
+					shown : {
+						directories : 0,
+						files : 0
+					},
+					hidden : {
+						directories : 0,
+						files : 0
+					},
 					size : 0
-				};
+				}, match = null;
+
+				if(main.store.gallery) main.store.gallery.data.selected.index = 0;
 
 				$('body > table tr.file, body > table tr.directory').each((index, item) =>
 				{
@@ -424,17 +582,32 @@
 						return true;
 					}
 
-					var is_file = item.hasClass('file'), match = (item.find('td:eq(0)').attr('data-raw')).match(new RegExp(query, 'i'));
+					var is_file = item.hasClass('file');
 
-					item.css('display', match ? '' : 'none');
+					try
+					{
+						match = {
+							valid : true,
+							data : (item.find('td:eq(0)').attr('data-raw')).match(new RegExp(query, 'i'))
+						};
+					} catch(e) {
+						match = {
+							valid : false,
+							reason : e
+						}
+					}
 
-					if(match && is_file)
+					item.css('display', (match.valid && match.data) ? '' : 'none');
+
+					if(match.valid && match.data && is_file)
 					{
 						var size = item.find('td:eq(2)').attr('data-raw');
 						if(!isNaN(size)) data.size = (data.size + parseInt(size));
 					}
 
-					(match) ? ((is_file) ? data.shown.files++ : data.shown.directories++) : ((is_file) ? data.hidden.files++ : data.hidden.directories++);
+					(match.valid && match.data) ?
+						((is_file) ? data.shown.files++ : data.shown.directories++) :
+						((is_file) ? data.hidden.files++ : data.hidden.directories++);
 				});
 
 				var top = {
@@ -467,8 +640,25 @@
 					`${data.shown.directories} ${data.shown.directories === 1 ? 'directory' : 'directories'}`
 				);
 
-				var option = $('body > div.menu > #gallery'), previews = $('body > table tr.file:visible a.preview').length;
+				var option = $('body > div.menu > #gallery'), previews = $('body > table tr.file:visible a.preview').length, status = $('.filter-container div.status');
 
+				if(status.length > 0)
+				{
+					if(data.reset)
+					{
+						status.text('').removeClass('se');
+					} else {
+						if(match && match.valid === false)
+						{
+							status.text(match.reason).addClass('se');
+						} else {
+							var matches = (data.shown.files + data.shown.directories);
+							status.text(`${matches} result${matches === 1 ? '' : 's'}.`).removeClass('se');
+						}
+					}
+				}
+
+				/* hide or show the gallery menu option */
 				if(!data.reset && previews === 0 && option.length > 0)
 				{
 					if(option.css('display') !== 'none')
@@ -658,11 +848,12 @@
 					'console' : config.debug,
 					'fade' : config.gallery.fade,
 					'mobile' : config.mobile,
-					'reverse_options' : config.gallery.reverse_options,
+					'reverse_options' : main.checkNested(client, 'gallery', 'reverse_options') ? (client.gallery.reverse_options) : config.gallery.reverse_options,
+					'autoplay' : main.checkNested(client, 'gallery', 'autoplay') ? (client.gallery.autoplay) : config.gallery.autoplay,
 					'scroll_interval' : config.gallery.scroll_interval,
 					'list' : {
 						'show' : list_state == null ? true : (list_state ? true : false),
-						'reverse' : client.gallery.hasOwnProperty('list_alignment') ? (client.gallery.list_alignment === 0 ? false : true) : false
+						'reverse' : main.checkNested(client, 'gallery', 'list_alignment') ? (client.gallery.list_alignment === 0 ? false : true) : false
 					}
 				});
 
@@ -674,16 +865,14 @@
 			{
 				var i = 0;
 
-				[
-					{
-						e : $('.filter-container'),
-						func : main.filter.toggle
-					},
-					{
-						e : $('body > div.menu'),
-						func : main.menu.toggle
-					}
-				]
+				[{
+					e : $('.filter-container'),
+					func : main.filter.toggle
+				},
+				{
+					e : $('body > div.menu'),
+					func : main.menu.toggle
+				}]
 				.forEach((obj) =>
 				{
 					if((obj.e).length > 0 && (obj.e).is(':visible'))
@@ -719,6 +908,31 @@
 
 			return items;
 		},
+		events : {
+			scroll : () =>
+			{
+				var path = $('body > div.path'),
+				top = $('div.top-bar > div.directory-info > div.quick-path'),
+				visible = $(window).scrollTop() < path.offset().top + path.outerHeight();
+
+				if(!visible)
+				{
+					if(top.length === 0)
+					{
+						top = $('<div/>', {
+							'class' : 'quick-path',
+							'data-view' : 'desktop'
+						}).html($('body > div.path').html());
+
+						$('div.top-bar > div.directory-info').append(top);
+					}
+
+					top.fadeIn(150).css('display', 'inline-block');
+				} else {
+					top.fadeOut(150);
+				}
+			}
+		},
 		bind : () =>
 		{
 			$(document).off('keydown').on('keydown', (e) =>
@@ -748,12 +962,17 @@
 					}
 				}
 			});
+
+			$(window).on('scroll', main.debounce((e) =>
+			{
+				main.events.scroll();
+			}));
 		}
 	};
 
 	$('body > .top-bar > div.extend').on('click', (e) =>
 	{
-		main.menu.toggle();
+		main.menu.toggle(e.currentTarget);
 	});
 
 	$('.filter-container > div.close > span').on('click', (e) =>
@@ -763,9 +982,9 @@
 
 	$('.filter-container > div input[type="text"]').on('input', (e) =>
 	{
-		main.filter.apply(
-			$(e.currentTarget).val()
-		);
+		var target = $(e.currentTarget);
+
+		main.filter.apply(target.val(), target);
 	});
 
 	$(document).on('click', 'body > div.menu #filter', (e) =>
@@ -832,17 +1051,17 @@
 			files : table.find('tbody tr.file').toArray()
 		};
 
-		/* Set a skip directory var if we're only sorting sizes or types (as they should be unaffected by these). */
-		var skip_directories = (config.sorting.hasOwnProperty('sort_by') && (index === 2 || index === 3))
+		/* set a skip directory var if we're only sorting sizes or types (as they should be unaffected by these). */
+		var skip_directories = (config.sorting.hasOwnProperty('sort_by') && (index === 2 || index === 3));
 
 		if(config.sorting.types === 0 || config.sorting.types === 2)
 		{
-			if(!skip_directories) rows.directories.sort(main.comparer($(column).index()))
+			if(!skip_directories) rows.directories.sort(main.comparer($(column).index()));
 		}
 
 		if(config.sorting.types === 0 || config.sorting.types === 1)
 		{
-			rows.files.sort(main.comparer($(column).index()))
+			rows.files.sort(main.comparer($(column).index()));
 		}
 
 		column.asc = !column.asc;
@@ -851,9 +1070,10 @@
 		parent.find('> span.sort-indicator').addClass(column.asc ? 'down' : 'up').show();
 
 		var client = main.client.get();
-		if(!client.hasOwnProperty('sort')) client.sort = {};
+
 		client.sort.ascending = (column.asc ? 1 : 0);
 		client.sort.row = index;
+
 		main.client.set(client);
 
 		if(!column.asc)
@@ -881,11 +1101,6 @@
 	{
 		config.mobile = Modernizr.mq('(max-width: 640px)');
 	}));
-
-	document.addEventListener('DOMContentloaded', (e) =>
-	{
-		if(config.debug) console.log('DOMContentloaded');
-	});
 
 	$(document).ready(() =>
 	{
@@ -930,12 +1145,14 @@
 				});
 			}
 		}
+
+		main.events.scroll();
 	});
 
-	/* Create client cookie if it doesn't exist or is invalid JSON. */
+	/* create client cookie if it doesn't exist or is invalid JSON. */
 	main.client.get();
 
-	/* Load sorting indicators */
+	/* load sorting indicators */
 	main.sort.load();
 
 	if(config.debug) console.log('config', config);

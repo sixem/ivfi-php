@@ -22,10 +22,10 @@
   --color-link-dir-regular: #ff9547;
   --color-link-dir-parent: #ffc720;
 
-  --color-background-gallery-list-selected: #01748e;
-  --color-background-gallery-list-selected-hover: #01748e;
+  --color-background-gallery-list-selected: #0490b0;
+  --color-background-gallery-list-selected-hover: #0490b0;
   --color-border-gallery-list-selected: #fff;
-  --width-border-gallery-list-selected: 4px;
+  --width-border-gallery-list-selected: 5px;
 
   --gallery-blur: blur(3px);
 }

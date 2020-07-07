@@ -36,6 +36,7 @@
 			fade : 0,
 			mobile : false,
 			scroll_interval : 35,
+			autoplay : true,
 			list : {
 				show : true,
 				reverse : false
@@ -178,7 +179,7 @@
 				{
 					video[0].currentTime = 0;
 					video[0].muted = false;
-					video[0].play();
+					video[0][main.settings.autoplay ? 'play' : 'pause']();
 				} else if(bool === false) {
 					video[0].muted = true;
 					video[0].pause();
@@ -367,11 +368,14 @@
 
 		main.createVideo = (extension) =>
 		{
-			var video = $('<video/>', {
+			var attributes = {
 				controls : '',
-				autoplay : '',
 				loop : ''
-			});
+			};
+
+			if(main.settings.autoplay) attributes.autoplay = '';
+
+			var video = $('<video/>', attributes);
 
 			var source = $('<source>', {
 				type : 'video/' + extension, src : ''

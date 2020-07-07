@@ -2,7 +2,9 @@
 
 Here is an overview of what each configurable option does.
 
-These options can be found at the top of the [indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php) file.
+These options can be found at the top of the [indexer.php](public/indexer.php) file.
+
+Some of these settings can be changed by the user/client, these are only default values for the script to use as defaults.
 
 ## Format
 | Key | Type | Default | Description |
