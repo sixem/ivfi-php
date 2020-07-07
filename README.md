@@ -44,9 +44,9 @@ The default setup will import assets (`js`, `css` etc) as separate files, like m
 The standalone setup will have all of these files bundled directly into the `.php` file. This may slightly increase the time it takes for the page to load but it usually won't be noticeable at all.
 
 ### Default
-Place the files from the [/public/](https://github.com/sixem/eyy-indexer/blob/master/public/) directory into your root web directory.
+Place the files from the [/public/](public/) directory into your root web directory.
 ### Standalone (Single file)
-Place the file from the [/standalone/](https://github.com/sixem/eyy-indexer/blob/master/standalone/) directory into your root web directory.
+Place the file from the [/standalone/](standalone/) directory into your root web directory.
 
 ## 2. Server Configuration
 
@@ -79,12 +79,12 @@ DirectoryIndex index.php index.html index.htm /indexer.php
 This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist.
 
 # Configuration
-The Indexer can be customized by editing the config available inside of the [indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php).
+The Indexer can be customized by editing the config available inside of the [indexer.php](public/indexer.php).
 
-You can read the [CONFIG.md](https://github.com/sixem/eyy-indexer/blob/master/CONFIG.md) to see a more detailed overview of the available options.
+You can read the [CONFIG.md](CONFIG.md) to see a more detailed overview of the available options.
 
 # Source
-The files inside [/.source/](https://github.com/sixem/eyy-indexer/blob/master/.source/) are **NOT** needed in order to run this script.
+The files inside [/.source/](.source/) are **NOT** needed in order to run this script.
 
 This directory contains the uncompressed (and untranspiled) source files of the script (.css, .js etc.), so you can use these files if you want to customize or edit the script in any way.
 
