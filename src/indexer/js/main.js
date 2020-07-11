@@ -14,6 +14,7 @@
 
 	const main = {
 		store  : {
+			preview : {},
 			defaults : {},
 			selection : {},
 			selected : null,
@@ -119,7 +120,7 @@
 				var client, keys_required = ['gallery', 'sort'], defaults = {
 					gallery : {
 						reverse_options : config.gallery.reverse_options,
-						list_alignment : 0,
+						list_alignment : config.gallery.list_alignment,
 						autoplay : true
 					}
 				};
@@ -241,7 +242,7 @@
 			{
 				$('.focus-overlay, .settings-container').remove();
 			},
-			update : {
+			update : {  /* update functions for settings which require live updating */
 				theme : (theme) =>
 				{
 					main.theme.set(theme === false ? null : theme, false);
@@ -276,6 +277,7 @@
 			options : {
 				gather : (container) =>
 				{
+					/* gather set settings data */
 					var elements = ['select', 'input[type="checkbox"]'], data = {};
 
 					container.find(elements.join(',')).each((i, e) =>
@@ -302,6 +304,7 @@
 				},
 				set : (data, client = null) =>
 				{
+					/* set gathered settings data */
 					if(!client) client = main.client.get();
 
 					Object.keys(data).forEach((key) =>
@@ -336,6 +339,7 @@
 
 							if(changed)
 							{
+								/* call the live update function (if any) for the changed settings */
 								if(is_main && main.settings.update.hasOwnProperty(option))
 								{
 									main.settings.update[option](value);
@@ -356,12 +360,14 @@
 			},
 			apply : (e, client = null) =>
 			{
+				/* apply settings (gather and set settings, then close menu) */
 				if(!client) client = main.client.get();
 				var set = main.settings.options.set(main.settings.options.gather(e), client);
 				main.settings.close();
 			},
 			show : () =>
 			{
+				/* build the settings menu */
 				if($('.settings-container').length > 0) return;
 
 				if($('.focus-overlay').length === 0) $('<div/>', { class : 'focus-overlay' })
@@ -714,7 +720,13 @@
 
 				var formatSince = (seconds) =>
 				{
-					if(seconds === 0) { return 'Now'; } else if(seconds < 0) { return false; }
+					if(seconds === 0)
+					{
+						return 'Now';
+					} else if(seconds < 0)
+					{
+						return false;
+					}
 
 					var t = {
 						'year' : 31556926,
@@ -989,7 +1001,8 @@
 
 	$(document).on('click', 'body > div.menu #filter', (e) =>
 	{
-		main.filter.toggle(); main.menu.toggle();
+		main.filter.toggle();
+		main.menu.toggle();
 	});
 
 	$(document).on('click', 'body > div.menu #settings', (e) =>
@@ -1002,7 +1015,8 @@
 	{
 		$(document).on('click', 'body > div.menu #gallery', (e) =>
 		{
-			main.gallery.load(null); main.menu.toggle(false);
+			main.gallery.load(null);
+			main.menu.toggle(false);
 		});
 
 		$('tbody tr.file a.preview').on('click', (e) =>
@@ -1114,14 +1128,14 @@
 		var menu = main.menu.create();
 
 		menu.css({
-			top : $('body > div.top-bar').outerHeight() + 'px',
+			top : $('body > div.top-bar').innerHeight() + 'px',
 			visibility : 'unset',
 			display : 'none'
 		});
 
 		if(config.mobile === false && config.preview.enabled === true)
 		{
-			var preview = new $.fn.imagePreview({
+			main.store.preview.main = new $.fn.imagePreview({
 				elements: ['a.preview', 'div.preview'],
 				hoverDelay : config.preview.hover_delay,
 				windowMargin: config.preview.window_margin,
@@ -1132,14 +1146,20 @@
 				}
 			});
 
+			$(main.store.preview.main).on('loaded', (e, data) =>
+			{
+				if(data)
+				{
+					if(config.debug)
+					{
+						console.log('preview_loaded', data);
+					}
+				}
+			});
+
 			if(config.preview.cursor_indicator === true)
 			{
-				$(preview).on('load', (e, data) =>
-				{
-					if(config.debug) console.log('load', data);
-				});
-
-				$(preview).on('loadChange', (e, state) =>
+				$(main.store.preview.main).on('loadChange', (e, state) =>
 				{
 					$('body > table tr.file a.preview').css('cursor', state ? 'progress' : 'pointer');
 				});

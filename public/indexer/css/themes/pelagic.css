@@ -2,18 +2,14 @@
 
 :root
 {
-  --color-gallery-border: #161616de;
-
   --color-gallery-link-download: #629dc8;
   --color-gallery-link-download-hover: #66a3d0;
-
-  --color-border-main: #232222;
 
   --color-link-download: #629dc8;
   --color-link-download-visited: #6878b7;
 
-  --color-link-file: #efd5e1;
-  --color-link-file-visited: #c2acc2;
+  --color-link-file: #efdfde;
+  --color-link-file-visited: #bcadac;
 
   --color-link-media-file: #629dc8;
   --color-link-media-file-hover: #629dc8;
@@ -22,10 +18,7 @@
   --color-link-dir-regular: #ff9547;
   --color-link-dir-parent: #ffc720;
 
-  --color-background-gallery-list-selected: #0490b0;
-  --color-background-gallery-list-selected-hover: #0490b0;
+  --color-background-gallery-list-selected: rgba(0, 172, 255, 0.35);
+  --color-background-gallery-list-selected-hover: rgba(0, 172, 255, 0.35);
   --color-border-gallery-list-selected: #fff;
-  --width-border-gallery-list-selected: 5px;
-
-  --gallery-blur: blur(3px);
 }

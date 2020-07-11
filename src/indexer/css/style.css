@@ -12,8 +12,9 @@
 {
 	--height-gallery-top-bar: 31px;
 
-	--color-background-body: #171717;
+	--color-background-body: #181818;
 	--color-background-table: #191919;
+	--color-body: #fff;
 
 	--color-gallery-border: #161616de;
 
@@ -35,13 +36,24 @@
 	--color-link-dir-regular: #e93333;
 	--color-link-dir-parent: #feac16;
 
+	--color-gallery-list-item: #fff;
+	--color-gallery-list-item-selected: #fff;
+
 	--color-background-gallery-list-selected: #1b3b88;
 	--color-background-gallery-list-selected-hover: #234597;
+
 	--color-border-gallery-list-selected: #fbfcff;
 	--width-border-gallery-list-selected: 5px;
 
-	--color-gallery-list-item: #fff;
-	--color-gallery-list-item-selected: #fff;
+	--color-gallery-list-item-hover: auto;
+	--color-background-gallery-list-item-hover: #1f1f1f6b;
+
+	--color-gallery-topbar: #fff;
+
+	--color-background-gallery-container: rgba(0, 0, 0, 0.5);
+	--color-background-gallery-topbar: #181818ab;
+
+	--color-table-header: #fff;
 
 	--gallery-blur: blur(3px);
 }
@@ -79,7 +91,7 @@ body
 {
 	font-size: 13px;
 	background-color: var(--color-background-body);
-	color: #fff;
+	color: var(--color-body);
 	position: relative;
 	padding-top: calc(var(--height-gallery-top-bar) - 2px);
 	margin: 0;
@@ -100,7 +112,7 @@ body > div.path a
 {
 	font-style: normal;
 	font-weight: bold;
-	color: white;
+	color: #fff;
 	text-decoration: none;
 }
 
@@ -145,6 +157,11 @@ body > table
 body > table tbody tr:not(.parent):hover td
 {
 	background-color: #1c1c1c;
+}
+
+body > table thead tr th
+{
+	color: var(--color-table-header);
 }
 
 body > table tr th
@@ -367,7 +384,7 @@ body, html,
 	background-color: rgba(28, 28, 28, 0.975);
 	position: fixed;
 	top: 0;
-	box-shadow: 0px 0px 2px #0d0d0d;
+	box-shadow: 0px 0px 1px #0d0d0d;
 }
 
 .top-bar > .directory-info
@@ -780,7 +797,7 @@ select:not(.default):focus
 	max-width: 100vw;
 	z-index: 1000;
 
-	background-color: rgba(0, 0, 0, 0.5);
+	background-color: var(--color-background-gallery-container);
 }
 
 .gallery-container div.bar
@@ -788,11 +805,12 @@ select:not(.default):focus
 	height: calc(var(--height-gallery-top-bar) - 2px);
 	max-height: calc(var(--height-gallery-top-bar) - 2px);
 	min-height: calc(var(--height-gallery-top-bar) - 2px);
-	background-color: #181818ab;
+	background-color: var(--color-background-gallery-topbar);
 	border-bottom: 2px solid var(--color-gallery-border);
 	padding-top: 1px;
 	width: 100%;
 	display: table;
+	color: var(--color-gallery-topbar);
 }
 
 .gallery-container div.bar div
@@ -857,7 +875,7 @@ select:not(.default):focus
 
 .gallery-container div.bar .left a
 {
-	color: #fff;
+	color: var(--color-gallery-topbar);
 	text-decoration: none;
 }
 
@@ -1062,7 +1080,8 @@ select:not(.default):focus
 
 .gallery-container div.content-container .list table tr:not(.selected):hover
 {
-	background-color: #1f1f1f6b;
+	background-color: var(--color-background-gallery-list-item-hover);
+	color: var(--color-gallery-list-item-hover);
 }
 
 .gallery-container div.content-container .screen-nav
@@ -1141,4 +1160,9 @@ select:not(.default):focus
 		content: ''!important;
 		margin: none!important;
 	}
+}
+
+img#image-preview, video#video-preview
+{
+  box-shadow: 0px 0px 1px #0d0d0d;
 }

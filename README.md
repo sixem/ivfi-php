@@ -84,9 +84,9 @@ The Indexer can be customized by editing the config available inside of the [ind
 You can read the [CONFIG.md](CONFIG.md) to see a more detailed overview of the available options.
 
 # Source
-The files inside [/.source/](.source/) are **NOT** needed in order to run this script.
+The files inside [/src/](src/) are **NOT** needed in order to run this script.
 
-This directory contains the uncompressed (and untranspiled) source files of the script (.css, .js etc.), so you can use these files if you want to customize or edit the script in any way.
+This directory contains the uncompressed (and untranspiled) source files of the script (.css, .js etc.), so you can use these files if you want to customize, contribute or edit the script in any way.
 
 # Contributing
 You can contribute by submitting a pull request to the [dev](https://github.com/sixem/eyy-indexer/tree/dev) branch.

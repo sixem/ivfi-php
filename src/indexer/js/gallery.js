@@ -171,7 +171,7 @@
 				main.setBlur(bool); main.limitBody(bool);
 			}
 
-			var video = main.container.find('.media .wrapper video');
+			var video = main.container.find('.media .wrapper video'), table = main.container.find('.list table');
 
 			if(video.length > 0)
 			{
@@ -184,6 +184,11 @@
 					video[0].muted = true;
 					video[0].pause();
 				}
+			}
+
+			if(table.length > 0)
+			{
+				if(main.data.list_drag) main.data.list_drag.css('height', table[0].scrollHeight + 'px');
 			}
 		};
 
@@ -867,7 +872,7 @@
 			});
 
 			var list = $('<div/>', {
-				class : 'list' + (main.settings.list.reverse ? ' reversed' : '')
+				class : 'ns list' + (main.settings.list.reverse ? ' reversed' : '')
 			});
 
 			content

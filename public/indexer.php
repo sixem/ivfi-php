@@ -28,8 +28,9 @@ $config = array(
     'gallery' => array(
         'enabled' => true,
         'fade' => 0,
-        'reverse_options' => true,
-        'scroll_interval' => 50
+        'reverse_options' => false,
+        'scroll_interval' => 50,
+        'list_alignment' => 0
     ),
     'preview' => array(
         'enabled' => true,
@@ -54,7 +55,7 @@ $config = array(
 );
 
 /* Set default configuration values */
-$config = array_merge(array('format'=>array('title'=>'Index of %s','sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>true,'scroll_interval'=>50),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','gif','png','ico','svg','bmp'),'video'=>array('webm','mp4')),'filter'=>array('file'=>false,'directory'=>false),'themes'=>false,'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true), isset($config) && is_array($config) ? $config : array());
+$config = array_merge(array('format'=>array('title'=>'Index of %s','sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>true,'scroll_interval'=>50,'list_alignment'=>0),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','gif','png','ico','svg','bmp'),'video'=>array('webm','mp4')),'filter'=>array('file'=>false,'directory'=>false),'themes'=>false,'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true), isset($config) && is_array($config) ? $config : array());
 
 if($config['footer'] === true)
 {
@@ -742,7 +743,8 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
     'enabled' => $config['gallery']['enabled'],
     'reverse_options' => $config['gallery']['reverse_options'],
     'fade' => $config['gallery']['fade'],
-    'scroll_interval' => $config['gallery']['scroll_interval']
+    'scroll_interval' => $config['gallery']['scroll_interval'],
+    'list_alignment' => $config['gallery']['list_alignment']
   ),
   'extensions' => array(
     'image' => $config['extensions']['image'],
