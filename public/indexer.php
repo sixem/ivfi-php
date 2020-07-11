@@ -5,9 +5,10 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  1.1.4
+ * @version  1.1.5
  */
 
+/* Configuration */
 $config = array(
     'format' => array(
         'title' => 'Index of %s',
@@ -27,8 +28,9 @@ $config = array(
     'gallery' => array(
         'enabled' => true,
         'fade' => 0,
-        'reverse_options' => true,
-        'scroll_interval' => 50
+        'reverse_options' => false,
+        'scroll_interval' => 50,
+        'list_alignment' => 0
     ),
     'preview' => array(
         'enabled' => true,
@@ -45,11 +47,15 @@ $config = array(
         'file' => false,
         'directory' => false
     ),
+    'themes' => false,
     'allow_direct_access' => false,
     'path_checking' => 'strict',
     'footer' => true,
     'debug' => false
 );
+
+/* Set default configuration values */
+$config = array_merge(array('format'=>array('title'=>'Index of %s','sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>true,'scroll_interval'=>50,'list_alignment'=>0),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','gif','png','ico','svg','bmp'),'video'=>array('webm','mp4')),'filter'=>array('file'=>false,'directory'=>false),'themes'=>false,'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true), isset($config) && is_array($config) ? $config : array());
 
 if($config['footer'] === true)
 {
@@ -62,6 +68,16 @@ if($config['debug'] === true)
   ini_set('display_startup_errors', 1);
 
   error_reporting(E_ALL);
+}
+
+if($config['themes'] && $config['themes'][0] !== '/')
+{
+  $config['themes'] = ('/' . $config['themes']);
+}
+
+if(substr($config['themes'], -1) !== '/')
+{
+  $config['themes'] = ($config['themes'] . '/');
 }
 
 class Indexer
@@ -80,6 +96,7 @@ class Indexer
       $this->relative = dirname(__FILE__);
     }
 
+    $this->client = isset($options['client']) ? $options['client'] : NULL;
     $this->allow_direct = isset($options['allow_direct_access']) ? $options['allow_direct_access'] : true;
     $this->path = rtrim(self::joinPaths($this->relative, $requested), '/');
     $this->timestamp = time();
@@ -134,15 +151,15 @@ class Indexer
         }
     } else {
         $this->types = array(
-            'jpg' => 'image',
-            'jpeg' => 'image',
-            'gif' => 'image',
-            'png' => 'image',
-            'ico' => 'image',
-            'svg' => 'image',
-            'bmp' => 'image',
-            'webm' => 'video',
-            'mp4' => 'video'
+          'jpg' => 'image',
+          'jpeg' => 'image',
+          'gif' => 'image',
+          'png' => 'image',
+          'ico' => 'image',
+          'svg' => 'image',
+          'bmp' => 'image',
+          'webm' => 'video',
+          'mp4' => 'video'
         );
     }
 
@@ -167,7 +184,7 @@ class Indexer
   public function buildTable($sorting = false, $sort_items = 0, $sort_type = 'modified', $use_mb = false)
   {
     $cookies = array(
-      'client_timezone_offset' => intval(self::getCookie('ei-client_timezone_offset', 0))
+      'timezone_offset' => intval(is_array($this->client) ? (isset($this->client['timezone_offset']) ? $this->client['timezone_offset'] : 0) : 0)
     );
 
     $script_name = basename(__FILE__);
@@ -181,7 +198,7 @@ class Indexer
     );
 
     $timezone = array(
-      'offset' => $cookies['client_timezone_offset'] > 0 ? -$cookies['client_timezone_offset'] * 60 : abs($cookies['client_timezone_offset']) * 60
+      'offset' => $cookies['timezone_offset'] > 0 ? -$cookies['timezone_offset'] * 60 : abs($cookies['timezone_offset']) * 60
     );
 
     $offset_hours = (($timezone['offset'] / 60) / 60);
@@ -353,7 +370,7 @@ class Indexer
 
   private function getFiles()
   {
-    return scandir($this->path);
+    return scandir($this->path, SCANDIR_SORT_NONE);
   }
 
   private function removeDotSegments($input)
@@ -522,7 +539,7 @@ class Indexer
     return $needle === '' || strrpos($haystack, $needle, - strlen($haystack)) !== false;
   }
 
-  private function joinPaths(...$params)
+  public function joinPaths(...$params)
   {
     $paths = array();
 
@@ -535,9 +552,12 @@ class Indexer
   }
 }
 
+$client =  isset($_COOKIE['ei-client']) ? $_COOKIE['ei-client'] : NULL;
+if($client) $client = json_decode($client, true);
+
 $cookies = array(
-  'sort_row' => isset($_COOKIE['ei-sort_row']) ? $_COOKIE['ei-sort_row'] : NULL,
-  'sort_ascending' => isset($_COOKIE['ei-sort_ascending']) ? $_COOKIE['ei-sort_ascending'] : NULL
+  'sort_row' => is_array($client) ? (isset($client['sort']['row']) ? $client['sort']['row'] : NULL) : NULL,
+  'sort_ascending' => is_array($client) ? (isset($client['sort']['ascending']) ? $client['sort']['ascending'] : NULL) : NULL
 );
 
 $sorting = array(
@@ -586,6 +606,7 @@ try
           'format' => array(
               'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
           ),
+          'client' => $client,
           'filter' => $config['filter'],
           'extensions' => $config['extensions'],
           'path_checking' => strtolower($config['path_checking']),
@@ -619,6 +640,25 @@ $counts = array(
     'files' => count($data['files']),
     'directories' => count($data['directories'])
 );
+
+$themes = array();
+
+if($config['themes'])
+{
+  $directory = rtrim($indexer->joinPaths($base_path, $config['themes']), '/');
+
+  if(is_dir($directory))
+  {
+    foreach(preg_grep('~\.css$~', scandir($directory, SCANDIR_SORT_NONE)) as $theme)
+    {
+      if($theme[0] != '.') array_push($themes, substr($theme, 0, strrpos($theme, '.')));
+    }
+  }
+
+  if(count($themes) > 0) array_unshift($themes, 'default');
+}
+
+$current_theme = count($themes) > 0 && is_array($client) && isset($client['theme']) ? (in_array($client['theme'], $themes) ? $client['theme'] : NULL) : NULL;
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -630,16 +670,19 @@ $counts = array(
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
     <link rel="stylesheet" type="text/css" href="/indexer/css/style.css">
+    <?=$current_theme ? '<link rel="stylesheet" type="text/css" href="' . $config['themes'] . $current_theme . '.css">' . PHP_EOL : ''?>
 
   </head>
 
   <body class="directory">
 
     <div class="top-bar">
-        <div class="extend ns">+</div>
-        <div data-count="size"><?=$data['size']['readable'];?></div>
-        <div <?=$data['recent']['file'] !== 0 ? 'title="Newest: ' . $data['recent']['file'] . '" ' : '';?>data-count="files"><?=$counts['files'] . ($counts['files'] === 1 ? ' file' : ' files');?></div>
-        <div <?=$data['recent']['directory'] !== 0 ? 'title="Newest: ' . $data['recent']['directory'] . '" ' : '';?>data-count="directories"><?=$counts['directories'] . ($counts['directories'] === 1 ? ' directory' : ' directories');?></div>
+        <div class="extend ns">&#x25BE;</div>
+        <div class="directory-info">
+          <div data-count="size"><?=$data['size']['readable'];?></div>
+          <div <?=$data['recent']['file'] !== 0 ? 'title="Newest: ' . $data['recent']['file'] . '" ' : '';?>data-count="files"><?=$counts['files'] . ($counts['files'] === 1 ? ' file' : ' files');?></div>
+          <div <?=$data['recent']['directory'] !== 0 ? 'title="Newest: ' . $data['recent']['directory'] . '" ' : '';?>data-count="directories"><?=$counts['directories'] . ($counts['directories'] === 1 ? ' directory' : ' directories');?></div>
+        </div>
     </div>
 
     <div class="path">Index of <?=$indexer->makePathClickable($indexer->getCurrentDirectory());?></div>
@@ -657,15 +700,19 @@ $counts = array(
   <?=$contents;?>
 </table>
 
+<div class="bottom">
+
 <?=($config['footer'] === true) ? sprintf(
-    '<div class="bottom">Page generated in %f seconds<div>Browsing %s @ <a href="/">%s</a></div></div>',
+    '  <div>Page generated in %f seconds</div><div>Browsing <span>%s</span> @ <a href="/">%s</a></div>',
     (microtime(true) - $render), $indexer->getCurrentDirectory(), $_SERVER['SERVER_NAME']
 ) : '';?>
+
+</div>
 
 <div class="filter-container">
     <div>
         <input type="text" placeholder="Search .." value="">
-        <div class="status"></div>
+        <div class="status" data-view="desktop"></div>
     </div>
     <div class="close">
         <span>[Close]</span>
@@ -696,12 +743,19 @@ $counts = array(
     'enabled' => $config['gallery']['enabled'],
     'reverse_options' => $config['gallery']['reverse_options'],
     'fade' => $config['gallery']['fade'],
-    'scroll_interval' => $config['gallery']['scroll_interval']
+    'scroll_interval' => $config['gallery']['scroll_interval'],
+    'list_alignment' => $config['gallery']['list_alignment']
   ),
   'extensions' => array(
     'image' => $config['extensions']['image'],
     'video' => $config['extensions']['video']
   ),
+  'themes' => array(
+    'path' => $config['themes'],
+    'pool' => $themes,
+    'set' => $current_theme ? $current_theme : 'default'
+  ),
+  'format' => array_intersect_key($config['format'], array_flip(array('sizes'))),
   'timestamp' => $indexer->timestamp,
   'debug' => $config['debug'],
   'mobile' => false

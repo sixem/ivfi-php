@@ -2,7 +2,9 @@
 
 Here is an overview of what each configurable option does.
 
-These options can be found at the top of the [indexer.php](https://github.com/sixem/eyy-indexer/blob/master/public/indexer.php) file.
+These options can be found at the top of the [indexer.php](public/indexer.php) file.
+
+Some of these settings can be changed by the client/user, these are only values for the script to use as defaults.
 
 ## Format
 | Key | Type | Default | Description |
@@ -34,8 +36,9 @@ The gallery plugin will display a gallery of the images and videos inside the cu
 |-----|------|---------|-------------|
 | `enabled` | Boolean | `true` | Whether the gallery plugin should be enabled or not.
 | `fade` | Integer | `0` | Fade duration (`ms`) when navigating the gallery. `0` will disable the effect.
-| `reverse_options` | Boolean | `true` | Whether gallery images should have a reverse search option or not.
+| `reverse_options` | Boolean | `false` | Whether gallery images should have reverse search options or not.
 | `scroll_interval` | Integer | `50` | Adds a forced break between scroll events in the gallery (`ms`).
+| `list_alignment` | Integer | `0` | Gallery list alignment where `0` is `right` and `1` is `left`.
 
 ## Preview
 The preview plugin displays a preview of the image or video when hovering over the filename.
@@ -73,6 +76,7 @@ Setting the value to `false` will disable the filter.
 ## Other
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| `themes` | Boolean | `false` | Set to a path relative to the root directory containing `.css` files. Example: `/indexer/css/themes/` (This directory also contains a few included themes).
 | `allow_direct_access` | Boolean | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
 | `footer` | Boolean | `true` | Whether there should be a simple footer below the list of files or not.

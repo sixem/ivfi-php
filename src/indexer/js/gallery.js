@@ -1,11 +1,13 @@
 /**
+ * @license
+ * 
  * <gallery-mode-plugin>
  * 
  * A plugin for <eyy-indexer> [https://github.com/sixem/eyy-indexer]
  * 
  * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  0.21 (1.1.4)
+ * @version  0.21 (1.1.5)
  */
 
 (function($)
@@ -34,7 +36,12 @@
 			fade : 0,
 			mobile : false,
 			scroll_interval : 35,
-			show_list : true,
+			autoplay : true,
+			list : {
+				show : true,
+				reverse : false
+
+			},
 			reverse_options : true
 		}, main.settings, options);
 
@@ -62,9 +69,9 @@
 		main.isImage = (filename, ext = null) => main.settings.extensions.image.includes(ext ? ext : main.getExtension(filename));
 		main.isVideo = (filename, ext = null) => main.settings.extensions.video.includes(ext ? ext : main.getExtension(filename));
 
-		main.getScrollBarWidth = () =>
+		main.getScrollBarWidth = (force = false) =>
 		{
-			if($('body').height() < $(window).height()) return 0;
+			if(!force) if($('body').height() < $(window).height()) return 0;
 
 			var outer = $('<div>').css({
 				visibility: 'hidden', width: 100, overflow: 'scroll'
@@ -81,8 +88,9 @@
 
 		main.limitBody = (bool = true) =>
 		{
-			var body = $('body');
-			var scrollpadding = main.getScrollBarWidth();
+			var body = $('body'),
+				table = body.find('> table'),
+				scrollpadding = main.getScrollBarWidth();
 
 			if(bool === true)
 			{
@@ -92,13 +100,13 @@
 					'overflow' : body.css('overflow')
 				};
 
-				if(scrollpadding > 0) body.find('> table').css({
+				if(scrollpadding > 0) table.css({
 					'width' : main.data.isChrome ? '100%' : 'calc(100% - ' + scrollpadding + 'px)',
 					'padding-right' : scrollpadding + 'px'
 				});
 
 				body.css({
-    				'max-height' : 'calc(100vh - var(--gallery-top-bar-height))',
+    				'max-height' : 'calc(100vh - var(--height-gallery-top-bar))',
     				'overflow' : 'hidden'
     			});
 			} else {
@@ -111,7 +119,7 @@
     				});
 				}
 
-				body.find('> table').css({
+				table.css({
 					'width' : '100%',
 					'padding-right' : 'unset'
 				});
@@ -163,7 +171,7 @@
 				main.setBlur(bool); main.limitBody(bool);
 			}
 
-			var video = main.container.find('.media .wrapper video');
+			var video = main.container.find('.media .wrapper video'), table = main.container.find('.list table');
 
 			if(video.length > 0)
 			{
@@ -171,11 +179,16 @@
 				{
 					video[0].currentTime = 0;
 					video[0].muted = false;
-					video[0].play();
+					video[0][main.settings.autoplay ? 'play' : 'pause']();
 				} else if(bool === false) {
 					video[0].muted = true;
 					video[0].pause();
 				}
+			}
+
+			if(table.length > 0)
+			{
+				if(main.data.list_drag) main.data.list_drag.css('height', table[0].scrollHeight + 'px');
 			}
 		};
 
@@ -223,7 +236,9 @@
 
 			items.forEach((data) => table.append(`<tr title="${data.name}"><td>${data.name}</td></tr>`));
 
-			main.data.list_drag.css('height', table[0].scrollHeight + 'px');
+			main.data.list_drag.css({
+				'height' : table[0].scrollHeight + 'px'
+			});
 
 			return table;
 		};
@@ -358,11 +373,14 @@
 
 		main.createVideo = (extension) =>
 		{
-			var video = $('<video/>', {
+			var attributes = {
 				controls : '',
-				autoplay : '',
 				loop : ''
-			});
+			};
+
+			if(main.settings.autoplay) attributes.autoplay = '';
+
+			var video = $('<video/>', attributes);
 
 			var source = $('<source>', {
 				type : 'video/' + extension, src : ''
@@ -376,6 +394,8 @@
 			var wrapper, video, source, reverse;
 
 			wrapper = main.container.find('.media .wrapper');
+
+			if(main.settings.fade > 0) wrapper.hide();
 
 			var applyChange = () =>
 			{
@@ -577,10 +597,13 @@
 
 		main.toggleList = (e = null) =>
 		{
-			var list = main.container.find('.list'), visible = list.is(':visible');
+			var list = main.container.find('.list'), visible = list.is(':visible'), client = JSON.parse(Cookies.get('ei-client'));
 
-			Cookies.set('ei-gallery_list-state', visible ? 0 : 1, {
-				sameSite : 'lax'
+			client.gallery.list_state = (!visible ? 1 : 0);
+
+			Cookies.set('ei-client', JSON.stringify(client), {
+				sameSite : 'lax',
+				expires : 365
 			});
 
 			e = (!e ? $('.gallery-container div.bar .right span[data-action="toggle"]') : e);
@@ -676,7 +699,8 @@
 
 					if(x < window_width)
 					{
-						var width = window_width - e.originalEvent.clientX;
+						var width = main.settings.list.reverse ? (x + main.data.scrollbar_width) : (window_width - x);
+
 						main.data.list.css('width', width + 'px');
 					}
 				});
@@ -694,8 +718,13 @@
 
 					if(lw > 100)
 					{
-						Cookies.set('ei-gallery_list-width', lw, {
-							sameSite : 'lax'
+						var client = JSON.parse(Cookies.get('ei-client'));
+
+						client.gallery.list_width = lw;
+
+						Cookies.set('ei-client', JSON.stringify(client), {
+							sameSite : 'lax',
+							expires : 365
 						});
 					}
 				}
@@ -802,7 +831,7 @@
 			}).appendTo(bar);
 
 			if(!main.settings.mobile) $('<span/>', {
-				'data-action' : 'toggle', text : main.settings.show_list ? 'List-' : 'List+'
+				'data-action' : 'toggle', text : main.settings.list.show ? 'List-' : 'List+'
 			}).appendTo(bar);
 
 			$('<span/>', {
@@ -822,11 +851,17 @@
 				class : 'gallery-container',
 			}).prependTo('body');
 
-			var top = $('<div/>', { class : 'bar' }).appendTo(main.container);
+			var top = $('<div/>', {
+				class : 'bar'
+			}).appendTo(main.container);
 
-			$('<div/>', { class : 'left' }).appendTo(top);
+			$('<div/>', {
+				class : 'left'
+			}).appendTo(top);
 
-			main.barConstruct($('<div/>', { class : 'right' }).appendTo(top));
+			main.barConstruct($('<div/>', {
+				class : 'right'
+			}).appendTo(top));
 
 			var content = $('<div/>', {
 				class : 'content-container'
@@ -834,52 +869,60 @@
 
 			var media = $('<div/>', {
 				class : 'media'
-			}).appendTo(content);
+			});
 
 			var list = $('<div/>', {
-				class : 'list'
-			}).appendTo(content);
+				class : 'ns list' + (main.settings.list.reverse ? ' reversed' : '')
+			});
+
+			content
+			.append(main.settings.list.reverse ? list : media)
+			.append(main.settings.list.reverse ? media : list);
 
 			main.data.list_drag = $('<div/>', {
-				class : 'drag'
+				class : 'drag' + (main.settings.list.reverse ? ' reversed' : '')
 			}).appendTo(list);
 
 			main.data.list = list;
 			main.data.list_dragged = false;
+			main.data.scrollbar_width = main.getScrollBarWidth(true);
+
+			var client = JSON.parse(Cookies.get('ei-client'));
 
 			try
 			{
-				var width = JSON.parse(Cookies.get('ei-gallery_list-width').toLowerCase());
+				var width = JSON.parse(client.gallery.list_width.toString().toLowerCase());
 
 				if(width === false)
 				{
 					width = 'auto';
-				} else if(width > (window.innerWidth / 2))
+				} else if(parseInt(width) > (window.innerWidth / 2))
 				{
-					width = Math.floor(window.innerWidth / 2) + 'px';
+					client.gallery.list_width = Math.floor(window.innerWidth / 2);
 
-					Cookies.set('ei-gallery_list-width', width, {
-						sameSite : 'lax'
+					Cookies.set('ei-client', JSON.stringify(client), {
+						sameSite : 'lax',
+						expires : 365
 					});
 				}
 
 				main.data.list.css('width', width);
 			} catch (e) {
-				console.error(e);
+				client.gallery.list_width = false;
 
-				Cookies.set('ei-gallery_list-width', false, {
-					sameSite : 'lax'
+				Cookies.set('ei-client', JSON.stringify(client), {
+					sameSite : 'lax',
+					expires : 365
 				});
 			}
 
-			if(!main.settings.show_list) list.hide();
+			if(!main.settings.list.show) list.hide();
 
 			if(main.settings.mobile === true)
 			{
 				list.hide();
 
 				$('<span/>', {
-					text : '<'
 				}).appendTo(
 					$('<div/>', {
 						class : 'screen-nav left',
@@ -887,7 +930,6 @@
 				}).appendTo(content));
 
 				$('<span/>', {
-					text : '>'
 				}).appendTo(
 					$('<div/>', {
 						class : 'screen-nav right',
@@ -895,7 +937,13 @@
 				}).appendTo(content));
 			}
 
-			media.append('<div class="wrapper"></div>').append('<div class="loader">Loading ..</div>');
+			$('<div/>', {
+				class : 'wrapper'
+			}).appendTo(media);
+
+			$('<div/>', {
+				class : 'loader' + (main.settings.list.reverse ? ' reversed' : '')
+			}).html('Loading ..').appendTo(media);
 
 			$('<tbody/>').appendTo(
 				$('<table/>', {
@@ -913,7 +961,10 @@
 		if(main.items.length === 0) return false;
 
 		main.data.selected = {
-			src : null, ext : null, index : null, type : null
+			src : null,
+			ext : null,
+			index : null,
+			type : null
 		};
 
 		if(!main.exists())
@@ -933,27 +984,3 @@
     	return main;
     };
 }(jQuery));
-
-/**
- * Copyright (c) 2007-2015 Ariel Flesler - aflesler<a>gmail<d>com | http://flesler.blogspot.com
- * Licensed under MIT
- * @author Ariel Flesler
- * @version 2.1.2
- */
-
-;(function(f){"use strict";"function"===typeof define&&define.amd?define(["jquery"],f):"undefined"!==typeof module&&module.exports?module.exports=f(require("jquery")):f(jQuery)})(function($){"use strict";function n(a){return!a.nodeName||-1!==$.inArray(a.nodeName.toLowerCase(),["iframe","#document","html","body"])}function h(a){return $.isFunction(a)||$.isPlainObject(a)?a:{top:a,left:a}}var p=$.scrollTo=function(a,d,b){return $(window).scrollTo(a,d,b)};p.defaults={axis:"xy",duration:0,limit:!0};$.fn.scrollTo=function(a,d,b){"object"=== typeof d&&(b=d,d=0);"function"===typeof b&&(b={onAfter:b});"max"===a&&(a=9E9);b=$.extend({},p.defaults,b);d=d||b.duration;var u=b.queue&&1<b.axis.length;u&&(d/=2);b.offset=h(b.offset);b.over=h(b.over);return this.each(function(){function k(a){var k=$.extend({},b,{queue:!0,duration:d,complete:a&&function(){a.call(q,e,b)}});r.animate(f,k)}if(null!==a){var l=n(this),q=l?this.contentWindow||window:this,r=$(q),e=a,f={},t;switch(typeof e){case "number":case "string":if(/^([+-]=?)?\d+(\.\d+)?(px|%)?$/.test(e)){e= h(e);break}e=l?$(e):$(e,q);case "object":if(e.length===0)return;if(e.is||e.style)t=(e=$(e)).offset()}var v=$.isFunction(b.offset)&&b.offset(q,e)||b.offset;$.each(b.axis.split(""),function(a,c){var d="x"===c?"Left":"Top",m=d.toLowerCase(),g="scroll"+d,h=r[g](),n=p.max(q,c);t?(f[g]=t[m]+(l?0:h-r.offset()[m]),b.margin&&(f[g]-=parseInt(e.css("margin"+d),10)||0,f[g]-=parseInt(e.css("border"+d+"Width"),10)||0),f[g]+=v[m]||0,b.over[m]&&(f[g]+=e["x"===c?"width":"height"]()*b.over[m])):(d=e[m],f[g]=d.slice&& "%"===d.slice(-1)?parseFloat(d)/100*n:d);b.limit&&/^\d+$/.test(f[g])&&(f[g]=0>=f[g]?0:Math.min(f[g],n));!a&&1<b.axis.length&&(h===f[g]?f={}:u&&(k(b.onAfterFirst),f={}))});k(b.onAfter)}})};p.max=function(a,d){var b="x"===d?"Width":"Height",h="scroll"+b;if(!n(a))return a[h]-$(a)[b.toLowerCase()]();var b="client"+b,k=a.ownerDocument||a.document,l=k.documentElement,k=k.body;return Math.max(l[h],k[h])-Math.min(l[b],k[b])};$.Tween.propHooks.scrollLeft=$.Tween.propHooks.scrollTop={get:function(a){return $(a.elem)[a.prop]()}, set:function(a){var d=this.get(a);if(a.options.interrupt&&a._last&&a._last!==d)return $(a.elem).stop();var b=Math.round(a.now);d!==b&&($(a.elem)[a.prop](b),a._last=this.get(a))}};return p});
-
-/**
- * jquery.detectSwipe v2.1.3
- * jQuery Plugin to obtain touch gestures from iPhone, iPod Touch, iPad and Android
- * http://github.com/marcandre/detect_swipe
- * Based on touchwipe by Andreas Waltl, netCU Internetagentur (http://www.netcu.de)
- */
-
-!function(factory){"function"==typeof define&&define.amd?
-// AMD. Register as an anonymous module.
-define(["jquery"],factory):"object"==typeof exports?
-// Node/CommonJS
-module.exports=factory(require("jquery")):
-// Browser globals
-factory(jQuery)}(function($){$.detectSwipe={version:"2.1.2",enabled:"ontouchstart"in document.documentElement,preventDefault:!0,threshold:125};var startX,startY,isMoving=!1;function onTouchEnd(){this.removeEventListener("touchmove",onTouchMove),this.removeEventListener("touchend",onTouchEnd),isMoving=!1}function onTouchMove(e){if($.detectSwipe.preventDefault&&e.preventDefault(),isMoving){var dir,x=e.touches[0].pageX,y=e.touches[0].pageY,dx=startX-x,dy=startY-y,ratio=window.devicePixelRatio||1;Math.abs(dx)*ratio>=$.detectSwipe.threshold?dir=dx>0?"left":"right":Math.abs(dy)*ratio>=$.detectSwipe.threshold&&(dir=dy>0?"up":"down"),dir&&(onTouchEnd.call(this),$(this).trigger("swipe",dir).trigger("swipe"+dir))}}function onTouchStart(e){1==e.touches.length&&(startX=e.touches[0].pageX,startY=e.touches[0].pageY,isMoving=!0,this.addEventListener("touchmove",onTouchMove,!1),this.addEventListener("touchend",onTouchEnd,!1))}$.event.special.swipe={setup:function(){this.addEventListener&&this.addEventListener("touchstart",onTouchStart,!1)}},$.each(["left","up","down","right"],function(){$.event.special["swipe"+this]={setup:function(){$(this).on("swipe",$.noop)}}})});

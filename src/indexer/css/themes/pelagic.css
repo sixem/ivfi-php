@@ -1,0 +1,24 @@
+@charset "UTF-8";
+
+:root
+{
+  --color-gallery-link-download: #629dc8;
+  --color-gallery-link-download-hover: #66a3d0;
+
+  --color-link-download: #629dc8;
+  --color-link-download-visited: #6878b7;
+
+  --color-link-file: #efdfde;
+  --color-link-file-visited: #bcadac;
+
+  --color-link-media-file: #629dc8;
+  --color-link-media-file-hover: #629dc8;
+  --color-link-media-file-visited: #6878b7;
+
+  --color-link-dir-regular: #ff9547;
+  --color-link-dir-parent: #ffc720;
+
+  --color-background-gallery-list-selected: rgba(0, 172, 255, 0.35);
+  --color-background-gallery-list-selected-hover: rgba(0, 172, 255, 0.35);
+  --color-border-gallery-list-selected: #fff;
+}
