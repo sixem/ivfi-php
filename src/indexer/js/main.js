@@ -5,7 +5,7 @@
  * 
  * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  1.1.5
+ * @version  1.1.6
  */
 
 (() =>
@@ -696,30 +696,155 @@
 			}
 		},
 		dates : {
-			convert : (i) =>
+			/* https://github.com/kvz/locutus/blob/master/src/php/datetime/date.js
+			 * Copyright (c) 2007-2016 Kevin van Zonneveld (https://kvz.io) ) */
+			format : (format, timestamp) =>
 			{
-				return i < 10 ? '0' + i : i;
+  				var jsdate, f, txtWords = [
+    				'Sun', 'Mon', 'Tues', 'Wednes', 'Thurs', 'Fri', 'Satur',
+    				'January', 'February', 'March', 'April', 'May', 'June',
+    				'July', 'August', 'September', 'October', 'November', 'December'
+  				], formatChr = /\\?(.?)/gi;
+
+  				var formatChrCb = (t, s) => f[t] ? f[t]() : s;
+
+				var _pad = (n, c) =>
+				{
+    				n = String(n);
+
+    				while(n.length < c) n = '0' + n;
+
+					return n;
+				};
+
+  				f = {
+    				d: () => _pad(f.j(), 2),
+    				D: () => f.l().slice(0, 3),
+    				j: () => jsdate.getDate(),
+    				l: () => txtWords[f.w()] + 'day',
+    				N: () => f.w() || 7,
+    				S: () =>
+    				{
+      					var j = f.j();
+      					var i = j % 10;
+
+      					if(i <= 3 && parseInt((j % 100) / 10, 10) === 1) i = 0;
+
+      					return ['st', 'nd', 'rd'][i - 1] || 'th';
+    				},
+    				w: () => jsdate.getDay(),
+    				z: () =>
+    				{
+      					var a = new Date(f.Y(), f.n() - 1, f.j());
+      					var b = new Date(f.Y(), 0, 1);
+
+      					return Math.round((a - b) / 864e5);
+    				},
+    				W: () =>
+    				{
+      					var a = new Date(f.Y(), f.n() - 1, f.j() - f.N() + 3);
+      					var b = new Date(a.getFullYear(), 0, 4);
+
+      					return _pad(1 + Math.round((a - b) / 864e5 / 7), 2);
+    				},
+    				F: () => txtWords[6 + f.n()],
+    				m: () => _pad(f.n(), 2),
+    				M: () => f.F().slice(0, 3),
+    				n: () => jsdate.getMonth() + 1,
+    				t: () => (new Date(f.Y(), f.n(), 0)).getDate(),
+    				L: () =>
+    				{
+      					var j = f.Y();
+
+      					return j % 4 === 0 & j % 100 !== 0 | j % 400 === 0;
+    				},
+    				o: () =>
+    				{
+      					var n = f.n();
+      					var W = f.W();
+      					var Y = f.Y();
+
+      					return Y + (n === 12 && W < 9 ? 1 : n === 1 && W > 9 ? -1 : 0);
+    				},
+    				Y: () => jsdate.getFullYear(),
+    				y: () => f.Y().toString().slice(-2),
+    				a: () => jsdate.getHours() > 11 ? 'pm' : 'am',
+    				A: () => f.a().toUpperCase(),
+    				B: () =>
+    				{
+      					var H = jsdate.getUTCHours() * 36e2;
+      					var i = jsdate.getUTCMinutes() * 60;
+      					var s = jsdate.getUTCSeconds();
+
+      					return _pad(Math.floor((H + i + s + 36e2) / 86.4) % 1e3, 3);
+    				},
+    				g: () => f.G() % 12 || 12,
+    				G: () => jsdate.getHours(),
+    				h: () => _pad(f.g(), 2),
+    				H: () => _pad(f.G(), 2),
+    				i: () => _pad(jsdate.getMinutes(), 2),
+    				s: () => _pad(jsdate.getSeconds(), 2),
+    				u: () => _pad(jsdate.getMilliseconds() * 1000, 6),
+    				e: () =>
+    				{
+      					var msg = 'Not supported (see source code of date() for timezone on how to add support)'
+      					throw new Error(msg)
+    				},
+    				I: () =>
+    				{
+      					var a = new Date(f.Y(), 0);
+      					var c = Date.UTC(f.Y(), 0);
+      					var b = new Date(f.Y(), 6);
+      					var d = Date.UTC(f.Y(), 6);
+
+      					return ((a - c) !== (b - d)) ? 1 : 0;
+    				},
+    				O: () =>
+    				{
+      					var tzo = jsdate.getTimezoneOffset();
+      					var a = Math.abs(tzo);
+
+      					return (tzo > 0 ? '-' : '+') + _pad(Math.floor(a / 60) * 100 + a % 60, 4);
+    				},
+    				P: () =>
+    				{
+      					var O = f.O();
+
+      					return (O.substr(0, 3) + ':' + O.substr(3, 2));
+    				},
+    				T: () => 'UTC',
+    				Z: () => -jsdate.getTimezoneOffset() * 60,
+    				c: () => 'Y-m-d\\TH:i:sP'.replace(formatChr, formatChrCb),
+    				r: () => 'D, d M Y H:i:s O'.replace(formatChr, formatChrCb),
+    				U: () => jsdate / 1000 | 0
+  				};
+
+  				var _date = (format, timestamp) =>
+  				{
+    				jsdate = (timestamp === undefined ? new Date()
+      					: (timestamp instanceof Date) ? new Date(timestamp)
+      					: new Date(timestamp * 1000)
+    				);
+
+    				return format.replace(formatChr, formatChrCb);
+  				};
+
+  				return _date(format, timestamp);
 			},
 			load : () =>
 			{
 				var offsetGet = () =>
 				{
-					let date = new Date();
-					return date.getTimezoneOffset();
-				};
-
-				var formatDate = (ts) =>
-				{
-					var convert = main.dates.convert, date = new Date(ts * 1000);
-
-					return [
-						`${convert(date.getDate())}/${convert(date.getMonth()+1)}/${date.getFullYear().toString().substring(2)}`,
-						`${convert(date.getHours())}:${convert(date.getMinutes())}`
-					];
+					/* get client's UTC offset */
+					var date = new Date();
+					return (new Date()).getTimezoneOffset();
 				};
 
 				var formatSince = (seconds) =>
 				{
+					/* formats seconds to an 'ago' string.
+					 * example: formatSince(3720); returns 1 hour and 2 minutes ago. */
+
 					if(seconds === 0)
 					{
 						return 'Now';
@@ -754,38 +879,62 @@
 					return value;
 				};
 
-				var apply = (offset) =>
+				var apply = (offset, format = true) =>
 				{
-					$('tbody tr.directory > td:nth-child(2), tbody tr.file > td:nth-child(2)').each((index, item) =>
+					$('tbody tr.directory > td:nth-child(2), tbody tr.file > td[data-raw]:nth-child(2)').each((index, item) =>
 					{
 						item = $(item);
 
-						if(item[0].hasAttribute('data-raw'))
+						var timestamp = parseInt(item.attr('data-raw')),
+						since = formatSince(config.timestamp - timestamp),
+						span = (format === true ? $('<span/>') : item.find('> span'));
+
+						/* update the date formats if the offset has been changed or set for the first time */
+						if(format === true)
 						{
-							var [short, full] = formatDate(item.attr('data-raw'));
-							var offset_hours = offset > 0 ? -Math.abs(offset) : Math.abs(offset); offset_hours = offset_hours / 60;
-							var e = $('<span/>'), mt = formatSince(config.timestamp - parseInt(item.attr('data-raw')));
+							/* get UTC timestamp, then add offset. this fixes an issue where some dates are off by an hour when modifying timestamps directly */
+							timestamp = (Date.parse((new Date(timestamp * 1000)).toUTCString().slice(0, -4)) / 1000) + (offset.minutes * 60);
 
-							if(mt)
+							(config.format.date).forEach((f, index) =>
 							{
-								e.attr('title', `${mt} (UTC${(offset_hours > 0 ? '+' : '') + offset_hours})`);
-							}
+								if(index <= 1)
+								{
+									var element = $('<span/>', {
+										text : main.dates.format(f, timestamp)
+									});
 
-							e.html(short).append($('<span/>', {
-								'data-view' : 'desktop',
-								text : ' ' + full
-							}));
+									if(config.format.date.length > 1)
+									{
+										element.attr('data-view', index === 0 ? 'desktop' : 'mobile')
+									}
 
-							item.html(e);
+									span.append(element);
+								}
+							});
+
+							item.html(span);
 						}
+
+						if(since) span.attr('title', `${since} (UTC${(offset.hours > 0 ? '+' : '') + offset.hours})`);
 					});
 				};
 
-				var offset = offsetGet(), client = main.client.get();
-				client.timezone_offset = offset;
-				main.client.set(client);
+				var offset = offsetGet(), client = main.client.get(), update = client.timezone_offset != offset;
 
-				apply(offset);
+				/* only update if offset is changed or unset */
+				if(update)
+				{
+					client.timezone_offset = offset;
+					main.client.set(client);
+				}
+
+				offset = {
+					minutes : (offset > 0 ? -Math.abs(offset) : Math.abs(offset))
+				};
+
+				offset.hours = (offset.minutes / 60);
+
+				apply(offset, update);
 			}
 		},
 		sort : {

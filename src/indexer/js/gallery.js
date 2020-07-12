@@ -7,7 +7,7 @@
  * 
  * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  0.21 (1.1.5)
+ * @version  0.21 (1.1.6)
  */
 
 (function($)

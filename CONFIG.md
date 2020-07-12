@@ -10,6 +10,7 @@ Some of these settings can be changed by the client/user, these are only values 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `title` | String | `Index of %s` | Page title where  `%s` represents the current path.
+| `date` | String / Array | `array('d/m/y H:i', 'd/m/y')` | Date format as per [function.date.php](https://www.php.net/manual/en/function.date.php). Can be a string or an array. If it is an array then the first value will be shown on desktop devices and the second will be shown on mobile devices. It is a good idea to set a shorter mobile format because of the limited screen space.
 | `sizes` | Array | `' B', ' kB', ' MB', ' GB', ' TB'` | Size formats for when displaying filesizes.
 
 ## Icon
@@ -76,7 +77,7 @@ Setting the value to `false` will disable the filter.
 ## Other
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `themes` | Boolean | `false` | Set to a path relative to the root directory containing `.css` files. Example: `/indexer/css/themes/` (This directory also contains a few included themes).
+| `themes` | Boolean | `false` | Set to a path relative to the root directory containing `.css` files. Example: `/indexer/css/themes/` (This directory also contains a few included themes). Every `.css` in the set folder will be treated as a separate theme.
 | `allow_direct_access` | Boolean | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
 | `footer` | Boolean | `true` | Whether there should be a simple footer below the list of files or not.

@@ -5,13 +5,14 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  1.1.5
+ * @version  1.1.6
  */
 
 /* Configuration */
 $config = array(
     'format' => array(
         'title' => 'Index of %s',
+        'date' => array('d/m/y H:i', 'd/m/y'),
         'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')
     ),
     'icon' => array(
@@ -40,8 +41,8 @@ $config = array(
         'cursor_indicator' => true
     ),
     'extensions' => array(
-        'image' => array('jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'),
-        'video' => array('webm', 'mp4')
+        'image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp'),
+        'video'=> array('webm', 'mp4')
     ),
     'filter' => array(
         'file' => false,
@@ -54,8 +55,26 @@ $config = array(
     'debug' => false
 );
 
-/* Set default configuration values */
-$config = array_merge(array('format'=>array('title'=>'Index of %s','sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>true,'scroll_interval'=>50,'list_alignment'=>0),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','gif','png','ico','svg','bmp'),'video'=>array('webm','mp4')),'filter'=>array('file'=>false,'directory'=>false),'themes'=>false,'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true), isset($config) && is_array($config) ? $config : array());
+/* Default configuration values. Used if values from the above config are unset. */
+$defaults = array('format'=>array('title'=>'Index of %s','date'=>array('d/m/y H:i','d/m/y'),'sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>true,'scroll_interval'=>50,'list_alignment'=>0),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','gif','png','ico','svg','bmp'),'video'=>array('webm','mp4')),'filter'=>array('file'=>false,'directory'=>false),'themes'=>false,'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true);
+
+/* Set default configuration values if the config is missing any keys */
+foreach($defaults as $key => $value)
+{
+  if(!isset($config[$key]))
+  {
+    $config[$key] = $defaults[$key];
+  } else if(is_array($config[$key]))
+  {
+    foreach($defaults[$key] as $k => $v)
+    {
+      if(!isset($config[$key][$k]))
+      {
+        $config[$key][$k] = $defaults[$key][$k];
+      }
+    }
+  }
+}
 
 if($config['footer'] === true)
 {
@@ -70,14 +89,27 @@ if($config['debug'] === true)
   error_reporting(E_ALL);
 }
 
-if($config['themes'] && $config['themes'][0] !== '/')
+if($config['themes'])
 {
-  $config['themes'] = ('/' . $config['themes']);
+  if($config['themes'][0] !== '/')
+  {
+    $config['themes'] = ('/' . $config['themes']);
+  }
+
+  if(substr($config['themes'], -1) !== '/')
+  {
+    $config['themes'] = ($config['themes'] . '/');
+  }
 }
 
-if(substr($config['themes'], -1) !== '/')
+if(!is_array($config['format']['date']))
 {
-  $config['themes'] = ($config['themes'] . '/');
+  if(is_string($config['format']['date']))
+  {
+    $config['format']['date'] = array($config['format']['date']);
+  } else {
+    $config['format']['date'] = array('d/m/y H:i', 'd/m/y');
+  }
 }
 
 class Indexer
@@ -175,10 +207,12 @@ class Indexer
 
     if(isset($options['format']['sizes']) && $options['format']['sizes'] !== NULL)
     {
-      $this->sizes = $options['format']['sizes'];
+      $this->format['sizes'] = $options['format']['sizes'];
     } else {
-      $this->sizes = array(' B', ' kB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB');
+      $this->format['sizes'] = array(' B', ' kB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB');
     }
+
+    $this->format['date'] = $options['format']['date'];
   }
 
   public function buildTable($sorting = false, $sort_items = 0, $sort_type = 'modified', $use_mb = false)
@@ -200,9 +234,6 @@ class Indexer
     $timezone = array(
       'offset' => $cookies['timezone_offset'] > 0 ? -$cookies['timezone_offset'] * 60 : abs($cookies['timezone_offset']) * 60
     );
-
-    $offset_hours = (($timezone['offset'] / 60) / 60);
-    $timezone['readable'] = ('UTC' . ($offset_hours > 0 ? '+' : '') . $offset_hours);
 
     $data = array(
       'files' => array(),
@@ -303,11 +334,9 @@ class Indexer
 
     foreach($data['directories'] as $dir)
     {
-      $modtitle = $dir['modified'][2] ? "{$dir['modified'][2]} ({$timezone['readable']})" : '';
-
       $op .= sprintf(
-        '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td data-raw="%s"><span title="%s">%s</span></td><td>-</td><td>-</td></tr>',
-        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][0], $modtitle, $dir['modified'][1]
+        '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td data-raw="%s"><span>%s</span></td><td>-</td><td>-</td></tr>',
+        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][0], $dir['modified'][1]
       );
 
       if($data['recent']['directory'] === 0 || $dir['modified'][0] > $data['recent']['directory'])
@@ -318,8 +347,6 @@ class Indexer
 
     foreach($data['files'] as $file)
     {
-      $modtitle = $file['modified'][2] ? "{$file['modified'][2]} ({$timezone['readable']})" : '';
-
       $data['size']['total'] = ($data['size']['total'] + $file['size'][0]);
 
       if($data['recent']['file'] === 0 || $file['modified'][0] > $data['recent']['file'])
@@ -338,8 +365,8 @@ class Indexer
       );
 
       $op .= sprintf(
-        '<td data-raw="%d"><span title="%s">%s</span></td>',
-        $file['modified'][0], $modtitle, $file['modified'][1]
+        '<td data-raw="%d"><span>%s</span></td>',
+        $file['modified'][0], $file['modified'][1]
       );
 
       $op .= sprintf(
@@ -453,39 +480,6 @@ class Indexer
     return $op;
   }
 
-  private function formatSince($seconds)
-  {
-    if($seconds === 0) { return 'Now'; } else if($seconds < 0) { return false; }
-
-    $t = array(
-      'year' => 31556926,
-      'month' => 2629743,
-      'week' => 604800,
-      'day' => 86000,
-      'hour' => 3600,
-      'minute' => 60,
-      'second' => 1
-    );
-
-    $index = 0; $count = count($t) - 1; $keys = array_keys($t);
-
-    foreach($t as $key => $i)
-    {
-      $index++;
-
-      if($seconds <= $i) continue;
-
-      $n = $count >= $index ? $keys[$index] : NULL;
-      $f = floor($seconds / $i);
-      $s = $n ? floor(($seconds - ($f * $i)) / $t[$n]) : 0;
-
-      return $f . ' ' . $key . ($f == 1 ? '' : 's') .
-      ($s > 0 ? (' and ' . $s . ' ' . $n . ($s == 1 ? '' : 's')) : '') . ' ago';
-    }
-
-    return false;
-  }
-
   private function formatDate($format, $stamp, $modifier = 0)
   {
     return gmdate($format, $stamp + $modifier);
@@ -495,10 +489,18 @@ class Indexer
   {
     $stamp = filemtime($path);
 
+    if(count($this->format['date']) > 1)
+    {
+      $format = sprintf('<\s\p\a\n \d\a\t\a-\v\i\e\w="\d\e\s\k\t\o\p">%s\<\/\s\p\a\n\>'.
+      '<\s\p\a\n \d\a\t\a-\v\i\e\w="\m\o\b\i\l\e">%s\<\/\s\p\a\n\>',
+      $this->format['date'][0], $this->format['date'][1]);
+    } else {
+      $format = $this->format['date'][0];
+    }
+
     return array(
       $stamp,
-      self::formatDate('d/m/y <\s\p\a\n \d\a\t\a-\v\i\e\w="\d\e\s\k\t\o\p">H:i\<\/\s\p\a\n\>', $stamp, $modifier),
-      self::formatSince($this->timestamp - $stamp)
+      self::formatDate($format, $stamp, $modifier)
     );
   }
 
@@ -522,14 +524,14 @@ class Indexer
 
     $factor = floor((strlen($bytes) - 1) / 3);
 
-    $x = @$this->sizes[$factor];
+    $x = @$this->format['sizes'][$factor];
 
     if($bytes > 104857600 || $factor == 0)
     {
       $decimals = 0;
     }
 
-    if($x === $this->sizes[1]) $decimals = 0;
+    if($x === $this->format['sizes'][1]) $decimals = 0;
 
     return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . $x;
   }
@@ -601,10 +603,11 @@ try
       urldecode($_SERVER['REQUEST_URI']),
       array(
           'path' => array(
-              'relative' => $base_path
+            'relative' => $base_path
           ),
           'format' => array(
-              'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
+            'date' => isset($config['format']['date']) ? $config['format']['date'] : NULL,
+            'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
           ),
           'client' => $client,
           'filter' => $config['filter'],
@@ -755,7 +758,7 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
     'pool' => $themes,
     'set' => $current_theme ? $current_theme : 'default'
   ),
-  'format' => array_intersect_key($config['format'], array_flip(array('sizes'))),
+  'format' => array_intersect_key($config['format'], array_flip(array('sizes', 'date'))),
   'timestamp' => $indexer->timestamp,
   'debug' => $config['debug'],
   'mobile' => false
