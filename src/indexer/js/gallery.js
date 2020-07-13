@@ -71,7 +71,7 @@
 
 		main.getScrollBarWidth = (force = false) =>
 		{
-			if(!force) if($('body').height() < $(window).height()) return 0;
+			if(!force) if($(document).height() <= $(window).height()) return 0;
 
 			var outer = $('<div>').css({
 				visibility: 'hidden', width: 100, overflow: 'scroll'
@@ -88,20 +88,19 @@
 
 		main.limitBody = (bool = true) =>
 		{
-			var body = $('body'),
-				table = body.find('> table'),
-				scrollpadding = main.getScrollBarWidth();
+			/* removes the scrollbar from the body (to avoid it showing when the gallery is open)
+			 * and adds a padding to it with the width of the scrollbar in order to avoid jumping elements. */
+
+			var body = $('body'), html = $('html'), scrollpadding = main.getScrollBarWidth();
 
 			if(bool === true)
 			{
 				main.data.body = {
 					'max-height' : body.css('max-height'),
-					'width' : body.css('width'),
 					'overflow' : body.css('overflow')
 				};
 
-				if(scrollpadding > 0) table.css({
-					'width' : main.data.isChrome ? '100%' : 'calc(100% - ' + scrollpadding + 'px)',
+				if(scrollpadding > 0) html.css({
 					'padding-right' : scrollpadding + 'px'
 				});
 
@@ -114,13 +113,11 @@
 				{
 					body.css({
     					'max-height' : main.data.body['max-height'],
-    					'width' : 'unset',
     					'overflow' : main.data.body.overflow
     				});
 				}
 
-				table.css({
-					'width' : '100%',
+				html.css({
 					'padding-right' : 'unset'
 				});
 			}
