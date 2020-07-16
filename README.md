@@ -1,7 +1,11 @@
-# eyy-indexer
+<p align="center">
+<img src="https://raw.githubusercontent.com/sixem/eyy-indexer/dev/logo.png">
+</p>
 
-<a href="https://github.com/sixem/eyy-indexer/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/eyy-indexer?color=37bd44&style=for-the-badge"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/eyy-indexer?style=for-the-badge"> <img src="https://img.shields.io/github/license/sixem/eyy-indexer?style=for-the-badge"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/eyy-indexer?style=for-the-badge">  
-\
+<p align="center">
+<a href="https://github.com/sixem/eyy-indexer/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/eyy-indexer?color=37bd44&style=for-the-badge"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/eyy-indexer?style=for-the-badge"> <img src="https://img.shields.io/github/license/sixem/eyy-indexer?style=for-the-badge"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/eyy-indexer?style=for-the-badge">
+</p>
+
 This is a simple file directory indexer / lister script written in PHP with some help from JavaScript.
 
 This Indexer is designed to be a more image and video friendly Indexer while still having most of the basic functions of any other Indexer or Directory Lister. It is also designed to have a retro and simple feel to it which is why it doesn't use any fancy CSS or icon packs.
