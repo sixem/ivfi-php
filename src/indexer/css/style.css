@@ -46,7 +46,7 @@
 	--width-border-gallery-list-selected: 5px;
 
 	--color-gallery-list-item-hover: auto;
-	--color-background-gallery-list-item-hover: #1f1f1f6b;
+	--color-background-gallery-list-item-hover: rgba(44, 54, 81, 0.20);
 
 	--color-gallery-topbar: #fff;
 
@@ -87,10 +87,14 @@ body, input, select, select > option
 	font-weight: normal;
 }
 
+body, html
+{
+	background-color: var(--color-background-body);
+}
+
 body
 {
 	font-size: 13px;
-	background-color: var(--color-background-body);
 	color: var(--color-body);
 	position: relative;
 	padding-top: calc(var(--height-gallery-top-bar) - 2px);
@@ -237,7 +241,7 @@ body > table tr.directory a
 
 body > table tr.file td:first-child
 {
-		padding-right: 5px;
+	padding-right: 5px;
 }
 
 body > table tr.file a:not(.preview)
@@ -383,7 +387,7 @@ body, html,
 	border-bottom: 1px solid #272727;
 	background-color: rgba(28, 28, 28, 0.975);
 	position: fixed;
-	top: 0;
+	top: 0; left: 0; right: 0;
 	box-shadow: 0px 0px 1px #0d0d0d;
 }
 
@@ -968,13 +972,45 @@ select:not(.default):focus
 	position: relative;
 }
 
+
+/* fit content */
+
+.gallery-container div.content-container .media .wrapper.fill
+{
+	height: calc(100vh - var(--height-gallery-top-bar) - 2px);
+}
+.gallery-container div.content-container .media .wrapper.fill .cover
+{
+	height: 100%;
+	/*
+	flex-direction: column;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	display: flex;
+	*/
+}
+.gallery-container div.content-container .media .wrapper.fill img,
+.gallery-container div.content-container .media .wrapper.fill video
+{
+	object-fit: contain;
+	height: 100%;
+	overflow: hidden;
+}
+.gallery-container div.content-container .media .wrapper.fill img
+{
+	width: 100%;
+}
+.gallery-container div.content-container .media .wrapper.fill video
+{
+	width: auto;
+}
+
 .gallery-container div.content-container .media .wrapper img,
 .gallery-container div.content-container .media .wrapper video
 {
 	object-fit: contain;
-
 	max-width: 100%;
-
 	display: none;
 }
 
@@ -990,21 +1026,15 @@ select:not(.default):focus
 	-webkit-transform: translateZ(0);
 }
 
-.gallery-container div.content-container .media .wrapper .pseudo
-{
-	max-height: 0px;
-	max-width: 0px;
-}
-
 .gallery-container div.content-container .list
 {
 	display: table-cell;
 
 	background-color: #151515a6;
 
-	max-width: 50vw;/*350px;*/
+	max-width: 50vw;
 	min-width: 275px;
-	width: auto;
+	width: 25vw;
 
 	height: calc(100vh - var(--height-gallery-top-bar) - 2px);
 

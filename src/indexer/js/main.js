@@ -27,21 +27,18 @@
 
 			return (e) =>
 			{
-				if(timer)
-				{
-					clearTimeout(timer);
-				}
-
+				if(timer) clearTimeout(timer);
 				timer = setTimeout(f, 100, e);
 			};
 		},
 		checkNested : (obj, ...args) =>
 		{
-			for (var i = 0; i < args.length; i++)
+			for(var i = 0; i < args.length; i++)
 			{
 				if(!obj || !obj.hasOwnProperty(args[i])) return false;
 				obj = obj[args[i]];
 			}
+
 			return true;
 		},
 		getReadableSize : (bytes = 0) =>
@@ -121,6 +118,7 @@
 					gallery : {
 						reverse_options : config.gallery.reverse_options,
 						list_alignment : config.gallery.list_alignment,
+						fit_content : config.gallery.fit_content,
 						autoplay : true
 					}
 				};
@@ -137,13 +135,24 @@
 						}
 					});
 
+					var update = false;
+
 					Object.keys(defaults).forEach((key) =>
 					{
 						Object.keys(defaults[key]).forEach((option) =>
 						{
-							if(!client[key].hasOwnProperty(option)) client[key][option] = defaults[key][option];
+							if(!client[key].hasOwnProperty(option))
+							{
+								client[key][option] = defaults[key][option];
+								update = true;
+							}
 						});
 					});
+
+					if(update)
+					{
+						main.client.set(client);
+					}
 				} catch (e) {
 					var client = {};
 
@@ -231,10 +240,13 @@
 				check : (options = {}, selected = null) =>
 				{
 					var checked = (selected !== null) ? selected() : false;
+
 					if(checked) options.checked = '';
+
 					var e = $('<input/>', Object.assign(options, {
 						type : 'checkbox'
 					})); e[0].checked = checked;
+
 					return e;
 				}
 			},
@@ -261,16 +273,41 @@
 							elements.forEach((e) => alignment === 0 ? $(e).removeClass('reversed') : $(e).addClass('reversed'));
 							var detached = $(elements[1]).detach(), media = ('.gallery-container div.content-container .media');
 							alignment === 1 ? detached.insertBefore(media) : detached.insertAfter(media);
-							(main.store.gallery).settings.list.reverse = (alignment === 0 ? false : true);
+							(main.store.gallery).store.list.reverse = (alignment === 0 ? false : true);
 						}
 					},
 					reverse_options : (value) =>
 					{
-						if(main.store.gallery) main.store.gallery.settings.reverse_options = value;
+						if(main.store.gallery) main.store.gallery.store.reverse_options = value;
 					},
 					autoplay : (value) =>
 					{
-						if(main.store.gallery) main.store.gallery.settings.autoplay = value;
+						if(main.store.gallery) main.store.gallery.store.autoplay = value;
+					},
+					fit_content : (value) =>
+					{
+						if(main.store.gallery)
+						{
+							main.store.gallery.store.fit_content = value;
+							var wrapper = $('.gallery-container div.content-container .media .wrapper');
+
+							if(wrapper && value)
+							{
+								wrapper.addClass('fill');
+
+								/* force height recalculation */
+								main.store.refresh = true;
+								main.store.selected = null;
+							} else if(wrapper)
+							{
+								wrapper.removeClass('fill');
+
+								['.cover', '.cover img', 'video'].forEach((e) => $(e).css({
+									height : '',
+									width : ''
+								}));
+							}
+						}
 					}
 				}
 			},
@@ -278,7 +315,8 @@
 				gather : (container) =>
 				{
 					/* gather set settings data */
-					var elements = ['select', 'input[type="checkbox"]'], data = {};
+					var elements = ['select', 'input[type="checkbox"]'],
+						data = {};
 
 					container.find(elements.join(',')).each((i, e) =>
 					{
@@ -408,9 +446,16 @@
 							}), 'List Alignment')); settings++;
 					}
 
-					[['Reverse Search', 'reverse_options', 'Toggle visibility of reverse search options on images.'],
-					['Autoplay Videos', 'autoplay', 'Toggle autoplaying of videos.']]
-					.forEach((e) =>
+					var sets = [];
+
+					/* toggleable gallery options (title, json key, description).*/
+					sets.push(
+						['Reverse Search', 'reverse_options', 'Toggle visibility of reverse search options on images.'],
+						['Autoplay Videos', 'autoplay', 'Toggle autoplaying of videos.'],
+						['Fit Content', 'fit_content', 'Force images and videos to fill the screen.']
+					);
+
+					sets.forEach((e) =>
 					{
 						var [label, key, description] = e;
 
@@ -711,9 +756,7 @@
 				var _pad = (n, c) =>
 				{
     				n = String(n);
-
     				while(n.length < c) n = '0' + n;
-
 					return n;
 				};
 
@@ -725,8 +768,8 @@
     				N: () => f.w() || 7,
     				S: () =>
     				{
-      					var j = f.j();
-      					var i = j % 10;
+      					var j = f.j(),
+      						i = j % 10;
 
       					if(i <= 3 && parseInt((j % 100) / 10, 10) === 1) i = 0;
 
@@ -735,15 +778,15 @@
     				w: () => jsdate.getDay(),
     				z: () =>
     				{
-      					var a = new Date(f.Y(), f.n() - 1, f.j());
-      					var b = new Date(f.Y(), 0, 1);
+      					var a = new Date(f.Y(), f.n() - 1, f.j()),
+      						b = new Date(f.Y(), 0, 1);
 
       					return Math.round((a - b) / 864e5);
     				},
     				W: () =>
     				{
-      					var a = new Date(f.Y(), f.n() - 1, f.j() - f.N() + 3);
-      					var b = new Date(a.getFullYear(), 0, 4);
+      					var a = new Date(f.Y(), f.n() - 1, f.j() - f.N() + 3),
+      						b = new Date(a.getFullYear(), 0, 4);
 
       					return _pad(1 + Math.round((a - b) / 864e5 / 7), 2);
     				},
@@ -760,9 +803,9 @@
     				},
     				o: () =>
     				{
-      					var n = f.n();
-      					var W = f.W();
-      					var Y = f.Y();
+      					var n = f.n(),
+      						W = f.W(),
+      						Y = f.Y();
 
       					return Y + (n === 12 && W < 9 ? 1 : n === 1 && W > 9 ? -1 : 0);
     				},
@@ -772,9 +815,9 @@
     				A: () => f.a().toUpperCase(),
     				B: () =>
     				{
-      					var H = jsdate.getUTCHours() * 36e2;
-      					var i = jsdate.getUTCMinutes() * 60;
-      					var s = jsdate.getUTCSeconds();
+      					var H = jsdate.getUTCHours() * 36e2,
+      						i = jsdate.getUTCMinutes() * 60,
+      						s = jsdate.getUTCSeconds();
 
       					return _pad(Math.floor((H + i + s + 36e2) / 86.4) % 1e3, 3);
     				},
@@ -792,17 +835,17 @@
     				},
     				I: () =>
     				{
-      					var a = new Date(f.Y(), 0);
-      					var c = Date.UTC(f.Y(), 0);
-      					var b = new Date(f.Y(), 6);
-      					var d = Date.UTC(f.Y(), 6);
+      					var a = new Date(f.Y(), 0),
+      						c = Date.UTC(f.Y(), 0),
+      						b = new Date(f.Y(), 6),
+      						d = Date.UTC(f.Y(), 6);
 
       					return ((a - c) !== (b - d)) ? 1 : 0;
     				},
     				O: () =>
     				{
-      					var tzo = jsdate.getTimezoneOffset();
-      					var a = Math.abs(tzo);
+      					var tzo = jsdate.getTimezoneOffset(),
+      						a = Math.abs(tzo);
 
       					return (tzo > 0 ? '-' : '+') + _pad(Math.floor(a / 60) * 100 + a % 60, 4);
     				},
@@ -868,8 +911,8 @@
 						var key = keys[index]; if(seconds <= t[key]) continue;
 
 						var n = count >= (index+1) ? keys[(index+1)] : null,
-						f = Math.floor(seconds / t[key]),
-						s = n ? Math.floor((seconds - (f * t[key])) / t[n]) : 0;
+							f = Math.floor(seconds / t[key]),
+							s = n ? Math.floor((seconds - (f * t[key])) / t[n]) : 0;
 
 						value = `${f} ${key}${f == 1 ? '' : 's'}` + (s > 0 ? (` and ${s} ${n}${s == 1 ? '' : 's'}`) : '') + ' ago';
 
@@ -886,14 +929,14 @@
 						item = $(item);
 
 						var timestamp = parseInt(item.attr('data-raw')),
-						since = formatSince(config.timestamp - timestamp),
-						span = (format === true ? $('<span/>') : item.find('> span'));
+							since = formatSince(config.timestamp - timestamp),
+							span = (format === true ? $('<span/>') : item.find('> span'));
 
 						/* update the date formats if the offset has been changed or set for the first time */
 						if(format === true)
 						{
 							/* get UTC timestamp, then add offset. this fixes an issue where some dates are off by an hour when modifying timestamps directly */
-							timestamp = (Date.parse((new Date(timestamp * 1000)).toUTCString().slice(0, -4)) / 1000) + (offset.minutes * 60);
+							timestamp = (Date.parse((new Date(timestamp * 1000)).toUTCString().slice(0, -4)) / 1000) + (offset.seconds);
 
 							(config.format.date).forEach((f, index) =>
 							{
@@ -919,7 +962,9 @@
 					});
 				};
 
-				var offset = offsetGet(), client = main.client.get(), update = client.timezone_offset != offset;
+				var offset = offsetGet(),
+					client = main.client.get(),
+					update = client.timezone_offset != offset;
 
 				/* only update if offset is changed or unset */
 				if(update)
@@ -933,6 +978,7 @@
 				};
 
 				offset.hours = (offset.minutes / 60);
+				offset.seconds = (offset.minutes * 60);
 
 				apply(offset, update);
 			}
@@ -977,15 +1023,31 @@
 		gallery : {
 			load : (index = 0) =>
 			{
-				if(config.debug) console.log('gallery.load =>', index);
 				if(!config.gallery.enabled) return false;
+				if(config.debug) console.log('gallery.load =>', index);
 
 				if(main.store.gallery && main.store.gallery !== false)
 				{
+					(main.store.gallery).store.continue.video = main.store.preview.video ? {
+						'src' : main.store.preview.video.find('source').attr('src'),
+						'time' : main.store.preview.video[0].currentTime
+					} : null;
+
+					main.store.preview.video = null;
+
 					let items = main.store.refresh ? main.getTableItems() : null;
-					if(items !== null && items.length === 0) return false;
-					main.store.gallery.show(true, index === null ? main.store.gallery.data.selected.index : index, items);
-					if(main.store.refresh) main.store.refresh = false;
+
+					if(items !== null && items.length === 0)
+					{
+						return false;
+					} else {
+						main.store.gallery.show(true, index === null ? main.store.gallery.data.selected.index : index, items);
+
+						if(main.store.refresh)
+						{
+							main.store.refresh = false;
+						}
+					}
 
 					return;
 				}
@@ -1011,10 +1073,17 @@
 					'mobile' : config.mobile,
 					'reverse_options' : main.checkNested(client, 'gallery', 'reverse_options') ? (client.gallery.reverse_options) : config.gallery.reverse_options,
 					'autoplay' : main.checkNested(client, 'gallery', 'autoplay') ? (client.gallery.autoplay) : config.gallery.autoplay,
+					'fit_content' : main.checkNested(client, 'gallery', 'fit_content') ? (client.gallery.fit_content) : config.gallery.fit_content,
 					'scroll_interval' : config.gallery.scroll_interval,
 					'list' : {
 						'show' : list_state == null ? true : (list_state ? true : false),
 						'reverse' : main.checkNested(client, 'gallery', 'list_alignment') ? (client.gallery.list_alignment === 0 ? false : true) : false
+					},
+					'continue' : {
+						'video' : main.store.preview.video ? {
+							'src' : main.store.preview.video.find('source').attr('src'),
+							'time' : main.store.preview.video[0].currentTime
+						} : null
 					}
 				});
 
@@ -1058,8 +1127,8 @@
 				if(parent.is(':hidden')) return true;
 
 				var url = item.attr('href'),
-				name = item.closest('td').data('raw'),
-				size = parent.find('td').eq(2).text();
+					name = item.closest('td').data('raw'),
+					size = parent.find('td').eq(2).text();
 
 				if(typeof url !== 'undefined' && typeof name !== 'undefined')
 				{
@@ -1073,8 +1142,8 @@
 			scroll : () =>
 			{
 				var path = $('body > div.path'),
-				top = $('div.top-bar > div.directory-info > div.quick-path'),
-				visible = $(window).scrollTop() < path.offset().top + path.outerHeight();
+					top = $('div.top-bar > div.directory-info > div.quick-path'),
+					visible = $(window).scrollTop() < path.offset().top + path.outerHeight();
 
 				if(!visible)
 				{
@@ -1262,7 +1331,18 @@
 
 	window.addEventListener('resize', main.debounce((e) =>
 	{
+		if(config.debug)
+		{
+			console.log('resized');
+		}
+
 		config.mobile = Modernizr.mq('(max-width: 640px)');
+
+		if(main.store.gallery)
+		{
+			(main.store.gallery).store.mobile = config.mobile;
+			(main.store.gallery).update.listWidth();
+		}
 	}));
 
 	$(document).ready(() =>
@@ -1299,10 +1379,14 @@
 			{
 				if(data)
 				{
+					main.store.preview.video = (data.itemType === 1 ? data.element : null);
+
 					if(config.debug)
 					{
 						console.log('preview_loaded', data);
 					}
+				} else {
+					main.store.preview.video = null;
 				}
 			});
 

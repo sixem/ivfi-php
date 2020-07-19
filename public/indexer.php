@@ -8,57 +8,79 @@
  * @version  1.1.6
  */
 
-/* Configuration */
+/**
+ * Configuration.
+ * A more in-depth overview can be found here:
+ * https://github.com/sixem/eyy-indexer/blob/master/CONFIG.md
+ */
 $config = array(
+    /* Formatting options. */
     'format' => array(
-        'title' => 'Index of %s',
-        'date' => array('d/m/y H:i', 'd/m/y'),
-        'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')
+        'title' => 'Index of %s', /* title format where %s is the current path. */
+        'date' => array('d/m/y H:i', 'd/m/y'), /* date formats (desktop, mobile). */
+        'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB') /* size formats. */
     ),
+    /* Favicon options. */
     'icon' => array(
-        'path' => '/favicon.png',
-        'mime' => 'image/png'
+        'path' => '/favicon.png', /* what favicon to use. */
+        'mime' => 'image/png' /* favicon mime type. */
     ),
+    /* Sorting options. Used as default until the client sets their own sorting settings. */
     'sorting' => array(
-        'enabled' => false,
-        'order' => SORT_ASC,
-        'types' => 0,
-        'sort_by' => 'name',
-        'use_mbstring' => false
+        'enabled' => false, /* whether the server should sort the items. */
+        'order' => SORT_ASC, /* sorting order. asc or desc. */
+        'types' => 0, /* what item types to sort. 0 = both. 1 = files only. 2 = directories only. */
+        'sort_by' => 'name', /* what to sort by. available options are name, modified, type and size. */
+        'use_mbstring' => false /* enabled mbstring when sorting. */
     ),
+    /* Gallery options. */
     'gallery' => array(
-        'enabled' => true,
-        'fade' => 0,
-        'reverse_options' => false,
-        'scroll_interval' => 50,
-        'list_alignment' => 0
+        'enabled' => true, /* whether the gallery plugin should be enabled. */
+        'fade' => 0, /* fade in ms when navigating */
+        'reverse_options' => false, /* reverse search options for images (when hovering over them). */
+        'scroll_interval' => 50, /* break in ms between scroll navigation events. */
+        'list_alignment' => 0, /* list alignment where 0 is right and 1 is left. */
+        'fit_content' => false /* whether the media should be forced to fill the screen space. */
     ),
+    /* Preview options. */
     'preview' => array(
-        'enabled' => true,
-        'static' => false,
-        'hover_delay' => 75,
-        'window_margin' => 0,
-        'cursor_indicator' => true
+        'enabled' => true, /* whether the preview plugin should be enabled. */
+        'static' => false, /* whether the preview should follow the cursor. */
+        'hover_delay' => 75, /* delay in ms before the preview is shown. */
+        'window_margin' => 0, /* force a px margin between the preview and the viewport edges. */
+        'cursor_indicator' => true /* displays a loading cursor while the preview is loading. */
     ),
+    /* Extension that should be marked as media.
+     * These extensions will have potential previews and be included in the gallery. */
     'extensions' => array(
-        'image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp'),
-        'video'=> array('webm', 'mp4')
+        'image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),
+        'video' => array('webm', 'mp4')
     ),
+    /* Filter what files or directories to show.
+     * Uses regular expressions. All names matching the regex will be shown.
+     * Setting the value to false will disable the respective filter. */
     'filter' => array(
         'file' => false,
         'directory' => false
     ),
+    /* Set to a path relative to the root directory (location of this file) containg .css files.
+     * Each .css file will be treated as a separate theme. */
     'themes' => false,
+    /* Whether this .php file should be directly accessible. */
     'allow_direct_access' => false,
+    /* Set to 'strict' or 'weak'.
+     * 'strict' uses realpath() to avoid backwards directory traversal whereas 'weak' uses a similar string-based approach. */
     'path_checking' => 'strict',
+    /* Whether the footer should be generated. */
     'footer' => true,
+    /* Enables console output in JS and PHP debugging. */
     'debug' => false
 );
 
-/* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('format'=>array('title'=>'Index of %s','date'=>array('d/m/y H:i','d/m/y'),'sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>true,'scroll_interval'=>50,'list_alignment'=>0),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','gif','png','ico','svg','bmp'),'video'=>array('webm','mp4')),'filter'=>array('file'=>false,'directory'=>false),'themes'=>false,'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true);
+/* Default configuration values. Used if values from the above config are missing / unset. */
+$defaults = array('format'=>array('title'=>'Index of %s','date'=>array('d/m/y H:i','d/m/y'),'sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>true,'scroll_interval'=>50,'list_alignment'=>0,'fit_content'=>false),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','gif','png','ico','svg','bmp'),'video'=>array('webm','mp4')),'filter'=>array('file'=>false,'directory'=>false),'themes'=>false,'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true);
 
-/* Set default configuration values if the config is missing any keys */
+/* Set default configuration values if the config is missing any keys. */
 foreach($defaults as $key => $value)
 {
   if(!isset($config[$key]))
@@ -747,7 +769,8 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
     'reverse_options' => $config['gallery']['reverse_options'],
     'fade' => $config['gallery']['fade'],
     'scroll_interval' => $config['gallery']['scroll_interval'],
-    'list_alignment' => $config['gallery']['list_alignment']
+    'list_alignment' => $config['gallery']['list_alignment'],
+    'fit_content' => $config['gallery']['fit_content']
   ),
   'extensions' => array(
     'image' => $config['extensions']['image'],

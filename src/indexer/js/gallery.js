@@ -7,7 +7,7 @@
  * 
  * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  0.21 (1.1.6)
+ * @version  0.22 (1.1.6)
  */
 
 (function($)
@@ -24,9 +24,9 @@
 			}
 		};
 
-		main.settings = $.extend({
+		main.store = $.extend({
 			extensions : {
-				image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'],
+				image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'],
 				video : ['mp4', 'webm']
 			},
 			console : true,
@@ -37,20 +37,23 @@
 			mobile : false,
 			scroll_interval : 35,
 			autoplay : true,
+			reverse_options : true,
+			fit_content : false,
 			list : {
 				show : true,
 				reverse : false
-
 			},
-			reverse_options : true
-		}, main.settings, options);
+			continue : {
+				video : null
+			}
+		}, main.store, options);
 
 		main.loadImage = (url) =>
 		{
 			return new Promise((resolve, reject) => {
 				let img = new Image();
 
-				img.addEventListener('load', (e) => resolve(url));
+				img.addEventListener('load', (e) => resolve([url, img]));
 
 				img.addEventListener('error', () =>
 				{
@@ -66,8 +69,8 @@
 
 		main.filterItems = (items) => items.filter((item, index) => main.isImage(item.name) || main.isVideo(item.name));
 
-		main.isImage = (filename, ext = null) => main.settings.extensions.image.includes(ext ? ext : main.getExtension(filename));
-		main.isVideo = (filename, ext = null) => main.settings.extensions.video.includes(ext ? ext : main.getExtension(filename));
+		main.isImage = (filename, ext = null) => main.store.extensions.image.includes(ext ? ext : main.getExtension(filename));
+		main.isVideo = (filename, ext = null) => main.store.extensions.video.includes(ext ? ext : main.getExtension(filename));
 
 		main.getScrollBarWidth = (force = false) =>
 		{
@@ -142,10 +145,10 @@
 		{
 			if(items)
 			{
-				if(main.settings.console) console.log('itemsUpdate', true);
+				if(main.store.console) console.log('itemsUpdate', true);
 
 				main.data.selected.index = null;
-				main.items = main.settings.filter ? main.filterItems(items) : items;
+				main.items = main.store.filter ? main.filterItems(items) : items;
 				main.populateTable(main.items);
 			}
 
@@ -158,26 +161,39 @@
 					main.container.find('.media .wrapper img, .media .wrapper video').hide();
 					main.navigate(index);
 				}
+
 				main.container.find('.list').scrollTo(main.container.find('> .list').find('tr').eq(index));
 			} else {
-				main.unbind(main.data.bound); main.container.hide();
+				main.unbind(main.data.bound);
+				main.container.hide();
 			}
 
-			if(main.settings.blur)
+			if(main.store.blur)
 			{
-				main.setBlur(bool); main.limitBody(bool);
+				main.setBlur(bool);
+				main.limitBody(bool);
 			}
 
-			var video = main.container.find('.media .wrapper video'), table = main.container.find('.list table');
+			var video = main.container.find('.media .wrapper video'),
+				table = main.container.find('.list table');
 
 			if(video.length > 0)
 			{
 				if(bool === true && video.is(':visible'))
 				{
-					video[0].currentTime = 0;
+					var current_time = 0;
+
+					if(main.store.continue.video && video.find('source').attr('src') == main.store.continue.video.src)
+					{
+						current_time = main.store.continue.video.time;
+						main.store.continue.video = null;
+					}
+
+					video[0].currentTime = current_time;
 					video[0].muted = false;
-					video[0][main.settings.autoplay ? 'play' : 'pause']();
-				} else if(bool === false) {
+					video[0][main.store.autoplay ? 'play' : 'pause']();
+				} else if(bool === false)
+				{
 					video[0].muted = true;
 					video[0].pause();
 				}
@@ -189,7 +205,8 @@
 			}
 		};
 
-		main.data.busy = null; main.data.busy_handle = null;
+		main.data.busy = null;
+		main.data.busy_handle = null;
 
 		main.tick = (loader) =>
 		{
@@ -259,6 +276,18 @@
 			return main;
 		};
 
+		main.update = {
+			listWidth : (wrapper = null) =>
+			{
+				if(!wrapper) wrapper = main.container.find('.media .wrapper');
+
+				var list = main.data.list ? main.data.list : (main.container.find('div.list')),
+					width = (main.store.mobile || !list || list.is(':hidden')) ? 0 : list.outerWidth();
+
+				wrapper[0].style.setProperty('--width-list', width + 'px');
+			}
+		};
+
 		main.getReverseOptions = (url) =>
 		{
 			url = encodeURIComponent(document.location.origin + url);
@@ -272,7 +301,7 @@
 
 		main.reverse = (trigger, show = true, fade = 0) =>
 		{
-			if(!main.settings.reverse_options) return false;
+			if(!main.store.reverse_options) return false;
 
 			var cover = main.container.find('.content-container .media .wrapper .cover');
 
@@ -319,9 +348,9 @@
 		/* sets the item info for the current item (topbar left) */
 		main.setItemInfo = (item, index, max) =>
 		{
-			if(main.settings.console) console.log('itemSet', item);
+			if(main.store.console) console.log('itemSet', item);
 
-			var name = main.settings.mobile ? main.shortenString(item.name, 30) : item.name;
+			var name = main.store.mobile ? main.shortenString(item.name, 30) : item.name;
 
 			main.container
 			.find('.bar > .right > a.download')
@@ -332,7 +361,7 @@
 			main.container.find('.bar > .left').html(
 				`<span>${index + 1} of ${max}</span>`+
 				` | <a href="${item.url}">${name}</a>`+
-				(item.hasOwnProperty('size') && !main.settings.mobile ? ` | <span>${item.size}</span>` : '')
+				(item.hasOwnProperty('size') && !main.store.mobile ? ` | <span>${item.size}</span>` : '')
 			);
 		};
 
@@ -375,7 +404,7 @@
 				loop : ''
 			};
 
-			if(main.settings.autoplay) attributes.autoplay = '';
+			if(main.store.autoplay) attributes.autoplay = '';
 
 			var video = $('<video/>', attributes);
 
@@ -386,23 +415,26 @@
 			return [video, source];
 		};
 
-		main.showItem = (type, element, src, init, index) =>
+		main.showItem = (type, element, src, init, index, data = null) =>
 		{
-			var wrapper, video, source, reverse;
+			var wrapper = main.container.find('.media .wrapper'), video, source, reverse;
 
-			wrapper = main.container.find('.media .wrapper');
-
-			if(main.settings.fade > 0) wrapper.hide();
+			if(main.store.fade > 0) wrapper.hide();
 
 			var applyChange = () =>
 			{
-				main.container.find(`.media .wrapper ${type === 0 ? 'video' : 'img'}`).hide();
+				var opp = wrapper.find(type === 0 ? 'video' : 'img').hide();
 
-				if(main.settings.fade > 0)
+				if(type === 1)
 				{
-					wrapper.stop().fadeOut(main.settings.fade, () =>
+					opp.parent('.cover').hide();
+				}
+
+				if(main.store.fade > 0)
+				{
+					wrapper.stop().fadeOut(main.store.fade, () =>
 					{
-						wrapper.stop().fadeIn(main.settings.fade);
+						wrapper.stop().fadeIn(main.store.fade);
 					});
 				} else {
 					wrapper.show();
@@ -417,9 +449,32 @@
 
 				if(type === 0)
 				{
-					video = main.container.find('.media .wrapper video');
+					video = wrapper.find('video');
+
+					if(main.store.console) console.log('itemDimensions', data.img.height, 'x', data.img.width);
+
+					if(main.store.fit_content)
+					{
+						var height;
+
+						if(data.img.width > data.img.height)
+						{
+							height = `calc(calc(100vw - var(--width-list)) / ${(data.img.width / data.img.height).toFixed(4)})`;
+							main.update.listWidth(wrapper);
+						} else {
+							height = '100%';
+						}
+
+						element.css({
+							width : 'auto',
+							height : height
+						});
+
+						element.parent('.cover').css('height', height);
+					}
 
 					element.attr('src', src).show();
+					element.parent('.cover').show();
 
 					if(video.length > 0)
 					{
@@ -443,8 +498,29 @@
 
 					video[0].load();
 
+					if(main.store.continue.video && src == main.store.continue.video.src)
+					{
+						video[0].currentTime = main.store.continue.video.time;
+						main.store.continue.video = null;
+					}
+
 					video[0].addEventListener('canplay', () =>
 					{
+						var height = video[0].videoHeight,
+							width = video[0].videoWidth;
+
+						if(main.store.console) console.log('itemDimensions', height, 'x', width);
+
+						if(main.store.fit_content)
+						{
+							main.update.listWidth(wrapper);
+
+							video.css({
+								width : 'auto',
+								height : width > height ? (`calc(calc(100vw - var(--width-list)) / ${(width / height).toFixed(4)})`) : ('100%')
+							});
+						}
+
 						video.show();
 
 						if(init === false)
@@ -464,7 +540,7 @@
 
 		main.navigate = (index, step = null) =>
 		{
-			if(main.settings.console) console.log('busyState', main.busy());
+			if(main.store.console) console.log('busyState', main.busy());
 
 			if(main.busy()) return false;
 
@@ -506,17 +582,21 @@
 				{
 					var cover = $('<div/>', {
 						class : 'cover'
-					}).prependTo(main.container.find('.media .wrapper'));
+					}).hide().prependTo(main.container.find('.media .wrapper'));
 
 					image = $('<img>').prependTo(cover);
 				}
 
 				main.loadImage(item.url)
-				.then((src) =>
+				.then((e) =>
 				{
+					let [src, img] = e;
+
 					if(main.data.selected.src === src)
 					{
-						main.showItem(0, image, src, init, index);
+						main.showItem(0, image, src, init, index, {
+							img
+						});
 					}
 				}).catch((err) =>
 				{
@@ -550,7 +630,7 @@
 
 		main.handleKey = (key, callback) =>
 		{
-			if(main.settings.console) console.log('handleKey', key);
+			if(main.store.console) console.log('handleKey', key);
 
 			if(key === 27)
 			{
@@ -605,12 +685,10 @@
 
 			e = (!e ? $('.gallery-container div.bar .right span[data-action="toggle"]') : e);
 
-			if(visible)
-			{
-				list.css('display', 'none'); e.text('List+');
-			} else {
-				list.css('display', 'table-cell'); e.text('List-');
-			}
+			e.text('List' + (visible ? '+' : '-'));
+			list.css('display', visible ? 'none' : 'table-cell');
+
+			main.update.listWidth();
 
 			return !visible;
 		}
@@ -687,8 +765,12 @@
 			main.data.list_drag.on('mousedown', (e) =>
 			{
 				main.data.list_dragged = true;
-				var window_width = window.innerWidth;
+
+				var window_width = window.innerWidth,
+					wrapper = main.container.find('.media .wrapper');
+
 				$('body').css('cursor', 'w-resize');
+				wrapper.css('pointer-events', 'none');
 
 				$(document).on('mousemove', '.gallery-container', (e) =>
 				{
@@ -696,7 +778,7 @@
 
 					if(x < window_width)
 					{
-						var width = main.settings.list.reverse ? (x + main.data.scrollbar_width) : (window_width - x);
+						var width = main.store.list.reverse ? (x + main.data.scrollbar_width) : (window_width - x);
 
 						main.data.list.css('width', width + 'px');
 					}
@@ -709,7 +791,10 @@
 				{
 					$(document).off('mousemove', '.gallery-container');
 
+					var wrapper = main.container.find('.media .wrapper');
+
 					$('body').css('cursor', '');
+					wrapper.css('pointer-events', 'auto');
 
 					var lw = parseInt(main.data.list.css('width').replace(/[^-\d\.]/g, ''));
 
@@ -723,6 +808,8 @@
 							sameSite : 'lax',
 							expires : 365
 						});
+
+						main.update.listWidth(wrapper);
 					}
 				}
 			});
@@ -757,7 +844,7 @@
 				if(!$(e.target).is('img, video, a')) main.show(false);
 			});
 
-			if(main.settings.reverse_options === true)
+			if(main.store.reverse_options === true)
 			{
 				$(document).on('mouseenter', 'div.gallery-container .media .wrapper .cover', (e) =>
 				{
@@ -770,7 +857,7 @@
 				main.reverse($(e.currentTarget), false);
 			});
 
-			if(main.settings.mobile === true)
+			if(main.store.mobile === true)
 			{
 				$('div.gallery-container').on('swipeleft', (e, data) => main.navigate(null, 1));
 				$('div.gallery-container').on('swiperight', (e, data) => main.navigate(null, -1));
@@ -778,15 +865,15 @@
 
 			$(document).on('DOMMouseScroll mousewheel', 'div.gallery-container .media', (e) =>
 			{
-				if(main.settings.scroll_interval > 0 && main.data.scrollbreak === true) return false;
+				if(main.store.scroll_interval > 0 && main.data.scrollbreak === true) return false;
 
 				main.navigate(null, (e.originalEvent.detail > 0 || e.originalEvent.wheelDelta < 0) ? 1 : -1);
 
-				if(main.settings.scroll_interval > 0)
+				if(main.store.scroll_interval > 0)
 				{
 					main.data.scrollbreak = true;
 
-					setTimeout(() => main.scrollBreak(), main.settings.scroll_interval);
+					setTimeout(() => main.scrollBreak(), main.store.scroll_interval);
 				}
 			});
 
@@ -816,19 +903,19 @@
 		main.barConstruct = (bar) =>
 		{
 			$('<a/>', {
-				text : main.settings.mobile ? 'Save' : 'Download', class : 'download', 'download' : '',
+				text : main.store.mobile ? 'Save' : 'Download', class : 'download', 'download' : '',
 			}).appendTo(bar);
 
-			if(!main.settings.mobile) $('<span/>', {
+			if(!main.store.mobile) $('<span/>', {
 				'data-action' : 'previous', text : 'Previous'
 			}).appendTo(bar);
 
-			if(!main.settings.mobile) $('<span/>', {
+			if(!main.store.mobile) $('<span/>', {
 				'data-action' : 'next', text : 'Next'
 			}).appendTo(bar);
 
-			if(!main.settings.mobile) $('<span/>', {
-				'data-action' : 'toggle', text : main.settings.list.show ? 'List-' : 'List+'
+			if(!main.store.mobile) $('<span/>', {
+				'data-action' : 'toggle', text : main.store.list.show ? 'List-' : 'List+'
 			}).appendTo(bar);
 
 			$('<span/>', {
@@ -869,15 +956,15 @@
 			});
 
 			var list = $('<div/>', {
-				class : 'ns list' + (main.settings.list.reverse ? ' reversed' : '')
+				class : 'ns list' + (main.store.list.reverse ? ' reversed' : '')
 			});
 
 			content
-			.append(main.settings.list.reverse ? list : media)
-			.append(main.settings.list.reverse ? media : list);
+			.append(main.store.list.reverse ? list : media)
+			.append(main.store.list.reverse ? media : list);
 
 			main.data.list_drag = $('<div/>', {
-				class : 'drag' + (main.settings.list.reverse ? ' reversed' : '')
+				class : 'drag' + (main.store.list.reverse ? ' reversed' : '')
 			}).appendTo(list);
 
 			main.data.list = list;
@@ -913,9 +1000,9 @@
 				});
 			}
 
-			if(!main.settings.list.show) list.hide();
+			if(!main.store.list.show) list.hide();
 
-			if(main.settings.mobile === true)
+			if(main.store.mobile === true)
 			{
 				list.hide();
 
@@ -935,11 +1022,11 @@
 			}
 
 			$('<div/>', {
-				class : 'wrapper'
+				class : 'wrapper' + (main.store.fit_content ? ' fill' : '')
 			}).appendTo(media);
 
 			$('<div/>', {
-				class : 'loader' + (main.settings.list.reverse ? ' reversed' : '')
+				class : 'loader' + (main.store.list.reverse ? ' reversed' : '')
 			}).html('Loading ..').appendTo(media);
 
 			$('<tbody/>').appendTo(
@@ -953,7 +1040,7 @@
 		}
 
 		main.container = $('div.gallery-container');
-		main.items = main.settings.filter ? main.filterItems(items) : items;
+		main.items = main.store.filter ? main.filterItems(items) : items;
 
 		if(main.items.length === 0) return false;
 
@@ -968,14 +1055,14 @@
 		{
 			initiate(() =>
 			{
-				if(main.settings.blur) main.setBlur(true).bind();
+				if(main.store.blur) main.setBlur(true).bind();
 			});
 		} else {
 			main.show(true);
 		}
 
 		main.navigate(
-			main.settings.start > (main.items.length - 1) ? (main.items.length - 1) : main.settings.start
+			main.store.start > (main.items.length - 1) ? (main.items.length - 1) : main.store.start
 		);
 
     	return main;

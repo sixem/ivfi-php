@@ -40,6 +40,7 @@ The gallery plugin will display a gallery of the images and videos inside the cu
 | `reverse_options` | Boolean | `false` | Whether gallery images should have reverse search options or not.
 | `scroll_interval` | Integer | `50` | Adds a forced break between scroll events in the gallery (`ms`).
 | `list_alignment` | Integer | `0` | Gallery list alignment where `0` is `right` and `1` is `left`.
+| `fit_content` | Boolean | `false` | Whether images and videos should be forced to fill the available screen space.
 
 ## Preview
 The preview plugin displays a preview of the image or video when hovering over the filename.
@@ -59,7 +60,7 @@ This basically means that the extensions included here will have previews and wi
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `image` | Array | `'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'` | Extensions marked as `image`.
+| `image` | Array | `'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'` | Extensions marked as `image`.
 | `video` | Array | `'webm', 'mp4'` | Extensions marked as `video`.
 
 ## Filter
