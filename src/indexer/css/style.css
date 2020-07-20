@@ -36,7 +36,7 @@
 	--color-link-dir-regular: #e93333;
 	--color-link-dir-parent: #feac16;
 
-	--color-gallery-list-item: #fff;
+	--color-gallery-list-item: #d4d4d4;
 	--color-gallery-list-item-selected: #fff;
 
 	--color-background-gallery-list-selected: #1b3b88;
@@ -99,6 +99,21 @@ body
 	position: relative;
 	padding-top: calc(var(--height-gallery-top-bar) - 2px);
 	margin: 0;
+}
+
+@media only screen and (min-width: 640px)
+{
+  body.compact
+  {
+    min-width: 640px;
+    width: auto;
+    max-width: 960px;
+    margin: 0 auto;
+
+    border: 1px solid var(--color-border-main);
+
+    margin-bottom: 20px;
+  }
 }
 
 body > div.path
@@ -487,7 +502,10 @@ body, html,
 	background-color: #1a1a1a;
 
 	position: fixed;
+
 	bottom: 0;
+	left: 0;
+	right: 0;
 
 	width: 100%;
 	padding: 5px 5px 7px 0px;
@@ -506,6 +524,7 @@ body, html,
 .filter-container > div:first-child > div.status
 {
 	display: inline-block;
+	margin-left: 10px;
 }
 
 .filter-container > div:first-child > div.status.se
@@ -905,30 +924,49 @@ select:not(.default):focus
 	position: relative;
 }
 
-.gallery-container div.content-container .media .reverse
+.gallery-container div.content-container .media .wrapper .cover .reverse
 {
 	position: absolute;
 	top: 0;
 	left: 0;
 	font-size: 10px;
-	background-color: rgba(0, 0, 0, 0.70);
-	display: none;
-	color: #848484;
-	padding: 5px 5px 5px 5px;
 	pointer-events: none;
+
+	border: 1px solid #1a1a1a;
+
+	opacity: 0.8;
+
+	visibility: hidden;
 }
 
-.gallery-container div.content-container .media .reverse a
+.gallery-container div.content-container .media .wrapper .cover:hover .reverse
 {
+	visibility: visible;
+}
+
+.gallery-container div.content-container .media .wrapper .cover .reverse a
+{
+	display: inline-block;
+
 	color: white;
 	text-decoration: none;
 	pointer-events: auto;
-	padding: 0px 1px 0px 1px;
+
+	padding: 4px 6px 3px 6px;
+
+	color: #e5e5e5;
+	background-color: #151515;
 }
 
-.gallery-container div.content-container .media .reverse a:hover
+.gallery-container div.content-container .media .wrapper .cover .reverse a:not(:last-child)
 {
-	text-decoration: underline;
+	border-right: 1px solid #1a1a1a;
+}
+
+.gallery-container div.content-container .media .wrapper .cover .reverse a:hover
+{
+	background-color: #1d1d1d;
+	color: #fff;
 }
 
 .gallery-container div.content-container .media .loader
@@ -1144,12 +1182,12 @@ select:not(.default):focus
 		cursor: pointer;
 	}
 
-	.gallery-container div.content-container .media .reverse
+	.gallery-container div.content-container .media .wrapper .cover .reverse
 	{
 		font-size: 9px;
 	}
 
-	.gallery-container div.content-container .media .reverse
+	.gallery-container div.content-container .media .wrapper .cover .reverse
 	{
 		padding: 4px;
 	}
@@ -1180,7 +1218,7 @@ select:not(.default):focus
 		vertical-align: middle;
 	}
 
-	.gallery-container div.content-container .media .reverse
+	.gallery-container div.content-container .media .wrapper .cover .reverse
 	{
 		z-index: 2;
 	}

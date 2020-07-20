@@ -63,6 +63,14 @@ This basically means that the extensions included here will have previews and wi
 | `image` | Array | `'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'` | Extensions marked as `image`.
 | `video` | Array | `'webm', 'mp4'` | Extensions marked as `video`.
 
+## Style
+Various visual options for the script.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `themes` | Boolean | `false` | Set to a path relative to the root directory containing `.css` files. Example: `/indexer/css/themes/` (This directory also contains a few included **example** themes). Every `.css` in the set folder will be treated as a separate theme.
+| `compact` | Boolean | `false` | Makes the page use a more compact and centered style.
+
 ## Filter
 This option can be used if you want to filter the files or directories using `regular expressions`.
 
@@ -78,7 +86,6 @@ Setting the value to `false` will disable the filter.
 ## Other
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `themes` | Boolean | `false` | Set to a path relative to the root directory containing `.css` files. Example: `/indexer/css/themes/` (This directory also contains a few included themes). Every `.css` in the set folder will be treated as a separate theme.
 | `allow_direct_access` | Boolean | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
 | `footer` | Boolean | `true` | Whether there should be a simple footer below the list of files or not.

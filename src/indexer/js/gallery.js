@@ -299,13 +299,10 @@
     		};
 		};
 
-		main.reverse = (trigger, show = true, fade = 0) =>
+		main.reverse = (trigger) =>
 		{
-			if(!main.store.reverse_options) return false;
-
-			var cover = main.container.find('.content-container .media .wrapper .cover');
-
-			if(cover.length === 0) return false;
+			if(!main.store.reverse_options || 
+				(main.container.find('.content-container .media .wrapper .cover')).length === 0) return false;
 
 			var container = main.container.find('.content-container .media .reverse');
 
@@ -316,18 +313,11 @@
 				}).appendTo(main.container.find('.content-container .media .wrapper .cover'));
 			}
 
-			if(show === false)
-			{
-				(fade > 0) ? container.stop().fadeOut(fade) : container.hide(); return;
-			}
-
-        	var options = main.getReverseOptions(main.data.selected.src);
+			var options = main.getReverseOptions(main.data.selected.src);
 
 			container.html(
-				Object.keys(options).map((site) => `<a class="reverse-link" target="_blank" href="${options[site]}">${site}</a>`).join('|')
+				Object.keys(options).map((site) => `<a class="reverse-link" target="_blank" href="${options[site]}">${site}</a>`)
 			);
-
-        	if(container.is(':hidden')) container.show();
 		};
 
 		main.shortenString = (input, cutoff) =>
@@ -733,8 +723,8 @@
 					trigger : 'div.gallery-container .media .wrapper img'
 				},
 				{
-					event : 'mouseleave',
-					trigger : 'div.gallery-container .media .reverse a'
+					event : 'mouseenter',
+					trigger : 'div.gallery-container .media .wrapper .cover'
 				},
 				{
 					event : 'swipeleft',
@@ -848,14 +838,9 @@
 			{
 				$(document).on('mouseenter', 'div.gallery-container .media .wrapper .cover', (e) =>
 				{
-					main.reverse($(e.currentTarget), true);
+					main.reverse($(e.currentTarget));
 				});
 			}
-
-			$(document).on('mouseleave', 'div.gallery-container .media .wrapper .cover', (e) =>
-			{
-				main.reverse($(e.currentTarget), false);
-			});
 
 			if(main.store.mobile === true)
 			{
@@ -979,7 +964,7 @@
 
 				if(width === false)
 				{
-					width = 'auto';
+					width = '';
 				} else if(parseInt(width) > (window.innerWidth / 2))
 				{
 					client.gallery.list_width = Math.floor(window.innerWidth / 2);

@@ -114,12 +114,15 @@
 		client : {
 			get : () =>
 			{
-				var client, keys_required = ['gallery', 'sort'], defaults = {
+				var client, keys_required = ['gallery', 'sort', 'style'], defaults = {
 					gallery : {
 						reverse_options : config.gallery.reverse_options,
 						list_alignment : config.gallery.list_alignment,
 						fit_content : config.gallery.fit_content,
 						autoplay : true
+					},
+					style : {
+						compact : config.style.compact
 					}
 				};
 
@@ -176,7 +179,7 @@
 		settings : {
 			available : () =>
 			{
-				if(config.hasOwnProperty('themes') && config.themes.pool.length > 0 ||
+				if(main.checkNested(config, 'style', 'themes') && config.style.themes.pool.length > 0 ||
 					config.gallery.enabled === true)
 				{
 					return true;
@@ -214,6 +217,8 @@
 						text : header ? header : main.capitalize(id)
 					}));
 				},
+				/* creates a select option.
+				 * set options['data-key'] to override section key. */
 				select : (values, options = {}, selected = null) =>
 				{
 					var e = $('<select/>', options);
@@ -237,6 +242,8 @@
 
 					return e;
 				},
+				/* creates a checkbox option.
+				 * set options['data-key'] to override section key. */
 				check : (options = {}, selected = null) =>
 				{
 					var checked = (selected !== null) ? selected() : false;
@@ -254,10 +261,17 @@
 			{
 				$('.focus-overlay, .settings-container').remove();
 			},
-			update : {  /* update functions for settings which require live updating */
+			/* update functions for settings which require live updating */
+			update : {
 				theme : (theme) =>
 				{
 					main.theme.set(theme === false ? null : theme, false);
+				},
+				style : {
+					compact : (value) =>
+					{
+						$('body')[value ? 'addClass' : 'removeClass']('compact');
+					}
 				},
 				gallery : {
 					list_alignment : (alignment) =>
@@ -278,7 +292,13 @@
 					},
 					reverse_options : (value) =>
 					{
-						if(main.store.gallery) main.store.gallery.store.reverse_options = value;
+						if(main.store.gallery)
+						{
+							main.store.gallery.store.reverse_options = value;
+							var e = $('.gallery-container div.content-container .media .wrapper .cover .reverse');
+							console.log(e);
+							if(e.length > 0) e.remove();
+						}
 					},
 					autoplay : (value) =>
 					{
@@ -324,7 +344,8 @@
 
 						if(e[0].hasAttribute('name'))
 						{
-							var id = e.attr('name'), section = e.closest('.section').attr('data-key');
+							var id = e.attr('name'),
+								section = e[0].hasAttribute('data-key') ? e.attr('data-key') : e.closest('.section').attr('data-key');
 
 							if(!data.hasOwnProperty(section)) data[section] = {};
 
@@ -358,8 +379,8 @@
 							switch(option)
 							{
 								case ('theme'):
-									if(data[key][option] <= (config.themes.pool.length - 1))
-										value = config.themes.pool[data[key][option]] === 'default' ? false : config.themes.pool[data[key][option]]; break;
+									if(data[key][option] <= (config.style.themes.pool.length - 1))
+										value = config.style.themes.pool[data[key][option]] === 'default' ? false : config.style.themes.pool[data[key][option]]; break;
 								default:
 									value = data[key][option]; break;
 							}
@@ -381,7 +402,7 @@
 								if(is_main && main.settings.update.hasOwnProperty(option))
 								{
 									main.settings.update[option](value);
-								} else if(main.settings.update[key].hasOwnProperty(option))
+								} else if(main.checkNested(main.settings.update, key, option))
 								{
 									main.settings.update[key][option](value);
 								}
@@ -417,16 +438,28 @@
 
 				var getMain = (section = main.settings.create.section('main'), settings = 0) =>
 				{
-					if(config.hasOwnProperty('themes') && config.themes.pool.length > 0)
+					if(main.checkNested(config, 'style', 'themes') && config.style.themes.pool.length > 0)
 					{
 						section.append(main.settings.create.option(
-							main.settings.create.select(config.themes.pool.map((e, i) =>
+							main.settings.create.select(config.style.themes.pool.map((e, i) =>
 							{
 								return { value : e, text : e };
 							}), { name : 'theme' }, (option, index, parent) =>
 							{
-								return (config.themes.set === null && index === 0) || (option[0].value == config.themes.set);
+								return (config.style.themes.set === null && index === 0) || (option[0].value == config.style.themes.set);
 							}), 'Theme')); settings++;
+					}
+
+					if(main.checkNested(config, 'style', 'compact') && !config.mobile)
+					{
+						var label = 'Compact Style',
+							description = 'Set the page to use a more compact style.';
+
+						section.append(main.settings.create.option(
+							main.settings.create.check({ name : 'compact', 'data-key' : 'style' },
+								() => {
+									return main.checkNested(client, 'style', 'compact') ? (client.style.compact) : config.style.compact;
+								}), label, { class : 'interactable' }, description)); settings++;
 					}
 
 					return { settings, section };
@@ -450,8 +483,8 @@
 
 					/* toggleable gallery options (title, json key, description).*/
 					sets.push(
-						['Reverse Search', 'reverse_options', 'Toggle visibility of reverse search options on images.'],
-						['Autoplay Videos', 'autoplay', 'Toggle autoplaying of videos.'],
+						['Reverse Search', 'reverse_options', 'Toggle the visibility of reverse search options on images.'],
+						['Autoplay Videos', 'autoplay', 'Toggle the autoplaying of videos.'],
 						['Fit Content', 'fit_content', 'Force images and videos to fill the screen.']
 					);
 
@@ -578,7 +611,7 @@
 				var sheets = $('head > link[rel="stylesheet"]').filter((i, sheet) =>
 					sheet.hasAttribute('href') && (sheet.getAttribute('href')).match(new RegExp('\/(themes)\/', 'i')));
 
-				config.themes.set = theme;
+				config.style.themes.set = theme;
 				
 				if(theme === null || !theme)
 				{
@@ -595,7 +628,7 @@
 				$('head').append($('<link/>', {
 					rel : 'stylesheet',
 					type : 'text/css',
-					href : `${config.themes.path}/${theme}.css`
+					href : `${config.style.themes.path}/${theme}.css`
 				}));
 
 				sheets.each((i, sheet) => sheet.remove());
@@ -876,12 +909,8 @@
 			},
 			load : () =>
 			{
-				var offsetGet = () =>
-				{
-					/* get client's UTC offset */
-					var date = new Date();
-					return (new Date()).getTimezoneOffset();
-				};
+				/* get client's UTC offset */
+				var offsetGet = () => (new Date()).getTimezoneOffset();
 
 				var formatSince = (seconds) =>
 				{

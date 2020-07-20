@@ -9,10 +9,11 @@
  */
 
 /**
- * Configuration.
+ * [Configuration]
  * A more in-depth overview can be found here:
  * https://github.com/sixem/eyy-indexer/blob/master/CONFIG.md
  */
+
 $config = array(
     /* Formatting options. */
     'format' => array(
@@ -51,10 +52,18 @@ $config = array(
         'cursor_indicator' => true /* displays a loading cursor while the preview is loading. */
     ),
     /* Extension that should be marked as media.
-     * These extensions will have potential previews and be included in the gallery. */
+     * These extensions will have potential previews and will be included in the gallery. */
     'extensions' => array(
         'image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),
         'video' => array('webm', 'mp4')
+    ),
+    /* Styling options. */
+    'style' => array(
+        /* Set to a path relative to the root directory (location of this file) containg .css files.
+         * Each .css file will be treated as a separate theme. Set to false to disable themes. */
+        'themes' => false,
+        /* Enables a more compact styling of the page. */
+        'compact' => false
     ),
     /* Filter what files or directories to show.
      * Uses regular expressions. All names matching the regex will be shown.
@@ -63,9 +72,6 @@ $config = array(
         'file' => false,
         'directory' => false
     ),
-    /* Set to a path relative to the root directory (location of this file) containg .css files.
-     * Each .css file will be treated as a separate theme. */
-    'themes' => false,
     /* Whether this .php file should be directly accessible. */
     'allow_direct_access' => false,
     /* Set to 'strict' or 'weak'.
@@ -77,8 +83,8 @@ $config = array(
     'debug' => true
 );
 
-/* Default configuration values. Used if values from the above config are missing / unset. */
-$defaults = array('format'=>array('title'=>'Index of %s','date'=>array('d/m/y H:i','d/m/y'),'sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>true,'scroll_interval'=>50,'list_alignment'=>0,'fit_content'=>false),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','gif','png','ico','svg','bmp'),'video'=>array('webm','mp4')),'filter'=>array('file'=>false,'directory'=>false),'themes'=>false,'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true);
+/* Default configuration values. Used if values from the above config are unset. */
+$defaults = array('format'=>array('title'=>'Index of %s','date'=>array('d/m/y H:i','d/m/y'),'sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>false,'scroll_interval'=>50,'list_alignment'=>0,'fit_content'=>false),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','png','gif','ico','svg','bmp','webp'),'video'=>array('webm','mp4')),'style'=>array('themes'=>false,'compact'=>false),'filter'=>array('file'=>false,'directory'=>false),'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true);
 
 /* Set default configuration values if the config is missing any keys. */
 foreach($defaults as $key => $value)
@@ -111,16 +117,16 @@ if($config['debug'] === true)
   error_reporting(E_ALL);
 }
 
-if($config['themes'])
+if($config['style']['themes'])
 {
-  if($config['themes'][0] !== '/')
+  if($config['style']['themes'][0] !== '/')
   {
-    $config['themes'] = ('/' . $config['themes']);
+    $config['style']['themes'] = ('/' . $config['style']['themes']);
   }
 
-  if(substr($config['themes'], -1) !== '/')
+  if(substr($config['style']['themes'], -1) !== '/')
   {
-    $config['themes'] = ($config['themes'] . '/');
+    $config['style']['themes'] = ($config['style']['themes'] . '/');
   }
 }
 
@@ -577,12 +583,26 @@ class Indexer
 }
 
 $client =  isset($_COOKIE['ei-client']) ? $_COOKIE['ei-client'] : NULL;
-if($client) $client = json_decode($client, true);
+
+if($client)
+{
+  $client = json_decode($client, true);
+}
+
+$validate = is_array($client);
 
 $cookies = array(
-  'sort_row' => is_array($client) ? (isset($client['sort']['row']) ? $client['sort']['row'] : NULL) : NULL,
-  'sort_ascending' => is_array($client) ? (isset($client['sort']['ascending']) ? $client['sort']['ascending'] : NULL) : NULL
+  'sorting' => array(
+    'row' => $validate ? (isset($client['sort']['row']) ? $client['sort']['row'] : NULL) : NULL,
+    'ascending' => $validate ? (isset($client['sort']['ascending']) ? $client['sort']['ascending'] : NULL) : NULL
+  )
 );
+
+/* override the config value if the cookie value is set */
+if($validate && isset($client['style']['compact']) && $client['style']['compact'])
+{
+  $config['style']['compact'] = $client['style']['compact'];
+}
 
 $sorting = array(
   'enabled' => $config['sorting']['enabled'],
@@ -591,9 +611,9 @@ $sorting = array(
   'sort_by' => strtolower($config['sorting']['sort_by'])
 );
 
-if($cookies['sort_row'] !== NULL)
+if($cookies['sorting']['row'] !== NULL)
 {
-  switch(intval($cookies['sort_row']))
+  switch(intval($cookies['sorting']['row']))
   {
     case 0: $sorting['sort_by'] = 'name'; break;
     case 1: $sorting['sort_by'] = 'modified'; break;
@@ -602,12 +622,12 @@ if($cookies['sort_row'] !== NULL)
   }
 }
 
-if($cookies['sort_ascending'] !== NULL)
+if($cookies['sorting']['ascending'] !== NULL)
 {
-  $sorting['order'] = (boolval($cookies['sort_ascending']) === true ? SORT_ASC : SORT_DESC);
+  $sorting['order'] = (boolval($cookies['sorting']['ascending']) === true ? SORT_ASC : SORT_DESC);
 }
 
-if($cookies['sort_ascending'] !== NULL || $cookies['sort_row'] !== NULL)
+if($cookies['sorting']['ascending'] !== NULL || $cookies['sorting']['row'] !== NULL)
 {
   $sorting['enabled'] = true;
 }
@@ -668,9 +688,9 @@ $counts = array(
 
 $themes = array();
 
-if($config['themes'])
+if($config['style']['themes'])
 {
-  $directory = rtrim($indexer->joinPaths($base_path, $config['themes']), '/');
+  $directory = rtrim($indexer->joinPaths($base_path, $config['style']['themes']), '/');
 
   if(is_dir($directory))
   {
@@ -695,11 +715,11 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
     <link rel="stylesheet" type="text/css" href="/indexer/css/style.css">
-    <?=$current_theme ? '<link rel="stylesheet" type="text/css" href="' . $config['themes'] . $current_theme . '.css">' . PHP_EOL : ''?>
+    <?=$current_theme ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes'] . $current_theme . '.css">' . PHP_EOL : ''?>
 
   </head>
 
-  <body class="directory">
+  <body class="directory<?=$config['style']['compact'] ? ' compact' : ''?>">
 
     <div class="top-bar">
         <div class="extend ns">&#x25BE;</div>
@@ -776,10 +796,13 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
     'image' => $config['extensions']['image'],
     'video' => $config['extensions']['video']
   ),
-  'themes' => array(
-    'path' => $config['themes'],
-    'pool' => $themes,
-    'set' => $current_theme ? $current_theme : 'default'
+  'style' => array(
+    'themes' => array(
+      'path' => $config['style']['themes'],
+      'pool' => $themes,
+      'set' => $current_theme ? $current_theme : 'default'
+    ),
+    'compact' => $config['style']['compact']
   ),
   'format' => array_intersect_key($config['format'], array_flip(array('sizes', 'date'))),
   'timestamp' => $indexer->timestamp,
