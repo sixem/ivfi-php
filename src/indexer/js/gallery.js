@@ -19,8 +19,7 @@
 		const main = {
 			data : {
 				busy : false,
-				scrollbreak : false,
-				isChrome : (/Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor))
+				scrollbreak : false
 			}
 		};
 
@@ -294,7 +293,7 @@
 
     		return {
        			'Google': 'https://www.google.com/searchbyimage?image_url=' + url + '&safe=off',
-        		'Yandex': 'https://www.yandex.com/images/search?rpt=imageview&img_url=' + url,
+        		'Yandex': 'https://yandex.com/images/search?rpt=imageview&url=' + url,
         		'IQDB': 'https://iqdb.org/?url=' + url
     		};
 		};
@@ -445,15 +444,9 @@
 
 					if(main.store.fit_content)
 					{
-						var height;
-
-						if(data.img.width > data.img.height)
-						{
-							height = `calc(calc(100vw - var(--width-list)) / ${(data.img.width / data.img.height).toFixed(4)})`;
-							main.update.listWidth(wrapper);
-						} else {
-							height = '100%';
-						}
+						var height = `calc(calc(100vw - var(--width-list)) / ${(data.img.width / data.img.height).toFixed(4)})`;
+						
+						main.update.listWidth(wrapper);
 
 						element.css({
 							width : 'auto',
@@ -507,7 +500,7 @@
 
 							video.css({
 								width : 'auto',
-								height : width > height ? (`calc(calc(100vw - var(--width-list)) / ${(width / height).toFixed(4)})`) : ('100%')
+								height : `calc(calc(100vw - var(--width-list)) / ${(width / height).toFixed(4)})`
 							});
 						}
 

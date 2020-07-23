@@ -1187,11 +1187,6 @@ select:not(.default):focus
 		font-size: 9px;
 	}
 
-	.gallery-container div.content-container .media .wrapper .cover .reverse
-	{
-		padding: 4px;
-	}
-
 	.gallery-container div.content-container .screen-nav.left
 	{
 		left: 0;

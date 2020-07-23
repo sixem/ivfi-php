@@ -74,6 +74,8 @@ Various visual options for the script.
 ## Filter
 This option can be used if you want to filter the files or directories using `regular expressions`.
 
+All filenames and directory names **matching** the `regex` will be shown.
+
 For example, setting `file` to `/^.{1,10}\.(jpg|png)$/` will only include `.jpg` and `.png` files with a filename between `1 - 10` characters in length when reading the directory files.
 
 Setting the value to `false` will disable the filter.

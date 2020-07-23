@@ -1052,7 +1052,11 @@
 		gallery : {
 			load : (index = 0) =>
 			{
-				if(!config.gallery.enabled) return false;
+				if(!config.gallery.enabled)
+				{
+					return false;
+				}
+
 				if(config.debug) console.log('gallery.load =>', index);
 
 				if(main.store.gallery && main.store.gallery !== false)
@@ -1081,18 +1085,8 @@
 					return;
 				}
 
-				var list_state = null, client = main.client.get();
-
-				if(!client.hasOwnProperty('gallery'))
-				{
-					client.gallery = {
-						'list_state' : 1
-					};
-
-					main.client.set(client);
-				}
-
-				list_state = JSON.parse(client.gallery.hasOwnProperty('list_state') ? client.gallery.list_state : 1);
+				var client = main.client.get(),
+					list_state = JSON.parse(client.gallery.hasOwnProperty('list_state') ? client.gallery.list_state : 1);
 
 				main.store.gallery = new $.fn.gallery(main.getTableItems(), {
 					'start' : index === null ? 0 : index,
