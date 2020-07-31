@@ -7,15 +7,14 @@
  * 
  * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  0.22 (1.1.6)
  */
 
 (function($)
 {
-    'use strict';
+	'use strict';
 
-    $.fn.gallery = function(items, options = {})
-    {
+	$.fn.gallery = function(items, options = {})
+	{
 		const main = {
 			data : {
 				busy : false,
@@ -52,7 +51,7 @@
 			return new Promise((resolve, reject) => {
 				let img = new Image();
 
-				img.addEventListener('load', (e) => resolve([url, img]));
+				img.addEventListener('load', () => resolve([url, img]));
 
 				img.addEventListener('error', () =>
 				{
@@ -66,7 +65,7 @@
 		main.getExtension = (filename) => (filename.split('.').pop()).toLowerCase();
 		main.getObjectSet = (...elements) => $((elements.filter((value) => typeof value !== 'undefined')).map((element) => $(element)));
 
-		main.filterItems = (items) => items.filter((item, index) => main.isImage(item.name) || main.isVideo(item.name));
+		main.filterItems = (items) => items.filter((item) => main.isImage(item.name) || main.isVideo(item.name));
 
 		main.isImage = (filename, ext = null) => main.store.extensions.image.includes(ext ? ext : main.getExtension(filename));
 		main.isVideo = (filename, ext = null) => main.store.extensions.video.includes(ext ? ext : main.getExtension(filename));
@@ -107,16 +106,16 @@
 				});
 
 				body.css({
-    				'max-height' : 'calc(100vh - var(--height-gallery-top-bar))',
-    				'overflow' : 'hidden'
-    			});
+					'max-height' : 'calc(100vh - var(--height-gallery-top-bar))',
+					'overflow' : 'hidden'
+				});
 			} else {
-				if(main.data.hasOwnProperty('body'))
+				if(Object.prototype.hasOwnProperty.call(main.data, 'body'))
 				{
 					body.css({
-    					'max-height' : main.data.body['max-height'],
-    					'overflow' : main.data.body.overflow
-    				});
+						'max-height' : main.data.body['max-height'],
+						'overflow' : main.data.body.overflow
+					});
 				}
 
 				html.css({
@@ -169,7 +168,7 @@
 
 			if(main.store.blur)
 			{
-				main.setBlur(bool);
+				main.set.blur(bool);
 				main.limitBody(bool);
 			}
 
@@ -180,7 +179,7 @@
 			{
 				if(bool === true && video.is(':visible'))
 				{
-					var current_time = 0;
+					var current_time = video[0].currentTime;
 
 					if(main.store.continue.video && video.find('source').attr('src') == main.store.continue.video.src)
 					{
@@ -263,18 +262,6 @@
 			return e.length > 0 ? e : null;
 		};
 
-		main.setBlur = (bool = true) =>
-		{
-			if(bool === true)
-			{
-				main.data.blurred = $('body > *:not(.gallery-container):not(script):not(noscript):not(style)').addClass('blur ns');
-			} else {
-				if(main.data.hasOwnProperty('blurred')) main.data.blurred.removeClass('blur ns');
-			}
-
-			return main;
-		};
-
 		main.update = {
 			listWidth : (wrapper = null) =>
 			{
@@ -291,14 +278,14 @@
 		{
 			url = encodeURIComponent(document.location.origin + url);
 
-    		return {
-       			'Google': 'https://www.google.com/searchbyimage?image_url=' + url + '&safe=off',
-        		'Yandex': 'https://yandex.com/images/search?rpt=imageview&url=' + url,
-        		'IQDB': 'https://iqdb.org/?url=' + url
-    		};
+			return {
+				'Google': 'https://www.google.com/searchbyimage?image_url=' + url + '&safe=off',
+				'Yandex': 'https://yandex.com/images/search?rpt=imageview&url=' + url,
+				'IQDB': 'https://iqdb.org/?url=' + url
+			};
 		};
 
-		main.reverse = (trigger) =>
+		main.reverse = () =>
 		{
 			if(!main.store.reverse_options || 
 				(main.container.find('.content-container .media .wrapper .cover')).length === 0) return false;
@@ -321,49 +308,92 @@
 
 		main.shortenString = (input, cutoff) =>
 		{
-    		cutoff = cutoff || 28;
+			cutoff = cutoff || 28;
 
-    		if(input.length > cutoff)
-    		{
-    			return [
-           		 input.substr(0, Math.floor((cutoff / 2) - 2)),
-            		input.substr(input.length - (Math.floor((cutoff / 2) - 2)), input.length)
-        		].join(' .. ');
-    		} else {
-        		return input;
-    		}
+			if(input.length > cutoff)
+			{
+				return [
+				input.substr(0, Math.floor((cutoff / 2) - 2)),
+					input.substr(input.length - (Math.floor((cutoff / 2) - 2)), input.length)
+				].join(' .. ');
+			} else {
+				return input;
+			}
 		};
 
-		/* sets the item info for the current item (topbar left) */
-		main.setItemInfo = (item, index, max) =>
-		{
-			if(main.store.console) console.log('itemSet', item);
+		main.set = {
+			cache : {
+				info : null
+			},
+			/* Sets the item info for the current item.
+			 * If update is set to false, then info is cache temporary and not shown.
+			 * Set update to true in order to show cached info.
+			 */
+			itemInfo : (update, item = null, index = null, max = null) =>
+			{
+				if(main.store.console && !update)
+				{
+					console.log('itemSet', item);
+				}
 
-			var name = main.store.mobile ? main.shortenString(item.name, 30) : item.name;
+				if(update)
+				{
+					if(Array.isArray(main.set.cache.info))
+					{
+						[item, index, max] = main.set.cache.info;
+					} else if(item === null || index === null || max === null)
+					{
+						return false;
+					}
+				} else {
+					main.set.cache.info = [item, index, max];
 
-			main.container
-			.find('.bar > .right > a.download')
-			.attr('filename', item.name)
-			.attr('href', item.url)
-			.attr('title', `Download: ${item.name}`);
+					return false;
+				}
 
-			main.container.find('.bar > .left').html(
-				`<span>${index + 1} of ${max}</span>`+
-				` | <a href="${item.url}">${name}</a>`+
-				(item.hasOwnProperty('size') && !main.store.mobile ? ` | <span>${item.size}</span>` : '')
-			);
-		};
+				var name = main.store.mobile ? main.shortenString(item.name, 30) : item.name;
+
+				main.container
+				.find('.bar > .right > a.download')
+				.attr('filename', item.name)
+				.attr('href', item.url)
+				.attr('title', `Download: ${item.name}`);
+
+				main.container.find('.bar > .left').html(
+					`<span>${index + 1} of ${max}</span>` +
+					` | <a href="${item.url}">${name}</a>` +
+					(Object.prototype.hasOwnProperty.call(item, 'size') && !main.store.mobile ? ` | <span>${item.size}</span>` : '')
+				);
+
+				return true;
+			},
+			/* Enables blur for (almost) all child elements of body. */
+			blur : (bool = true) =>
+			{
+				if(bool === true)
+				{
+					main.data.blurred = $('body > *:not(.gallery-container):not(script):not(noscript):not(style)').addClass('blur ns');
+				} else {
+					if(Object.prototype.hasOwnProperty.call(main.data, 'blurred'))
+					{
+						main.data.blurred.removeClass('blur ns');
+					}
+				}
+
+				return main;
+			}
+		}
 
 		/* checks if an item is visible in the viewport (can be improved upon) */
 		main.isScrolledIntoView = (elem, offset) =>
 		{
-    		var top_margin = elem.offset().top - $(window).scrollTop();
-    		if(top_margin < offset) return false;
+			var top_margin = elem.offset().top - $(window).scrollTop();
+			if(top_margin < offset) return false;
 
-    		var bottom_margin = (top_margin + elem.outerHeight());
-    		if(bottom_margin > $(window).height()) return false;
+			var bottom_margin = (top_margin + elem.outerHeight());
+			if(bottom_margin > $(window).height()) return false;
 
-    		return true;
+			return true;
 		};
 
 		/* scrolls an item into view (scrollto plugin is being used over this as this needs improvement) */
@@ -379,40 +409,86 @@
 		{
 			var adjusted = (current + change);
 
-			if(adjusted > max) adjusted = (adjusted - max) - 1;
-			if(adjusted < 0) adjusted = max - (Math.abs(adjusted) - 1);
-			if(adjusted < 0 || adjusted > max) return main.calculateIndex(current, (max - adjusted), max);
+			if(adjusted > max)
+			{
+				adjusted = (adjusted - max) - 1;
+			}
+
+			if(adjusted < 0)
+			{
+				adjusted = max - (Math.abs(adjusted) - 1);
+			}
+
+			if(adjusted < 0 || adjusted > max)
+			{
+				return main.calculateIndex(current, (max - adjusted), max);
+			}
 
 			return adjusted;
 		};
 
-		main.createVideo = (extension) =>
-		{
-			var attributes = {
-				controls : '',
-				loop : ''
-			};
+		main.video = {
+			volume : null,
+			create : (extension) =>
+			{
+				var attributes = {
+					controls : '',
+					preload : 'none',
+					loop : ''
+				};
 
-			if(main.store.autoplay) attributes.autoplay = '';
+				var video = $('<video/>', attributes),
+				source = $('<source>', {
+					type : 'video/' + extension,
+					src : ''
+				}).appendTo(video);
 
-			var video = $('<video/>', attributes);
+				return [video, source];
+			},
+			seek : (i) =>
+			{
+				var video = main.container.find('.media .wrapper video').get(0);
 
-			var source = $('<source>', {
-				type : 'video/' + extension, src : ''
-			}).appendTo(video);
+				if(video)
+				{
+					var current = Math.round(video.currentTime), duration = Math.round(video.duration);
 
-			return [video, source];
-		};
+					if(i > 0)
+					{
+						if((current + i) > duration)
+						{
+							return true;
+						} else {
+							video.currentTime = current + i;
+						}
+					} else if(i < 0)
+					{
+						if((current + i) < 0)
+						{
+							return true;
+						} else {
+							video.currentTime = current + i;
+						}
+					}
+
+					return false;
+				}
+			}
+		}
 
 		main.showItem = (type, element, src, init, index, data = null) =>
 		{
-			var wrapper = main.container.find('.media .wrapper'), video, source, reverse;
+			var wrapper = main.container.find('.media .wrapper'), video, source;
 
 			if(main.store.fade > 0) wrapper.hide();
 
 			var applyChange = () =>
 			{
+				main.set.itemInfo(true);
+
 				var opp = wrapper.find(type === 0 ? 'video' : 'img').hide();
+
+				main.data.selected.type = type;
 
 				if(type === 1)
 				{
@@ -434,13 +510,9 @@
 
 			var display = () =>
 			{
-				reverse = main.container.find('.content-container .media .reverse');
-
 				if(type === 0)
 				{
 					video = wrapper.find('video');
-
-					if(main.store.console) console.log('itemDimensions', data.img.height, 'x', data.img.width);
 
 					if(main.store.fit_content)
 					{
@@ -461,6 +533,8 @@
 
 					if(video.length > 0)
 					{
+						video.off('error');
+
 						video[0].pause();
 						video.find('source').attr('src', '');
 					}
@@ -470,29 +544,60 @@
 				{
 					if(init === false)
 					{
-						[video, source] = main.createVideo(main.data.selected.ext);
+						[video, source] = main.video.create(main.data.selected.ext);
 						video.appendTo(wrapper);
 					} else {
 						source = element.find('source');
 						video = element;
 					}
 
+					var evented = false;
+
+					/*(() =>
+					{
+						 * Attempts to fix an issue where video requests are continuing to hang after changing video source.
+						 * Probably has something to do with caching. Affects mostly larger videos that require multiple requests.
+						 *
+						 * This will stop any active requests before setting a new video source. Not optimal but one of very few "solutions".
+						 *
+						 * @Firefox: After 6 hanging requests, the next one is completely blocked until the others timeout.
+						 *
+
+						 *** (!) Disabled as it stops .gif files from loading after firing, other than that it works.
+
+						if(window.stop !== undefined)
+						{
+							window.stop();
+						} else if(document.execCommand !== undefined)
+						{
+							document.execCommand('Stop', false);
+						}
+					})();*/
+
 					source.attr('src', src);
 
-					video[0].load();
-
-					if(main.store.continue.video && src == main.store.continue.video.src)
+					var error = (err) =>
 					{
-						video[0].currentTime = main.store.continue.video.time;
-						main.store.continue.video = null;
+						console.error('Failed to load video source.', err);
+						main.busy(false);
 					}
 
-					video[0].addEventListener('canplay', () =>
-					{
-						var height = video[0].videoHeight,
-							width = video[0].videoWidth;
+					video.on('error', (err) => error(err));
+					source.on('error', (err) => error(err));
 
-						if(main.store.console) console.log('itemDimensions', height, 'x', width);
+					video.on('volumechange', () =>
+					{
+						main.video.volume = video.get(0).volume;
+					});
+
+					video.on('canplay canplaythrough', () =>
+					{
+						if(evented)
+						{
+							return false;
+						}
+
+						var height = video[0].videoHeight, width = video[0].videoWidth;
 
 						if(main.store.fit_content)
 						{
@@ -504,15 +609,42 @@
 							});
 						}
 
+						if(main.video.volume)
+						{
+							video.get(0).volume = main.video.volume;
+						}
+
+						if(main.store.autoplay)
+						{
+							video[0].play();
+						}
+
 						video.show();
+
+						/* if the gallery was hidden while loading, pause video and hide loader. */
+						if(!main.container.is(':visible'))
+						{
+							main.container.find('.media .loader').hide();
+							video[0].pause();
+						}
 
 						if(init === false)
 						{
 							element.remove();
 						}
 
+						evented = true;
+
 						applyChange();
-					}, false);
+					});
+
+					video[0].load();
+
+					if(main.store.continue.video && src == main.store.continue.video.src)
+					{
+						video[0].currentTime = main.store.continue.video.time;
+						main.store.continue.video = null;
+					}
 				}
 
 				main.data.selected.index = index;
@@ -523,36 +655,60 @@
 
 		main.navigate = (index, step = null) =>
 		{
-			if(main.store.console) console.log('busyState', main.busy());
+			if(main.store.console)
+			{
+				console.log('busyState', main.busy());
+			}
 
-			if(main.busy()) return false;
+			if(main.busy())
+			{
+				return false;
+			}
 
 			var max = main.items.length - 1;
 
-			if(index === null) index = main.data.selected.index;
-			if(step !== null) index = main.calculateIndex(index, step, max);
-			if(main.data.selected.index === index || main.busy() === true) return;
+			if(index === null)
+			{
+				index = main.data.selected.index;
+			}
 
-			var item = main.items[index]; main.setItemInfo(item, index, max + 1);
+			if(step !== null)
+			{
+				index = main.calculateIndex(index, step, max);
+			}
+
+			if(main.data.selected.index === index || main.busy() === true)
+			{
+				return false;
+			}
+
+			var video, image, init, item;
+
+			image = main.container.find('.media .wrapper img');
+			video = main.container.find('.media .wrapper video');
+
+			var list = main.container.find('.list'),
+			table = list.find('table'),
+			element = table.find('tr').eq(index);
+
+			item = main.items[index];
 
 			main.data.selected.src = item.url;
 			main.data.selected.ext = main.getExtension(item.name);
 
-            var list = main.container.find('.list'), table = list.find('table'), elem = table.find('tr').eq(index);
-
 			table.find('tr.selected').removeAttr('class');
-			elem.attr('class', 'selected');
+			element.attr('class', 'selected');
 
-			if(!main.isScrolledIntoView(elem, Math.floor(main.container.find('.bar').outerHeight() - 4))) list.scrollTo(elem);
+			main.set.itemInfo((image.length === 0 && video.length === 0) ? true : false, item, index, max + 1);
 
-			var video, source, image, init;
+			if(!main.isScrolledIntoView(element, Math.floor(main.container.find('.bar').outerHeight() - 4)))
+			{
+				list.scrollTo(element);
+			}
 
 			if(main.isImage(null, main.data.selected.ext))
 			{
 				main.busy(true);
-
-				image = main.container.find('.media .wrapper img');
-				video = main.container.find('.media .wrapper video');
 
 				init = (image.length === 0);
 
@@ -594,12 +750,11 @@
 			{
 				main.busy(true);
 
-				video = main.container.find('.media .wrapper video');
 				init = (video.length === 0);
 
 				if(init)
 				{
-					[video, source] = main.createVideo(main.data.selected.ext);
+					video = main.video.create(main.data.selected.ext)[0];
 					video.appendTo(main.container.find('.media .wrapper'));
 				}
 
@@ -613,17 +768,30 @@
 
 		main.handleKey = (key, callback) =>
 		{
-			if(main.store.console) console.log('handleKey', key);
+			if(main.store.console)
+			{
+				console.log('handleKey', key);
+			}
 
 			if(key === 27)
 			{
 				main.show(false);
 			} else if(key === 40 || key === 34 || key === 39)
 			{
-				main.navigate(null, 1);
+				if(key === 39 && main.data.selected.type === 1)
+				{
+					if(main.video.seek(5)) main.navigate(null, 1);
+				} else {
+					main.navigate(null, 1);
+				}
 			} else if(key === 38 || key === 33 || key === 37)
 			{
-				main.navigate(null, -1);
+				if(key === 37 && main.data.selected.type === 1)
+				{
+					if(main.video.seek(-5)) main.navigate(null, -1);
+				} else {
+					main.navigate(null, -1);
+				}
 			} else if(key === 76)
 			{
 				main.toggleList();
@@ -636,7 +804,7 @@
 		{
 			bound.forEach((value) =>
 			{
-				if(value.hasOwnProperty('direct') && value.direct === true)
+				if(Object.prototype.hasOwnProperty.call(value, 'direct') && value.direct === true)
 				{
 					$(value.trigger).off(value.event);
 
@@ -745,7 +913,7 @@
 
 			main.unbind(main.data.bound, false);
 
-			main.data.list_drag.on('mousedown', (e) =>
+			main.data.list_drag.on('mousedown', () =>
 			{
 				main.data.list_dragged = true;
 
@@ -768,7 +936,7 @@
 				});
 			});
 
-			$(document).on('mouseup', '.gallery-container', (e) =>
+			$(document).on('mouseup', '.gallery-container', () =>
 			{
 				if(main.data.list_dragged === true)
 				{
@@ -779,7 +947,7 @@
 					$('body').css('cursor', '');
 					wrapper.css('pointer-events', 'auto');
 
-					var lw = parseInt(main.data.list.css('width').replace(/[^-\d\.]/g, ''));
+					var lw = parseInt(main.data.list.css('width').replace(/[^-\d.]/g, ''));
 
 					if(lw > 100)
 					{
@@ -797,7 +965,7 @@
 				}
 			});
 
-			$(document).on('click', 'div.gallery-container [data-action="close"]', (e) =>
+			$(document).on('click', 'div.gallery-container [data-action="close"]', () =>
 			{
 				main.show(false);
 			});
@@ -807,12 +975,12 @@
 				main.toggleList($(e.currentTarget));
 			});
 
-			$(document).on('click', 'div.gallery-container [data-action="previous"]', (e) =>
+			$(document).on('click', 'div.gallery-container [data-action="previous"]', () =>
 			{
 				main.navigate(null, -1);
 			});
 
-			$(document).on('click', 'div.gallery-container [data-action="next"]', (e) =>
+			$(document).on('click', 'div.gallery-container [data-action="next"]', () =>
 			{
 				main.navigate(null, 1);
 			});
@@ -837,8 +1005,8 @@
 
 			if(main.store.mobile === true)
 			{
-				$('div.gallery-container').on('swipeleft', (e, data) => main.navigate(null, 1));
-				$('div.gallery-container').on('swiperight', (e, data) => main.navigate(null, -1));
+				$('div.gallery-container').on('swipeleft', () => main.navigate(null, 1));
+				$('div.gallery-container').on('swiperight', () => main.navigate(null, -1));
 			}
 
 			$(document).on('DOMMouseScroll mousewheel', 'div.gallery-container .media', (e) =>
@@ -1033,7 +1201,7 @@
 		{
 			initiate(() =>
 			{
-				if(main.store.blur) main.setBlur(true).bind();
+				if(main.store.blur) main.set.blur(true).bind();
 			});
 		} else {
 			main.show(true);
@@ -1043,6 +1211,6 @@
 			main.store.start > (main.items.length - 1) ? (main.items.length - 1) : main.store.start
 		);
 
-    	return main;
-    };
+		return main;
+	};
 }(jQuery));
