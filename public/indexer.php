@@ -710,6 +710,15 @@ if(count($themes) > 0)
     $current_theme = $config['style']['themes']['default'];
   }
 }
+
+$compact = NULL;
+
+if(is_array($client) && isset($client['style']['compact']))
+{
+  $compact = $client['style']['compact'];
+} else {
+  $compact = $config['style']['compact'];
+}
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -725,7 +734,7 @@ if(count($themes) > 0)
 
   </head>
 
-  <body class="directory<?=$config['style']['compact'] ? ' compact' : ''?>">
+  <body class="directory<?=$compact ? ' compact' : ''?>">
 
     <div class="top-bar">
         <div class="extend ns">&#x25BE;</div>
