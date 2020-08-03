@@ -25,7 +25,11 @@
 
 			return (e) =>
 			{
-				if(timer) clearTimeout(timer);
+				if(timer)
+				{
+					clearTimeout(timer);
+				}
+				
 				timer = setTimeout(f, 100, e);
 			};
 		},
@@ -1080,14 +1084,19 @@
 					return false;
 				}
 
-				if(config.debug) console.log('gallery.load =>', index);
+				if(config.debug)
+				{
+					console.log('gallery.load =>', index);
+				}
+
+				var preview_video = $('.preview-container > video');
 
 				/* if a gallery instance is already active, show it */
 				if(main.gallery.instance && main.gallery.instance !== false)
 				{
-					(main.gallery.instance).store.continue.video = main.store.preview.video ? {
-						'src' : main.store.preview.video.find('source').attr('src'),
-						'time' : main.store.preview.video[0].currentTime
+					(main.gallery.instance).store.continue.video = preview_video.length > 0 ? {
+						'src' : preview_video.find('source').attr('src'),
+						'time' : preview_video[0].currentTime
 					} : null;
 
 					main.store.preview.video = null;
@@ -1144,9 +1153,9 @@
 				};
 
 				options.continue = {
-					video : main.store.preview.video ? {
-						src : main.store.preview.video.find('source').attr('src'),
-						time : main.store.preview.video[0].currentTime
+					video : preview_video.length > 0 ? {
+						src : preview_video.find('source').attr('src'),
+						time : preview_video[0].currentTime
 					} : null
 				}
 
@@ -1433,39 +1442,13 @@
 
 		if(config.mobile === false && config.preview.enabled === true)
 		{
-			main.store.preview.main = new $.fn.imagePreview({
-				elements: ['a.preview', 'div.preview'],
-				hoverDelay : config.preview.hover_delay,
-				windowMargin: config.preview.window_margin,
-				staticPreview : config.preview.static,
-				extensions : {
-					images : config.extensions.image,
-					videos : config.extensions.video
-				}
-			});
-
-			$(main.store.preview.main).on('loaded', (e, data) =>
+			$('.preview').each((index, element) =>
 			{
-				if(data)
-				{
-					main.store.preview.video = (data.itemType === 1 ? data.element : null);
-
-					if(config.debug)
-					{
-						console.log('preview_loaded', data);
-					}
-				} else {
-					main.store.preview.video = null;
-				}
+				window.hoverPreview(element, {
+					delay : config.preview.hover_delay,
+					cursor : config.preview.cursor_indicator
+				})
 			});
-
-			if(config.preview.cursor_indicator === true)
-			{
-				$(main.store.preview.main).on('loadChange', (e, state) =>
-				{
-					$('body > table tr.file a.preview').css('cursor', state ? 'progress' : 'pointer');
-				});
-			}
 		}
 
 		main.events.scroll();

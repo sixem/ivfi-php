@@ -48,9 +48,7 @@ The preview plugin displays a preview of the image or video when hovering over t
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `enabled` | Boolean | `true` | Whether the preview plugin should be enabled or not.
-| `static` | Boolean | `false` | Whether the preview should follow the cursor or not.
 | `hover_delay` | Integer | `75` | Adds a delay (`ms`) before the preview is displayed.
-| `window_margin` | Integer | `0` | Forces a `px` margin between the preview and the edges of the viewport.
 | `cursor_indicator` | Boolean | `true` | Displays a loading cursor while the preview is loading.
 
 ## Extensions
@@ -68,7 +66,8 @@ Various visual options for the script.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `themes` | Boolean | `false` | Set to a path relative to the root directory containing `.css` files. Example: `/indexer/css/themes/` (This directory also contains a few included **example** themes). Every `.css` in the set folder will be treated as a separate theme.
+| `themes => path` | Boolean / String | `false` | Set to a path relative to the root directory containing `.css` files. Example: `/indexer/css/themes/` (This directory also contains a few included **example** themes). Every `.css` in the set folder will be treated as a separate theme.
+| `themes => default` | Boolean / String | `false` | Default theme for new clients to use. Takes a filename **without** the `.css` extension.
 | `compact` | Boolean | `false` | Makes the page use a more compact and centered style.
 
 ## Filter

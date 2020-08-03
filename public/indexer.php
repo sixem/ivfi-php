@@ -46,9 +46,7 @@ $config = array(
     /* Preview options. */
     'preview' => array(
         'enabled' => true, /* whether the preview plugin should be enabled. */
-        'static' => false, /* whether the preview should follow the cursor. */
         'hover_delay' => 75, /* delay in ms before the preview is shown. */
-        'window_margin' => 0, /* force a px margin between the preview and the viewport edges. */
         'cursor_indicator' => true /* displays a loading cursor while the preview is loading. */
     ),
     /* Extension that should be marked as media.
@@ -61,7 +59,10 @@ $config = array(
     'style' => array(
         /* Set to a path relative to the root directory (location of this file) containg .css files.
          * Each .css file will be treated as a separate theme. Set to false to disable themes. */
-        'themes' => false,
+        'themes' => array(
+          'path' => false,
+          'default' => false
+        ),
         /* Enables a more compact styling of the page. */
         'compact' => false
     ),
@@ -84,7 +85,7 @@ $config = array(
 );
 
 /* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('format'=>array('title'=>'Index of %s','date'=>array('d/m/y H:i','d/m/y'),'sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>false,'scroll_interval'=>50,'list_alignment'=>0,'fit_content'=>false),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','png','gif','ico','svg','bmp','webp'),'video'=>array('webm','mp4')),'style'=>array('themes'=>false,'compact'=>false),'filter'=>array('file'=>false,'directory'=>false),'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>false);
+$defaults = array('format'=>array('title'=>'Index of %s','date'=>array('d/m/y H:i','d/m/y'),'sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false ),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>false,'scroll_interval'=>50,'list_alignment'=>0,'fit_content'=>false ),'preview'=>array('enabled'=>true,'hover_delay'=>75,'cursor_indicator'=>true ),'extensions'=>array('image'=>array('jpg','jpeg','png','gif','ico','svg','bmp','webp'),'video'=>array('webm','mp4')),'style'=>array('themes'=>array('path'=>false,'default'=>false),'compact'=>false),'filter'=>array('file'=>false,'directory'=>false),'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>false);
 
 /* Set default configuration values if the config is missing any keys. */
 foreach($defaults as $key => $value)
@@ -117,16 +118,16 @@ if($config['debug'] === true)
   error_reporting(E_ALL);
 }
 
-if($config['style']['themes'])
+if($config['style']['themes']['path'])
 {
-  if($config['style']['themes'][0] !== '/')
+  if($config['style']['themes']['path'][0] !== '/')
   {
-    $config['style']['themes'] = ('/' . $config['style']['themes']);
+    $config['style']['themes']['path'] = ('/' . $config['style']['themes']['path']);
   }
 
-  if(substr($config['style']['themes'], -1) !== '/')
+  if(substr($config['style']['themes']['path'], -1) !== '/')
   {
-    $config['style']['themes'] = ($config['style']['themes'] . '/');
+    $config['style']['themes']['path'] = ($config['style']['themes']['path'] . '/');
   }
 }
 
@@ -410,14 +411,6 @@ class Indexer
 
     $data['size']['readable'] = self::readableFilesize($data['size']['total']);
 
-    foreach(array('file', 'directory') as $type)
-    {
-      if($data['recent'][$type] > 0)
-      {
-        $data['recent'][$type] = self::formatDate('d/m/y H:i', $data['recent'][$type], $timezone['offset']);
-      }
-    }
-
     $this->data = $data;
 
     return $op;
@@ -688,9 +681,9 @@ $counts = array(
 
 $themes = array();
 
-if($config['style']['themes'])
+if($config['style']['themes']['path'])
 {
-  $directory = rtrim($indexer->joinPaths($base_path, $config['style']['themes']), '/');
+  $directory = rtrim($indexer->joinPaths($base_path, $config['style']['themes']['path']), '/');
 
   if(is_dir($directory))
   {
@@ -703,7 +696,20 @@ if($config['style']['themes'])
   if(count($themes) > 0) array_unshift($themes, 'default');
 }
 
-$current_theme = count($themes) > 0 && is_array($client) && isset($client['theme']) ? (in_array($client['theme'], $themes) ? $client['theme'] : NULL) : NULL;
+// $current_theme = count($themes) > 0 && is_array($client) && isset($client['style']['theme']) ? (in_array($client['style']['theme'], $themes) ? $client['style']['theme'] : NULL) : NULL;
+
+$current_theme = NULL;
+
+if(count($themes) > 0)
+{
+  if(is_array($client) && isset($client['style']['theme']))
+  {
+    $current_theme = in_array($client['style']['theme'], $themes) ? $client['style']['theme'] : NULL;
+  } elseif(isset($config['style']['themes']['default']) && in_array($config['style']['themes']['default'], $themes))
+  {
+    $current_theme = $config['style']['themes']['default'];
+  }
+}
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -715,7 +721,7 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
     <link rel="stylesheet" type="text/css" href="/indexer/css/style.css">
-    <?=$current_theme ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes'] . $current_theme . '.css">' . PHP_EOL : ''?>
+    <?=($current_theme && strtolower($current_theme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $current_theme . '.css">' . PHP_EOL : ''?>
 
   </head>
 
@@ -725,8 +731,8 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
         <div class="extend ns">&#x25BE;</div>
         <div class="directory-info">
           <div data-count="size"><?=$data['size']['readable'];?></div>
-          <div <?=$data['recent']['file'] !== 0 ? 'title="Newest: ' . $data['recent']['file'] . '" ' : '';?>data-count="files"><?=$counts['files'] . ($counts['files'] === 1 ? ' file' : ' files');?></div>
-          <div <?=$data['recent']['directory'] !== 0 ? 'title="Newest: ' . $data['recent']['directory'] . '" ' : '';?>data-count="directories"><?=$counts['directories'] . ($counts['directories'] === 1 ? ' directory' : ' directories');?></div>
+          <div <?=$data['recent']['file'] !== 0 ? 'data-raw="' . $data['recent']['file'] . '" ' : '';?>data-count="files"><?=$counts['files'] . ($counts['files'] === 1 ? ' file' : ' files');?></div>
+          <div <?=$data['recent']['directory'] !== 0 ? 'data-raw="' . $data['recent']['directory'] . '" ' : '';?>data-count="directories"><?=$counts['directories'] . ($counts['directories'] === 1 ? ' directory' : ' directories');?></div>
         </div>
     </div>
 
@@ -768,15 +774,12 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
 
 <script type="text/javascript" src="/indexer/js/vendors.js"></script>
 <script type="text/javascript" src="/indexer/js/gallery.js"></script>
-<script type="text/javascript" src="/indexer/js/preview.js"></script>
 
 <script type="text/javascript"><?=('var config = ' . json_encode(array(
   'preview' => array(
     'enabled' => $config['preview']['enabled'],
     'hover_delay' => $config['preview']['hover_delay'],
-    'window_margin' => $config['preview']['window_margin'],
     'cursor_indicator' => $config['preview']['cursor_indicator'],
-    'static' => $config['preview']['static']
   ),
   'sorting' => array(
     'enabled' => $sorting['enabled'],
@@ -798,7 +801,7 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
   ),
   'style' => array(
     'themes' => array(
-      'path' => $config['style']['themes'],
+      'path' => $config['style']['themes']['path'],
       'pool' => $themes,
       'set' => $current_theme ? $current_theme : 'default'
     ),
