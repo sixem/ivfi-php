@@ -5,7 +5,6 @@
  * 
  * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  1.1.5
  */
 
 (() =>
@@ -18,7 +17,6 @@
 			defaults : {},
 			selection : {},
 			selected : null,
-			gallery : null,
 			refresh : false,
 		},
 		debounce : (f) =>
@@ -31,34 +29,33 @@
 				{
 					clearTimeout(timer);
 				}
-
+				
 				timer = setTimeout(f, 100, e);
 			};
 		},
 		checkNested : (obj, ...args) =>
 		{
-			for (var i = 0; i < args.length; i++)
+			for(var i = 0; i < args.length; i++)
 			{
-				if(!obj || !obj.hasOwnProperty(args[i])) return false;
+				if(!obj || !Object.prototype.hasOwnProperty.call(obj, args[i])) return false;
 				obj = obj[args[i]];
 			}
+
 			return true;
 		},
 		getReadableSize : (bytes = 0) =>
 		{
 			/* https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string */
 
-			if(bytes === 0) return '0.00 B';
+			if(bytes === 0) return '0.00' + config.format.sizes[0];
 
-			var byteUnits = [...config.format.sizes], i = -1;
-
-			byteUnits.shift();
+			var i = 0;
 
 			do {
 				bytes = bytes / 1024; i++;
 			} while (bytes > 1024);
 
-			return Math.max(bytes, 0.1).toFixed(1) + byteUnits[i];
+			return Math.max(bytes, 0.1).toFixed(i < 2 ? 0 : 2) + config.format.sizes[i];
 		},
 		capitalize : (input) =>
 		{
@@ -117,11 +114,16 @@
 		client : {
 			get : () =>
 			{
-				var client, keys_required = ['gallery', 'sort'], defaults = {
+				var client, keys_required = ['gallery', 'sort', 'style'], defaults = {
 					gallery : {
 						reverse_options : config.gallery.reverse_options,
 						list_alignment : config.gallery.list_alignment,
+						fit_content : config.gallery.fit_content,
 						autoplay : true
+					},
+					style : {
+						compact : config.style.compact,
+						theme : false
 					}
 				};
 
@@ -131,24 +133,44 @@
 
 					(keys_required).forEach((key) =>
 					{
-						if(!client.hasOwnProperty(key))
+						if(!Object.prototype.hasOwnProperty.call(client, key))
 						{
-							client[key] = defaults.hasOwnProperty(key) ? defaults[key] : {};
+							client[key] = Object.prototype.hasOwnProperty.call(defaults, key) ? defaults[key] : {};
 						}
 					});
+
+					var update = false;
 
 					Object.keys(defaults).forEach((key) =>
 					{
 						Object.keys(defaults[key]).forEach((option) =>
 						{
-							if(!client[key].hasOwnProperty(option)) client[key][option] = defaults[key][option];
+							if(!Object.prototype.hasOwnProperty.call(client[key], option))
+							{
+								client[key][option] = defaults[key][option];
+								update = true;
+							}
 						});
 					});
-				} catch (e) {
-					var client = {};
 
+					if(update)
+					{
+						main.client.set(client);
+					}
+				} catch (e) /* On JSON.parse() error. Means that the client does not have a valid cookie, so we're creating it. */
+				{
+					client = {};
+
+					/* Set default theme (if any). */
+					if(config.style.themes.set)
+					{
+						defaults.style.theme = config.style.themes.set;
+					}
+
+					/* Create keys. */
 					(keys_required).forEach((key) => client[key] = {});
 
+					/* Merge and set cookie. */
 					main.client.set(Object.assign(client, defaults));
 				}
 
@@ -167,7 +189,7 @@
 		settings : {
 			available : () =>
 			{
-				if(config.hasOwnProperty('themes') && config.themes.pool.length > 0 ||
+				if(main.checkNested(config, 'style', 'themes', 'pool') && config.style.themes.pool.length > 0 ||
 					config.gallery.enabled === true)
 				{
 					return true;
@@ -178,7 +200,7 @@
 			create : {
 				option : (e, text, options = {}, title = null) =>
 				{
-					if(options.hasOwnProperty('class')) options.class = ('option ' + options.class);
+					if(Object.prototype.hasOwnProperty.call(options, 'class')) options.class = ('option ' + options.class);
 
 					var wrapper_attributes = Object.assign({
 						class : 'option'
@@ -205,6 +227,8 @@
 						text : header ? header : main.capitalize(id)
 					}));
 				},
+				/* creates a select option.
+				 * set options['data-key'] to override section key. */
 				select : (values, options = {}, selected = null) =>
 				{
 					var e = $('<select/>', options);
@@ -228,13 +252,18 @@
 
 					return e;
 				},
+				/* creates a checkbox option.
+				 * set options['data-key'] to override section key. */
 				check : (options = {}, selected = null) =>
 				{
 					var checked = (selected !== null) ? selected() : false;
+
 					if(checked) options.checked = '';
+
 					var e = $('<input/>', Object.assign(options, {
 						type : 'checkbox'
 					})); e[0].checked = checked;
+
 					return e;
 				}
 			},
@@ -242,15 +271,22 @@
 			{
 				$('.focus-overlay, .settings-container').remove();
 			},
-			update : {  /* update functions for settings which require live updating */
-				theme : (theme) =>
-				{
-					main.theme.set(theme === false ? null : theme, false);
+			/* update functions for settings which require live updating */
+			update : {
+				style : {
+					theme : (theme) =>
+					{
+						main.theme.set(theme === false ? null : theme, false);
+					},
+					compact : (value) =>
+					{
+						$('body')[value ? 'addClass' : 'removeClass']('compact');
+					}
 				},
 				gallery : {
 					list_alignment : (alignment) =>
 					{
-						if(main.store.gallery)
+						if(main.gallery.instance)
 						{
 							var elements = [
 								'.gallery-container div.content-container .media .loader',
@@ -261,16 +297,47 @@
 							elements.forEach((e) => alignment === 0 ? $(e).removeClass('reversed') : $(e).addClass('reversed'));
 							var detached = $(elements[1]).detach(), media = ('.gallery-container div.content-container .media');
 							alignment === 1 ? detached.insertBefore(media) : detached.insertAfter(media);
-							(main.store.gallery).settings.list.reverse = (alignment === 0 ? false : true);
+							(main.gallery.instance).store.list.reverse = (alignment === 0 ? false : true);
 						}
 					},
 					reverse_options : (value) =>
 					{
-						if(main.store.gallery) main.store.gallery.settings.reverse_options = value;
+						if(main.gallery.instance)
+						{
+							main.gallery.instance.store.reverse_options = value;
+							var e = $('.gallery-container div.content-container .media .wrapper .cover .reverse');
+							console.log(e);
+							if(e.length > 0) e.remove();
+						}
 					},
 					autoplay : (value) =>
 					{
-						if(main.store.gallery) main.store.gallery.settings.autoplay = value;
+						if(main.gallery.instance) main.gallery.instance.store.autoplay = value;
+					},
+					fit_content : (value) =>
+					{
+						if(main.gallery.instance)
+						{
+							main.gallery.instance.store.fit_content = value;
+							var wrapper = $('.gallery-container div.content-container .media .wrapper');
+
+							if(wrapper && value)
+							{
+								wrapper.addClass('fill');
+
+								/* force height recalculation */
+								main.store.refresh = true;
+								main.store.selected = null;
+							} else if(wrapper)
+							{
+								wrapper.removeClass('fill');
+
+								['.cover', '.cover img', 'video'].forEach((e) => $(e).css({
+									height : '',
+									width : ''
+								}));
+							}
+						}
 					}
 				}
 			},
@@ -278,7 +345,8 @@
 				gather : (container) =>
 				{
 					/* gather set settings data */
-					var elements = ['select', 'input[type="checkbox"]'], data = {};
+					var elements = ['select', 'input[type="checkbox"]'],
+						data = {};
 
 					container.find(elements.join(',')).each((i, e) =>
 					{
@@ -286,9 +354,10 @@
 
 						if(e[0].hasAttribute('name'))
 						{
-							var id = e.attr('name'), section = e.closest('.section').attr('data-key');
+							var id = e.attr('name'),
+								section = e[0].hasAttribute('data-key') ? e.attr('data-key') : e.closest('.section').attr('data-key');
 
-							if(!data.hasOwnProperty(section)) data[section] = {};
+							if(!Object.prototype.hasOwnProperty.call(data, section)) data[section] = {};
 
 							if(e.is('select'))
 							{
@@ -311,7 +380,7 @@
 					{
 						var is_main = (key === 'main');
 
-						if(!is_main && !client.hasOwnProperty(key)) client[key] = {};
+						if(!is_main && !Object.prototype.hasOwnProperty.call(client, key)) client[key] = {};
 
 						Object.keys(data[key]).forEach((option) =>
 						{
@@ -320,8 +389,8 @@
 							switch(option)
 							{
 								case ('theme'):
-									if(data[key][option] <= (config.themes.pool.length - 1))
-										value = config.themes.pool[data[key][option]] === 'default' ? false : config.themes.pool[data[key][option]]; break;
+									if(data[key][option] <= (config.style.themes.pool.length - 1))
+										value = config.style.themes.pool[data[key][option]] === 'default' ? false : config.style.themes.pool[data[key][option]]; break;
 								default:
 									value = data[key][option]; break;
 							}
@@ -340,10 +409,10 @@
 							if(changed)
 							{
 								/* call the live update function (if any) for the changed settings */
-								if(is_main && main.settings.update.hasOwnProperty(option))
+								if(is_main && Object.prototype.hasOwnProperty.call(main.settings.update, option))
 								{
 									main.settings.update[option](value);
-								} else if(main.settings.update[key].hasOwnProperty(option))
+								} else if(main.checkNested(main.settings.update, key, option))
 								{
 									main.settings.update[key][option](value);
 								}
@@ -361,17 +430,23 @@
 			apply : (e, client = null) =>
 			{
 				/* apply settings (gather and set settings, then close menu) */
-				if(!client) client = main.client.get();
-				var set = main.settings.options.set(main.settings.options.gather(e), client);
+
+				if(!client)
+				{
+					client = main.client.get();
+				}
+
+				main.settings.options.set(main.settings.options.gather(e), client);
 				main.settings.close();
 			},
 			show : () =>
 			{
 				/* build the settings menu */
+
 				if($('.settings-container').length > 0) return;
 
 				if($('.focus-overlay').length === 0) $('<div/>', { class : 'focus-overlay' })
-					.appendTo($('body')).on('click', (e) => main.settings.close());
+					.appendTo($('body')).on('click', () => main.settings.close());
 
 				let container = $('<div/>', {
 					class : 'settings-container'
@@ -379,16 +454,28 @@
 
 				var getMain = (section = main.settings.create.section('main'), settings = 0) =>
 				{
-					if(config.hasOwnProperty('themes') && config.themes.pool.length > 0)
+					if(main.checkNested(config, 'style', 'themes', 'pool') && config.style.themes.pool.length > 0)
 					{
 						section.append(main.settings.create.option(
-							main.settings.create.select(config.themes.pool.map((e, i) =>
+							main.settings.create.select(config.style.themes.pool.map((e) =>
 							{
 								return { value : e, text : e };
-							}), { name : 'theme' }, (option, index, parent) =>
+							}), { name : 'theme', 'data-key' : 'style' }, (option, index) =>
 							{
-								return (config.themes.set === null && index === 0) || (option[0].value == config.themes.set);
+								return (config.style.themes.set === null && index === 0) || (option[0].value == config.style.themes.set);
 							}), 'Theme')); settings++;
+					}
+
+					if(main.checkNested(config, 'style', 'compact') && !config.mobile)
+					{
+						var label = 'Compact Style',
+							description = 'Set the page to use a more compact style.';
+
+						section.append(main.settings.create.option(
+							main.settings.create.check({ name : 'compact', 'data-key' : 'style' },
+								() => {
+									return main.checkNested(client, 'style', 'compact') ? (client.style.compact) : config.style.compact;
+								}), label, { class : 'interactable' }, description)); settings++;
 					}
 
 					return { settings, section };
@@ -399,18 +486,25 @@
 					if(!config.mobile)
 					{
 						section.append(main.settings.create.option(
-							main.settings.create.select(['right', 'left'].map((e, i) =>
+							main.settings.create.select(['right', 'left'].map((e) =>
 							{
 								return { value : 'align-' + e, text : e };
-							}), { name : 'list_alignment' }, (option, index, parent) =>
+							}), { name : 'list_alignment' }, (option, index) =>
 							{
 								return (index === client.gallery.list_alignment);
 							}), 'List Alignment')); settings++;
 					}
 
-					[['Reverse Search', 'reverse_options', 'Toggle visibility of reverse search options on images.'],
-					['Autoplay Videos', 'autoplay', 'Toggle autoplaying of videos.']]
-					.forEach((e) =>
+					var sets = [];
+
+					/* toggleable gallery options (title, json key, description).*/
+					sets.push(
+						['Reverse Search', 'reverse_options', 'Toggle the visibility of reverse search options on images.'],
+						['Autoplay Videos', 'autoplay', 'Toggle the autoplaying of videos.'],
+						['Fit Content', 'fit_content', 'Force images and videos to fill the screen.']
+					);
+
+					sets.forEach((e) =>
 					{
 						var [label, key, description] = e;
 
@@ -439,13 +533,13 @@
 					class : 'apply ns',
 					text : 'Apply'
 				}).appendTo(bottom)
-				.on('click', (e) => main.settings.apply(container, client));
+				.on('click', () => main.settings.apply(container, client));
 
 				$('<div/>', {
 					class : 'cancel ns',
 					text : 'Cancel'
 				}).appendTo(bottom)
-				.on('click', (e) => main.settings.close());
+				.on('click', () => main.settings.close());
 
 				$('body').append(container);
 
@@ -505,10 +599,10 @@
 				{
 					var e = $('<div/>', {
 						text : item.text,
-						class : 'ns' + (item.hasOwnProperty('class') ? ' ' + item.class : '')
+						class : 'ns' + (Object.prototype.hasOwnProperty.call(item, 'class') ? ' ' + item.class : '')
 					}).appendTo(container);
 
-					if(item.hasOwnProperty('id')) e.attr('id', item.id);
+					if(Object.prototype.hasOwnProperty.call(item, 'id')) e.attr('id', item.id);
 				});
 
 				return container;
@@ -531,9 +625,9 @@
 			set : (theme = null, set_cookie = true) =>
 			{
 				var sheets = $('head > link[rel="stylesheet"]').filter((i, sheet) =>
-					sheet.hasAttribute('href') && (sheet.getAttribute('href')).match(new RegExp('\/(themes)\/', 'i')));
+					sheet.hasAttribute('href') && (sheet.getAttribute('href')).match(new RegExp('/(themes)/', 'i')));
 
-				config.themes.set = theme;
+				config.style.themes.set = theme;
 				
 				if(theme === null || !theme)
 				{
@@ -543,21 +637,21 @@
 				} else {
 					if(set_cookie)
 					{
-						main.client.set(main.client.get().theme = theme);
+						main.client.set(main.client.get().style.theme = theme);
 					}
 				}
 
 				$('head').append($('<link/>', {
 					rel : 'stylesheet',
 					type : 'text/css',
-					href : `${config.themes.path}/${theme}.css`
+					href : `${config.style.themes.path}/${theme}.css`
 				}));
 
 				sheets.each((i, sheet) => sheet.remove());
 			}
 		},
 		filter : {
-			apply : (query = null, selector = null) =>
+			apply : (query = null) =>
 			{
 				main.store.refresh = true;
 
@@ -576,7 +670,7 @@
 					size : 0
 				}, match = null;
 
-				if(main.store.gallery) main.store.gallery.data.selected.index = 0;
+				if(main.gallery.instance) main.gallery.instance.data.selected.index = 0;
 
 				$('body > table tr.file, body > table tr.directory').each((index, item) =>
 				{
@@ -622,7 +716,7 @@
 
 				['size', 'files', 'directories'].forEach((s) => top[s] = top.container.find(`[data-count="${s}"]`));
 
-				if(!main.store.defaults.hasOwnProperty('top_values'))
+				if(!Object.prototype.hasOwnProperty.call(main.store.defaults, 'top_values'))
 				{
 					main.store.defaults.top_values = {
 						size : top.size.text(),
@@ -665,6 +759,7 @@
 				}
 
 				/* hide or show the gallery menu option */
+
 				if(!data.reset && previews === 0 && option.length > 0)
 				{
 					if(option.css('display') !== 'none')
@@ -696,30 +791,149 @@
 			}
 		},
 		dates : {
-			convert : (i) =>
+			/* https://github.com/kvz/locutus/blob/master/src/php/datetime/date.js
+			 * Copyright (c) 2007-2016 Kevin van Zonneveld (https://kvz.io) ) */
+			format : (format, timestamp) =>
 			{
-				return i < 10 ? '0' + i : i;
+				var jsdate, f, txtWords = [
+					'Sun', 'Mon', 'Tues', 'Wednes', 'Thurs', 'Fri', 'Satur',
+					'January', 'February', 'March', 'April', 'May', 'June',
+					'July', 'August', 'September', 'October', 'November', 'December'
+				], formatChr = /\\?(.?)/gi;
+
+				var formatChrCb = (t, s) => f[t] ? f[t]() : s;
+
+				var _pad = (n, c) =>
+				{
+					n = String(n);
+					while(n.length < c) n = '0' + n;
+					return n;
+				};
+
+				f = {
+					d: () => _pad(f.j(), 2),
+					D: () => f.l().slice(0, 3),
+					j: () => jsdate.getDate(),
+					l: () => txtWords[f.w()] + 'day',
+					N: () => f.w() || 7,
+					S: () =>
+					{
+						var j = f.j(),
+							i = j % 10;
+
+						if(i <= 3 && parseInt((j % 100) / 10, 10) === 1) i = 0;
+
+						return ['st', 'nd', 'rd'][i - 1] || 'th';
+					},
+					w: () => jsdate.getDay(),
+					z: () =>
+					{
+						var a = new Date(f.Y(), f.n() - 1, f.j()),
+							b = new Date(f.Y(), 0, 1);
+
+						return Math.round((a - b) / 864e5);
+					},
+					W: () =>
+					{
+						var a = new Date(f.Y(), f.n() - 1, f.j() - f.N() + 3),
+							b = new Date(a.getFullYear(), 0, 4);
+
+						return _pad(1 + Math.round((a - b) / 864e5 / 7), 2);
+					},
+					F: () => txtWords[6 + f.n()],
+					m: () => _pad(f.n(), 2),
+					M: () => f.F().slice(0, 3),
+					n: () => jsdate.getMonth() + 1,
+					t: () => (new Date(f.Y(), f.n(), 0)).getDate(),
+					L: () =>
+					{
+						var j = f.Y();
+
+						return j % 4 === 0 & j % 100 !== 0 | j % 400 === 0;
+					},
+					o: () =>
+					{
+						var n = f.n(),
+							W = f.W(),
+							Y = f.Y();
+
+						return Y + (n === 12 && W < 9 ? 1 : n === 1 && W > 9 ? -1 : 0);
+					},
+					Y: () => jsdate.getFullYear(),
+					y: () => f.Y().toString().slice(-2),
+					a: () => jsdate.getHours() > 11 ? 'pm' : 'am',
+					A: () => f.a().toUpperCase(),
+					B: () =>
+					{
+						var H = jsdate.getUTCHours() * 36e2,
+							i = jsdate.getUTCMinutes() * 60,
+							s = jsdate.getUTCSeconds();
+
+						return _pad(Math.floor((H + i + s + 36e2) / 86.4) % 1e3, 3);
+					},
+					g: () => f.G() % 12 || 12,
+					G: () => jsdate.getHours(),
+					h: () => _pad(f.g(), 2),
+					H: () => _pad(f.G(), 2),
+					i: () => _pad(jsdate.getMinutes(), 2),
+					s: () => _pad(jsdate.getSeconds(), 2),
+					u: () => _pad(jsdate.getMilliseconds() * 1000, 6),
+					e: () =>
+					{
+						var msg = 'Not supported (see source code of date() for timezone on how to add support)'
+						throw new Error(msg)
+					},
+					I: () =>
+					{
+						var a = new Date(f.Y(), 0),
+							c = Date.UTC(f.Y(), 0),
+							b = new Date(f.Y(), 6),
+							d = Date.UTC(f.Y(), 6);
+
+						return ((a - c) !== (b - d)) ? 1 : 0;
+					},
+					O: () =>
+					{
+						var tzo = jsdate.getTimezoneOffset(),
+							a = Math.abs(tzo);
+
+						return (tzo > 0 ? '-' : '+') + _pad(Math.floor(a / 60) * 100 + a % 60, 4);
+					},
+					P: () =>
+					{
+						var O = f.O();
+
+						return (O.substr(0, 3) + ':' + O.substr(3, 2));
+					},
+					T: () => 'UTC',
+					Z: () => -jsdate.getTimezoneOffset() * 60,
+					c: () => 'Y-m-d\\TH:i:sP'.replace(formatChr, formatChrCb),
+					r: () => 'D, d M Y H:i:s O'.replace(formatChr, formatChrCb),
+					U: () => jsdate / 1000 | 0
+				};
+
+				var _date = (format, timestamp) =>
+				{
+					jsdate = (timestamp === undefined ? new Date()
+						: (timestamp instanceof Date) ? new Date(timestamp)
+						: new Date(timestamp * 1000)
+					);
+
+					return format.replace(formatChr, formatChrCb);
+				};
+
+				return _date(format, timestamp);
 			},
 			load : () =>
 			{
-				var offsetGet = () =>
-				{
-					let date = new Date();
-					return date.getTimezoneOffset();
-				};
-
-				var formatDate = (ts) =>
-				{
-					var convert = main.dates.convert, date = new Date(ts * 1000);
-
-					return [
-						`${convert(date.getDate())}/${convert(date.getMonth()+1)}/${date.getFullYear().toString().substring(2)}`,
-						`${convert(date.getHours())}:${convert(date.getMinutes())}`
-					];
-				};
+				/* get client's UTC offset */
+				var offsetGet = () => (new Date()).getTimezoneOffset();
 
 				var formatSince = (seconds) =>
 				{
+					/* formats seconds to an 'ago' string.
+					 * example: formatSince(3720); returns 1 hour and 2 minutes ago. */
+
 					if(seconds === 0)
 					{
 						return 'Now';
@@ -743,8 +957,8 @@
 						var key = keys[index]; if(seconds <= t[key]) continue;
 
 						var n = count >= (index+1) ? keys[(index+1)] : null,
-						f = Math.floor(seconds / t[key]),
-						s = n ? Math.floor((seconds - (f * t[key])) / t[n]) : 0;
+							f = Math.floor(seconds / t[key]),
+							s = n ? Math.floor((seconds - (f * t[key])) / t[n]) : 0;
 
 						value = `${f} ${key}${f == 1 ? '' : 's'}` + (s > 0 ? (` and ${s} ${n}${s == 1 ? '' : 's'}`) : '') + ' ago';
 
@@ -754,44 +968,80 @@
 					return value;
 				};
 
-				var apply = (offset) =>
+				var apply = (offset, format = true) =>
 				{
-					$('tbody tr.directory > td:nth-child(2), tbody tr.file > td:nth-child(2)').each((index, item) =>
+					$('tbody tr.directory > td:nth-child(2), tbody tr.file > td[data-raw]:nth-child(2)')
+					.each((index, item) =>
+					{
+						item = $(item);
+
+						var timestamp = parseInt(item.attr('data-raw')),
+							since = formatSince(config.timestamp - timestamp),
+							span = (format === true ? $('<span/>') : item.find('> span'));
+
+						/* update the date formats if the offset has been changed or set for the first time */
+						if(format === true)
+						{
+							(config.format.date).forEach((f, index) =>
+							{
+								if(index <= 1)
+								{
+									var element = $('<span/>', {
+										text : main.dates.format(f, timestamp)
+									});
+
+									if(config.format.date.length > 1)
+									{
+										element.attr('data-view', index === 0 ? 'desktop' : 'mobile')
+									}
+
+									span.append(element);
+								}
+							});
+
+							item.html(span);
+						}
+
+						if(since) span.attr('title', `${since} (UTC${(offset.hours > 0 ? '+' : '') + offset.hours})`);
+					});
+
+					$('.top-bar > .directory-info div[data-count="files"], \
+						.top-bar > .directory-info div[data-count="directories"]').each((index, item) =>
 					{
 						item = $(item);
 
 						if(item[0].hasAttribute('data-raw'))
 						{
-							var [short, full] = formatDate(item.attr('data-raw'));
-							var offset_hours = offset > 0 ? -Math.abs(offset) : Math.abs(offset); offset_hours = offset_hours / 60;
-							var e = $('<span/>'), mt = formatSince(config.timestamp - parseInt(item.attr('data-raw')));
-
-							if(mt)
-							{
-								e.attr('title', `${mt} (UTC${(offset_hours > 0 ? '+' : '') + offset_hours})`);
-							}
-
-							e.html(short).append($('<span/>', {
-								'data-view' : 'desktop',
-								text : ' ' + full
-							}));
-
-							item.html(e);
+							$(item).attr('title', 'Newest: ' + main.dates.format(config.format.date[0], parseInt(item.attr('data-raw'))))
 						}
 					});
 				};
 
-				var offset = offsetGet(), client = main.client.get();
-				client.timezone_offset = offset;
-				main.client.set(client);
+				var offset = offsetGet(),
+					client = main.client.get(),
+					update = client.timezone_offset != offset;
 
-				apply(offset);
+				/* only update if offset is changed or unset */
+				if(update)
+				{
+					client.timezone_offset = offset;
+					main.client.set(client);
+				}
+
+				offset = {
+					minutes : (offset > 0 ? -Math.abs(offset) : Math.abs(offset))
+				};
+
+				offset.hours = (offset.minutes / 60);
+				offset.seconds = (offset.minutes * 60);
+
+				apply(offset, update);
 			}
 		},
 		sort : {
 			load : () =>
 			{
-				if(config.hasOwnProperty('sorting') && config.sorting.enabled)
+				if(Object.prototype.hasOwnProperty.call(config, 'sorting') && config.sorting.enabled)
 				{
 					if(config.sorting.types === 0 || config.sorting.types === 1)
 					{
@@ -826,50 +1076,95 @@
 			}
 		},
 		gallery : {
+			instance : null,
 			load : (index = 0) =>
 			{
-				if(config.debug) console.log('gallery.load =>', index);
-				if(!config.gallery.enabled) return false;
-
-				if(main.store.gallery && main.store.gallery !== false)
+				if(!config.gallery.enabled)
 				{
+					return false;
+				}
+
+				if(config.debug)
+				{
+					console.log('gallery.load =>', index);
+				}
+
+				var preview_video = $('.preview-container > video');
+
+				/* if a gallery instance is already active, show it */
+				if(main.gallery.instance && main.gallery.instance !== false)
+				{
+					(main.gallery.instance).store.continue.video = preview_video.length > 0 ? {
+						'src' : preview_video.find('source').attr('src'),
+						'time' : preview_video[0].currentTime
+					} : null;
+
+					main.store.preview.video = null;
+
 					let items = main.store.refresh ? main.getTableItems() : null;
-					if(items !== null && items.length === 0) return false;
-					main.store.gallery.show(true, index === null ? main.store.gallery.data.selected.index : index, items);
-					if(main.store.refresh) main.store.refresh = false;
+
+					if(items !== null && items.length === 0)
+					{
+						return false;
+					} else {
+						main.gallery.instance.show(true, index === null ? main.gallery.instance.data.selected.index : index, items);
+
+						if(main.store.refresh)
+						{
+							main.store.refresh = false;
+						}
+					}
 
 					return;
 				}
 
-				var list_state = null, client = main.client.get();
+				/* set gallery options and start a new instance */
+				var client = main.client.get(), options = {},
+					list_state = JSON.parse(Object.prototype.hasOwnProperty.call(client.gallery, 'list_state') ? 
+						client.gallery.list_state : 1);
 
-				if(!client.hasOwnProperty('gallery'))
-				{
-					client.gallery = {
-						'list_state' : 1
-					};
+				options.start = index === null ? 0 : index;
+				options.filter = false;
 
-					main.client.set(client);
+				options.console = config.debug;
+				options.fade = config.gallery.fade;
+
+				options.mobile = config.mobile;
+
+				options.reverse_options = main.checkNested(client, 'gallery', 'reverse_options') ? 
+					(client.gallery.reverse_options) : 
+					config.gallery.autoplay;
+
+				options.autoplay = main.checkNested(client, 'gallery', 'autoplay') ?
+					(client.gallery.autoplay) :
+					config.gallery.autoplay;
+
+				options.fit_content = main.checkNested(client, 'gallery', 'fit_content') ?
+					(client.gallery.fit_content) :
+					config.gallery.fit_content;
+
+				options.scroll_interval = config.gallery.scroll_interval;
+
+				options.list = {
+					show : list_state == null ? true : (list_state ? true : false),
+					reverse : main.checkNested(client, 'gallery', 'list_alignment') ?
+						(client.gallery.list_alignment === 0 ? false : true) :
+						false
+				};
+
+				options.continue = {
+					video : preview_video.length > 0 ? {
+						src : preview_video.find('source').attr('src'),
+						time : preview_video[0].currentTime
+					} : null
 				}
 
-				list_state = JSON.parse(client.gallery.hasOwnProperty('list_state') ? client.gallery.list_state : 1);
+				main.gallery.instance = new $.fn.gallery(main.getTableItems(), options);
 
-				main.store.gallery = new $.fn.gallery(main.getTableItems(), {
-					'start' : index === null ? 0 : index,
-					'filter' : false,
-					'console' : config.debug,
-					'fade' : config.gallery.fade,
-					'mobile' : config.mobile,
-					'reverse_options' : main.checkNested(client, 'gallery', 'reverse_options') ? (client.gallery.reverse_options) : config.gallery.reverse_options,
-					'autoplay' : main.checkNested(client, 'gallery', 'autoplay') ? (client.gallery.autoplay) : config.gallery.autoplay,
-					'scroll_interval' : config.gallery.scroll_interval,
-					'list' : {
-						'show' : list_state == null ? true : (list_state ? true : false),
-						'reverse' : main.checkNested(client, 'gallery', 'list_alignment') ? (client.gallery.list_alignment === 0 ? false : true) : false
-					}
-				});
-
-				if(main.store.gallery !== false) $(main.store.gallery).on('unbound', (e, state) => main.bind());
+				if(main.gallery.instance !== false)
+				{
+					$(main.gallery.instance).on('unbound', () => main.bind());
+				}
 			}
 		},
 		overlay : {
@@ -909,8 +1204,8 @@
 				if(parent.is(':hidden')) return true;
 
 				var url = item.attr('href'),
-				name = item.closest('td').data('raw'),
-				size = parent.find('td').eq(2).text();
+					name = item.closest('td').data('raw'),
+					size = parent.find('td').eq(2).text();
 
 				if(typeof url !== 'undefined' && typeof name !== 'undefined')
 				{
@@ -924,8 +1219,8 @@
 			scroll : () =>
 			{
 				var path = $('body > div.path'),
-				top = $('div.top-bar > div.directory-info > div.quick-path'),
-				visible = $(window).scrollTop() < path.offset().top + path.outerHeight();
+					top = $('div.top-bar > div.directory-info > div.quick-path'),
+					visible = $(window).scrollTop() < path.offset().top + path.outerHeight();
 
 				if(!visible)
 				{
@@ -975,7 +1270,7 @@
 				}
 			});
 
-			$(window).on('scroll', main.debounce((e) =>
+			$(window).on('scroll', main.debounce(() =>
 			{
 				main.events.scroll();
 			}));
@@ -987,7 +1282,7 @@
 		main.menu.toggle(e.currentTarget);
 	});
 
-	$('.filter-container > div.close > span').on('click', (e) =>
+	$('.filter-container > div.close > span').on('click', () =>
 	{
 		main.filter.toggle();
 	});
@@ -996,16 +1291,16 @@
 	{
 		var target = $(e.currentTarget);
 
-		main.filter.apply(target.val(), target);
+		main.filter.apply(target.val());
 	});
 
-	$(document).on('click', 'body > div.menu #filter', (e) =>
+	$(document).on('click', 'body > div.menu #filter', () =>
 	{
 		main.filter.toggle();
 		main.menu.toggle();
 	});
 
-	$(document).on('click', 'body > div.menu #settings', (e) =>
+	$(document).on('click', 'body > div.menu #settings', () =>
 	{
 		main.settings.show();
 		main.menu.toggle(false);
@@ -1013,7 +1308,7 @@
 
 	if(config.gallery.enabled === true)
 	{
-		$(document).on('click', 'body > div.menu #gallery', (e) =>
+		$(document).on('click', 'body > div.menu #gallery', () =>
 		{
 			main.gallery.load(null);
 			main.menu.toggle(false);
@@ -1035,7 +1330,7 @@
 		});
 	}
 
-	$(document).on('click', 'body > div.menu #copy', (e) =>
+	$(document).on('click', 'body > div.menu #copy', () =>
 	{
 		var wget = () =>
 		{
@@ -1066,7 +1361,8 @@
 		};
 
 		/* set a skip directory var if we're only sorting sizes or types (as they should be unaffected by these). */
-		var skip_directories = (config.sorting.hasOwnProperty('sort_by') && (index === 2 || index === 3));
+		var skip_directories = (Object.prototype.hasOwnProperty.call(config.sorting, 'sort_by') &&
+			(index === 2 || index === 3));
 
 		if(config.sorting.types === 0 || config.sorting.types === 2)
 		{
@@ -1111,9 +1407,20 @@
 		$('tbody tr.last').removeClass('last');
 	});
 
-	window.addEventListener('resize', main.debounce((e) =>
+	window.addEventListener('resize', main.debounce(() =>
 	{
+		if(config.debug)
+		{
+			console.log('resized');
+		}
+
 		config.mobile = Modernizr.mq('(max-width: 640px)');
+
+		if(main.gallery.instance)
+		{
+			(main.gallery.instance).store.mobile = config.mobile;
+			(main.gallery.instance).update.listWidth();
+		}
 	}));
 
 	$(document).ready(() =>
@@ -1135,35 +1442,13 @@
 
 		if(config.mobile === false && config.preview.enabled === true)
 		{
-			main.store.preview.main = new $.fn.imagePreview({
-				elements: ['a.preview', 'div.preview'],
-				hoverDelay : config.preview.hover_delay,
-				windowMargin: config.preview.window_margin,
-				staticPreview : config.preview.static,
-				extensions : {
-					images : config.extensions.image,
-					videos : config.extensions.video
-				}
-			});
-
-			$(main.store.preview.main).on('loaded', (e, data) =>
+			$('.preview').each((index, element) =>
 			{
-				if(data)
-				{
-					if(config.debug)
-					{
-						console.log('preview_loaded', data);
-					}
-				}
+				window.hoverPreview(element, {
+					delay : config.preview.hover_delay,
+					cursor : config.preview.cursor_indicator
+				})
 			});
-
-			if(config.preview.cursor_indicator === true)
-			{
-				$(main.store.preview.main).on('loadChange', (e, state) =>
-				{
-					$('body > table tr.file a.preview').css('cursor', state ? 'progress' : 'pointer');
-				});
-			}
 		}
 
 		main.events.scroll();

@@ -7,26 +7,24 @@
  * 
  * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
- * @version  0.21 (1.1.5)
  */
 
 (function($)
 {
-    'use strict';
+	'use strict';
 
-    $.fn.gallery = function(items, options = {})
-    {
+	$.fn.gallery = function(items, options = {})
+	{
 		const main = {
 			data : {
 				busy : false,
-				scrollbreak : false,
-				isChrome : (/Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor))
+				scrollbreak : false
 			}
 		};
 
-		main.settings = $.extend({
+		main.store = $.extend({
 			extensions : {
-				image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'],
+				image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'],
 				video : ['mp4', 'webm']
 			},
 			console : true,
@@ -37,20 +35,23 @@
 			mobile : false,
 			scroll_interval : 35,
 			autoplay : true,
+			reverse_options : true,
+			fit_content : false,
 			list : {
 				show : true,
 				reverse : false
-
 			},
-			reverse_options : true
-		}, main.settings, options);
+			continue : {
+				video : null
+			}
+		}, main.store, options);
 
 		main.loadImage = (url) =>
 		{
 			return new Promise((resolve, reject) => {
 				let img = new Image();
 
-				img.addEventListener('load', (e) => resolve(url));
+				img.addEventListener('load', () => resolve([url, img]));
 
 				img.addEventListener('error', () =>
 				{
@@ -64,14 +65,14 @@
 		main.getExtension = (filename) => (filename.split('.').pop()).toLowerCase();
 		main.getObjectSet = (...elements) => $((elements.filter((value) => typeof value !== 'undefined')).map((element) => $(element)));
 
-		main.filterItems = (items) => items.filter((item, index) => main.isImage(item.name) || main.isVideo(item.name));
+		main.filterItems = (items) => items.filter((item) => main.isImage(item.name) || main.isVideo(item.name));
 
-		main.isImage = (filename, ext = null) => main.settings.extensions.image.includes(ext ? ext : main.getExtension(filename));
-		main.isVideo = (filename, ext = null) => main.settings.extensions.video.includes(ext ? ext : main.getExtension(filename));
+		main.isImage = (filename, ext = null) => main.store.extensions.image.includes(ext ? ext : main.getExtension(filename));
+		main.isVideo = (filename, ext = null) => main.store.extensions.video.includes(ext ? ext : main.getExtension(filename));
 
 		main.getScrollBarWidth = (force = false) =>
 		{
-			if(!force) if($('body').height() < $(window).height()) return 0;
+			if(!force) if($(document).height() <= $(window).height()) return 0;
 
 			var outer = $('<div>').css({
 				visibility: 'hidden', width: 100, overflow: 'scroll'
@@ -88,39 +89,36 @@
 
 		main.limitBody = (bool = true) =>
 		{
-			var body = $('body'),
-				table = body.find('> table'),
-				scrollpadding = main.getScrollBarWidth();
+			/* removes the scrollbar from the body (to avoid it showing when the gallery is open)
+			 * and adds a padding to it with the width of the scrollbar in order to avoid jumping elements. */
+
+			var body = $('body'), html = $('html'), scrollpadding = main.getScrollBarWidth();
 
 			if(bool === true)
 			{
 				main.data.body = {
 					'max-height' : body.css('max-height'),
-					'width' : body.css('width'),
 					'overflow' : body.css('overflow')
 				};
 
-				if(scrollpadding > 0) table.css({
-					'width' : main.data.isChrome ? '100%' : 'calc(100% - ' + scrollpadding + 'px)',
+				if(scrollpadding > 0) html.css({
 					'padding-right' : scrollpadding + 'px'
 				});
 
 				body.css({
-    				'max-height' : 'calc(100vh - var(--height-gallery-top-bar))',
-    				'overflow' : 'hidden'
-    			});
+					'max-height' : 'calc(100vh - var(--height-gallery-top-bar))',
+					'overflow' : 'hidden'
+				});
 			} else {
-				if(main.data.hasOwnProperty('body'))
+				if(Object.prototype.hasOwnProperty.call(main.data, 'body'))
 				{
 					body.css({
-    					'max-height' : main.data.body['max-height'],
-    					'width' : 'unset',
-    					'overflow' : main.data.body.overflow
-    				});
+						'max-height' : main.data.body['max-height'],
+						'overflow' : main.data.body.overflow
+					});
 				}
 
-				table.css({
-					'width' : '100%',
+				html.css({
 					'padding-right' : 'unset'
 				});
 			}
@@ -145,10 +143,10 @@
 		{
 			if(items)
 			{
-				if(main.settings.console) console.log('itemsUpdate', true);
+				if(main.store.console) console.log('itemsUpdate', true);
 
 				main.data.selected.index = null;
-				main.items = main.settings.filter ? main.filterItems(items) : items;
+				main.items = main.store.filter ? main.filterItems(items) : items;
 				main.populateTable(main.items);
 			}
 
@@ -161,26 +159,39 @@
 					main.container.find('.media .wrapper img, .media .wrapper video').hide();
 					main.navigate(index);
 				}
+
 				main.container.find('.list').scrollTo(main.container.find('> .list').find('tr').eq(index));
 			} else {
-				main.unbind(main.data.bound); main.container.hide();
+				main.unbind(main.data.bound);
+				main.container.hide();
 			}
 
-			if(main.settings.blur)
+			if(main.store.blur)
 			{
-				main.setBlur(bool); main.limitBody(bool);
+				main.set.blur(bool);
+				main.limitBody(bool);
 			}
 
-			var video = main.container.find('.media .wrapper video'), table = main.container.find('.list table');
+			var video = main.container.find('.media .wrapper video'),
+				table = main.container.find('.list table');
 
 			if(video.length > 0)
 			{
 				if(bool === true && video.is(':visible'))
 				{
-					video[0].currentTime = 0;
+					var current_time = video[0].currentTime;
+
+					if(main.store.continue.video && video.find('source').attr('src') == main.store.continue.video.src)
+					{
+						current_time = main.store.continue.video.time;
+						main.store.continue.video = null;
+					}
+
+					video[0].currentTime = current_time;
 					video[0].muted = false;
-					video[0][main.settings.autoplay ? 'play' : 'pause']();
-				} else if(bool === false) {
+					video[0][main.store.autoplay ? 'play' : 'pause']();
+				} else if(bool === false)
+				{
 					video[0].muted = true;
 					video[0].pause();
 				}
@@ -192,7 +203,8 @@
 			}
 		};
 
-		main.data.busy = null; main.data.busy_handle = null;
+		main.data.busy = null;
+		main.data.busy_handle = null;
 
 		main.tick = (loader) =>
 		{
@@ -250,36 +262,33 @@
 			return e.length > 0 ? e : null;
 		};
 
-		main.setBlur = (bool = true) =>
-		{
-			if(bool === true)
+		main.update = {
+			listWidth : (wrapper = null) =>
 			{
-				main.data.blurred = $('body > *:not(.gallery-container):not(script):not(noscript):not(style)').addClass('blur ns');
-			} else {
-				if(main.data.hasOwnProperty('blurred')) main.data.blurred.removeClass('blur ns');
-			}
+				if(!wrapper) wrapper = main.container.find('.media .wrapper');
 
-			return main;
+				var list = main.data.list ? main.data.list : (main.container.find('div.list')),
+					width = (main.store.mobile || !list || list.is(':hidden')) ? 0 : list.outerWidth();
+
+				wrapper[0].style.setProperty('--width-list', width + 'px');
+			}
 		};
 
 		main.getReverseOptions = (url) =>
 		{
 			url = encodeURIComponent(document.location.origin + url);
 
-    		return {
-       			'Google': 'https://www.google.com/searchbyimage?image_url=' + url + '&safe=off',
-        		'Yandex': 'https://www.yandex.com/images/search?rpt=imageview&img_url=' + url,
-        		'IQDB': 'https://iqdb.org/?url=' + url
-    		};
+			return {
+				'Google': 'https://www.google.com/searchbyimage?image_url=' + url + '&safe=off',
+				'Yandex': 'https://yandex.com/images/search?rpt=imageview&url=' + url,
+				'IQDB': 'https://iqdb.org/?url=' + url
+			};
 		};
 
-		main.reverse = (trigger, show = true, fade = 0) =>
+		main.reverse = () =>
 		{
-			if(!main.settings.reverse_options) return false;
-
-			var cover = main.container.find('.content-container .media .wrapper .cover');
-
-			if(cover.length === 0) return false;
+			if(!main.store.reverse_options || 
+				(main.container.find('.content-container .media .wrapper .cover')).length === 0) return false;
 
 			var container = main.container.find('.content-container .media .reverse');
 
@@ -290,65 +299,101 @@
 				}).appendTo(main.container.find('.content-container .media .wrapper .cover'));
 			}
 
-			if(show === false)
-			{
-				(fade > 0) ? container.stop().fadeOut(fade) : container.hide(); return;
-			}
-
-        	var options = main.getReverseOptions(main.data.selected.src);
+			var options = main.getReverseOptions(main.data.selected.src);
 
 			container.html(
-				Object.keys(options).map((site) => `<a class="reverse-link" target="_blank" href="${options[site]}">${site}</a>`).join('|')
+				Object.keys(options).map((site) => `<a class="reverse-link" target="_blank" href="${options[site]}">${site}</a>`)
 			);
-
-        	if(container.is(':hidden')) container.show();
 		};
 
 		main.shortenString = (input, cutoff) =>
 		{
-    		cutoff = cutoff || 28;
+			cutoff = cutoff || 28;
 
-    		if(input.length > cutoff)
-    		{
-    			return [
-           		 input.substr(0, Math.floor((cutoff / 2) - 2)),
-            		input.substr(input.length - (Math.floor((cutoff / 2) - 2)), input.length)
-        		].join(' .. ');
-    		} else {
-        		return input;
-    		}
+			if(input.length > cutoff)
+			{
+				return [
+				input.substr(0, Math.floor((cutoff / 2) - 2)),
+					input.substr(input.length - (Math.floor((cutoff / 2) - 2)), input.length)
+				].join(' .. ');
+			} else {
+				return input;
+			}
 		};
 
-		/* sets the item info for the current item (topbar left) */
-		main.setItemInfo = (item, index, max) =>
-		{
-			if(main.settings.console) console.log('itemSet', item);
+		main.set = {
+			cache : {
+				info : null
+			},
+			/* Sets the item info for the current item.
+			 * If update is set to false, then info is cache temporary and not shown.
+			 * Set update to true in order to show cached info.
+			 */
+			itemInfo : (update, item = null, index = null, max = null) =>
+			{
+				if(main.store.console && !update)
+				{
+					console.log('itemSet', item);
+				}
 
-			var name = main.settings.mobile ? main.shortenString(item.name, 30) : item.name;
+				if(update)
+				{
+					if(Array.isArray(main.set.cache.info))
+					{
+						[item, index, max] = main.set.cache.info;
+					} else if(item === null || index === null || max === null)
+					{
+						return false;
+					}
+				} else {
+					main.set.cache.info = [item, index, max];
 
-			main.container
-			.find('.bar > .right > a.download')
-			.attr('filename', item.name)
-			.attr('href', item.url)
-			.attr('title', `Download: ${item.name}`);
+					return false;
+				}
 
-			main.container.find('.bar > .left').html(
-				`<span>${index + 1} of ${max}</span>`+
-				` | <a href="${item.url}">${name}</a>`+
-				(item.hasOwnProperty('size') && !main.settings.mobile ? ` | <span>${item.size}</span>` : '')
-			);
-		};
+				var name = main.store.mobile ? main.shortenString(item.name, 30) : item.name;
+
+				main.container
+				.find('.bar > .right > a.download')
+				.attr('filename', item.name)
+				.attr('href', item.url)
+				.attr('title', `Download: ${item.name}`);
+
+				main.container.find('.bar > .left').html(
+					`<span>${index + 1} of ${max}</span>` +
+					` | <a href="${item.url}">${name}</a>` +
+					(Object.prototype.hasOwnProperty.call(item, 'size') && !main.store.mobile ? ` | <span>${item.size}</span>` : '')
+				);
+
+				return true;
+			},
+			/* Enables blur for (almost) all child elements of body. */
+			blur : (bool = true) =>
+			{
+				if(bool === true)
+				{
+					main.data.blurred = $('body > *:not(.gallery-container):not(script):not(noscript):not(style)').addClass('blur ns');
+				} else {
+					if(Object.prototype.hasOwnProperty.call(main.data, 'blurred'))
+					{
+						main.data.blurred.removeClass('blur ns');
+					}
+				}
+
+				return main;
+			}
+		}
 
 		/* checks if an item is visible in the viewport (can be improved upon) */
 		main.isScrolledIntoView = (elem, offset) =>
 		{
-    		var top_margin = elem.offset().top - $(window).scrollTop();
-    		if(top_margin < offset) return false;
+			var top_margin = elem.offset().top - $(window).scrollTop();
+			if(top_margin < offset) return false;
 
-    		var bottom_margin = (top_margin + elem.outerHeight());
-    		if(bottom_margin > $(window).height()) return false;
+			var bottom_margin = (top_margin + elem.outerHeight());
+			if(bottom_margin > $(window).height()) return false;
 
-    		return true;
+			return true;
 		};
 
 		/* scrolls an item into view (scrollto plugin is being used over this as this needs improvement) */
@@ -364,48 +409,97 @@
 		{
 			var adjusted = (current + change);
 
-			if(adjusted > max) adjusted = (adjusted - max) - 1;
-			if(adjusted < 0) adjusted = max - (Math.abs(adjusted) - 1);
-			if(adjusted < 0 || adjusted > max) return main.calculateIndex(current, (max - adjusted), max);
+			if(adjusted > max)
+			{
+				adjusted = (adjusted - max) - 1;
+			}
+
+			if(adjusted < 0)
+			{
+				adjusted = max - (Math.abs(adjusted) - 1);
+			}
+
+			if(adjusted < 0 || adjusted > max)
+			{
+				return main.calculateIndex(current, (max - adjusted), max);
+			}
 
 			return adjusted;
 		};
 
-		main.createVideo = (extension) =>
+		main.video = {
+			volume : null,
+			create : (extension) =>
+			{
+				var attributes = {
+					controls : '',
+					preload : 'none',
+					loop : ''
+				};
+
+				var video = $('<video/>', attributes),
+				source = $('<source>', {
+					type : 'video/' + extension,
+					src : ''
+				}).appendTo(video);
+
+				return [video, source];
+			},
+			seek : (i) =>
+			{
+				var video = main.container.find('.media .wrapper video').get(0);
+
+				if(video)
+				{
+					var current = Math.round(video.currentTime), duration = Math.round(video.duration);
+
+					if(i > 0)
+					{
+						if((current + i) > duration)
+						{
+							return true;
+						} else {
+							video.currentTime = current + i;
+						}
+					} else if(i < 0)
+					{
+						if((current + i) < 0)
+						{
+							return true;
+						} else {
+							video.currentTime = current + i;
+						}
+					}
+
+					return false;
+				}
+			}
+		}
+
+		main.showItem = (type, element, src, init, index, data = null) =>
 		{
-			var attributes = {
-				controls : '',
-				loop : ''
-			};
+			var wrapper = main.container.find('.media .wrapper'), video, source;
 
-			if(main.settings.autoplay) attributes.autoplay = '';
-
-			var video = $('<video/>', attributes);
-
-			var source = $('<source>', {
-				type : 'video/' + extension, src : ''
-			}).appendTo(video);
-
-			return [video, source];
-		};
-
-		main.showItem = (type, element, src, init, index) =>
-		{
-			var wrapper, video, source, reverse;
-
-			wrapper = main.container.find('.media .wrapper');
-
-			if(main.settings.fade > 0) wrapper.hide();
+			if(main.store.fade > 0) wrapper.hide();
 
 			var applyChange = () =>
 			{
-				main.container.find(`.media .wrapper ${type === 0 ? 'video' : 'img'}`).hide();
+				main.set.itemInfo(true);
 
-				if(main.settings.fade > 0)
+				var opp = wrapper.find(type === 0 ? 'video' : 'img').hide();
+
+				main.data.selected.type = type;
+
+				if(type === 1)
 				{
-					wrapper.stop().fadeOut(main.settings.fade, () =>
+					opp.parent('.cover').hide();
+				}
+
+				if(main.store.fade > 0)
+				{
+					wrapper.stop().fadeOut(main.store.fade, () =>
 					{
-						wrapper.stop().fadeIn(main.settings.fade);
+						wrapper.stop().fadeIn(main.store.fade);
 					});
 				} else {
 					wrapper.show();
@@ -416,16 +510,31 @@
 
 			var display = () =>
 			{
-				reverse = main.container.find('.content-container .media .reverse');
-
 				if(type === 0)
 				{
-					video = main.container.find('.media .wrapper video');
+					video = wrapper.find('video');
+
+					if(main.store.fit_content)
+					{
+						var height = `calc(calc(100vw - var(--width-list)) / ${(data.img.width / data.img.height).toFixed(4)})`;
+						
+						main.update.listWidth(wrapper);
+
+						element.css({
+							width : 'auto',
+							height : height
+						});
+
+						element.parent('.cover').css('height', height);
+					}
 
 					element.attr('src', src).show();
+					element.parent('.cover').show();
 
 					if(video.length > 0)
 					{
+						video.off('error');
+
 						video[0].pause();
 						video.find('source').attr('src', '');
 					}
@@ -435,28 +544,107 @@
 				{
 					if(init === false)
 					{
-						[video, source] = main.createVideo(main.data.selected.ext);
+						[video, source] = main.video.create(main.data.selected.ext);
 						video.appendTo(wrapper);
 					} else {
 						source = element.find('source');
 						video = element;
 					}
 
+					var evented = false;
+
+					/*(() =>
+					{
+						 * Attempts to fix an issue where video requests are continuing to hang after changing video source.
+						 * Probably has something to do with caching. Affects mostly larger videos that require multiple requests.
+						 *
+						 * This will stop any active requests before setting a new video source. Not optimal but one of very few "solutions".
+						 *
+						 * @Firefox: After 6 hanging requests, the next one is completely blocked until the others timeout.
+						 *
+
+						 *** (!) Disabled as it stops .gif files from loading after firing, other than that it works.
+
+						if(window.stop !== undefined)
+						{
+							window.stop();
+						} else if(document.execCommand !== undefined)
+						{
+							document.execCommand('Stop', false);
+						}
+					})();*/
+
 					source.attr('src', src);
 
-					video[0].load();
-
-					video[0].addEventListener('canplay', () =>
+					var error = (err) =>
 					{
+						console.error('Failed to load video source.', err);
+						main.busy(false);
+					}
+
+					video.on('error', (err) => error(err));
+					source.on('error', (err) => error(err));
+
+					video.on('volumechange', () =>
+					{
+						main.video.volume = video.get(0).volume;
+					});
+
+					video.on('canplay canplaythrough', () =>
+					{
+						if(evented)
+						{
+							return false;
+						}
+
+						var height = video[0].videoHeight, width = video[0].videoWidth;
+
+						if(main.store.fit_content)
+						{
+							main.update.listWidth(wrapper);
+
+							video.css({
+								width : 'auto',
+								height : `calc(calc(100vw - var(--width-list)) / ${(width / height).toFixed(4)})`
+							});
+						}
+
+						if(main.video.volume)
+						{
+							video.get(0).volume = main.video.volume;
+						}
+
+						if(main.store.autoplay)
+						{
+							video[0].play();
+						}
+
 						video.show();
+
+						/* if the gallery was hidden while loading, pause video and hide loader. */
+						if(!main.container.is(':visible'))
+						{
+							main.container.find('.media .loader').hide();
+							video[0].pause();
+						}
 
 						if(init === false)
 						{
 							element.remove();
 						}
 
+						evented = true;
+
 						applyChange();
-					}, false);
+					});
+
+					video[0].load();
+
+					if(main.store.continue.video && src == main.store.continue.video.src)
+					{
+						video[0].currentTime = main.store.continue.video.time;
+						main.store.continue.video = null;
+					}
 				}
 
 				main.data.selected.index = index;
@@ -467,36 +655,60 @@
 
 		main.navigate = (index, step = null) =>
 		{
-			if(main.settings.console) console.log('busyState', main.busy());
+			if(main.store.console)
+			{
+				console.log('busyState', main.busy());
+			}
 
-			if(main.busy()) return false;
+			if(main.busy())
+			{
+				return false;
+			}
 
 			var max = main.items.length - 1;
 
-			if(index === null) index = main.data.selected.index;
-			if(step !== null) index = main.calculateIndex(index, step, max);
-			if(main.data.selected.index === index || main.busy() === true) return;
+			if(index === null)
+			{
+				index = main.data.selected.index;
+			}
 
-			var item = main.items[index]; main.setItemInfo(item, index, max + 1);
+			if(step !== null)
+			{
+				index = main.calculateIndex(index, step, max);
+			}
+
+			if(main.data.selected.index === index || main.busy() === true)
+			{
+				return false;
+			}
+
+			var video, image, init, item;
+
+			image = main.container.find('.media .wrapper img');
+			video = main.container.find('.media .wrapper video');
+
+			var list = main.container.find('.list'),
+			table = list.find('table'),
+			element = table.find('tr').eq(index);
+
+			item = main.items[index];
 
 			main.data.selected.src = item.url;
 			main.data.selected.ext = main.getExtension(item.name);
 
-            var list = main.container.find('.list'), table = list.find('table'), elem = table.find('tr').eq(index);
-
 			table.find('tr.selected').removeAttr('class');
-			elem.attr('class', 'selected');
+			element.attr('class', 'selected');
 
-			if(!main.isScrolledIntoView(elem, Math.floor(main.container.find('.bar').outerHeight() - 4))) list.scrollTo(elem);
+			main.set.itemInfo((image.length === 0 && video.length === 0) ? true : false, item, index, max + 1);
 
-			var video, source, image, init;
+			if(!main.isScrolledIntoView(element, Math.floor(main.container.find('.bar').outerHeight() - 4)))
+			{
+				list.scrollTo(element);
+			}
 
 			if(main.isImage(null, main.data.selected.ext))
 			{
 				main.busy(true);
-
-				image = main.container.find('.media .wrapper img');
-				video = main.container.find('.media .wrapper video');
 
 				init = (image.length === 0);
 
@@ -509,17 +721,21 @@
 				{
 					var cover = $('<div/>', {
 						class : 'cover'
-					}).prependTo(main.container.find('.media .wrapper'));
+					}).hide().prependTo(main.container.find('.media .wrapper'));
 
 					image = $('<img>').prependTo(cover);
 				}
 
 				main.loadImage(item.url)
-				.then((src) =>
+				.then((e) =>
 				{
+					let [src, img] = e;
+
 					if(main.data.selected.src === src)
 					{
-						main.showItem(0, image, src, init, index);
+						main.showItem(0, image, src, init, index, {
+							img
+						});
 					}
 				}).catch((err) =>
 				{
@@ -534,12 +750,11 @@
 			{
 				main.busy(true);
 
-				video = main.container.find('.media .wrapper video');
 				init = (video.length === 0);
 
 				if(init)
 				{
-					[video, source] = main.createVideo(main.data.selected.ext);
+					video = main.video.create(main.data.selected.ext)[0];
 					video.appendTo(main.container.find('.media .wrapper'));
 				}
 
@@ -553,17 +768,30 @@
 
 		main.handleKey = (key, callback) =>
 		{
-			if(main.settings.console) console.log('handleKey', key);
+			if(main.store.console)
+			{
+				console.log('handleKey', key);
+			}
 
 			if(key === 27)
 			{
 				main.show(false);
 			} else if(key === 40 || key === 34 || key === 39)
 			{
-				main.navigate(null, 1);
+				if(key === 39 && main.data.selected.type === 1)
+				{
+					if(main.video.seek(5)) main.navigate(null, 1);
+				} else {
+					main.navigate(null, 1);
+				}
 			} else if(key === 38 || key === 33 || key === 37)
 			{
-				main.navigate(null, -1);
+				if(key === 37 && main.data.selected.type === 1)
+				{
+					if(main.video.seek(-5)) main.navigate(null, -1);
+				} else {
+					main.navigate(null, -1);
+				}
 			} else if(key === 76)
 			{
 				main.toggleList();
@@ -576,7 +804,7 @@
 		{
 			bound.forEach((value) =>
 			{
-				if(value.hasOwnProperty('direct') && value.direct === true)
+				if(Object.prototype.hasOwnProperty.call(value, 'direct') && value.direct === true)
 				{
 					$(value.trigger).off(value.event);
 
@@ -608,12 +836,10 @@
 
 			e = (!e ? $('.gallery-container div.bar .right span[data-action="toggle"]') : e);
 
-			if(visible)
-			{
-				list.css('display', 'none'); e.text('List+');
-			} else {
-				list.css('display', 'table-cell'); e.text('List-');
-			}
+			e.text('List' + (visible ? '+' : '-'));
+			list.css('display', visible ? 'none' : 'table-cell');
+
+			main.update.listWidth();
 
 			return !visible;
 		}
@@ -658,8 +884,8 @@
 					trigger : 'div.gallery-container .media .wrapper img'
 				},
 				{
-					event : 'mouseleave',
-					trigger : 'div.gallery-container .media .reverse a'
+					event : 'mouseenter',
+					trigger : 'div.gallery-container .media .wrapper .cover'
 				},
 				{
 					event : 'swipeleft',
@@ -687,11 +913,15 @@
 
 			main.unbind(main.data.bound, false);
 
-			main.data.list_drag.on('mousedown', (e) =>
+			main.data.list_drag.on('mousedown', () =>
 			{
 				main.data.list_dragged = true;
-				var window_width = window.innerWidth;
+
+				var window_width = window.innerWidth,
+					wrapper = main.container.find('.media .wrapper');
+
 				$('body').css('cursor', 'w-resize');
+				wrapper.css('pointer-events', 'none');
 
 				$(document).on('mousemove', '.gallery-container', (e) =>
 				{
@@ -699,22 +929,25 @@
 
 					if(x < window_width)
 					{
-						var width = main.settings.list.reverse ? (x + main.data.scrollbar_width) : (window_width - x);
+						var width = main.store.list.reverse ? (x + main.data.scrollbar_width) : (window_width - x);
 
 						main.data.list.css('width', width + 'px');
 					}
 				});
 			});
 
-			$(document).on('mouseup', '.gallery-container', (e) =>
+			$(document).on('mouseup', '.gallery-container', () =>
 			{
 				if(main.data.list_dragged === true)
 				{
 					$(document).off('mousemove', '.gallery-container');
 
-					$('body').css('cursor', '');
+					var wrapper = main.container.find('.media .wrapper');
 
-					var lw = parseInt(main.data.list.css('width').replace(/[^-\d\.]/g, ''));
+					$('body').css('cursor', '');
+					wrapper.css('pointer-events', 'auto');
+
+					var lw = parseInt(main.data.list.css('width').replace(/[^-\d.]/g, ''));
 
 					if(lw > 100)
 					{
@@ -726,11 +959,13 @@
 							sameSite : 'lax',
 							expires : 365
 						});
+
+						main.update.listWidth(wrapper);
 					}
 				}
 			});
 
-			$(document).on('click', 'div.gallery-container [data-action="close"]', (e) =>
+			$(document).on('click', 'div.gallery-container [data-action="close"]', () =>
 			{
 				main.show(false);
 			});
@@ -740,12 +975,12 @@
 				main.toggleList($(e.currentTarget));
 			});
 
-			$(document).on('click', 'div.gallery-container [data-action="previous"]', (e) =>
+			$(document).on('click', 'div.gallery-container [data-action="previous"]', () =>
 			{
 				main.navigate(null, -1);
 			});
 
-			$(document).on('click', 'div.gallery-container [data-action="next"]', (e) =>
+			$(document).on('click', 'div.gallery-container [data-action="next"]', () =>
 			{
 				main.navigate(null, 1);
 			});
@@ -760,36 +995,31 @@
 				if(!$(e.target).is('img, video, a')) main.show(false);
 			});
 
-			if(main.settings.reverse_options === true)
+			if(main.store.reverse_options === true)
 			{
 				$(document).on('mouseenter', 'div.gallery-container .media .wrapper .cover', (e) =>
 				{
-					main.reverse($(e.currentTarget), true);
+					main.reverse($(e.currentTarget));
 				});
 			}
 
-			$(document).on('mouseleave', 'div.gallery-container .media .wrapper .cover', (e) =>
+			if(main.store.mobile === true)
 			{
-				main.reverse($(e.currentTarget), false);
-			});
-
-			if(main.settings.mobile === true)
-			{
-				$('div.gallery-container').on('swipeleft', (e, data) => main.navigate(null, 1));
-				$('div.gallery-container').on('swiperight', (e, data) => main.navigate(null, -1));
+				$('div.gallery-container').on('swipeleft', () => main.navigate(null, 1));
+				$('div.gallery-container').on('swiperight', () => main.navigate(null, -1));
 			}
 
 			$(document).on('DOMMouseScroll mousewheel', 'div.gallery-container .media', (e) =>
 			{
-				if(main.settings.scroll_interval > 0 && main.data.scrollbreak === true) return false;
+				if(main.store.scroll_interval > 0 && main.data.scrollbreak === true) return false;
 
 				main.navigate(null, (e.originalEvent.detail > 0 || e.originalEvent.wheelDelta < 0) ? 1 : -1);
 
-				if(main.settings.scroll_interval > 0)
+				if(main.store.scroll_interval > 0)
 				{
 					main.data.scrollbreak = true;
 
-					setTimeout(() => main.scrollBreak(), main.settings.scroll_interval);
+					setTimeout(() => main.scrollBreak(), main.store.scroll_interval);
 				}
 			});
 
@@ -819,19 +1049,19 @@
 		main.barConstruct = (bar) =>
 		{
 			$('<a/>', {
-				text : main.settings.mobile ? 'Save' : 'Download', class : 'download', 'download' : '',
+				text : main.store.mobile ? 'Save' : 'Download', class : 'download', 'download' : '',
 			}).appendTo(bar);
 
-			if(!main.settings.mobile) $('<span/>', {
+			if(!main.store.mobile) $('<span/>', {
 				'data-action' : 'previous', text : 'Previous'
 			}).appendTo(bar);
 
-			if(!main.settings.mobile) $('<span/>', {
+			if(!main.store.mobile) $('<span/>', {
 				'data-action' : 'next', text : 'Next'
 			}).appendTo(bar);
 
-			if(!main.settings.mobile) $('<span/>', {
-				'data-action' : 'toggle', text : main.settings.list.show ? 'List-' : 'List+'
+			if(!main.store.mobile) $('<span/>', {
+				'data-action' : 'toggle', text : main.store.list.show ? 'List-' : 'List+'
 			}).appendTo(bar);
 
 			$('<span/>', {
@@ -872,15 +1102,15 @@
 			});
 
 			var list = $('<div/>', {
-				class : 'ns list' + (main.settings.list.reverse ? ' reversed' : '')
+				class : 'ns list' + (main.store.list.reverse ? ' reversed' : '')
 			});
 
 			content
-			.append(main.settings.list.reverse ? list : media)
-			.append(main.settings.list.reverse ? media : list);
+			.append(main.store.list.reverse ? list : media)
+			.append(main.store.list.reverse ? media : list);
 
 			main.data.list_drag = $('<div/>', {
-				class : 'drag' + (main.settings.list.reverse ? ' reversed' : '')
+				class : 'drag' + (main.store.list.reverse ? ' reversed' : '')
 			}).appendTo(list);
 
 			main.data.list = list;
@@ -895,7 +1125,7 @@
 
 				if(width === false)
 				{
-					width = 'auto';
+					width = '';
 				} else if(parseInt(width) > (window.innerWidth / 2))
 				{
 					client.gallery.list_width = Math.floor(window.innerWidth / 2);
@@ -916,9 +1146,9 @@
 				});
 			}
 
-			if(!main.settings.list.show) list.hide();
+			if(!main.store.list.show) list.hide();
 
-			if(main.settings.mobile === true)
+			if(main.store.mobile === true)
 			{
 				list.hide();
 
@@ -938,11 +1168,11 @@
 			}
 
 			$('<div/>', {
-				class : 'wrapper'
+				class : 'wrapper' + (main.store.fit_content ? ' fill' : '')
 			}).appendTo(media);
 
 			$('<div/>', {
-				class : 'loader' + (main.settings.list.reverse ? ' reversed' : '')
+				class : 'loader' + (main.store.list.reverse ? ' reversed' : '')
 			}).html('Loading ..').appendTo(media);
 
 			$('<tbody/>').appendTo(
@@ -956,7 +1186,7 @@
 		}
 
 		main.container = $('div.gallery-container');
-		main.items = main.settings.filter ? main.filterItems(items) : items;
+		main.items = main.store.filter ? main.filterItems(items) : items;
 
 		if(main.items.length === 0) return false;
 
@@ -971,16 +1201,16 @@
 		{
 			initiate(() =>
 			{
-				if(main.settings.blur) main.setBlur(true).bind();
+				if(main.store.blur) main.set.blur(true).bind();
 			});
 		} else {
 			main.show(true);
 		}
 
 		main.navigate(
-			main.settings.start > (main.items.length - 1) ? (main.items.length - 1) : main.settings.start
+			main.store.start > (main.items.length - 1) ? (main.items.length - 1) : main.store.start
 		);
 
-    	return main;
-    };
+		return main;
+	};
 }(jQuery));

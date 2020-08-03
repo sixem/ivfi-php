@@ -5,57 +5,105 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  1.1.5
+ * @version  1.1.6
  */
 
-/* Configuration */
+/**
+ * [Configuration]
+ * A more in-depth overview can be found here:
+ * https://github.com/sixem/eyy-indexer/blob/master/CONFIG.md
+ */
+
 $config = array(
+    /* Formatting options. */
     'format' => array(
-        'title' => 'Index of %s',
-        'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')
+        'title' => 'Index of %s', /* title format where %s is the current path. */
+        'date' => array('d/m/y H:i', 'd/m/y'), /* date formats (desktop, mobile). */
+        'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB') /* size formats. */
     ),
+    /* Favicon options. */
     'icon' => array(
-        'path' => '/favicon.png',
-        'mime' => 'image/png'
+        'path' => '/favicon.png', /* what favicon to use. */
+        'mime' => 'image/png' /* favicon mime type. */
     ),
+    /* Sorting options. Used as default until the client sets their own sorting settings. */
     'sorting' => array(
-        'enabled' => false,
-        'order' => SORT_ASC,
-        'types' => 0,
-        'sort_by' => 'name',
-        'use_mbstring' => false
+        'enabled' => false, /* whether the server should sort the items. */
+        'order' => SORT_ASC, /* sorting order. asc or desc. */
+        'types' => 0, /* what item types to sort. 0 = both. 1 = files only. 2 = directories only. */
+        'sort_by' => 'name', /* what to sort by. available options are name, modified, type and size. */
+        'use_mbstring' => false /* enabled mbstring when sorting. */
     ),
+    /* Gallery options. */
     'gallery' => array(
-        'enabled' => true,
-        'fade' => 0,
-        'reverse_options' => false,
-        'scroll_interval' => 50,
-        'list_alignment' => 0
+        'enabled' => true, /* whether the gallery plugin should be enabled. */
+        'fade' => 0, /* fade in ms when navigating */
+        'reverse_options' => false, /* reverse search options for images (when hovering over them). */
+        'scroll_interval' => 50, /* break in ms between scroll navigation events. */
+        'list_alignment' => 0, /* list alignment where 0 is right and 1 is left. */
+        'fit_content' => false /* whether the media should be forced to fill the screen space. */
     ),
+    /* Preview options. */
     'preview' => array(
-        'enabled' => true,
-        'static' => false,
-        'hover_delay' => 75,
-        'window_margin' => 0,
-        'cursor_indicator' => true
+        'enabled' => true, /* whether the preview plugin should be enabled. */
+        'hover_delay' => 75, /* delay in ms before the preview is shown. */
+        'cursor_indicator' => true /* displays a loading cursor while the preview is loading. */
     ),
+    /* Extension that should be marked as media.
+     * These extensions will have potential previews and will be included in the gallery. */
     'extensions' => array(
-        'image' => array('jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'),
+        'image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),
         'video' => array('webm', 'mp4')
     ),
+    /* Styling options. */
+    'style' => array(
+        /* Set to a path relative to the root directory (location of this file) containg .css files.
+         * Each .css file will be treated as a separate theme. Set to false to disable themes. */
+        'themes' => array(
+          'path' => false,
+          'default' => false
+        ),
+        /* Enables a more compact styling of the page. */
+        'compact' => false
+    ),
+    /* Filter what files or directories to show.
+     * Uses regular expressions. All names matching the regex will be shown.
+     * Setting the value to false will disable the respective filter. */
     'filter' => array(
         'file' => false,
         'directory' => false
     ),
-    'themes' => false,
+    /* Whether this .php file should be directly accessible. */
     'allow_direct_access' => false,
+    /* Set to 'strict' or 'weak'.
+     * 'strict' uses realpath() to avoid backwards directory traversal whereas 'weak' uses a similar string-based approach. */
     'path_checking' => 'strict',
+    /* Whether the footer should be generated. */
     'footer' => true,
+    /* Enables console output in JS and PHP debugging. */
     'debug' => false
 );
 
-/* Set default configuration values */
-$config = array_merge(array('format'=>array('title'=>'Index of %s','sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>true,'scroll_interval'=>50,'list_alignment'=>0),'preview'=>array('enabled'=>true,'static'=>false,'hover_delay'=>75,'window_margin'=>0,'cursor_indicator'=>true),'extensions'=>array('image'=>array('jpg','jpeg','gif','png','ico','svg','bmp'),'video'=>array('webm','mp4')),'filter'=>array('file'=>false,'directory'=>false),'themes'=>false,'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true), isset($config) && is_array($config) ? $config : array());
+/* Default configuration values. Used if values from the above config are unset. */
+$defaults = array('format'=>array('title'=>'Index of %s','date'=>array('d/m/y H:i','d/m/y'),'sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false ),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>false,'scroll_interval'=>50,'list_alignment'=>0,'fit_content'=>false ),'preview'=>array('enabled'=>true,'hover_delay'=>75,'cursor_indicator'=>true ),'extensions'=>array('image'=>array('jpg','jpeg','png','gif','ico','svg','bmp','webp'),'video'=>array('webm','mp4')),'style'=>array('themes'=>array('path'=>false,'default'=>false),'compact'=>false),'filter'=>array('file'=>false,'directory'=>false),'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>false);
+
+/* Set default configuration values if the config is missing any keys. */
+foreach($defaults as $key => $value)
+{
+  if(!isset($config[$key]))
+  {
+    $config[$key] = $defaults[$key];
+  } else if(is_array($config[$key]))
+  {
+    foreach($defaults[$key] as $k => $v)
+    {
+      if(!isset($config[$key][$k]))
+      {
+        $config[$key][$k] = $defaults[$key][$k];
+      }
+    }
+  }
+}
 
 if($config['footer'] === true)
 {
@@ -70,14 +118,27 @@ if($config['debug'] === true)
   error_reporting(E_ALL);
 }
 
-if($config['themes'] && $config['themes'][0] !== '/')
+if($config['style']['themes']['path'])
 {
-  $config['themes'] = ('/' . $config['themes']);
+  if($config['style']['themes']['path'][0] !== '/')
+  {
+    $config['style']['themes']['path'] = ('/' . $config['style']['themes']['path']);
+  }
+
+  if(substr($config['style']['themes']['path'], -1) !== '/')
+  {
+    $config['style']['themes']['path'] = ($config['style']['themes']['path'] . '/');
+  }
 }
 
-if(substr($config['themes'], -1) !== '/')
+if(!is_array($config['format']['date']))
 {
-  $config['themes'] = ($config['themes'] . '/');
+  if(is_string($config['format']['date']))
+  {
+    $config['format']['date'] = array($config['format']['date']);
+  } else {
+    $config['format']['date'] = array('d/m/y H:i', 'd/m/y');
+  }
 }
 
 class Indexer
@@ -175,10 +236,12 @@ class Indexer
 
     if(isset($options['format']['sizes']) && $options['format']['sizes'] !== NULL)
     {
-      $this->sizes = $options['format']['sizes'];
+      $this->format['sizes'] = $options['format']['sizes'];
     } else {
-      $this->sizes = array(' B', ' kB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB');
+      $this->format['sizes'] = array(' B', ' kB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB');
     }
+
+    $this->format['date'] = $options['format']['date'];
   }
 
   public function buildTable($sorting = false, $sort_items = 0, $sort_type = 'modified', $use_mb = false)
@@ -200,9 +263,6 @@ class Indexer
     $timezone = array(
       'offset' => $cookies['timezone_offset'] > 0 ? -$cookies['timezone_offset'] * 60 : abs($cookies['timezone_offset']) * 60
     );
-
-    $offset_hours = (($timezone['offset'] / 60) / 60);
-    $timezone['readable'] = ('UTC' . ($offset_hours > 0 ? '+' : '') . $offset_hours);
 
     $data = array(
       'files' => array(),
@@ -303,11 +363,9 @@ class Indexer
 
     foreach($data['directories'] as $dir)
     {
-      $modtitle = $dir['modified'][2] ? "{$dir['modified'][2]} ({$timezone['readable']})" : '';
-
       $op .= sprintf(
-        '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td data-raw="%s"><span title="%s">%s</span></td><td>-</td><td>-</td></tr>',
-        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][0], $modtitle, $dir['modified'][1]
+        '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td data-raw="%s"><span>%s</span></td><td>-</td><td>-</td></tr>',
+        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][0], $dir['modified'][1]
       );
 
       if($data['recent']['directory'] === 0 || $dir['modified'][0] > $data['recent']['directory'])
@@ -318,8 +376,6 @@ class Indexer
 
     foreach($data['files'] as $file)
     {
-      $modtitle = $file['modified'][2] ? "{$file['modified'][2]} ({$timezone['readable']})" : '';
-
       $data['size']['total'] = ($data['size']['total'] + $file['size'][0]);
 
       if($data['recent']['file'] === 0 || $file['modified'][0] > $data['recent']['file'])
@@ -338,8 +394,8 @@ class Indexer
       );
 
       $op .= sprintf(
-        '<td data-raw="%d"><span title="%s">%s</span></td>',
-        $file['modified'][0], $modtitle, $file['modified'][1]
+        '<td data-raw="%d"><span>%s</span></td>',
+        $file['modified'][0], $file['modified'][1]
       );
 
       $op .= sprintf(
@@ -354,14 +410,6 @@ class Indexer
     }
 
     $data['size']['readable'] = self::readableFilesize($data['size']['total']);
-
-    foreach(array('file', 'directory') as $type)
-    {
-      if($data['recent'][$type] > 0)
-      {
-        $data['recent'][$type] = self::formatDate('d/m/y H:i', $data['recent'][$type], $timezone['offset']);
-      }
-    }
 
     $this->data = $data;
 
@@ -453,39 +501,6 @@ class Indexer
     return $op;
   }
 
-  private function formatSince($seconds)
-  {
-    if($seconds === 0) { return 'Now'; } else if($seconds < 0) { return false; }
-
-    $t = array(
-      'year' => 31556926,
-      'month' => 2629743,
-      'week' => 604800,
-      'day' => 86000,
-      'hour' => 3600,
-      'minute' => 60,
-      'second' => 1
-    );
-
-    $index = 0; $count = count($t) - 1; $keys = array_keys($t);
-
-    foreach($t as $key => $i)
-    {
-      $index++;
-
-      if($seconds <= $i) continue;
-
-      $n = $count >= $index ? $keys[$index] : NULL;
-      $f = floor($seconds / $i);
-      $s = $n ? floor(($seconds - ($f * $i)) / $t[$n]) : 0;
-
-      return $f . ' ' . $key . ($f == 1 ? '' : 's') .
-      ($s > 0 ? (' and ' . $s . ' ' . $n . ($s == 1 ? '' : 's')) : '') . ' ago';
-    }
-
-    return false;
-  }
-
   private function formatDate($format, $stamp, $modifier = 0)
   {
     return gmdate($format, $stamp + $modifier);
@@ -495,10 +510,18 @@ class Indexer
   {
     $stamp = filemtime($path);
 
+    if(count($this->format['date']) > 1)
+    {
+      $format = sprintf('<\s\p\a\n \d\a\t\a-\v\i\e\w="\d\e\s\k\t\o\p">%s\<\/\s\p\a\n\>'.
+      '<\s\p\a\n \d\a\t\a-\v\i\e\w="\m\o\b\i\l\e">%s\<\/\s\p\a\n\>',
+      $this->format['date'][0], $this->format['date'][1]);
+    } else {
+      $format = $this->format['date'][0];
+    }
+
     return array(
       $stamp,
-      self::formatDate('d/m/y <\s\p\a\n \d\a\t\a-\v\i\e\w="\d\e\s\k\t\o\p">H:i\<\/\s\p\a\n\>', $stamp, $modifier),
-      self::formatSince($this->timestamp - $stamp)
+      self::formatDate($format, $stamp, $modifier)
     );
   }
 
@@ -522,14 +545,14 @@ class Indexer
 
     $factor = floor((strlen($bytes) - 1) / 3);
 
-    $x = @$this->sizes[$factor];
+    $x = @$this->format['sizes'][$factor];
 
     if($bytes > 104857600 || $factor == 0)
     {
       $decimals = 0;
     }
 
-    if($x === $this->sizes[1]) $decimals = 0;
+    if($x === $this->format['sizes'][1]) $decimals = 0;
 
     return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . $x;
   }
@@ -553,12 +576,26 @@ class Indexer
 }
 
 $client =  isset($_COOKIE['ei-client']) ? $_COOKIE['ei-client'] : NULL;
-if($client) $client = json_decode($client, true);
+
+if($client)
+{
+  $client = json_decode($client, true);
+}
+
+$validate = is_array($client);
 
 $cookies = array(
-  'sort_row' => is_array($client) ? (isset($client['sort']['row']) ? $client['sort']['row'] : NULL) : NULL,
-  'sort_ascending' => is_array($client) ? (isset($client['sort']['ascending']) ? $client['sort']['ascending'] : NULL) : NULL
+  'sorting' => array(
+    'row' => $validate ? (isset($client['sort']['row']) ? $client['sort']['row'] : NULL) : NULL,
+    'ascending' => $validate ? (isset($client['sort']['ascending']) ? $client['sort']['ascending'] : NULL) : NULL
+  )
 );
+
+/* override the config value if the cookie value is set */
+if($validate && isset($client['style']['compact']) && $client['style']['compact'])
+{
+  $config['style']['compact'] = $client['style']['compact'];
+}
 
 $sorting = array(
   'enabled' => $config['sorting']['enabled'],
@@ -567,9 +604,9 @@ $sorting = array(
   'sort_by' => strtolower($config['sorting']['sort_by'])
 );
 
-if($cookies['sort_row'] !== NULL)
+if($cookies['sorting']['row'] !== NULL)
 {
-  switch(intval($cookies['sort_row']))
+  switch(intval($cookies['sorting']['row']))
   {
     case 0: $sorting['sort_by'] = 'name'; break;
     case 1: $sorting['sort_by'] = 'modified'; break;
@@ -578,12 +615,12 @@ if($cookies['sort_row'] !== NULL)
   }
 }
 
-if($cookies['sort_ascending'] !== NULL)
+if($cookies['sorting']['ascending'] !== NULL)
 {
-  $sorting['order'] = (boolval($cookies['sort_ascending']) === true ? SORT_ASC : SORT_DESC);
+  $sorting['order'] = (boolval($cookies['sorting']['ascending']) === true ? SORT_ASC : SORT_DESC);
 }
 
-if($cookies['sort_ascending'] !== NULL || $cookies['sort_row'] !== NULL)
+if($cookies['sorting']['ascending'] !== NULL || $cookies['sorting']['row'] !== NULL)
 {
   $sorting['enabled'] = true;
 }
@@ -601,10 +638,11 @@ try
       urldecode($_SERVER['REQUEST_URI']),
       array(
           'path' => array(
-              'relative' => $base_path
+            'relative' => $base_path
           ),
           'format' => array(
-              'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
+            'date' => isset($config['format']['date']) ? $config['format']['date'] : NULL,
+            'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
           ),
           'client' => $client,
           'filter' => $config['filter'],
@@ -643,9 +681,9 @@ $counts = array(
 
 $themes = array();
 
-if($config['themes'])
+if($config['style']['themes']['path'])
 {
-  $directory = rtrim($indexer->joinPaths($base_path, $config['themes']), '/');
+  $directory = rtrim($indexer->joinPaths($base_path, $config['style']['themes']['path']), '/');
 
   if(is_dir($directory))
   {
@@ -658,7 +696,20 @@ if($config['themes'])
   if(count($themes) > 0) array_unshift($themes, 'default');
 }
 
-$current_theme = count($themes) > 0 && is_array($client) && isset($client['theme']) ? (in_array($client['theme'], $themes) ? $client['theme'] : NULL) : NULL;
+// $current_theme = count($themes) > 0 && is_array($client) && isset($client['style']['theme']) ? (in_array($client['style']['theme'], $themes) ? $client['style']['theme'] : NULL) : NULL;
+
+$current_theme = NULL;
+
+if(count($themes) > 0)
+{
+  if(is_array($client) && isset($client['style']['theme']))
+  {
+    $current_theme = in_array($client['style']['theme'], $themes) ? $client['style']['theme'] : NULL;
+  } elseif(isset($config['style']['themes']['default']) && in_array($config['style']['themes']['default'], $themes))
+  {
+    $current_theme = $config['style']['themes']['default'];
+  }
+}
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -670,18 +721,18 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
     <link rel="stylesheet" type="text/css" href="/indexer/css/style.css">
-    <?=$current_theme ? '<link rel="stylesheet" type="text/css" href="' . $config['themes'] . $current_theme . '.css">' . PHP_EOL : ''?>
+    <?=($current_theme && strtolower($current_theme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $current_theme . '.css">' . PHP_EOL : ''?>
 
   </head>
 
-  <body class="directory">
+  <body class="directory<?=$config['style']['compact'] ? ' compact' : ''?>">
 
     <div class="top-bar">
         <div class="extend ns">&#x25BE;</div>
         <div class="directory-info">
           <div data-count="size"><?=$data['size']['readable'];?></div>
-          <div <?=$data['recent']['file'] !== 0 ? 'title="Newest: ' . $data['recent']['file'] . '" ' : '';?>data-count="files"><?=$counts['files'] . ($counts['files'] === 1 ? ' file' : ' files');?></div>
-          <div <?=$data['recent']['directory'] !== 0 ? 'title="Newest: ' . $data['recent']['directory'] . '" ' : '';?>data-count="directories"><?=$counts['directories'] . ($counts['directories'] === 1 ? ' directory' : ' directories');?></div>
+          <div <?=$data['recent']['file'] !== 0 ? 'data-raw="' . $data['recent']['file'] . '" ' : '';?>data-count="files"><?=$counts['files'] . ($counts['files'] === 1 ? ' file' : ' files');?></div>
+          <div <?=$data['recent']['directory'] !== 0 ? 'data-raw="' . $data['recent']['directory'] . '" ' : '';?>data-count="directories"><?=$counts['directories'] . ($counts['directories'] === 1 ? ' directory' : ' directories');?></div>
         </div>
     </div>
 
@@ -723,15 +774,12 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
 
 <script type="text/javascript" src="/indexer/js/vendors.js"></script>
 <script type="text/javascript" src="/indexer/js/gallery.js"></script>
-<script type="text/javascript" src="/indexer/js/preview.js"></script>
 
 <script type="text/javascript"><?=('var config = ' . json_encode(array(
   'preview' => array(
     'enabled' => $config['preview']['enabled'],
     'hover_delay' => $config['preview']['hover_delay'],
-    'window_margin' => $config['preview']['window_margin'],
     'cursor_indicator' => $config['preview']['cursor_indicator'],
-    'static' => $config['preview']['static']
   ),
   'sorting' => array(
     'enabled' => $sorting['enabled'],
@@ -744,18 +792,22 @@ $current_theme = count($themes) > 0 && is_array($client) && isset($client['theme
     'reverse_options' => $config['gallery']['reverse_options'],
     'fade' => $config['gallery']['fade'],
     'scroll_interval' => $config['gallery']['scroll_interval'],
-    'list_alignment' => $config['gallery']['list_alignment']
+    'list_alignment' => $config['gallery']['list_alignment'],
+    'fit_content' => $config['gallery']['fit_content']
   ),
   'extensions' => array(
     'image' => $config['extensions']['image'],
     'video' => $config['extensions']['video']
   ),
-  'themes' => array(
-    'path' => $config['themes'],
-    'pool' => $themes,
-    'set' => $current_theme ? $current_theme : 'default'
+  'style' => array(
+    'themes' => array(
+      'path' => $config['style']['themes']['path'],
+      'pool' => $themes,
+      'set' => $current_theme ? $current_theme : 'default'
+    ),
+    'compact' => $config['style']['compact']
   ),
-  'format' => array_intersect_key($config['format'], array_flip(array('sizes'))),
+  'format' => array_intersect_key($config['format'], array_flip(array('sizes', 'date'))),
   'timestamp' => $indexer->timestamp,
   'debug' => $config['debug'],
   'mobile' => false
