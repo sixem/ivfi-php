@@ -62,6 +62,8 @@
 			});
 		};
 
+		main.encodeUrl = (input) => encodeURI(input).replace('#', '%23').replace('?', '%3F');
+
 		main.getExtension = (filename) => (filename.split('.').pop()).toLowerCase();
 		main.getObjectSet = (...elements) => $((elements.filter((value) => typeof value !== 'undefined')).map((element) => $(element)));
 
@@ -276,7 +278,7 @@
 
 		main.getReverseOptions = (url) =>
 		{
-			url = encodeURIComponent(document.location.origin + url);
+			url = main.encodeUrl(document.location.origin + url);
 
 			return {
 				'Google': 'https://www.google.com/searchbyimage?image_url=' + url + '&safe=off',
@@ -352,16 +354,17 @@
 				}
 
 				var name = main.store.mobile ? main.shortenString(item.name, 30) : item.name;
+				var url = main.encodeUrl(item.url);
 
 				main.container
 				.find('.bar > .right > a.download')
 				.attr('filename', item.name)
-				.attr('href', item.url)
+				.attr('href', url)
 				.attr('title', `Download: ${item.name}`);
 
 				main.container.find('.bar > .left').html(
 					`<span>${index + 1} of ${max}</span>` +
-					` | <a href="${item.url}">${name}</a>` +
+					` | <a href="${url}">${name}</a>` +
 					(Object.prototype.hasOwnProperty.call(item, 'size') && !main.store.mobile ? ` | <span>${item.size}</span>` : '')
 				);
 
@@ -693,7 +696,9 @@
 
 			item = main.items[index];
 
-			main.data.selected.src = item.url;
+			var encoded = main.encodeUrl(item.url);
+
+			main.data.selected.src = encoded;
 			main.data.selected.ext = main.getExtension(item.name);
 
 			table.find('tr.selected').removeAttr('class');
@@ -726,7 +731,7 @@
 					image = $('<img>').prependTo(cover);
 				}
 
-				main.loadImage(item.url)
+				main.loadImage(encoded)
 				.then((e) =>
 				{
 					let [src, img] = e;
@@ -758,7 +763,7 @@
 					video.appendTo(main.container.find('.media .wrapper'));
 				}
 
-				main.showItem(1, video, item.url, init, index);
+				main.showItem(1, video, encoded, init, index);
 
 				return true;
 			}
