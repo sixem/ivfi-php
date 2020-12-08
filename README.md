@@ -17,7 +17,11 @@ JavaScript is not required for the Indexer but it is needed for the extra functi
 ***You can visit the [demo](https://five.sh/demo/indexer/) to view the indexer in action.***
 
 ### Feedback :bulb:
-Feel free to let me know if you have any ideas on what to change or add, or if you experience any bugs or errors.
+I'm open for any feedback.
+
+You can open an [issue](https://github.com/sixem/eyy-indexer/issues) if you encounter any **specific** problems or bugs of any kind.
+
+Or, you can start a [discussion](https://github.com/sixem/eyy-indexer/discussions) if you just have any general questions. You can also suggest any features or potential changes there.
 
 # Features
 #### **Gallery Mode**
