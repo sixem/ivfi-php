@@ -5,7 +5,7 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  1.1.61
+ * @version  1.1.7
  */
 
 /**
@@ -15,6 +15,8 @@
  */
 
 $config = array(
+    /* Authentication options. */
+    'authentication' => false,
     /* Formatting options. */
     'format' => array(
         'title' => 'Index of %s', /* title format where %s is the current path. */
@@ -86,6 +88,73 @@ $config = array(
 
 /* Default configuration values. Used if values from the above config are unset. */
 $defaults = array('format'=>array('title'=>'Index of %s','date'=>array('d/m/y H:i','d/m/y'),'sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false ),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>false,'scroll_interval'=>50,'list_alignment'=>0,'fit_content'=>false ),'preview'=>array('enabled'=>true,'hover_delay'=>75,'cursor_indicator'=>true ),'extensions'=>array('image'=>array('jpg','jpeg','png','gif','ico','svg','bmp','webp'),'video'=>array('webm','mp4')),'style'=>array('themes'=>array('path'=>false,'default'=>false),'compact'=>false),'filter'=>array('file'=>false,'directory'=>false),'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true);
+
+function authenticate($users, $realm)
+{
+  function http_digest_parse($text)
+  {
+    /* Protect against missing data. */
+    $needed_parts = array(
+      'nonce' => 1,
+      'nc' => 1,
+      'cnonce' => 1,
+      'qop' => 1,
+      'username' => 1,
+      'uri' => 1,
+      'response' => 1
+    );
+
+    $data = array();
+    $keys = implode('|', array_keys($needed_parts));
+
+    preg_match_all('@(' . $keys . ')=(?:([\'"])([^\2]+?)\2|([^\s,]+))@', $text, $matches, PREG_SET_ORDER);
+
+    foreach($matches as $m)
+    {
+      $data[$m[1]] = $m[3] ? $m[3] : $m[4];
+      unset($needed_parts[$m[1]]);
+    }
+
+    return $needed_parts ? false : $data;
+  }
+
+  function createHeader($realm)
+  {
+    header($_SERVER['SERVER_PROTOCOL'] . '401 Unauthorized');
+    header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . uniqid() . '",opaque="' . md5($realm) . '"');
+  }
+
+  if(empty($_SERVER['PHP_AUTH_DIGEST']))
+  {
+    createHeader($realm);
+    die('401 Unauthorized');
+  }
+
+  $data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST']);
+
+  if(!$data || !isset($users[$data['username']]))
+  {
+    createHeader($realm);
+    die('Invalid credentials.');
+  }
+
+  $a1 = md5($data['username'] . ':' . $realm . ':' . $users[$data['username']]);
+  $a2 = md5($_SERVER['REQUEST_METHOD'] . ':' . $data['uri']);
+
+  $valid_response = md5($a1 . ':' . $data['nonce'] . ':' . $data['nc'] . ':' . $data['cnonce'] . ':' . $data['qop'] . ':' . $a2);
+
+  if($data['response'] != $valid_response)
+  {
+    createHeader($realm);
+    die('Invalid credentials.');
+  }
+}
+
+
+if($config['authentication'] && is_array($config['authentication']) && count($config['authentication']) > 0)
+{
+  authenticate($config['authentication'], 'Restricted content.');
+}
 
 /* Set default configuration values if the config is missing any keys. */
 foreach($defaults as $key => $value)
