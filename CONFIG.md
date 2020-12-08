@@ -4,13 +4,20 @@ Here is an overview of what each configurable option does.
 
 These options can be found at the top of the [indexer.php](public/indexer.php) file.
 
-Some of these settings can be changed by the client/user, these are only values for the script to use as defaults.
+Some of these settings can be changed by the client/user. These are only values for the script to use as defaults.
+
+## Authentication
+Enables HTTP authentication through PHP. Don't rely on this for any strong protection.
+
+| Key | Type | Value | Description |
+|-----|------|---------|-------------|
+| `username` | String | `password` | Each key in the array represents a valid user where the value is the password.
 
 ## Format
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `title` | String | `Index of %s` | Page title where  `%s` represents the current path.
-| `date` | String / Array | `array('d/m/y H:i', 'd/m/y')` | Date format as per [function.date.php](https://www.php.net/manual/en/function.date.php). Can be a string or an array. If it is an array then the first value will be shown on desktop devices and the second will be shown on mobile devices. It is a good idea to set a shorter mobile format because of the limited screen space.
+| `date` | String / Array | `array('d/m/y H:i', 'd/m/y')` | Date format as per [datetime.format.php](https://www.php.net/manual/en/datetime.format.php). Can be a string or an array. If it is an array then the first value will be shown on desktop devices and the second will be shown on mobile devices. It is a good idea to set a shorter mobile format because of the limited screen space.
 | `sizes` | Array | `' B', ' kB', ' MB', ' GB', ' TB'` | Size formats for when displaying filesizes.
 
 ## Icon
