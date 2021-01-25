@@ -1,5 +1,5 @@
 public/indexer/fonts/* linguist-vendored=true
 public/indexer/js/vendors.js linguist-vendored=true
 
-.source/indexer/fonts/* linguist-vendored=true
-.source/indexer/js/vendors.js linguist-vendored=true
+src/indexer/fonts/* linguist-vendored=true
+src/indexer/js/vendors.js linguist-vendored=true
