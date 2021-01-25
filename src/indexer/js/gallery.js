@@ -1,11 +1,8 @@
 /**
  * @license
  * 
- * <gallery-mode-plugin>
+ * <gallery-mode-plugin> A plugin for <eyy-indexer> [https://github.com/sixem/eyy-indexer]
  * 
- * A plugin for <eyy-indexer> [https://github.com/sixem/eyy-indexer]
- * 
- * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
  */
 
@@ -22,10 +19,24 @@
 			}
 		};
 
+		/* Table:
+		 * http://gcctech.org/csc/javascript/javascript_keycodes.htm */
+		main.data.keys = {
+			escape : 27,
+			pageUp : 33,
+			pageDown : 34,
+			arrowLeft : 37,
+			arrowUp : 38,
+			arrowRight : 39,
+			arrowDown : 40,
+			g : 71,
+			l : 76
+		};
+
 		main.store = $.extend({
 			extensions : {
 				image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'],
-				video : ['mp4', 'webm']
+				video : ['mp4', 'webm', 'ogv', 'ogg']
 			},
 			console : true,
 			blur : true,
@@ -35,6 +46,7 @@
 			mobile : false,
 			scroll_interval : 35,
 			autoplay : true,
+			volume : 0,
 			reverse_options : true,
 			fit_content : false,
 			list : {
@@ -192,9 +204,11 @@
 					video[0].currentTime = current_time;
 					video[0].muted = false;
 					video[0][main.store.autoplay ? 'play' : 'pause']();
+
+					main.video.setVolume(video[0], main.video.getVolume());
 				} else if(bool === false)
 				{
-					video[0].muted = true;
+					// video[0].muted = true;
 					video[0].pause();
 				}
 			}
@@ -431,7 +445,6 @@
 		};
 
 		main.video = {
-			volume : null,
 			create : (extension) =>
 			{
 				var attributes = {
@@ -442,11 +455,31 @@
 
 				var video = $('<video/>', attributes),
 				source = $('<source>', {
-					type : 'video/' + extension,
+					type : 'video/' + (extension === 'ogv' ? 'ogg' : extension),
 					src : ''
 				}).appendTo(video);
 
+				main.video.setVolume(video.get(0), main.video.getVolume());
+
 				return [video, source];
+			},
+			getVolume : () =>
+			{
+				var volume = parseFloat(main.store.volume);
+				volume = (isNaN(volume) || volume < 0 || volume > 1) ? 0 : volume;
+
+				return volume;
+			},
+			setVolume : (video, i) =>
+			{
+				if(i > 0)
+				{
+					video.volume = i >= 1 ? 1.0 : i;
+				} else {
+					video.muted = true;
+				}
+
+				return i;
 			},
 			seek : (i) =>
 			{
@@ -558,6 +591,8 @@
 
 					/*(() =>
 					{
+						 * [Nodexer]
+						 *
 						 * Attempts to fix an issue where video requests are continuing to hang after changing video source.
 						 * Probably has something to do with caching. Affects mostly larger videos that require multiple requests.
 						 *
@@ -590,7 +625,9 @@
 
 					video.on('volumechange', () =>
 					{
-						main.video.volume = video.get(0).volume;
+						main.store.volume = video.get(0).muted ? 0 : parseFloat(parseFloat(video.get(0).volume).toFixed(2));
+
+						$(main).trigger('volumeChange', main.store.volume);
 					});
 
 					video.on('canplay canplaythrough', () =>
@@ -612,9 +649,9 @@
 							});
 						}
 
-						if(main.video.volume)
+						if(main.store.volume)
 						{
-							video.get(0).volume = main.video.volume;
+							video.get(0).volume = main.store.volume;
 						}
 
 						if(main.store.autoplay)
@@ -769,7 +806,14 @@
 			}
 		};
 
-		main.data.key_prevent = [33, 34, 37, 38, 39, 40, 71];
+		main.data.key_prevent = [
+			main.data.keys.pageUp,
+			main.data.keys.pageDown,
+			main.data.keys.arrowLeft,
+			main.data.keys.arrowUp,
+			main.data.keys.arrowRight,
+			main.data.keys.arrowDown
+		];
 
 		main.handleKey = (key, callback) =>
 		{
@@ -778,26 +822,26 @@
 				console.log('handleKey', key);
 			}
 
-			if(key === 27)
+			if(key === main.data.keys.escape)
 			{
 				main.show(false);
-			} else if(key === 40 || key === 34 || key === 39)
+			} else if(key === main.data.keys.arrowDown || key === main.data.keys.pageDown || key === main.data.keys.arrowRight)
 			{
-				if(key === 39 && main.data.selected.type === 1)
+				if(key === main.data.keys.arrowRight && main.data.selected.type === 1)
 				{
 					if(main.video.seek(5)) main.navigate(null, 1);
 				} else {
 					main.navigate(null, 1);
 				}
-			} else if(key === 38 || key === 33 || key === 37)
+			} else if(key === main.data.keys.arrowUp || key === main.data.keys.pageUp || key === main.data.keys.arrowLeft)
 			{
-				if(key === 37 && main.data.selected.type === 1)
+				if(key === main.data.keys.arrowLeft && main.data.selected.type === 1)
 				{
 					if(main.video.seek(-5)) main.navigate(null, -1);
 				} else {
 					main.navigate(null, -1);
 				}
-			} else if(key === 76)
+			} else if(key === main.data.keys.l)
 			{
 				main.toggleList();
 			}
@@ -1032,7 +1076,7 @@
 			{
 				if(main.data.key_prevent.includes(e.keyCode)) e.preventDefault();
 
-				if(e.keyCode === 71)
+				if(e.keyCode === main.data.keys.g)
 				{
 					main.show(false);
 				}
