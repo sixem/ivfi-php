@@ -42,7 +42,7 @@ This script can be customized in a number of ways. (See: [Configuration](#config
 + Server-side filtering.
 + Direct download links.
 + Clickable path for easy navigation.
-+ Basic mobile support.
++ Mobile support.
 
 # Setup
 ## 1. Files
