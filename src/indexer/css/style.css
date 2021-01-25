@@ -321,10 +321,10 @@ body > table span.sort-indicator.down::after
 
 body > div.bottom
 {
-		margin: 10px 0px 12px 7px;
-		color: #4a4a4a;
-		font-size: 12px;
-		position: relative;
+	margin: 10px 0px 12px 7px;
+	color: #4a4a4a;
+	font-size: 12px;
+	position: relative;
 }
 
 body > div.bottom div:nth-child(1)::after
@@ -375,6 +375,7 @@ body, html,
 
 ::-webkit-scrollbar
 {
+	width: 10px;
     background-color: #131315;
 }
 
@@ -1095,20 +1096,20 @@ select:not(.default):focus
 
 .gallery-container div.content-container .list > div.drag
 {
-		content: ' ';
-		width: 5px;
-		min-height: 100%;
-		cursor: w-resize;
-		position: absolute;
-		left: 0; top: 0; bottom: 0;
-		border-left: 2px solid var(--color-gallery-border);
+	content: ' ';
+	width: 5px;
+	min-height: 100%;
+	cursor: w-resize;
+	position: absolute;
+	left: 0; top: 0; bottom: 0;
+	border-left: 2px solid var(--color-gallery-border);
 }
 
 .gallery-container div.content-container .list > div.drag.reversed
 {
-		left: unset; right: 0; top: 0; bottom: 0;
-		border-left: none;
-		border-right: 2px solid var(--color-gallery-border);
+	left: unset; right: 0; top: 0; bottom: 0;
+	border-left: none;
+	border-right: 2px solid var(--color-gallery-border);
 }
 
 .gallery-container div.content-container .list table
@@ -1119,7 +1120,7 @@ select:not(.default):focus
 
 .gallery-container div.content-container .list table tr td
 {
-	padding: 5px 4px 5px 6px;
+	padding: 6px 4px 6px 6px;
 	cursor: pointer;
 	max-width: 0px;
 	overflow: hidden;
@@ -1228,5 +1229,5 @@ select:not(.default):focus
 
 img#image-preview, video#video-preview
 {
-  box-shadow: 0px 0px 1px #0d0d0d;
+	box-shadow: 0px 0px 1px #0d0d0d;
 }
