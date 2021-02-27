@@ -23,7 +23,7 @@ $config = array(
     /* Formatting options. */
     'format' => array(
         'title' => 'Index of %s', /* title format where %s is the current path. */
-        'date' => array('m/d/y H:i:s', 'd/m/y'), /* date formats (desktop, mobile). */
+        'date' => array('m/d/y H:i', 'd/m/y'), /* date formats (desktop, mobile). */
         'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB') /* size formats. */
     ),
     /* Favicon options. */
