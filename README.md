@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/sixem/eyy-indexer/dev/logo.png">
+<img src="https://raw.githubusercontent.com/sixem/eyy-indexer/master/logo.svg">
 </p>
 
 <p align="center">
@@ -8,15 +8,19 @@
 
 <br/>
 
-This is a simple file directory indexer / lister script written in PHP with some help from JavaScript.
+## What is this project?
+
+This is a simple file directory viewer script written in PHP and JavaScript.
 
 This Indexer is designed to be a more image and video friendly Indexer while still having most of the basic functions of any other Indexer or Directory Lister. It is also designed to have a retro and simple feel to it which is why it doesn't use any fancy CSS or icon packs.
 
 JavaScript is not required for the Indexer but it is needed for the extra functionality.
 
+### Demo
+
 ***You can visit the [demo](https://five.sh/demo/indexer/) to view the indexer in action.***
 
-### Feedback :bulb:
+### Feedback 💡
 I'm open for any feedback.
 
 You can open an [issue](https://github.com/sixem/eyy-indexer/issues) if you encounter any **specific** problems or bugs of any kind.
@@ -24,27 +28,29 @@ You can open an [issue](https://github.com/sixem/eyy-indexer/issues) if you enco
 Or, you can start a [discussion](https://github.com/sixem/eyy-indexer/discussions) if you just have any general questions. You can also suggest any features or potential changes there.
 
 # Features
-#### **Gallery Mode**
+### **| Authentication**
+The script supports HTTP authentication.
+### **| Gallery Mode**
 A gallery mode where you can view images and videos of the current directory without needing to visit each URL separately. It has support for downloading files and reverse searching images.
-#### **Hover Previews**
+### **| Hover Previews**
 Displays a preview of the image or video when hovering over the name.
-#### **Search Filter**
+### **| Search Filter**
 The search filter can be used to search for filenames or filetypes in the current directory. Usage (Desktop): `Shift + F`.
-#### **Single file**
+### **| Single file**
 This script can be set up as a single file script.
-#### **Customizable**
+### **| Customizable**
 This script can be customized in a number of ways. (See: [Configuration](#configuration))
-#### **And more:**
+### **| And much more:**
 + File attributes (date modified and size).
-+ Dates will match the client's timezone.
++ Dates will match the timezone of the client.
 + Persistent client-set sorting settings.
 + Support for themes.
 + Server-side filtering.
 + Direct download links.
-+ Clickable path for easy navigation.
++ Clickable paths for easy navigation.
 + Mobile support.
 
-# Setup
+# Setup ⚙️
 ## 1. Files
 
 You can choose between having a default setup and a standalone setup.
@@ -88,12 +94,12 @@ DirectoryIndex index.php index.html index.htm /indexer.php
 
 This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist.
 
-# Configuration
+# Configuration 🔧
 The Indexer can be customized by editing the config available inside of the [indexer.php](public/indexer.php).
 
 You can read the [CONFIG.md](CONFIG.md) to see a more detailed overview of the available options.
 
-# Source
+# Source 📑
 The files inside [/src/](src/) are **NOT** needed in order to run this script.
 
 This directory contains the uncompressed and untranspiled source files of the script (.css, .js and so on). You can use these files if you want to customize or edit the script in any way.
@@ -101,7 +107,7 @@ This directory contains the uncompressed and untranspiled source files of the sc
 # Contributing
 You can contribute by submitting a pull request to the [dev](https://github.com/sixem/eyy-indexer/tree/dev) branch.
 
-# Plugins / Libraries used
+# Plugins / Libraries used 🩸
 ### [js-cookie](https://github.com/js-cookie/js-cookie)
 A simple, lightweight JavaScript API for handling cookies.
 
@@ -118,4 +124,4 @@ Lightweight, cross-browser and highly customizable animated scrolling with jQuer
 Gives easy access to left/right/up/down swipe events for iOS and other touch devices.
 
 ## Disclaimer
-***Use this script at your own risk. There may exist bugs that i do not know of.***
+***As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.***
