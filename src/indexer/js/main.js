@@ -1465,11 +1465,11 @@
 
 		if(config.mobile === false && config.preview.enabled === true)
 		{
-			let previews = {}, intial = $('body').find('> table tr.file > td > a.preview');
+			let previews = {}, initial = $('body').find('> table tr.file > td > a.preview');
 
-			if(intial.length > 0)
+			if(initial.length > 0)
 			{
-				window.hoverPreview(intial[0], {
+				window.hoverPreview(initial[0], {
 					delay : config.preview.hover_delay,
 					cursor : config.preview.cursor_indicator,
 					encodeAll : true
