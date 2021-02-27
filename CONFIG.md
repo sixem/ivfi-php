@@ -2,9 +2,40 @@
 
 Here is an overview of what each configurable option does.
 
-These options can be found at the top of the [indexer.php](public/indexer.php) file.
+These options can be found and changed at the top of the [indexer.php](public/indexer.php) file, or you can create a config file that makes updating a bit easier (see below).
 
 Some of these settings can be changed by the client/user. These are only values for the script to use as defaults.
+
+### First.. How do i keep config values between updates?
+
+You can edit the configuration in the file directly, but if you wish to keep a separate config file that does not reset between updates, then creating your own config file can be a good solution.
+
+The script will look for a config file in the same directory as the script. If the file is named `indexer.php` (as it is by default), then it'll look for a file called `indexer.config.php`. If you rename the file to `something.php`, then it'll look for `something.config.php` and so on.
+
+Any values that are not present in the config file, will be set to the default value. It is also worth noting that having a `.` in front of the config file (hidden file) **will also work**.
+
+A basic example of a config file:
+```php
+<?php
+return array(
+    'authentication' => array(
+        'mysecretusername' => 'supersecretpassword'
+    ),
+    'icon' => array(
+        'path' => 'https://cdn1.five.sh/assets/media/five.png',
+        'mime' => 'image/png'
+    ),
+    'style' => array(
+        'themes' => array(
+            'path' => 'indexer/css/themes',
+            'default' => 'pelagic'
+        ),
+        'compact' => true
+    ),
+    'debug' => true
+);
+?>
+```
 
 ## Authentication
 Enables HTTP authentication through PHP. Don't rely on this for any strong protection.
@@ -17,7 +48,7 @@ Enables HTTP authentication through PHP. Don't rely on this for any strong prote
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `title` | String | `Index of %s` | Page title where  `%s` represents the current path.
-| `date` | String / Array | `array('d/m/y H:i', 'd/m/y')` | Date format as per [datetime.format.php](https://www.php.net/manual/en/datetime.format.php). Can be a string or an array. If it is an array then the first value will be shown on desktop devices and the second will be shown on mobile devices. It is a good idea to set a shorter mobile format because of the limited screen space.
+| `date` | String / Array | `array('d/m/y H:i', 'd/m/y')` | Date format as per [datetime.format.php](https://www.php.net/manual/en/datetime.format.php#refsect1-datetime.format-parameters). Can be a string or an array. If it is an array then the first value will be shown on desktop devices and the second will be shown on mobile devices. It is a good idea to set a shorter mobile format because of the limited screen space.
 | `sizes` | Array | `' B', ' kB', ' MB', ' GB', ' TB'` | Size formats for when displaying filesizes.
 
 ## Icon
@@ -35,7 +66,7 @@ Default sorting settings. Once the client sorts the items themselves, then those
 | `order` | Integer | `SORT_ASC` | Sorting order. `SORT_ASC` or `SORT_DESC`.
 | `types` | Integer | `0` | What item types to sort. `0` = Both. `1` = Files only. `2` = Directories only.
 | `sort_by` | String | `name` | What to sort by. Available options are `name`, `modified`, `type` and `size`.
-| `use_mbstring` | Boolean | `false` | Enables [mbstring](https://www.php.net/manual/en/book.mbstring.php). This will solve some sorting issues with cyrillic capital letters et cetera, but it'll require `mbstring` to be installed.
+| `use_mbstring` | Boolean | `false` | Enables [mbstring](https://www.php.net/manual/en/book.mbstring.php). This will solve some sorting issues with cyrillic capital letters et cetera, but it'll require `mbstring` to be installed. Only affects server-side sorting.
 
 ## Gallery
 The gallery plugin will display a gallery of the images and videos inside the current path.
@@ -47,7 +78,7 @@ The gallery plugin will display a gallery of the images and videos inside the cu
 | `reverse_options` | Boolean | `false` | Whether gallery images should have reverse search options or not.
 | `scroll_interval` | Integer | `50` | Adds a forced break between scroll events in the gallery (`ms`).
 | `list_alignment` | Integer | `0` | Gallery list alignment where `0` is `right` and `1` is `left`.
-| `fit_content` | Boolean | `false` | Whether images and videos should be forced to fill the available screen space.
+| `fit_content` | Boolean | `true` | Whether images and videos should be forced to fill the available screen space.
 
 ## Preview
 The preview plugin displays a preview of the image or video when hovering over the filename.
@@ -66,10 +97,10 @@ This basically means that the extensions included here will have previews and wi
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `image` | Array | `'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'` | Extensions marked as `image`.
-| `video` | Array | `'webm', 'mp4'` | Extensions marked as `video`.
+| `video` | Array | `'webm', 'mp4', 'ogg', 'ogv'` | Extensions marked as `video`.
 
 ## Style
-Various visual options for the script.
+Various visual options for the script. The `compact` setting can be changed by the client in the settings menu, as can `themes`, if they are enabled.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -96,7 +127,8 @@ Setting the value to `false` will disable the filter.
 |-----|------|---------|-------------|
 | `allow_direct_access` | Boolean | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
-| `footer` | Boolean | `true` | Whether there should be a simple footer below the list of files or not.
+| `footer` | Boolean | `true` | Setting this to `true` or `false` will enable or disable the path, site and generation time in the footer respectively.
+| `credits` | Boolean | `true` | When set to true, it will display a simple link to the git repository in the footer along with the version number. I would appreciate it if you keep this enabled, but i also understand that it is not always desirable, so the option to hide it is there.
 | `debug` | Boolean | `false` | Enables PHP debugging and `console.log` info messages.
 
 # Advanced
@@ -105,4 +137,4 @@ Advanced settings that are not a part of the regular configuration.
 You can set some server variables (`$_SERVER`) to modify how the script works.
 | Key | Type | Description |
 |-----|------|-------------|
-| `INDEXER_BASE_PATH` | String | Overrides the default base directory of the script. Can be used if you are dealing with a dynamic `root` path or if you want to place the script outside of the `root` directory, for example.
+| `INDEXER_BASE_PATH` | String | Overrides the default base directory of the script. Can be used if you are dealing with a dynamic `root` path or if you want to place the script outside of the `root` directory, for example. This does **not** work with themes out of the box.

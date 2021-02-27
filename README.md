@@ -96,7 +96,7 @@ You can read the [CONFIG.md](CONFIG.md) to see a more detailed overview of the a
 # Source
 The files inside [/src/](src/) are **NOT** needed in order to run this script.
 
-This directory contains the uncompressed (and untranspiled) source files of the script (.css, .js etc.), so you can use these files if you want to customize, contribute or edit the script in any way.
+This directory contains the uncompressed and untranspiled source files of the script (.css, .js and so on). You can use these files if you want to customize or edit the script in any way.
 
 # Contributing
 You can contribute by submitting a pull request to the [dev](https://github.com/sixem/eyy-indexer/tree/dev) branch.
@@ -108,8 +108,8 @@ A simple, lightweight JavaScript API for handling cookies.
 ### [modernizr.mq](https://github.com/Modernizr/Modernizr)
 Modernizr is a JavaScript library that detects HTML5 and CSS3 features in the user’s browser.
 
-### [image.preview.js](https://github.com/sixem/image.preview.js)
-A simple jQuery plugin that adds hoverable image and video previews to links and other elements.
+### [hover-preview-js](https://github.com/sixem/hover-preview-js)
+A simple plugin that adds hoverable image and video previews to any element.
 
 ### [jquery.scrollTo](https://github.com/flesler/jquery.scrollTo)
 Lightweight, cross-browser and highly customizable animated scrolling with jQuery.

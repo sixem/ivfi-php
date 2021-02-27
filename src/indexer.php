@@ -14,13 +14,16 @@
  * https://github.com/sixem/eyy-indexer/blob/master/CONFIG.md
  */
 
+/* Used to bust the cache and to display footer version number. */
+$version = '1.1.7';
+
 $config = array(
     /* Authentication options. */
     'authentication' => false,
     /* Formatting options. */
     'format' => array(
         'title' => 'Index of %s', /* title format where %s is the current path. */
-        'date' => array('d/m/y H:i', 'd/m/y'), /* date formats (desktop, mobile). */
+        'date' => array('m/d/y H:i:s', 'd/m/y'), /* date formats (desktop, mobile). */
         'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB') /* size formats. */
     ),
     /* Favicon options. */
@@ -43,7 +46,7 @@ $config = array(
         'reverse_options' => false, /* reverse search options for images (when hovering over them). */
         'scroll_interval' => 50, /* break in ms between scroll navigation events. */
         'list_alignment' => 0, /* list alignment where 0 is right and 1 is left. */
-        'fit_content' => false /* whether the media should be forced to fill the screen space. */
+        'fit_content' => true /* whether the media should be forced to fill the screen space. */
     ),
     /* Preview options. */
     'preview' => array(
@@ -55,7 +58,7 @@ $config = array(
      * These extensions will have potential previews and will be included in the gallery. */
     'extensions' => array(
         'image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),
-        'video' => array('webm', 'mp4')
+        'video' => array('webm', 'mp4', 'ogg', 'ogv')
     ),
     /* Styling options. */
     'style' => array(
@@ -69,7 +72,7 @@ $config = array(
         'compact' => false
     ),
     /* Filter what files or directories to show.
-     * Uses regular expressions. All names matching the regex will be shown.
+     * Uses regular expressions. All names !matching! the regex will be shown.
      * Setting the value to false will disable the respective filter. */
     'filter' => array(
         'file' => false,
@@ -80,14 +83,30 @@ $config = array(
     /* Set to 'strict' or 'weak'.
      * 'strict' uses realpath() to avoid backwards directory traversal whereas 'weak' uses a similar string-based approach. */
     'path_checking' => 'strict',
-    /* Whether the footer should be generated. */
+    /* Whether extra information in the footer should be generated (page load time, path etc.). */
     'footer' => true,
+    /* Displays a simple link to the git repository in the footer along with the current version.
+     * I would really appreciate it if you keep this enabled. */
+    'credits' => true,
     /* Enables console output in JS and PHP debugging. */
     'debug' => true
 );
 
+/* Look for a config file in the current directory. */
+$config_file = (basename(__FILE__, '.php') . '.config.php');
+
+/* If found, it'll override the above configuration values.
+ * Any unset values in the file will take the default values. */
+if(file_exists($config_file))
+{
+  $config = include($config_file);
+} else if(file_exists('.' . $config_file)) /* Also check for hidden (.) file. */
+{
+  $config = include('.' . $config_file);
+}
+
 /* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('format'=>array('title'=>'Index of %s','date'=>array('d/m/y H:i','d/m/y'),'sizes'=>array(' B',' kB',' MB',' GB',' TB')),'icon'=>array('path'=>'/favicon.png','mime'=>'image/png'),'sorting'=>array('enabled'=>false,'order'=>SORT_ASC,'types'=>0,'sort_by'=>'name','use_mbstring'=>false ),'gallery'=>array('enabled'=>true,'fade'=>0,'reverse_options'=>false,'scroll_interval'=>50,'list_alignment'=>0,'fit_content'=>false ),'preview'=>array('enabled'=>true,'hover_delay'=>75,'cursor_indicator'=>true ),'extensions'=>array('image'=>array('jpg','jpeg','png','gif','ico','svg','bmp','webp'),'video'=>array('webm','mp4')),'style'=>array('themes'=>array('path'=>false,'default'=>false),'compact'=>false),'filter'=>array('file'=>false,'directory'=>false),'allow_direct_access'=>false,'path_checking'=>'strict','footer'=>true,'debug'=>true);
+$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'fade' => 0,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'allow_direct_access' => false,'path_checking' => 'strict','footer' => true,'credits' => true,'debug' => false);
 
 function authenticate($users, $realm)
 {
@@ -156,7 +175,8 @@ if($config['authentication'] && is_array($config['authentication']) && count($co
   authenticate($config['authentication'], 'Restricted content.');
 }
 
-/* Set default configuration values if the config is missing any keys. */
+/* Set default configuration values if the config is missing any keys.
+ * This does not go too deep at all. */
 foreach($defaults as $key => $value)
 {
   if(!isset($config[$key]))
@@ -217,7 +237,7 @@ class Indexer
 
   function __construct($path, $options = array())
   {
-    $requested = urldecode(strpos($path, '?') !== false ? explode('?', $path)[0] : $path);
+    $requested = rawurldecode(strpos($path, '?') !== false ? explode('?', $path)[0] : $path);
 
     if(isset($options['path']['relative']) && $options['path']['relative'] !== NULL)
     {
@@ -704,7 +724,7 @@ if(isset($_SERVER['INDEXER_BASE_PATH']))
 try
 {
   $indexer = new Indexer(
-      urldecode($_SERVER['REQUEST_URI']),
+      rawurldecode($_SERVER['REQUEST_URI']),
       array(
           'path' => array(
             'relative' => $base_path
@@ -788,6 +808,8 @@ if(is_array($client) && isset($client['style']['compact']))
 } else {
   $compact = $config['style']['compact'];
 }
+
+$footer = $config['footer'] === true || $config['credits'] !== false;
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -798,12 +820,12 @@ if(is_array($client) && isset($client['style']['compact']))
     <title><?=sprintf($config['format']['title'], $indexer->getCurrentDirectory());?></title>
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
-    <link rel="stylesheet" type="text/css" href="/indexer/css/style.css">
-    <?=($current_theme && strtolower($current_theme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $current_theme . '.css">' . PHP_EOL : ''?>
+    <link rel="stylesheet" type="text/css" href="/indexer/css/style.css?v=<?=$version;?>">
+    <?=($current_theme && strtolower($current_theme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $current_theme . '.css?v=' . $version . '">' . PHP_EOL : ''?>
 
   </head>
 
-  <body class="directory<?=$compact ? ' compact' : ''?>">
+  <body class="directory<?=$compact ? ' compact' : ''?><?=!$footer ? ' pb' : ''?>">
 
     <div class="top-bar">
         <div class="extend ns">&#x25BE;</div>
@@ -829,14 +851,26 @@ if(is_array($client) && isset($client['style']['compact']))
   <?=$contents;?>
 </table>
 
-<div class="bottom">
+<?php
+if($footer)
+{
+  echo '<div class="bottom">';
 
-<?=($config['footer'] === true) ? sprintf(
+  echo ($config['footer'] === true) ? sprintf(
     '  <div>Page generated in %f seconds</div><div>Browsing <span>%s</span> @ <a href="/">%s</a></div>',
     (microtime(true) - $render), $indexer->getCurrentDirectory(), $_SERVER['SERVER_NAME']
-) : '';?>
+  ) : '';
 
-</div>
+  echo ($config['credits'] !== false) ? sprintf(
+    '<div class="git-reference%s">
+    <a target="_blank" href="https://github.com/sixem/eyy-indexer">eyy-indexer</a><span class="version">%s</span>
+  </div>',
+      ($config['footer'] !== true ? ' single' : ''), $version
+  ) : '';
+
+  echo '</div>';
+}
+?>
 
 <div class="filter-container">
     <div>
@@ -850,10 +884,7 @@ if(is_array($client) && isset($client['style']['compact']))
 
 <!-- [https://github.com/sixem/eyy-indexer] --> 
 
-<script type="text/javascript" src="/indexer/js/vendors.js"></script>
-<script type="text/javascript" src="/indexer/js/gallery.js"></script>
-
-<script type="text/javascript"><?=('var config = ' . json_encode(array(
+<script id="__INDEXER_DATA__" type="application/json"><?=(json_encode(array(
   'preview' => array(
     'enabled' => $config['preview']['enabled'],
     'hover_delay' => $config['preview']['hover_delay'],
@@ -889,9 +920,12 @@ if(is_array($client) && isset($client['style']['compact']))
   'timestamp' => $indexer->timestamp,
   'debug' => $config['debug'],
   'mobile' => false
-)) . ';'); ?>
-config.mobile = Modernizr.mq('(max-width: 640px)');</script>
+))); ?>
+</script>
 
-<script type="text/javascript" src="/indexer/js/main.js"></script>
+<script type="text/javascript" src="/indexer/js/vendors.js?v=<?=$version;?>"></script>
+<script type="text/javascript" src="/indexer/js/gallery.js?v=<?=$version;?>"></script>
+<script type="text/javascript" src="/indexer/js/main.js?v=<?=$version;?>"></script>
+
 </body>
 </html>
