@@ -23,18 +23,18 @@
 
 	--color-border-main: #232222;
 
-	--color-link-download: #436beb;
-	--color-link-download-visited: #7751eb;
+	--color-link-download: #587fe0;
+	--color-link-download-visited: #7f65cf;
 
 	--color-link-file: #9b9b9b;
 	--color-link-file-visited: #757575;
 
-	--color-link-media-file: #517eeb;
-	--color-link-media-file-hover: #5486ff;
-	--color-link-media-file-visited: #7751eb;
+	--color-link-media-file: #587fe0;
+	--color-link-media-file-hover: #5884f0;
+	--color-link-media-file-visited: #7f65cf;
 
-	--color-link-dir-regular: #e93333;
-	--color-link-dir-parent: #feac16;
+	--color-link-dir-regular: #f64e4e;
+	--color-link-dir-parent: #ffb632;
 
 	--color-gallery-list-item: #d4d4d4;
 	--color-gallery-list-item-selected: #fff;
@@ -101,6 +101,12 @@ body
 	margin: 0;
 }
 
+body.pb
+{
+	border-bottom: 1px solid var(--color-border-main);
+	margin-bottom: 18px;
+}
+
 @media only screen and (min-width: 640px)
 {
   body.compact
@@ -148,6 +154,7 @@ div.top-bar > div.directory-info > div.quick-path
 	overflow-x: hidden;
 	text-overflow: ellipsis;
 	vertical-align: middle;
+	position: absolute;
 }
 
 div.top-bar > div.directory-info > div.quick-path a
@@ -165,10 +172,9 @@ body > table
 {
 	width: 100%;
 	table-layout: fixed;
-	padding-bottom: 10px;
+	padding-bottom: 6px;
 	padding-top: 10px;
 	border-spacing: 0px;
-	border-bottom: 1px solid var(--color-border-main);
 	border-top: 1px solid var(--color-border-main);
 	background-color: var(--color-background-table);
 }
@@ -320,13 +326,14 @@ body > table span.sort-indicator.down::after
 
 body > div.bottom
 {
-		margin: 10px 0px 12px 7px;
-		color: #4a4a4a;
-		font-size: 12px;
-		position: relative;
+	padding: 9px 0px 10px 7px;
+	color: #4a4a4a;
+	font-size: 12px;
+	position: relative;
+	border-top: 1px solid var(--color-border-main);
 }
 
-body > div.bottom div:nth-child(1)::after
+body > div.bottom div:nth-child(1):not(.git-reference)::after
 {
 	content: '|';
 	margin: 0px 10px 0px 10px;
@@ -339,7 +346,6 @@ body > div.bottom div:nth-child(2)
 
 body > div.bottom div:nth-child(2) > span
 {
-	max-width: 30vw;
 	display: inline-block;
 	white-space: nowrap;
 
@@ -349,6 +355,16 @@ body > div.bottom div:nth-child(2) > span
 	vertical-align: top;
 }
 
+body:not(.compact) > div.bottom div:nth-child(2) > span
+{
+	max-width: 20vw;
+}
+
+body.compact > div.bottom div:nth-child(2) > span
+{
+	max-width: 300px;
+}
+
 body > div.bottom div
 {
 	display: inline-block;
@@ -356,12 +372,48 @@ body > div.bottom div
 
 body > div.bottom a
 {
-		color: #4a4a4a;
+	color: #4a4a4a;
 }
 
 body > div.bottom a:hover
 {
-		color: #545454;
+	color: #545454;
+}
+
+div.git-reference
+{
+    color: #4a4a4a;
+    position: absolute;
+    right: 7px;
+}
+
+div.git-reference a
+{
+	color: #4a4a4a;
+}
+
+div.git-reference a:hover
+{
+	color: #545454;
+	text-decoration: underline;
+}
+
+div.git-reference > span
+{
+	margin-left: 6px;
+}
+
+body.compact div.git-reference.single
+{
+	position: unset;
+	width: 100%;
+}
+
+body:not(.compact) div.git-reference.single
+{
+	position: relative;
+	width: 100%;
+	text-align: right;
 }
 
 /* scrollbar styling */
@@ -374,6 +426,7 @@ body, html,
 
 ::-webkit-scrollbar
 {
+	width: 10px;
     background-color: #131315;
 }
 
@@ -425,6 +478,8 @@ body, html,
 
 .top-bar > div.extend
 {
+	transition: background-color 0.2s;
+
 	font-weight: bold;
 
 	position: absolute;
@@ -755,7 +810,8 @@ select:not(.default):focus
 			font-size: 10px!important;
 		}
 
-		body > div.bottom div
+		body > div.bottom div:nth-child(1),
+		body > div.bottom div:nth-child(2)
 		{
 			margin-top: 9px;
 			display: block!important;
@@ -985,6 +1041,13 @@ select:not(.default):focus
 	left: 10px;
 }
 
+.gallery-container div.content-container .media .wrapper > div.error
+{
+    color: #d83232;
+    display: block;
+    width: 100%;
+}
+
 .gallery-container div.content-container,
 .gallery-container div.content-container .media .wrapper .cover,
 .gallery-container div.content-container .media .wrapper,
@@ -1094,31 +1157,37 @@ select:not(.default):focus
 
 .gallery-container div.content-container .list > div.drag
 {
-		content: ' ';
-		width: 5px;
-		min-height: 100%;
-		cursor: w-resize;
-		position: absolute;
-		left: 0; top: 0; bottom: 0;
-		border-left: 2px solid var(--color-gallery-border);
+	content: ' ';
+	width: 5px;
+	min-height: 100%;
+	cursor: w-resize;
+	position: sticky;
+	top: 0;
+	bottom: 0;
+	border-left: 2px solid var(--color-gallery-border);
+	z-index: 1;
 }
 
 .gallery-container div.content-container .list > div.drag.reversed
 {
-		left: unset; right: 0; top: 0; bottom: 0;
-		border-left: none;
-		border-right: 2px solid var(--color-gallery-border);
+	left: unset; right: 0; top: 0; bottom: 0;
+	float: right;
+	border-left: none;
+	border-right: 2px solid var(--color-gallery-border);
 }
 
 .gallery-container div.content-container .list table
 {
 	width: 100%;
 	max-width: 100%;
+
+	position: absolute;
+	top: 0;
 }
 
 .gallery-container div.content-container .list table tr td
 {
-	padding: 5px 4px 5px 6px;
+	padding: 6px 4px 6px 6px;
 	cursor: pointer;
 	max-width: 0px;
 	overflow: hidden;
@@ -1218,6 +1287,23 @@ select:not(.default):focus
 		z-index: 2;
 	}
 
+	div.git-reference
+	{
+		text-align: center!important;
+		margin-top: 14px;
+		position: unset!important;
+		right: unset!important;
+	}
+
+	div.top-bar > div.directory-info > div[data-count="directories"]
+	{
+		width: 100%;
+	}
+
+	body > table tr td {
+		padding: 7px 0px 7px 0px;
+	}
+
 	body > div.bottom div:nth-child(1)::after
 	{
 		content: ''!important;
@@ -1225,7 +1311,7 @@ select:not(.default):focus
 	}
 }
 
-img#image-preview, video#video-preview
+div[hidden]
 {
-  box-shadow: 0px 0px 1px #0d0d0d;
+	display: none;
 }

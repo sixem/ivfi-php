@@ -3,13 +3,14 @@
  * 
  * <eyy-indexer-main> [https://github.com/sixem/eyy-indexer]
  * 
- * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
  */
 
 (() =>
 {
 	'use strict';
+
+	const config = JSON.parse($('#__INDEXER_DATA__').html());
 
 	const main = {
 		store  : {
@@ -29,7 +30,7 @@
 				{
 					clearTimeout(timer);
 				}
-				
+
 				timer = setTimeout(f, 100, e);
 			};
 		},
@@ -111,6 +112,18 @@
 				return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.localeCompare(valB);
 			};
 		},
+		generateWget : () =>
+		{
+			var url = window.location.href, extensions = [];
+
+			$('body > table > tbody > tr.file > td:first-child > a:visible').each((index, item) =>
+			{
+				var extension = $(item).text().split('.').pop().toLowerCase().trim();
+				if(!extensions.includes(extension)) extensions.push(extension);
+			});
+
+			return `wget -r -np -nH -nd -e robots=off --accept "${extensions.join(',')}" "${url}"`;
+		},
 		client : {
 			get : () =>
 			{
@@ -119,7 +132,8 @@
 						reverse_options : config.gallery.reverse_options,
 						list_alignment : config.gallery.list_alignment,
 						fit_content : config.gallery.fit_content,
-						autoplay : true
+						autoplay : true,
+						volume : 0.25
 					},
 					style : {
 						compact : config.style.compact,
@@ -269,7 +283,7 @@
 			},
 			close : () =>
 			{
-				$('.focus-overlay, .settings-container').remove();
+				$('body > div.focus-overlay, body > div.settings-container').remove();
 			},
 			/* update functions for settings which require live updating */
 			update : {
@@ -289,13 +303,13 @@
 						if(main.gallery.instance)
 						{
 							var elements = [
-								'.gallery-container div.content-container .media .loader',
-								'.gallery-container div.content-container .list',
-								'.gallery-container div.content-container .list > div.drag'
+								'body > div.gallery-container > div.content-container > div.media > div.loader',
+								'body > div.gallery-container > div.content-container > div.list',
+								'body > div.gallery-container > div.content-container > div.list > div.drag'
 							];
 
 							elements.forEach((e) => alignment === 0 ? $(e).removeClass('reversed') : $(e).addClass('reversed'));
-							var detached = $(elements[1]).detach(), media = ('.gallery-container div.content-container .media');
+							var detached = $(elements[1]).detach(), media = ('body > div.gallery-container > div.content-container > div.media');
 							alignment === 1 ? detached.insertBefore(media) : detached.insertAfter(media);
 							(main.gallery.instance).store.list.reverse = (alignment === 0 ? false : true);
 						}
@@ -305,8 +319,7 @@
 						if(main.gallery.instance)
 						{
 							main.gallery.instance.store.reverse_options = value;
-							var e = $('.gallery-container div.content-container .media .wrapper .cover .reverse');
-							console.log(e);
+							var e = $('body > div.gallery-container > div.content-container > div.media > div.wrapper > div.cover .reverse');
 							if(e.length > 0) e.remove();
 						}
 					},
@@ -319,7 +332,7 @@
 						if(main.gallery.instance)
 						{
 							main.gallery.instance.store.fit_content = value;
-							var wrapper = $('.gallery-container div.content-container .media .wrapper');
+							var wrapper = $('body > div.gallery-container > div.content-container > div.media > div.wrapper');
 
 							if(wrapper && value)
 							{
@@ -443,9 +456,9 @@
 			{
 				/* build the settings menu */
 
-				if($('.settings-container').length > 0) return;
+				if($('body > div.settings-container').length > 0) return;
 
-				if($('.focus-overlay').length === 0) $('<div/>', { class : 'focus-overlay' })
+				if($('body > div.focus-overlay').length === 0) $('<div/>', { class : 'focus-overlay' })
 					.appendTo($('body')).on('click', () => main.settings.close());
 
 				let container = $('<div/>', {
@@ -577,7 +590,7 @@
 				];
 
 				/* add menu item if gallery is enabled */
-				if(config.gallery.enabled === true && $('a.preview').length > 0)
+				if(config.gallery.enabled === true && $('body > table > tbody > tr.file > td > a.preview').length > 0)
 				{
 					items.unshift({
 						text : '[Open] Gallery',
@@ -603,6 +616,31 @@
 					}).appendTo(container);
 
 					if(Object.prototype.hasOwnProperty.call(item, 'id')) e.attr('id', item.id);
+				});
+
+				/* event delegation */
+				(container)[0].addEventListener('click', (e) =>
+				{
+					if(e.target.tagName == 'DIV')
+					{
+						if(e.target.id == 'gallery' && config.gallery.enabled === true)
+						{
+							main.gallery.load(null);
+							main.menu.toggle(false);
+						} else if(e.target.id == 'copy')
+						{
+							main.copyTextToClipboard(main.generateWget());
+							main.menu.toggle(false);
+						} else if(e.target.id == 'settings')
+						{
+							main.settings.show();
+							main.menu.toggle(false);
+						} else if(e.target.id == 'filter')
+						{
+							main.filter.toggle();
+							main.menu.toggle();
+						}
+					}
 				});
 
 				return container;
@@ -672,13 +710,13 @@
 
 				if(main.gallery.instance) main.gallery.instance.data.selected.index = 0;
 
-				$('body > table tr.file, body > table tr.directory').each((index, item) =>
+				$('body > table > tbody > tr.file, body > table > tbody > tr.directory').each((index, item) =>
 				{
 					item = $(item); 
 
 					if(data.reset === true)
 					{
-						item.css('display', '');
+						item[0].removeAttribute('hidden');
 						return true;
 					}
 
@@ -697,7 +735,12 @@
 						}
 					}
 
-					item.css('display', (match.valid && match.data) ? '' : 'none');
+					if(match.valid && match.data)
+					{
+						item[0].removeAttribute('hidden');
+					} else {
+						item[0].setAttribute('hidden', '');
+					}
 
 					if(match.valid && match.data && is_file)
 					{
@@ -740,7 +783,9 @@
 					`${data.shown.directories} ${data.shown.directories === 1 ? 'directory' : 'directories'}`
 				);
 
-				var option = $('body > div.menu > #gallery'), previews = $('body > table tr.file:visible a.preview').length, status = $('.filter-container div.status');
+				var option = $('body > div.menu > #gallery'),
+					previews = $('body > table tr.file:visible a.preview').length,
+					status = $('body > div.filter-container div.status');
 
 				if(status.length > 0)
 				{
@@ -776,7 +821,7 @@
 			},
 			toggle : () =>
 			{
-				var container = $('.filter-container'), input = container.find('input[type="text"]');
+				var container = $('body > div.filter-container'), input = container.find('input[type="text"]');
 
 				if(container.is(':visible'))
 				{
@@ -970,7 +1015,7 @@
 
 				var apply = (offset, format = true) =>
 				{
-					$('tbody tr.directory > td:nth-child(2), tbody tr.file > td[data-raw]:nth-child(2)')
+					$('body > table > tbody > tr.directory > td:nth-child(2), tbody tr.file > td[data-raw]:nth-child(2)')
 					.each((index, item) =>
 					{
 						item = $(item);
@@ -1005,8 +1050,8 @@
 						if(since) span.attr('title', `${since} (UTC${(offset.hours > 0 ? '+' : '') + offset.hours})`);
 					});
 
-					$('.top-bar > .directory-info div[data-count="files"], \
-						.top-bar > .directory-info div[data-count="directories"]').each((index, item) =>
+					$('body > div.top-bar > .directory-info div[data-count="files"], \
+						body > div.top-bar > .directory-info div[data-count="directories"]').each((index, item) =>
 					{
 						item = $(item);
 
@@ -1041,6 +1086,8 @@
 		sort : {
 			load : () =>
 			{
+				var ths = document.querySelectorAll('table th span[sortable]');
+
 				if(Object.prototype.hasOwnProperty.call(config, 'sorting') && config.sorting.enabled)
 				{
 					if(config.sorting.types === 0 || config.sorting.types === 1)
@@ -1063,7 +1110,7 @@
 
 						if(index !== null)
 						{
-							var th = $('table th span[sortable]').eq(index).parents('th');
+							var th = $(ths[index]).closest('th');
 
 							if(th.length > 0)
 							{
@@ -1089,7 +1136,7 @@
 					console.log('gallery.load =>', index);
 				}
 
-				var preview_video = $('.preview-container > video');
+				var preview_video = $('body > div.preview-container > video');
 
 				/* if a gallery instance is already active, show it */
 				if(main.gallery.instance && main.gallery.instance !== false)
@@ -1139,6 +1186,10 @@
 					(client.gallery.autoplay) :
 					config.gallery.autoplay;
 
+				options.volume = main.checkNested(client, 'gallery', 'volume') ?
+					(client.gallery.volume) :
+					config.gallery.volume;
+
 				options.fit_content = main.checkNested(client, 'gallery', 'fit_content') ?
 					(client.gallery.fit_content) :
 					config.gallery.fit_content;
@@ -1157,13 +1208,20 @@
 						src : preview_video.find('source').attr('src'),
 						time : preview_video[0].currentTime
 					} : null
-				}
+				};
 
 				main.gallery.instance = new $.fn.gallery(main.getTableItems(), options);
 
 				if(main.gallery.instance !== false)
 				{
 					$(main.gallery.instance).on('unbound', () => main.bind());
+
+					$(main.gallery.instance).on('volumeChange', (e, volume) =>
+					{
+						client = main.client.get();
+						client.gallery.volume = volume;
+						main.client.set(client);
+					});
 				}
 			}
 		},
@@ -1173,7 +1231,7 @@
 				var i = 0;
 
 				[{
-					e : $('.filter-container'),
+					e : $('body > .filter-container'),
 					func : main.filter.toggle
 				},
 				{
@@ -1195,21 +1253,24 @@
 		{
 			var items = [];
 
-			$('tr.file td:first-child a.preview').each((index, item) =>
+			document.querySelectorAll('body > table > tbody > tr.file > td:first-child > a.preview').forEach((e) =>
 			{
-				item = $(item);
+				let parent = e.parentNode, container = (parent).parentNode;
 
-				var parent = item.closest('tr');
+				if(container.hasAttribute('hidden'))
+				{
+					return false;
+				}
 
-				if(parent.is(':hidden')) return true;
-
-				var url = item.attr('href'),
-					name = item.closest('td').data('raw'),
-					size = parent.find('td').eq(2).text();
+				var url = e.getAttribute('href');
 
 				if(typeof url !== 'undefined' && typeof name !== 'undefined')
 				{
-					items.push({ name, url, size });
+					items.push({
+						url : url,
+						name : parent.getAttribute('data-raw'),
+						size : container.querySelector('td:nth-child(3)').innerHTML
+					});
 				}
 			});
 
@@ -1219,7 +1280,7 @@
 			scroll : () =>
 			{
 				var path = $('body > div.path'),
-					top = $('div.top-bar > div.directory-info > div.quick-path'),
+					top = $('body > div.top-bar > div.directory-info > div.quick-path'),
 					visible = $(window).scrollTop() < path.offset().top + path.outerHeight();
 
 				if(!visible)
@@ -1231,13 +1292,70 @@
 							'data-view' : 'desktop'
 						}).html($('body > div.path').html());
 
-						$('div.top-bar > div.directory-info').append(top);
+						$('body > div.top-bar > div.directory-info').append(top);
 					}
 
 					top.fadeIn(150).css('display', 'inline-block');
 				} else {
 					top.fadeOut(150);
 				}
+			},
+			sortTableColumn : (target) =>
+			{
+				var parent = $(target).parent(), index = parent.index(),
+					column = !$(target).is('th') ? parent[0] : target,
+					table = $('body > table');
+
+				var rows = {
+					directories : table.find('tbody > tr.directory').toArray(),
+					files : table.find('tbody > tr.file').toArray()
+				};
+
+				/* set a skip directory var if we're only sorting sizes or types (as they should be unaffected by these). */
+				var skip_directories = (Object.prototype.hasOwnProperty.call(config.sorting, 'sort_by') &&
+					(index === 2 || index === 3));
+
+				if(config.sorting.types === 0 || config.sorting.types === 2)
+				{
+					if(!skip_directories) rows.directories.sort(main.comparer($(column).index()));
+				}
+
+				if(config.sorting.types === 0 || config.sorting.types === 1)
+				{
+					rows.files.sort(main.comparer($(column).index()));
+				}
+
+				column.asc = !column.asc;
+
+				$('body > table > thead > tr > th span.sort-indicator').removeClass('up down');
+				parent.find('> span.sort-indicator').addClass(column.asc ? 'down' : 'up').show();
+
+				var client = main.client.get();
+
+				client.sort.ascending = (column.asc ? 1 : 0);
+				client.sort.row = index;
+
+				main.client.set(client);
+
+				if(!column.asc)
+				{
+					if(config.sorting.types === 0 || config.sorting.types === 2)
+					{
+						if(!skip_directories) rows.directories = rows.directories.reverse();
+					}
+
+					if(config.sorting.types === 0 || config.sorting.types === 1)
+					{
+						rows.files = rows.files.reverse();
+					}
+				}
+
+				Object.keys(rows).forEach((key) => rows[key].forEach((item) => table.append(item)));
+
+				main.store.refresh = true;
+				main.store.selected = null;
+
+				$('body > table > tbody > tr.last').removeClass('last');
 			}
 		},
 		bind : () =>
@@ -1258,7 +1376,7 @@
 				{
 					if(config.gallery.enabled === true)
 					{
-						var container = $('.filter-container');
+						var container = $('body > .filter-container');
 
 						if(container.is(':visible') === false ||
 							!container.find('input[type="text"]').is(':focus'))
@@ -1277,135 +1395,40 @@
 		}
 	};
 
-	$('body > .top-bar > div.extend').on('click', (e) =>
+	$('body > div.top-bar > div.extend').on('click', (e) =>
 	{
 		main.menu.toggle(e.currentTarget);
 	});
 
-	$('.filter-container > div.close > span').on('click', () =>
+	$('body > div.filter-container > div.close > span').on('click', () =>
 	{
 		main.filter.toggle();
 	});
 
-	$('.filter-container > div input[type="text"]').on('input', (e) =>
+	$('body > div.filter-container > div input[type="text"]').on('input', (e) =>
 	{
 		var target = $(e.currentTarget);
 
 		main.filter.apply(target.val());
 	});
 
-	$(document).on('click', 'body > div.menu #filter', () =>
+	document.querySelector('body > table').addEventListener('click', (e) =>
 	{
-		main.filter.toggle();
-		main.menu.toggle();
-	});
-
-	$(document).on('click', 'body > div.menu #settings', () =>
-	{
-		main.settings.show();
-		main.menu.toggle(false);
-	});
-
-	if(config.gallery.enabled === true)
-	{
-		$(document).on('click', 'body > div.menu #gallery', () =>
+		if(e.target.tagName == 'SPAN' && e.target.hasAttribute('sortable'))
 		{
-			main.gallery.load(null);
-			main.menu.toggle(false);
-		});
-
-		$('tbody tr.file a.preview').on('click', (e) =>
+			main.events.sortTableColumn(e.target);
+		} else if(e.target.tagName == 'A' && e.target.className == 'preview' && config.gallery.enabled === true)
 		{
 			e.preventDefault();
 
-			if($(e.target).is('a'))
-			{
-				var parents = $(e.target).closest('table').find('tr.file:visible')
-				.filter((index, element) => $(element).find('a.preview').length > 0);
+			var parents = $(e.target).closest('table').find('tr.file:visible')
+			.filter((index, element) => $(element).find('a.preview').length > 0);
 
-				let index = parents.index($(e.target).closest('tr.file'));
+			let index = parents.index($(e.target).closest('tr.file'));
 
-				main.gallery.load(index !== -1 ? index : 0);
-			}
-		});
-	}
-
-	$(document).on('click', 'body > div.menu #copy', () =>
-	{
-		var wget = () =>
-		{
-			var url = window.location.href, extensions = [];
-
-			$('tr.file td:first-child a:visible').each((index, item) =>
-			{
-				var extension = $(item).text().split('.').pop().toLowerCase().trim();
-				if(!extensions.includes(extension)) extensions.push(extension);
-			});
-
-			return `wget -r -np -nH -nd -e robots=off --accept "${extensions.join(',')}" "${url}"`;
-		};
-
-		main.copyTextToClipboard(wget());
-		main.menu.toggle(false);
-	});
-
-	$('table th span[sortable]').on('click', (e) =>
-	{
-		var parent = $(e.currentTarget).parents('th'), index = parent.index();
-		var column = !$(e.currentTarget).is('th') ? parent[0] : e.currentTarget;
-		var table = $(column).parents('table').eq(0);
-
-		var rows = {
-			directories : table.find('tbody tr.directory').toArray(),
-			files : table.find('tbody tr.file').toArray()
-		};
-
-		/* set a skip directory var if we're only sorting sizes or types (as they should be unaffected by these). */
-		var skip_directories = (Object.prototype.hasOwnProperty.call(config.sorting, 'sort_by') &&
-			(index === 2 || index === 3));
-
-		if(config.sorting.types === 0 || config.sorting.types === 2)
-		{
-			if(!skip_directories) rows.directories.sort(main.comparer($(column).index()));
+			main.gallery.load(index !== -1 ? index : 0);
 		}
-
-		if(config.sorting.types === 0 || config.sorting.types === 1)
-		{
-			rows.files.sort(main.comparer($(column).index()));
-		}
-
-		column.asc = !column.asc;
-
-		$('body > table span.sort-indicator').removeClass('up down');
-		parent.find('> span.sort-indicator').addClass(column.asc ? 'down' : 'up').show();
-
-		var client = main.client.get();
-
-		client.sort.ascending = (column.asc ? 1 : 0);
-		client.sort.row = index;
-
-		main.client.set(client);
-
-		if(!column.asc)
-		{
-			if(config.sorting.types === 0 || config.sorting.types === 2)
-			{
-				if(!skip_directories) rows.directories = rows.directories.reverse();
-			}
-
-			if(config.sorting.types === 0 || config.sorting.types === 1)
-			{
-				rows.files = rows.files.reverse();
-			}
-		}
-
-		Object.keys(rows).forEach((key) => rows[key].forEach((item) => table.append(item)));
-
-		main.store.refresh = true;
-		main.store.selected = null;
-
-		$('tbody tr.last').removeClass('last');
-	});
+	}, true);
 
 	window.addEventListener('resize', main.debounce(() =>
 	{
@@ -1428,7 +1451,7 @@
 		main.bind();
 		main.dates.load();
 
-		$('.filter-container > input[type="text"]').val('');
+		$('body > .filter-container > input[type="text"]').val('');
 
 		config.mobile = Modernizr.mq('(max-width: 640px)');
 
@@ -1442,13 +1465,33 @@
 
 		if(config.mobile === false && config.preview.enabled === true)
 		{
-			$('.preview').each((index, element) =>
+			let previews = {}, initial = $('body').find('> table tr.file > td > a.preview');
+
+			if(initial.length > 0)
 			{
-				window.hoverPreview(element, {
+				window.hoverPreview(initial[0], {
 					delay : config.preview.hover_delay,
-					cursor : config.preview.cursor_indicator
-				})
-			});
+					cursor : config.preview.cursor_indicator,
+					encodeAll : true
+				});
+			}
+
+			document.querySelector('body > table').addEventListener('mouseenter', (e) =>
+			{
+				if(e.target.tagName == 'A' && e.target.className == 'preview')
+				{
+					var index = $(e.target).closest('tr').index();
+
+					if(!Object.prototype.hasOwnProperty.call(previews, index))
+					{
+						previews[index] = window.hoverPreview(e.target, {
+							delay : config.preview.hover_delay,
+							cursor : config.preview.cursor_indicator,
+							encodeAll : true
+						});
+					}
+				}
+			}, true);
 		}
 
 		main.events.scroll();

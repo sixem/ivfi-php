@@ -1,11 +1,8 @@
 /**
  * @license
  * 
- * <gallery-mode-plugin>
+ * <gallery-mode-plugin> A plugin for <eyy-indexer> [https://github.com/sixem/eyy-indexer]
  * 
- * A plugin for <eyy-indexer> [https://github.com/sixem/eyy-indexer]
- * 
- * Licensed under GPL-3.0
  * @author   emy [admin@eyy.co]
  */
 
@@ -22,10 +19,24 @@
 			}
 		};
 
+		/* Table:
+		 * http://gcctech.org/csc/javascript/javascript_keycodes.htm */
+		main.data.keys = {
+			escape : 27,
+			pageUp : 33,
+			pageDown : 34,
+			arrowLeft : 37,
+			arrowUp : 38,
+			arrowRight : 39,
+			arrowDown : 40,
+			g : 71,
+			l : 76
+		};
+
 		main.store = $.extend({
 			extensions : {
 				image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'],
-				video : ['mp4', 'webm']
+				video : ['mp4', 'webm', 'ogv', 'ogg']
 			},
 			console : true,
 			blur : true,
@@ -35,6 +46,7 @@
 			mobile : false,
 			scroll_interval : 35,
 			autoplay : true,
+			volume : 0,
 			reverse_options : true,
 			fit_content : false,
 			list : {
@@ -46,19 +58,27 @@
 			}
 		}, main.store, options);
 
-		main.loadImage = (url) =>
+		main.loadImage = (src) =>
 		{
 			return new Promise((resolve, reject) => {
-				let img = new Image();
+				var img = document.createElement('img');
+				img.src = src;
 
-				img.addEventListener('load', () => resolve([url, img]));
-
-				img.addEventListener('error', () =>
+				img.addEventListener('error', (e) =>
 				{
-					reject(new Error(`failed to load image URL: ${url}`));
+					reject(new Error(`failed to load image URL: ${src}`));
 				});
 
-				img.src = url;
+				let timer = setInterval(() =>
+				{
+					var w = img.naturalWidth, h = img.naturalHeight;
+				
+					if(w && h)
+					{
+						clearInterval(timer);
+						resolve([src, img, [w, h]])
+					}
+				}, 30);
 			});
 		};
 
@@ -89,12 +109,17 @@
 			return (100 - widthWithScroll);
 		};
 
+		main.data.scrollBar = {
+			width : main.getScrollBarWidth(),
+			widthForced : $(document).height() <= $(window).height()
+		};
+
 		main.limitBody = (bool = true) =>
 		{
 			/* removes the scrollbar from the body (to avoid it showing when the gallery is open)
 			 * and adds a padding to it with the width of the scrollbar in order to avoid jumping elements. */
 
-			var body = $('body'), html = $('html'), scrollpadding = main.getScrollBarWidth();
+			var body = $('body'), html = $('html'), scrollpadding = main.data.scrollBar.width;
 
 			if(bool === true)
 			{
@@ -128,7 +153,7 @@
 
 		main.exists = () =>
 		{
-			main.container = $('div.gallery-container');
+			main.container = $('body > div.gallery-container');
 
 			return main.container.length > 0;
 		};
@@ -158,11 +183,12 @@
 
 				if(index !== main.data.selected.index)
 				{
-					main.container.find('.media .wrapper img, .media .wrapper video').hide();
+					main.container.find('> div.content-container > div.media > div.wrapper img, > div.content-container > div.media > div.wrapper video').hide();
 					main.navigate(index);
 				}
 
-				main.container.find('.list').scrollTo(main.container.find('> .list').find('tr').eq(index));
+				main.container.find('> div.content-container > div.list')
+				.scrollTo(main.container.find('> div.content-container > div.list').find('tr:nth-child(' + (index + 1) + ')'));
 			} else {
 				main.unbind(main.data.bound);
 				main.container.hide();
@@ -174,8 +200,8 @@
 				main.limitBody(bool);
 			}
 
-			var video = main.container.find('.media .wrapper video'),
-				table = main.container.find('.list table');
+			var video = main.container.find('> div.content-container > div.media > div.wrapper video'),
+				table = main.container.find('> div.content-container > div.list > table');
 
 			if(video.length > 0)
 			{
@@ -192,16 +218,13 @@
 					video[0].currentTime = current_time;
 					video[0].muted = false;
 					video[0][main.store.autoplay ? 'play' : 'pause']();
+
+					main.video.setVolume(video[0], main.video.getVolume());
 				} else if(bool === false)
 				{
-					video[0].muted = true;
+					// video[0].muted = true;
 					video[0].pause();
 				}
-			}
-
-			if(table.length > 0)
-			{
-				if(main.data.list_drag) main.data.list_drag.css('height', table[0].scrollHeight + 'px');
 			}
 		};
 
@@ -223,7 +246,7 @@
 			{
 				main.data.busy = bool;
 
-				var loader = main.container.find('.media .loader');
+				var loader = main.container.find('> div.content-container > div.media > .loader');
 
 				if(!$(loader)[0].hasAttribute('data-tick')) $(loader).attr('data-tick', 1);
 
@@ -244,32 +267,29 @@
 
 		main.populateTable = (items, table = null) =>
 		{
-			if(table === null) table = main.container.find('.list table');
+			if(table === null)
+			{
+				table = main.container[0].querySelector('div.content-container > div.list > table');
+			}
 
-			table.html('');
+			var buffer = [];
 
-			items.forEach((data) => table.append(`<tr title="${data.name}"><td>${data.name}</td></tr>`));
+			for(var i = 0; i <= items.length - 1; i++)
+			{
+				buffer[i] = `<tr title="${items[i].name}"><td>${items[i].name}</td></tr>`;
+			}
 
-			main.data.list_drag.css({
-				'height' : table[0].scrollHeight + 'px'
-			});
+			table.innerHTML = (buffer.join(''));
 
 			return table;
-		};
-
-		main.hideExisting = (selector) =>
-		{
-			var e = main.container.find(selector).hide();
-
-			return e.length > 0 ? e : null;
 		};
 
 		main.update = {
 			listWidth : (wrapper = null) =>
 			{
-				if(!wrapper) wrapper = main.container.find('.media .wrapper');
+				if(!wrapper) wrapper = main.container.find('> div.content-container > div.media > div.wrapper');
 
-				var list = main.data.list ? main.data.list : (main.container.find('div.list')),
+				var list = main.data.list ? main.data.list : (main.container.find('> div.content-container > div.list')),
 					width = (main.store.mobile || !list || list.is(':hidden')) ? 0 : list.outerWidth();
 
 				wrapper[0].style.setProperty('--width-list', width + 'px');
@@ -290,15 +310,15 @@
 		main.reverse = () =>
 		{
 			if(!main.store.reverse_options || 
-				(main.container.find('.content-container .media .wrapper .cover')).length === 0) return false;
+				(main.container.find('> div.content-container > div.media > div.wrapper > div.cover')).length === 0) return false;
 
-			var container = main.container.find('.content-container .media .reverse');
+			var container = main.container.find('> div.content-container > div.media .reverse');
 
 			if(container.length === 0)
 			{
 				container = $('<div/>', {
 					class : 'reverse'
-				}).appendTo(main.container.find('.content-container .media .wrapper .cover'));
+				}).appendTo(main.container.find('> div.content-container > div.media > div.wrapper > div.cover'));
 			}
 
 			var options = main.getReverseOptions(main.data.selected.src);
@@ -362,7 +382,7 @@
 				.attr('href', url)
 				.attr('title', `Download: ${item.name}`);
 
-				main.container.find('.bar > .left').html(
+				main.container.find('> div.bar > div.left').html(
 					`<span>${index + 1} of ${max}</span>` +
 					` | <a href="${url}">${name}</a>` +
 					(Object.prototype.hasOwnProperty.call(item, 'size') && !main.store.mobile ? ` | <span>${item.size}</span>` : '')
@@ -431,7 +451,6 @@
 		};
 
 		main.video = {
-			volume : null,
 			create : (extension) =>
 			{
 				var attributes = {
@@ -442,15 +461,35 @@
 
 				var video = $('<video/>', attributes),
 				source = $('<source>', {
-					type : 'video/' + extension,
+					type : 'video/' + (extension === 'ogv' ? 'ogg' : extension),
 					src : ''
 				}).appendTo(video);
 
+				main.video.setVolume(video.get(0), main.video.getVolume());
+
 				return [video, source];
+			},
+			getVolume : () =>
+			{
+				var volume = parseFloat(main.store.volume);
+				volume = (isNaN(volume) || volume < 0 || volume > 1) ? 0 : volume;
+
+				return volume;
+			},
+			setVolume : (video, i) =>
+			{
+				if(i > 0)
+				{
+					video.volume = i >= 1 ? 1.0 : i;
+				} else {
+					video.muted = true;
+				}
+
+				return i;
 			},
 			seek : (i) =>
 			{
-				var video = main.container.find('.media .wrapper video').get(0);
+				var video = main.container.find('> div.content-container > div.media > div.wrapper video').get(0);
 
 				if(video)
 				{
@@ -481,12 +520,14 @@
 
 		main.showItem = (type, element, src, init, index, data = null) =>
 		{
-			var wrapper = main.container.find('.media .wrapper'), video, source;
+			var wrapper = main.container.find('> div.content-container > div.media > div.wrapper'), video, source;
 
 			if(main.store.fade > 0) wrapper.hide();
 
 			var applyChange = () =>
 			{
+				main.container.find('> div.content-container > div.media > div.wrapper > div:not(.cover)').remove();
+
 				main.set.itemInfo(true);
 
 				var opp = wrapper.find(type === 0 ? 'video' : 'img').hide();
@@ -531,7 +572,7 @@
 						element.parent('.cover').css('height', height);
 					}
 
-					element.attr('src', src).show();
+					element.attr('src', '').attr('src', src).show();
 					element.parent('.cover').show();
 
 					if(video.length > 0)
@@ -556,27 +597,6 @@
 
 					var evented = false;
 
-					/*(() =>
-					{
-						 * Attempts to fix an issue where video requests are continuing to hang after changing video source.
-						 * Probably has something to do with caching. Affects mostly larger videos that require multiple requests.
-						 *
-						 * This will stop any active requests before setting a new video source. Not optimal but one of very few "solutions".
-						 *
-						 * @Firefox: After 6 hanging requests, the next one is completely blocked until the others timeout.
-						 *
-
-						 *** (!) Disabled as it stops .gif files from loading after firing, other than that it works.
-
-						if(window.stop !== undefined)
-						{
-							window.stop();
-						} else if(document.execCommand !== undefined)
-						{
-							document.execCommand('Stop', false);
-						}
-					})();*/
-
 					source.attr('src', src);
 
 					var error = (err) =>
@@ -590,7 +610,9 @@
 
 					video.on('volumechange', () =>
 					{
-						main.video.volume = video.get(0).volume;
+						main.store.volume = video.get(0).muted ? 0 : parseFloat(parseFloat(video.get(0).volume).toFixed(2));
+
+						$(main).trigger('volumeChange', main.store.volume);
 					});
 
 					video.on('canplay canplaythrough', () =>
@@ -612,9 +634,9 @@
 							});
 						}
 
-						if(main.video.volume)
+						if(main.store.volume)
 						{
-							video.get(0).volume = main.video.volume;
+							video.get(0).volume = main.store.volume;
 						}
 
 						if(main.store.autoplay)
@@ -627,7 +649,7 @@
 						/* if the gallery was hidden while loading, pause video and hide loader. */
 						if(!main.container.is(':visible'))
 						{
-							main.container.find('.media .loader').hide();
+							main.container.find('> div.content-container > div.media > div.wrapper > div.loader').hide();
 							video[0].pause();
 						}
 
@@ -687,12 +709,12 @@
 
 			var video, image, init, item;
 
-			image = main.container.find('.media .wrapper img');
-			video = main.container.find('.media .wrapper video');
+			image = main.container.find('> div.content-container > div.media > div.wrapper img');
+			video = main.container.find('> div.content-container > div.media > div.wrapper video');
 
-			var list = main.container.find('.list'),
-			table = list.find('table'),
-			element = table.find('tr').eq(index);
+			var list = main.container.find('> div.content-container > div.list'),
+			table = list.find('> table'),
+			element = table.find('tr:nth-child(' + (index + 1) + ')');
 
 			item = main.items[index];
 
@@ -706,7 +728,7 @@
 
 			main.set.itemInfo((image.length === 0 && video.length === 0) ? true : false, item, index, max + 1);
 
-			if(!main.isScrolledIntoView(element, Math.floor(main.container.find('.bar').outerHeight() - 4)))
+			if(!main.isScrolledIntoView(element, Math.floor(main.container.find('> div.bar').outerHeight() - 4)))
 			{
 				list.scrollTo(element);
 			}
@@ -726,26 +748,37 @@
 				{
 					var cover = $('<div/>', {
 						class : 'cover'
-					}).hide().prependTo(main.container.find('.media .wrapper'));
+					}).hide().prependTo(main.container.find('> div.content-container > div.media > div.wrapper'));
 
 					image = $('<img>').prependTo(cover);
 				}
 
-				main.loadImage(encoded)
-				.then((e) =>
+				main.loadImage(encoded).then((data) =>
 				{
-					let [src, img] = e;
+					let [src, img, dimensions] = data, [w, h] = dimensions;
 
 					if(main.data.selected.src === src)
 					{
 						main.showItem(0, image, src, init, index, {
-							img
+							img : {
+								width : w, height : h
+							}
 						});
 					}
-				}).catch((err) =>
+				}).catch((error) =>
 				{
+					console.error(error);
+
 					main.busy(false);
-					console.error(err);
+					main.data.selected.index = index;
+
+					main.container.find('> div.content-container > div.media > div.wrapper img, > div.content-container > div.media > div.wrapper video').hide();
+					main.container.find('> div.content-container > div.media > div.wrapper > div:not(.cover)').remove();
+
+					$('<div/>', {
+						class : 'error',
+						text : 'Error: Image could not be displayed.'
+					}).prependTo(main.container.find('.media .wrapper'));
 				});
 
 				return true;
@@ -760,7 +793,7 @@
 				if(init)
 				{
 					video = main.video.create(main.data.selected.ext)[0];
-					video.appendTo(main.container.find('.media .wrapper'));
+					video.appendTo(main.container.find('> div.content-container > div.media > div.wrapper'));
 				}
 
 				main.showItem(1, video, encoded, init, index);
@@ -769,7 +802,14 @@
 			}
 		};
 
-		main.data.key_prevent = [33, 34, 37, 38, 39, 40, 71];
+		main.data.key_prevent = [
+			main.data.keys.pageUp,
+			main.data.keys.pageDown,
+			main.data.keys.arrowLeft,
+			main.data.keys.arrowUp,
+			main.data.keys.arrowRight,
+			main.data.keys.arrowDown
+		];
 
 		main.handleKey = (key, callback) =>
 		{
@@ -778,26 +818,26 @@
 				console.log('handleKey', key);
 			}
 
-			if(key === 27)
+			if(key === main.data.keys.escape)
 			{
 				main.show(false);
-			} else if(key === 40 || key === 34 || key === 39)
+			} else if(key === main.data.keys.arrowDown || key === main.data.keys.pageDown || key === main.data.keys.arrowRight)
 			{
-				if(key === 39 && main.data.selected.type === 1)
+				if(key === main.data.keys.arrowRight && main.data.selected.type === 1)
 				{
 					if(main.video.seek(5)) main.navigate(null, 1);
 				} else {
 					main.navigate(null, 1);
 				}
-			} else if(key === 38 || key === 33 || key === 37)
+			} else if(key === main.data.keys.arrowUp || key === main.data.keys.pageUp || key === main.data.keys.arrowLeft)
 			{
-				if(key === 37 && main.data.selected.type === 1)
+				if(key === main.data.keys.arrowLeft && main.data.selected.type === 1)
 				{
 					if(main.video.seek(-5)) main.navigate(null, -1);
 				} else {
 					main.navigate(null, -1);
 				}
-			} else if(key === 76)
+			} else if(key === main.data.keys.l)
 			{
 				main.toggleList();
 			}
@@ -830,7 +870,7 @@
 
 		main.toggleList = (e = null) =>
 		{
-			var list = main.container.find('.list'), visible = list.is(':visible'), client = JSON.parse(Cookies.get('ei-client'));
+			var list = main.container.find('> div.content-container > div.list'), visible = list.is(':visible'), client = JSON.parse(Cookies.get('ei-client'));
 
 			client.gallery.list_state = (!visible ? 1 : 0);
 
@@ -839,7 +879,7 @@
 				expires : 365
 			});
 
-			e = (!e ? $('.gallery-container div.bar .right span[data-action="toggle"]') : e);
+			e = (!e ? $('div.gallery-container > div.bar .right span[data-action="toggle"]') : e);
 
 			e.text('List' + (visible ? '+' : '-'));
 			list.css('display', visible ? 'none' : 'table-cell');
@@ -854,57 +894,49 @@
 			main.data.bound = [
 				{
 					event : 'click',
-					trigger : 'div.gallery-container .list table tr'
+					trigger : 'body > div.gallery-container > div.content-container > div.list table tr'
 				},
 				{
 					event : 'click',
-					trigger : 'div.gallery-container [data-action="close"]'
+					trigger : 'body > div.gallery-container [data-action="close"]'
 				},
 				{
 					event : 'click',
-					trigger : 'div.gallery-container [data-action="toggle"]'
+					trigger : 'body > div.gallery-container [data-action="toggle"]'
 				},
 				{
 					event : 'click',
-					trigger : 'div.gallery-container [data-action="previous"]'
+					trigger : 'body > div.gallery-container [data-action="previous"]'
 				},
 				{
 					event : 'click',
-					trigger : 'div.gallery-container [data-action="next"]'
+					trigger : 'body > div.gallery-container [data-action="next"]'
 				},
 				{
 					event : 'click',
-					trigger : 'div.gallery-container .media'
+					trigger : 'body > div.gallery-container > div.content-container > div.media'
 				},
 				{
 					event : 'DOMMouseScroll mousewheel',
-					trigger : 'div.gallery-container .media'
-				},
-				{
-					event : 'mouseover',
-					trigger : 'div.gallery-container .media .wrapper img'
-				},
-				{
-					event : 'mouseleave',
-					trigger : 'div.gallery-container .media .wrapper img'
+					trigger : 'body > div.gallery-container > div.content-container > div.media'
 				},
 				{
 					event : 'mouseenter',
-					trigger : 'div.gallery-container .media .wrapper .cover'
+					trigger : 'body > div.gallery-container > div.content-container > div.media > div.wrapper > div.cover'
 				},
 				{
 					event : 'swipeleft',
-					trigger : 'div.gallery-container',
+					trigger : 'body > div.gallery-container',
 					direct : true
 				},
 				{
 					event : 'swiperight',
-					trigger : 'div.gallery-container',
+					trigger : 'body > div.gallery-container',
 					direct : true
 				},
 				{
 					event : 'mouseup',
-					trigger : '.gallery-container'
+					trigger : 'body > div.gallery-container'
 				},
 				{
 					event : 'keydown',
@@ -923,12 +955,12 @@
 				main.data.list_dragged = true;
 
 				var window_width = window.innerWidth,
-					wrapper = main.container.find('.media .wrapper');
+					wrapper = main.container.find('> div.content-container > div.media > div.wrapper');
 
 				$('body').css('cursor', 'w-resize');
 				wrapper.css('pointer-events', 'none');
 
-				$(document).on('mousemove', '.gallery-container', (e) =>
+				$(document).on('mousemove', 'body > div.gallery-container', (e) =>
 				{
 					var x = e.originalEvent.clientX;
 
@@ -941,13 +973,13 @@
 				});
 			});
 
-			$(document).on('mouseup', '.gallery-container', () =>
+			$(document).on('mouseup', 'body > div.gallery-container', () =>
 			{
 				if(main.data.list_dragged === true)
 				{
-					$(document).off('mousemove', '.gallery-container');
+					$(document).off('mousemove', 'body > div.gallery-container');
 
-					var wrapper = main.container.find('.media .wrapper');
+					var wrapper = main.container.find('> div.content-container > div.media > div.wrapper');
 
 					$('body').css('cursor', '');
 					wrapper.css('pointer-events', 'auto');
@@ -970,39 +1002,39 @@
 				}
 			});
 
-			$(document).on('click', 'div.gallery-container [data-action="close"]', () =>
+			$(document).on('click', 'body > div.gallery-container [data-action="close"]', () =>
 			{
 				main.show(false);
 			});
 
-			$(document).on('click', 'div.gallery-container [data-action="toggle"]', (e) =>
+			$(document).on('click', 'body > div.gallery-container [data-action="toggle"]', (e) =>
 			{
 				main.toggleList($(e.currentTarget));
 			});
 
-			$(document).on('click', 'div.gallery-container [data-action="previous"]', () =>
+			$(document).on('click', 'body > div.gallery-container [data-action="previous"]', () =>
 			{
 				main.navigate(null, -1);
 			});
 
-			$(document).on('click', 'div.gallery-container [data-action="next"]', () =>
+			$(document).on('click', 'body > div.gallery-container [data-action="next"]', () =>
 			{
 				main.navigate(null, 1);
 			});
 
-			$(document).on('click', 'div.gallery-container .list table tr', (e) =>
+			$(document).on('click', 'body > div.gallery-container > div.content-container > div.list table tr', (e) =>
 			{
 				main.navigate($(e.currentTarget).index());
 			});
 
-			$(document).on('click', 'div.gallery-container .media', (e) =>
+			$(document).on('click', 'body > div.gallery-container > div.content-container > div.media', (e) =>
 			{
 				if(!$(e.target).is('img, video, a')) main.show(false);
 			});
 
 			if(main.store.reverse_options === true)
 			{
-				$(document).on('mouseenter', 'div.gallery-container .media .wrapper .cover', (e) =>
+				$(document).on('mouseenter', 'body > div.gallery-container > div.content-container > div.media > div.wrapper > div.cover', (e) =>
 				{
 					main.reverse($(e.currentTarget));
 				});
@@ -1010,11 +1042,11 @@
 
 			if(main.store.mobile === true)
 			{
-				$('div.gallery-container').on('swipeleft', () => main.navigate(null, 1));
-				$('div.gallery-container').on('swiperight', () => main.navigate(null, -1));
+				$('body > div.gallery-container').on('swipeleft', () => main.navigate(null, 1));
+				$('body > div.gallery-container').on('swiperight', () => main.navigate(null, -1));
 			}
 
-			$(document).on('DOMMouseScroll mousewheel', 'div.gallery-container .media', (e) =>
+			$(document).on('DOMMouseScroll mousewheel', 'body > div.gallery-container > div.content-container > div.media', (e) =>
 			{
 				if(main.store.scroll_interval > 0 && main.data.scrollbreak === true) return false;
 
@@ -1032,7 +1064,7 @@
 			{
 				if(main.data.key_prevent.includes(e.keyCode)) e.preventDefault();
 
-				if(e.keyCode === 71)
+				if(e.keyCode === main.data.keys.g)
 				{
 					main.show(false);
 				}
@@ -1078,8 +1110,7 @@
 		{
 			main.limitBody(true);
 
-			var previews = $('body').find('#image-preview, #video-preview');
-
+			var previews = $('body').find('body > div.preview-container');
 			if(previews.length > 0) previews.remove();
 
 			main.container = $('<div/>', {
@@ -1120,7 +1151,7 @@
 
 			main.data.list = list;
 			main.data.list_dragged = false;
-			main.data.scrollbar_width = main.getScrollBarWidth(true);
+			main.data.scrollbar_width = (main.data.scrollBar.widthForced ? 0 : main.data.scrollBar.width);
 
 			var client = JSON.parse(Cookies.get('ei-client'));
 
@@ -1151,7 +1182,10 @@
 				});
 			}
 
-			if(!main.store.list.show) list.hide();
+			if(!main.store.list.show)
+			{
+				list.hide();
+			}
 
 			if(main.store.mobile === true)
 			{
@@ -1187,10 +1221,11 @@
 			);
 
 			main.populateTable(main.items);
+
 			callback(true);
 		}
 
-		main.container = $('div.gallery-container');
+		main.container = $('body > div.gallery-container');
 		main.items = main.store.filter ? main.filterItems(items) : items;
 
 		if(main.items.length === 0) return false;
@@ -1206,7 +1241,12 @@
 		{
 			initiate(() =>
 			{
-				if(main.store.blur) main.set.blur(true).bind();
+				main.bind();
+
+				if(main.store.blur)
+				{
+					main.set.blur();
+				}
 			});
 		} else {
 			main.show(true);
