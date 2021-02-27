@@ -1419,8 +1419,6 @@
 			main.events.sortTableColumn(e.target);
 		} else if(e.target.tagName == 'A' && e.target.className == 'preview' && config.gallery.enabled === true)
 		{
-			var t0 = performance.now(); // remove
-
 			e.preventDefault();
 
 			var parents = $(e.target).closest('table').find('tr.file:visible')
@@ -1429,8 +1427,6 @@
 			let index = parents.index($(e.target).closest('tr.file'));
 
 			main.gallery.load(index !== -1 ? index : 0);
-
-			var t1 = performance.now(); // remove
 		}
 	}, true);
 
