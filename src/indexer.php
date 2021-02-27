@@ -5,7 +5,7 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  1.1.7
+ * @version  1.1.71
  */
 
 /**
@@ -15,7 +15,7 @@
  */
 
 /* Used to bust the cache and to display footer version number. */
-$version = '1.1.7';
+$version = '1.1.71';
 
 $config = array(
     /* Authentication options. */

@@ -1465,11 +1465,16 @@
 
 		if(config.mobile === false && config.preview.enabled === true)
 		{
+			document.querySelectorAll('body > table tr.file > td > a.preview').forEach((preview, index) =>
+			{
+				preview.itemIndex = index;
+			});
+
 			let previews = {}, initial = $('body').find('> table tr.file > td > a.preview');
 
 			if(initial.length > 0)
 			{
-				window.hoverPreview(initial[0], {
+				previews[initial[0].itemIndex] = window.hoverPreview(initial[0], {
 					delay : config.preview.hover_delay,
 					cursor : config.preview.cursor_indicator,
 					encodeAll : true
@@ -1480,7 +1485,7 @@
 			{
 				if(e.target.tagName == 'A' && e.target.className == 'preview')
 				{
-					var index = $(e.target).closest('tr').index();
+					var index = (e.target.itemIndex);
 
 					if(!Object.prototype.hasOwnProperty.call(previews, index))
 					{
