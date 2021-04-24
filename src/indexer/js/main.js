@@ -708,7 +708,12 @@
 					size : 0
 				}, match = null;
 
-				if(main.gallery.instance) main.gallery.instance.data.selected.index = 0;
+				if(main.gallery.instance)
+				{
+					main.gallery.instance.data.selected.index = 0;
+				}
+
+				var directory_sizes = (Object.prototype.hasOwnProperty.call(config.sorting, 'directory_sizes') && config.sorting.directory_sizes);
 
 				$('body > table > tbody > tr.file, body > table > tbody > tr.directory').each((index, item) =>
 				{
@@ -720,7 +725,7 @@
 						return true;
 					}
 
-					var is_file = item.hasClass('file');
+					var is_file = item.hasClass('file'), is_directory = item.hasClass('directory');
 
 					try
 					{
@@ -743,6 +748,10 @@
 					}
 
 					if(match.valid && match.data && is_file)
+					{
+						var size = item.find('td:eq(2)').attr('data-raw');
+						if(!isNaN(size)) data.size = (data.size + parseInt(size));
+					} else if(directory_sizes && match.valid && match.data && is_directory)
 					{
 						var size = item.find('td:eq(2)').attr('data-raw');
 						if(!isNaN(size)) data.size = (data.size + parseInt(size));
@@ -1311,9 +1320,10 @@
 					files : table.find('tbody > tr.file').toArray()
 				};
 
-				/* set a skip directory var if we're only sorting sizes or types (as they should be unaffected by these). */
-				var skip_directories = (Object.prototype.hasOwnProperty.call(config.sorting, 'sort_by') &&
-					(index === 2 || index === 3));
+				/* set a skip directory var if we're only sorting sizes or types
+				 * they should be unaffected by these unless directory sizes are enabled. */
+				var skip_directories = !(Object.prototype.hasOwnProperty.call(config.sorting, 'directory_sizes') && config.sorting.directory_sizes) &&
+				(Object.prototype.hasOwnProperty.call(config.sorting, 'sort_by') && (index === 2 || index === 3));
 
 				if(config.sorting.types === 0 || config.sorting.types === 2)
 				{

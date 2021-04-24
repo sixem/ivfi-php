@@ -5,7 +5,7 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  1.1.71
+ * @version  dev-1.1.8
  */
 
 /**
@@ -15,7 +15,7 @@
  */
 
 /* Used to bust the cache and to display footer version number. */
-$version = '1.1.71';
+$version = 'dev-1.1.8';
 
 $config = array(
     /* Authentication options. */
@@ -23,13 +23,13 @@ $config = array(
     /* Formatting options. */
     'format' => array(
         'title' => 'Index of %s', /* title format where %s is the current path. */
-        'date' => array('m/d/y H:i', 'd/m/y'), /* date formats (desktop, mobile). */
+        'date' => array('d/m/y H:i', 'd/m/y'), /* date formats (desktop, mobile). */
         'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB') /* size formats. */
     ),
     /* Favicon options. */
     'icon' => array(
-        'path' => '/favicon.png', /* what favicon to use. */
-        'mime' => 'image/png' /* favicon mime type. */
+        'path' => '/favicon.ico', /* what favicon to use. */
+        'mime' => 'image/x-icon' /* favicon mime type. */
     ),
     /* Sorting options. Used as default until the client sets their own sorting settings. */
     'sorting' => array(
@@ -78,6 +78,14 @@ $config = array(
         'file' => false,
         'directory' => false
     ),
+    /* Calculates the size of directories.
+     * This can be intensive, especially with the recursive option, so be aware of that. */
+    'directory_sizes' => array(
+      /* Whether directory sizes should be calculated or not. */
+      'enabled' => false,
+      /* Whether directories should be scanned recursively or not when calculating size. */
+      'recursive' => false
+    ),
     /* Whether this .php file should be directly accessible. */
     'allow_direct_access' => false,
     /* Set to 'strict' or 'weak'.
@@ -106,7 +114,7 @@ if(file_exists($config_file))
 }
 
 /* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'fade' => 0,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'allow_direct_access' => false,'path_checking' => 'strict','footer' => true,'credits' => true,'debug' => false);
+$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'fade' => 0,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'allow_direct_access' => false,'path_checking' => 'strict','footer' => true,'credits' => true,'debug' => false);
 
 function authenticate($users, $realm)
 {
@@ -250,6 +258,7 @@ class Indexer
     $this->allow_direct = isset($options['allow_direct_access']) ? $options['allow_direct_access'] : true;
     $this->path = rtrim(self::joinPaths($this->relative, $requested), '/');
     $this->timestamp = time();
+    $this->directory_sizes = $options['directory_sizes'];
 
     if(is_dir($this->path))
     {
@@ -415,7 +424,7 @@ class Indexer
       $item['name'] = $use_mb === true ? mb_strtolower($dir[1], 'UTF-8') : strtolower($dir[1]);
       $item['modified'] = self::getModified($dir[0], $timezone['offset']);
       $item['type'] = 'directory';
-      $item['size'] = 0;
+      $item['size'] = $this->directory_sizes['enabled'] ? ($this->directory_sizes['recursive'] ? self::getDirectorySizeRecursively($dir[0]) : self::getDirectorySize($dir[0])) : 0;
     }
 
     foreach($data['files'] as $index => $file)
@@ -452,8 +461,13 @@ class Indexer
 
     foreach($data['directories'] as $dir)
     {
+      if($this->directory_sizes['enabled'])
+      {
+        $data['size']['total'] = ($data['size']['total'] + $dir['size']);
+      }
+
       $op .= sprintf(
-        '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td data-raw="%s"><span>%s</span></td><td>-</td><td>-</td></tr>',
+        '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td data-raw="%s"><span>%s</span></td>',
         $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][0], $dir['modified'][1]
       );
 
@@ -461,6 +475,14 @@ class Indexer
       {
         $data['recent']['directory'] = $dir['modified'][0];
       }
+
+      $op .= sprintf(
+        '<td%s>%s</td>',
+        $this->directory_sizes['enabled'] ? ' data-raw="' . $dir['size'] . '"' : '',
+        $this->directory_sizes['enabled'] ? self::readableFilesize($dir['size']) : '-'
+      );
+
+      $op .= '<td>-</td></tr>';
     }
 
     foreach($data['files'] as $file)
@@ -622,10 +644,49 @@ class Indexer
   private function getSize($path)
   {
     $fs = filesize($path);
-
     $size = ($fs < 0 ? -1 : $fs);
 
     return array($size, self::readableFilesize($size));
+  }
+
+  private function getDirectorySize($path)
+  {
+    $size = 0;
+
+    foreach(scandir($path, SCANDIR_SORT_NONE) as $file)
+    {
+      if($file[0] === '.')
+      {
+        continue;
+      } else {
+        $filesize = filesize(self::joinPaths($path, $file));
+
+        if($filesize && $filesize > 0)
+        {
+          $size += $filesize;
+        }
+      }
+    }
+
+    return $size;
+  }
+
+  private function getDirectorySizeRecursively($path)
+  {
+    $size = 0;
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
+
+    foreach($iterator as $file)
+    {
+      if($file->isDir())
+      {
+        continue;
+      } else {
+        $size += filesize($file->getPathname());
+      }
+    }
+
+    return $size;
   }
 
   private function readableFilesize($bytes, $decimals = 2)
@@ -733,6 +794,7 @@ try
             'date' => isset($config['format']['date']) ? $config['format']['date'] : NULL,
             'sizes' => isset($config['format']['sizes']) ? $config['format']['sizes'] : NULL
           ),
+          'directory_sizes' => $config['directory_sizes'],
           'client' => $client,
           'filter' => $config['filter'],
           'extensions' => $config['extensions'],
@@ -894,7 +956,8 @@ if($footer)
     'enabled' => $sorting['enabled'],
     'types' => $sorting['types'],
     'sort_by' => strtolower($sorting['sort_by']),
-    'order' => $sorting['order'] === SORT_ASC ? 'asc' : 'desc'
+    'order' => $sorting['order'] === SORT_ASC ? 'asc' : 'desc',
+    'directory_sizes' => $config['directory_sizes']['enabled']
   ),
   'gallery' => array(
     'enabled' => $config['gallery']['enabled'],
@@ -920,7 +983,7 @@ if($footer)
   'timestamp' => $indexer->timestamp,
   'debug' => $config['debug'],
   'mobile' => false
-))); ?>
+)));?>
 </script>
 
 <script type="text/javascript" src="/indexer/js/vendors.js?v=<?=$version;?>"></script>

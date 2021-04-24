@@ -6,7 +6,7 @@ These options can be found and changed at the top of the [indexer.php](public/in
 
 Some of these settings can be changed by the client/user. These are only values for the script to use as defaults.
 
-### First.. How do i keep config values between updates?
+## First.. How do i keep config values between updates?
 
 You can edit the configuration in the file directly, but if you wish to keep a separate config file that does not reset between updates, then creating your own config file can be a good solution.
 
@@ -121,6 +121,16 @@ Setting the value to `false` will disable the filter.
 |-----|------|---------|-------------|
 | `file` | Boolean / String | `false` | A `regexp` filter for what files should be included.
 | `directory` | Boolean / String | `false` | A `regexp` filter for what directories should be included.
+
+## Directory Sizes
+Shows the sizes of directories.
+
+Leaving this off is recommended as calculating the directory sizes can be a bit intensive, especially with the recursive option.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `enabled` | Boolean | `false` | Whether directory sizes should be calculated or not.
+| `recursive` | Boolean | `false` | Recursively scans the directories when calculating the size.
 
 ## Other
 | Key | Type | Default | Description |

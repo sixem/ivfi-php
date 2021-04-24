@@ -640,6 +640,7 @@ body, html,
 	background-color: #191919;
 	padding-top: 10px;
 	border: 1px solid var(--color-border-main);
+	border-radius: 3px;
 	box-shadow: 0px 0px 10px #0d0d0d;
 }
 

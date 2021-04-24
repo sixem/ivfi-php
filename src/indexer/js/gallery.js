@@ -384,7 +384,7 @@
 
 				main.container.find('> div.bar > div.left').html(
 					`<span>${index + 1} of ${max}</span>` +
-					` | <a href="${url}">${name}</a>` +
+					` | <a target="_blank" href="${url}">${name}</a>` +
 					(Object.prototype.hasOwnProperty.call(item, 'size') && !main.store.mobile ? ` | <span>${item.size}</span>` : '')
 				);
 

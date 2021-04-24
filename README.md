@@ -39,7 +39,7 @@ The search filter can be used to search for filenames or filetypes in the curren
 ### **Single file**
 This script can be set up as a single file script (standalone setup). Only one file needed, nothing more.
 ### **Customizable**
-This script can be customized in a number of ways. (See: [Configuration](#configuration))
+This script can be customized in a number of ways. (See: [Configuration](CONFIG.md))
 ### **And much more ..**
 + All dates will match the timezone of the client.
 + Persistent client-set sorting settings.
@@ -105,7 +105,7 @@ The files inside [/src/](src/) are **NOT** needed in order to run this script.
 This directory contains the uncompressed and untranspiled source files of the script (.css, .js and so on). You can use these files if you want to customize or edit the script in any way.
 
 # Contributing
-You can contribute by submitting a pull request to the current [dev](https://github.com/sixem/eyy-indexer/tree/dev) branch.
+You can contribute by submitting a pull request to the current [dev](https://github.com/sixem/eyy-indexer/branches) branch.
 
 # Plugins / Libraries used
 ### [js-cookie](https://github.com/js-cookie/js-cookie)
