@@ -38,7 +38,7 @@ return array(
 ```
 
 ## Authentication
-Key: **authentication**
+Key: **`authentication`**
 
 Enables HTTP authentication through PHP. Don't rely on this for any strong protection.
 
@@ -47,7 +47,7 @@ Enables HTTP authentication through PHP. Don't rely on this for any strong prote
 | `username` | String | `password` | Each key in the array represents a valid user where the value is the password.
 
 ## Format
-Key: **format**
+Key: **`format`**
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -56,7 +56,7 @@ Key: **format**
 | `sizes` | Array | `' B', ' kB', ' MB', ' GB', ' TB'` | Size formats for when displaying filesizes.
 
 ## Icon
-Key: **icon**
+Key: **`icon`**
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -64,7 +64,7 @@ Key: **icon**
 | `mime` | String | `image/png` | Favicon [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
 
 ## Sorting
-Key: **sorting**
+Key: **`sorting`**
 
 Default sorting settings. Once the client sorts the items themselves, then those settings will be active for them instead.
 
@@ -77,7 +77,7 @@ Default sorting settings. Once the client sorts the items themselves, then those
 | `use_mbstring` | Boolean | `false` | Enables [mbstring](https://www.php.net/manual/en/book.mbstring.php). This will solve some sorting issues with cyrillic capital letters et cetera, but it'll require `mbstring` to be installed. Only affects server-side sorting.
 
 ## Gallery
-Key: **gallery**
+Key: **`gallery`**
 
 The gallery plugin will display a gallery of the images and videos inside the current path.
 
@@ -91,7 +91,7 @@ The gallery plugin will display a gallery of the images and videos inside the cu
 | `fit_content` | Boolean | `true` | Whether images and videos should be forced to fill the available screen space.
 
 ## Preview
-Key: **preview**
+Key: **`preview`**
 
 The preview plugin displays a preview of the image or video when hovering over the filename.
 
@@ -102,7 +102,7 @@ The preview plugin displays a preview of the image or video when hovering over t
 | `cursor_indicator` | Boolean | `true` | Displays a loading cursor while the preview is loading.
 
 ## Extensions
-Key: **extensions**
+Key: **`extensions`**
 
 This setting decides which extensions will be marked as `"media"`.
 
@@ -114,7 +114,7 @@ This basically means that the extensions included here will have previews and wi
 | `video` | Array | `'webm', 'mp4', 'ogg', 'ogv'` | Extensions marked as `video`.
 
 ## Style
-Key: **style**
+Key: **`style`**
 
 Various visual options for the script. The `compact` setting can be changed by the client in the settings menu, as can `themes`, if they are enabled.
 
@@ -125,7 +125,7 @@ Various visual options for the script. The `compact` setting can be changed by t
 | `compact` | Boolean | `false` | Makes the page use a more compact and centered style.
 
 ## Filter
-Key: **filter**
+Key: **`filter`**
 
 This option can be used if you want to filter the files or directories using `regular expressions`.
 
@@ -141,7 +141,7 @@ Setting the value to `false` will disable the filter.
 | `directory` | Boolean / String | `false` | A `regexp` filter for what directories should be included.
 
 ## Directory Sizes
-Key: **directory_sizes**
+Key: **`directory_sizes`**
 
 Shows the sizes of directories.
 
