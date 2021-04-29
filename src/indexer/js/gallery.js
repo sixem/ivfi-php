@@ -303,7 +303,8 @@
 			return {
 				'Google': 'https://www.google.com/searchbyimage?image_url=' + url + '&safe=off',
 				'Yandex': 'https://yandex.com/images/search?rpt=imageview&url=' + url,
-				'IQDB': 'https://iqdb.org/?url=' + url
+				'Bing': 'https://bing.com/images/search?q=imgurl:' + url + '&view=detailv2&iss=sbi#enterInsights',
+				'SauceNAO': 'https://saucenao.com/search.php?url=' + url
 			};
 		};
 
