@@ -55,7 +55,8 @@
 			},
 			continue : {
 				video : null
-			}
+			},
+			encode_all : false
 		}, main.store, options);
 
 		main.loadImage = (src) =>
@@ -82,7 +83,17 @@
 			});
 		};
 
-		main.encodeUrl = (input) => encodeURI(input).replace('#', '%23').replace('?', '%3F');
+		main.encodeUrl = (input) => 
+		{
+			var encoded = encodeURI(input);
+
+			if(main.store.encode_all)
+			{
+				encoded = encoded.replace('#', '%23').replace('?', '%3F');
+			}
+
+			return encoded;
+		};
 
 		main.getExtension = (filename) => (filename.split('.').pop()).toLowerCase();
 		main.getObjectSet = (...elements) => $((elements.filter((value) => typeof value !== 'undefined')).map((element) => $(element)));
