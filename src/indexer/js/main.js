@@ -124,6 +124,31 @@
 
 			return `wget -r -np -nH -nd -e robots=off --accept "${extensions.join(',')}" "${url}"`;
 		},
+		/* Strips ? and anything that follows from a URL. */
+		stripUrl : (url) =>
+		{
+			if(!url.includes('?'))
+			{
+				return url;
+			} else {
+				return url.split('?')[0];
+			}
+		},
+		/* Pops a string, identifies extension. */
+		identifyExtension : (url) =>
+		{
+			let ext = (url).split('.').pop().toLowerCase();
+
+			if(config.extensions.image.includes(ext))
+			{
+				return [ext, 0];
+			} else if(config.extensions.video.includes(ext))
+			{
+				return [ext, 1];
+			}
+
+			return null;
+		},
 		client : {
 			get : () =>
 			{
@@ -132,6 +157,10 @@
 						reverse_options : config.gallery.reverse_options,
 						list_alignment : config.gallery.list_alignment,
 						fit_content : config.gallery.fit_content,
+						extensions : {
+							image : config.extensions.image,
+							video : config.extensions.video
+						},
 						autoplay : true,
 						volume : 0.25
 					},
@@ -1219,6 +1248,8 @@
 					} : null
 				};
 
+				options.encode_all = config.encode_all;
+
 				main.gallery.instance = new $.fn.gallery(main.getTableItems(), options);
 
 				if(main.gallery.instance !== false)
@@ -1482,13 +1513,25 @@
 
 			let previews = {}, initial = $('body').find('> table tr.file > td > a.preview');
 
+			/* Apply a preview to the first preview element (due to browser iffyness). */
 			if(initial.length > 0)
 			{
-				previews[initial[0].itemIndex] = window.hoverPreview(initial[0], {
-					delay : config.preview.hover_delay,
-					cursor : config.preview.cursor_indicator,
-					encodeAll : true
-				});
+				let asrc = initial[0].getAttribute('href'), identified = main.identifyExtension(main.stripUrl(asrc));
+
+				if(identified)
+				{
+					let [a_ext, a_type] = identified;
+
+					previews[initial[0].itemIndex] = window.hoverPreview(initial[0], {
+						delay : config.preview.hover_delay,
+						cursor : config.preview.cursor_indicator,
+						encodeAll : config.encode_all,
+						force : {
+							extension : a_ext,
+							type : a_type
+						}
+					});
+				}
 			}
 
 			document.querySelector('body > table').addEventListener('mouseenter', (e) =>
@@ -1499,11 +1542,22 @@
 
 					if(!Object.prototype.hasOwnProperty.call(previews, index))
 					{
-						previews[index] = window.hoverPreview(e.target, {
-							delay : config.preview.hover_delay,
-							cursor : config.preview.cursor_indicator,
-							encodeAll : true
-						});
+						let asrc = e.target.getAttribute('href'), identified = main.identifyExtension(main.stripUrl(asrc));
+
+						if(identified)
+						{
+							let [a_ext, a_type] = identified;
+
+							previews[index] = window.hoverPreview(e.target, {
+								delay : config.preview.hover_delay,
+								cursor : config.preview.cursor_indicator,
+								encodeAll : config.encode_all,
+								force : {
+									extension : a_ext,
+									type : a_type
+								}
+							});
+						}
 					}
 				}
 			}, true);
