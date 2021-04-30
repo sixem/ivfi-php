@@ -5,7 +5,7 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  dev-1.1.8
+ * @version  dev_2-1.1.8
  */
 
 /**
@@ -15,7 +15,7 @@
  */
 
 /* Used to bust the cache and to display footer version number. */
-$version = 'dev-1.1.8';
+$version = 'dev_2-1.1.8';
 
 $config = array(
     /* Authentication options. */
@@ -83,9 +83,13 @@ $config = array(
     'directory_sizes' => array(
       /* Whether directory sizes should be calculated or not. */
       'enabled' => false,
-      /* Whether directories should be scanned recursively or not when calculating size. */
+      /* Recursively scans the directories when calculating the size. */
       'recursive' => false
     ),
+    /* Processing functions. */
+    'processor' => false,
+    /* Should ? and # characters be encoded when processing URLs. */
+    'encode_all' => false,
     /* Whether this .php file should be directly accessible. */
     'allow_direct_access' => false,
     /* Set to 'strict' or 'weak'.
@@ -114,7 +118,7 @@ if(file_exists($config_file))
 }
 
 /* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'fade' => 0,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'allow_direct_access' => false,'path_checking' => 'strict','footer' => true,'credits' => true,'debug' => false);
+$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'fade' => 0,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','footer' => true,'credits' => true,'debug' => false);
 
 function authenticate($users, $realm)
 {
@@ -245,6 +249,7 @@ class Indexer
 
   function __construct($path, $options = array())
   {
+    /* */
     $requested = rawurldecode(strpos($path, '?') !== false ? explode('?', $path)[0] : $path);
 
     if(isset($options['path']['relative']) && $options['path']['relative'] !== NULL)
@@ -254,6 +259,21 @@ class Indexer
       $this->relative = dirname(__FILE__);
     }
 
+    /* Declare array for optional processing of data. */
+    $this->processor = array(
+      'item' => NULL
+    );
+
+    /* Check for passed processing functions. */
+    if(isset($options['processor']) && is_array($options['processor']))
+    {
+      if(isset($options['processor']['item']))
+      {
+        $this->processor['item'] = $options['processor']['item'];
+      }
+    }
+
+    /* Set remaining options/variables. */
     $this->client = isset($options['client']) ? $options['client'] : NULL;
     $this->allow_direct = isset($options['allow_direct_access']) ? $options['allow_direct_access'] : true;
     $this->path = rtrim(self::joinPaths($this->relative, $requested), '/');
@@ -425,6 +445,7 @@ class Indexer
       $item['modified'] = self::getModified($dir[0], $timezone['offset']);
       $item['type'] = 'directory';
       $item['size'] = $this->directory_sizes['enabled'] ? ($this->directory_sizes['recursive'] ? self::getDirectorySizeRecursively($dir[0]) : self::getDirectorySize($dir[0])) : 0;
+      $item['url'] = rtrim(self::joinPaths($this->requested, $dir[1]), '/');
     }
 
     foreach($data['files'] as $index => $file)
@@ -435,7 +456,13 @@ class Indexer
       $item['type'] = self::getFileType($file[1]);
       $item['size'] = self::getSize($file[0]);
       $item['modified'] = self::getModified($file[0], $timezone['offset']);
-      $item['path'] = rtrim(self::joinPaths($this->requested, $file[1]), '/');
+      $item['url'] = rtrim(self::joinPaths($this->requested, $file[1]), '/');
+    }
+
+    /* Pass data to processor if it is set. */
+    if($this->processor['item'])
+    {
+      $data = $this->processor['item']($data, $this);
     }
 
     if($sorting)
@@ -468,7 +495,7 @@ class Indexer
 
       $op .= sprintf(
         '<tr class="directory"><td data-raw="%s"><a href="%s">[%s]</a></td><td data-raw="%s"><span>%s</span></td>',
-        $dir[1], rtrim(self::joinPaths($this->requested, $dir[1]), '/'), $dir[1], $dir['modified'][0], $dir['modified'][1]
+        $dir[1], $dir['url'], $dir[1], $dir['modified'][0], $dir['modified'][1]
       );
 
       if($data['recent']['directory'] === 0 || $dir['modified'][0] > $data['recent']['directory'])
@@ -501,7 +528,7 @@ class Indexer
 
       $op .= sprintf(
         '<a%shref="%s">%s</a></td>',
-        (($file['type'][0] === 'image' || $file['type'][0] === 'video' ? true : false) ? ' class="preview" ' : ' '), $file['path'], $file[1]
+        (($file['type'][0] === 'image' || $file['type'][0] === 'video' ? true : false) ? ' class="preview" ' : ' '), $file['url'], $file[1]
       );
 
       $op .= sprintf(
@@ -516,7 +543,7 @@ class Indexer
 
       $op .= sprintf(
         '<td data-raw="%s" class="download"><a href="%s" download="" filename="%s">%s</a></td></tr>',
-        $file['type'][0], $file['path'], $file[1], ('<span data-view="mobile">[Save]</span><span data-view="desktop">[Download]</span>')
+        $file['type'][0], $file['url'], $file[1], ('<span data-view="mobile">[Save]</span><span data-view="desktop">[Download]</span>')
       );
     }
 
@@ -799,6 +826,7 @@ try
           'filter' => $config['filter'],
           'extensions' => $config['extensions'],
           'path_checking' => strtolower($config['path_checking']),
+          'processor' => $config['processor'],
           'allow_direct_access' => $config['allow_direct_access']
       )
   );
@@ -980,6 +1008,7 @@ if($footer)
     'compact' => $config['style']['compact']
   ),
   'format' => array_intersect_key($config['format'], array_flip(array('sizes', 'date'))),
+  'encode_all' => $config['encode_all'],
   'timestamp' => $indexer->timestamp,
   'debug' => $config['debug'],
   'mobile' => false
