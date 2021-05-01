@@ -14,11 +14,11 @@ An example of a `$data['files']` item:
 ```php
 array(7) {
   [0]=>
-  string(41) "/var/www/server/public/master/POWER.jpg" // absolute path of item.
+  string(41) "/var/www/server/public/master/IMAGE.jpg" // absolute path of item.
   [1]=>
-  string(9) "POWER.jpg" // rendered filename.
+  string(9) "IMAGE.jpg" // rendered filename.
   ["name"]=>
-  string(9) "power.jpg" // used for server-side sorting only (if sorted by name).
+  string(9) "image.jpg" // used for server-side sorting only (if sorted by name).
   ["type"]=>
   array(2) {
     [0]=>
@@ -41,7 +41,7 @@ array(7) {
     string(90) "<span data-view=\"desktop\">04/09/21 09:22:04</span><span data-view=\"mobile\">09/04/21</span>" // html string for showing modified date.
   }
   ["url"]=>
-  string(17) "/master/POWER.jpg" // url to the item.
+  string(17) "/master/IMAGE.jpg" // url to the item.
 }
 ```
 
