@@ -2,7 +2,7 @@
 
 The `processor` option can be used if you want to alter some of the data used by the indexer. You can pass functions through the configuration and modify the data before it is being utilized by the indexer.
 
-These functions will be called by the indexer and the relevant arguments will be passed to them. If a function is passed, the indexer excepts the handled `$data` to be returned in the same way that it was passed (intact structure/keys).
+These functions will be called by the indexer and the relevant arguments will be passed to them. If a function is passed, the indexer expects the handled `$data` to be returned in the same way that it was passed (intact structure/keys).
 
 ## Item
 Key: `processor {array} => item {function}`
