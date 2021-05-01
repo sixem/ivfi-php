@@ -5,7 +5,7 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  dev_2-1.1.8
+ * @version  dev_3-1.1.8
  */
 
 /**
@@ -15,44 +15,44 @@
  */
 
 /* Used to bust the cache and to display footer version number. */
-$version = 'dev_2-1.1.8';
+$version = 'dev_3-1.1.8';
 
 $config = array(
     /* Authentication options. */
     'authentication' => false,
     /* Formatting options. */
     'format' => array(
-        'title' => 'Index of %s', /* title format where %s is the current path. */
-        'date' => array('d/m/y H:i', 'd/m/y'), /* date formats (desktop, mobile). */
-        'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB') /* size formats. */
+        'title' => 'Index of %s', /* Title format where %s is the current path. */
+        'date' => array('d/m/y H:i', 'd/m/y'), /* Date formats (desktop, mobile). */
+        'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB') /* Size formats. */
     ),
     /* Favicon options. */
     'icon' => array(
-        'path' => '/favicon.ico', /* what favicon to use. */
-        'mime' => 'image/x-icon' /* favicon mime type. */
+        'path' => '/favicon.ico', /* What favicon to use. */
+        'mime' => 'image/x-icon' /* Favicon mime type. */
     ),
     /* Sorting options. Used as default until the client sets their own sorting settings. */
     'sorting' => array(
-        'enabled' => false, /* whether the server should sort the items. */
-        'order' => SORT_ASC, /* sorting order. asc or desc. */
-        'types' => 0, /* what item types to sort. 0 = both. 1 = files only. 2 = directories only. */
-        'sort_by' => 'name', /* what to sort by. available options are name, modified, type and size. */
-        'use_mbstring' => false /* enabled mbstring when sorting. */
+        'enabled' => false, /* Whether the server should sort the items. */
+        'order' => SORT_ASC, /* Sorting order. asc or desc. */
+        'types' => 0, /* What item types to sort. 0 = both. 1 = files only. 2 = directories only. */
+        'sort_by' => 'name', /* What to sort by. available options are name, modified, type and size. */
+        'use_mbstring' => false /* Enabled mbstring when sorting. */
     ),
     /* Gallery options. */
     'gallery' => array(
-        'enabled' => true, /* whether the gallery plugin should be enabled. */
-        'fade' => 0, /* fade in ms when navigating */
-        'reverse_options' => false, /* reverse search options for images (when hovering over them). */
-        'scroll_interval' => 50, /* break in ms between scroll navigation events. */
-        'list_alignment' => 0, /* list alignment where 0 is right and 1 is left. */
-        'fit_content' => true /* whether the media should be forced to fill the screen space. */
+        'enabled' => true, /* Whether the gallery plugin should be enabled. */
+        'fade' => 0, /* Fade in ms when navigating */
+        'reverse_options' => false, /* Reverse search options for images (when hovering over them). */
+        'scroll_interval' => 50, /* Break in ms between scroll navigation events. */
+        'list_alignment' => 0, /* List alignment where 0 is right and 1 is left. */
+        'fit_content' => true /* Whether the media should be forced to fill the screen space. */
     ),
     /* Preview options. */
     'preview' => array(
-        'enabled' => true, /* whether the preview plugin should be enabled. */
-        'hover_delay' => 75, /* delay in ms before the preview is shown. */
-        'cursor_indicator' => true /* displays a loading cursor while the preview is loading. */
+        'enabled' => true, /* Whether the preview plugin should be enabled. */
+        'hover_delay' => 75, /* Delay in milliseconds before the preview is shown. */
+        'cursor_indicator' => true /* Displays a loading cursor while the preview is loading. */
     ),
     /* Extension that should be marked as media.
      * These extensions will have potential previews and will be included in the gallery. */
@@ -120,6 +120,7 @@ if(file_exists($config_file))
 /* Default configuration values. Used if values from the above config are unset. */
 $defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'fade' => 0,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','footer' => true,'credits' => true,'debug' => false);
 
+/* Authentication function. */
 function authenticate($users, $realm)
 {
   function http_digest_parse($text)
@@ -149,20 +150,24 @@ function authenticate($users, $realm)
     return $needed_parts ? false : $data;
   }
 
+  /* Create header for when unathorized. */
   function createHeader($realm)
   {
     header($_SERVER['SERVER_PROTOCOL'] . '401 Unauthorized');
     header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . uniqid() . '",opaque="' . md5($realm) . '"');
   }
 
+  /* Deny access if no digest is set. */
   if(empty($_SERVER['PHP_AUTH_DIGEST']))
   {
     createHeader($realm);
     die('401 Unauthorized');
   }
 
+  /* Get digest data. */
   $data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST']);
 
+  /* Deny access if data is invalid or username is unset. */
   if(!$data || !isset($users[$data['username']]))
   {
     createHeader($realm);
@@ -174,6 +179,7 @@ function authenticate($users, $realm)
 
   $valid_response = md5($a1 . ':' . $data['nonce'] . ':' . $data['nc'] . ':' . $data['cnonce'] . ':' . $data['qop'] . ':' . $a2);
 
+  /* Deny access if data can't be verified. */
   if($data['response'] != $valid_response)
   {
     createHeader($realm);
@@ -181,7 +187,7 @@ function authenticate($users, $realm)
   }
 }
 
-
+/* Call authentication function if authentication is enabled. */
 if($config['authentication'] && is_array($config['authentication']) && count($config['authentication']) > 0)
 {
   authenticate($config['authentication'], 'Restricted content.');
@@ -206,11 +212,13 @@ foreach($defaults as $key => $value)
   }
 }
 
+/* Set start time for page render calculations. */
 if($config['footer'] === true)
 {
   $render = microtime(true);
 }
 
+/* Enable debugging if enabled. */
 if($config['debug'] === true)
 {
   ini_set('display_errors', 1);
@@ -249,9 +257,10 @@ class Indexer
 
   function __construct($path, $options = array())
   {
-    /* */
+    /* Get requested path. */
     $requested = rawurldecode(strpos($path, '?') !== false ? explode('?', $path)[0] : $path);
 
+    /* Set relative path. */
     if(isset($options['path']['relative']) && $options['path']['relative'] !== NULL)
     {
       $this->relative = $options['path']['relative'];
@@ -280,32 +289,40 @@ class Indexer
     $this->timestamp = time();
     $this->directory_sizes = $options['directory_sizes'];
 
+    /* Is requested path a directory? */
     if(is_dir($this->path))
     {
+      /* Check if the directory is above the base directory (or same level). */
       if(self::isAboveCurrent($this->path, $this->relative))
       {
         $this->requested = $requested;
       } else {
+        /* Directory is below the base directory. */
         if($options['path_checking'] === 'strict' || $options['path_checking'] !== 'weak')
         {
           throw new Exception("requested path (is_dir) is below the public working directory. (mode: {$options['path_checking']})", 1);
         } else if($options['path_checking'] === 'weak')
         {
+          /* If path checking is 'weak' do another test using a 'realpath' alternative instead (string-based approach which doesn't solve links). */
           if(self::isAboveCurrent($this->path, $this->relative, false) || is_link($this->path))
           {
             $this->requested = $requested;
           } else {
+            /* Even the 'weak' check failed, throw an exception. */
             throw new Exception("requested path (is_dir) is below the public working directory. (mode: {$options['path_checking']})", 2);
           }
         }
       }
     } else {
+      /* Is requested path a file (this can only be the indexer as we don't have control over any other files)? */
       if(is_file($this->path))
       {
+        /* If direct access is disabled, deny access. */
         if($this->allow_direct === false)
         {
           http_response_code(403); die('Forbidden');
         } else {
+          /* If direct access is allowed, show current directory of script (if it is above base directory). */
           $this->path = dirname($this->path);
 
           if(self::isAboveCurrent($this->path, $this->relative))
@@ -316,10 +333,12 @@ class Indexer
           }
         }
       } else {
+        /* If requested path is neither a file nor a directory. */
         throw new Exception('invalid path. path does not exist.', 4);
       }
     }
 
+    /* Set extension variables. */
     if(isset($options['extensions']))
     {
         $this->types = array();
@@ -342,6 +361,7 @@ class Indexer
         );
     }
 
+    /* Set filter variables. */
     if(isset($options['filter']) && is_array($options['filter']))
     {
       $this->filter = $options['filter'];
@@ -352,6 +372,7 @@ class Indexer
       );
     }
 
+    /* Set size format variables. */
     if(isset($options['format']['sizes']) && $options['format']['sizes'] !== NULL)
     {
       $this->format['sizes'] = $options['format']['sizes'];
@@ -362,24 +383,31 @@ class Indexer
     $this->format['date'] = $options['format']['date'];
   }
 
+  /* Gets file/directory information and constructs the HTML of the table. */
   public function buildTable($sorting = false, $sort_items = 0, $sort_type = 'modified', $use_mb = false)
   {
+    /* Get client timezone offset. */
+
     $cookies = array(
       'timezone_offset' => intval(is_array($this->client) ? (isset($this->client['timezone_offset']) ? $this->client['timezone_offset'] : 0) : 0)
     );
 
+    $timezone = array(
+      'offset' => $cookies['timezone_offset'] > 0 ? -$cookies['timezone_offset'] * 60 : abs($cookies['timezone_offset']) * 60
+    );
+
+    /* Gets the filename of this .php file. Used to hide it from the folder. */
     $script_name = basename(__FILE__);
+    /* Gets the current directory. */
     $directory = self::getCurrentDirectory();
+    /* Gets the files from the current path using 'scandir'. */
     $files = self::getFiles();
+    /* Is this the base directory (/)?*/
     $is_base = ($directory === '/');
 
     $op = sprintf(
       '<tr class="parent"><td><a href="%s">[Parent Directory]</a></td><td>-</td><td>-</td><td>-</td></tr>',
       dirname($directory)
-    );
-
-    $timezone = array(
-      'offset' => $cookies['timezone_offset'] > 0 ? -$cookies['timezone_offset'] * 60 : abs($cookies['timezone_offset']) * 60
     );
 
     $data = array(
@@ -395,6 +423,7 @@ class Indexer
       )
     );
 
+    /* Hide directories / files if they match the filter or if they are indexer components. */
     foreach($files as $file)
     {
       if($file[0] === '.') continue;
@@ -441,7 +470,13 @@ class Indexer
     {
       $item = &$data['directories'][$index];
 
-      $item['name'] = $use_mb === true ? mb_strtolower($dir[1], 'UTF-8') : strtolower($dir[1]);
+      /* We only need to set 'name' key if we're sorting by name. */
+      if($sort_type === 'name')
+      {
+        $item['name'] = $use_mb === true ? mb_strtolower($dir[1], 'UTF-8') : strtolower($dir[1]);
+      }
+
+      /* Set directory data values. */
       $item['modified'] = self::getModified($dir[0], $timezone['offset']);
       $item['type'] = 'directory';
       $item['size'] = $this->directory_sizes['enabled'] ? ($this->directory_sizes['recursive'] ? self::getDirectorySizeRecursively($dir[0]) : self::getDirectorySize($dir[0])) : 0;
@@ -452,7 +487,13 @@ class Indexer
     {
       $item = &$data['files'][$index];
 
-      $item['name'] = $use_mb === true ? mb_strtolower($file[1], 'UTF-8') : strtolower($file[1]);
+      /* We only need to set 'name' key if we're sorting by name. */
+      if($sort_type === 'name')
+      {
+        $item['name'] = $use_mb === true ? mb_strtolower($file[1], 'UTF-8') : strtolower($file[1]);
+      }
+
+      /* Set file data values. */
       $item['type'] = self::getFileType($file[1]);
       $item['size'] = self::getSize($file[0]);
       $item['modified'] = self::getModified($file[0], $timezone['offset']);
@@ -465,6 +506,7 @@ class Indexer
       $data = $this->processor['item']($data, $this);
     }
 
+    /* Sort items server-side. */
     if($sorting)
     {
       if($sort_items === 0 || $sort_items === 1)
@@ -486,6 +528,7 @@ class Indexer
       }
     }
 
+    /* Iterate over the directories, get and store data. */
     foreach($data['directories'] as $dir)
     {
       if($this->directory_sizes['enabled'])
@@ -512,6 +555,7 @@ class Indexer
       $op .= '<td>-</td></tr>';
     }
 
+    /* Iterate over the files, get and store data. */
     foreach($data['files'] as $file)
     {
       $data['size']['total'] = ($data['size']['total'] + $file['size'][0]);
@@ -554,11 +598,14 @@ class Indexer
     return $op;
   }
 
+  /* Gets the current files from set path. */
   private function getFiles()
   {
     return scandir($this->path, SCANDIR_SORT_NONE);
   }
 
+  /* A 'realpath' alternative, doesn't resolve links, relies purely on strings instead.
+   * Used with 'weak' path checking. */
   private function removeDotSegments($input)
   {
     $output = '';
@@ -591,16 +638,19 @@ class Indexer
     return $output;
   }
 
+  /* Checks if $path is above $base. Reverse path traversal is bad? */
   private function isAboveCurrent($path, $base, $use_realpath = true)
   {
     return self::startsWith($use_realpath ? realpath($path) : self::removeDotSegments($path), $use_realpath ? realpath($base) : self::removeDotSegments($base));
   }
 
+  /* Some data is stored in $this->data, this retrieves that. */
   public function getLastData()
   {
     return isset($this->data) ? $this->data : false;
   }
 
+  /* Gets the current directory. */
   public function getCurrentDirectory()
   {
     $requested = trim($this->requested);
@@ -613,6 +663,7 @@ class Indexer
     }
   }
 
+  /* Identifies file type by matching it against the extension arrays. */
   private function getFileType($filename)
   {
     $extension = strtolower(ltrim(pathinfo($filename, PATHINFO_EXTENSION), '.'));
@@ -620,6 +671,7 @@ class Indexer
     return array(isset($this->types[$extension]) ? $this->types[$extension] : 'other', $extension);
   }
 
+  /* Converts the current path into clickable a[href] links. */
   public function makePathClickable($path)
   {
     $paths = explode('/', ltrim($path, '/'));
@@ -639,11 +691,13 @@ class Indexer
     return $op;
   }
 
+  /* Formats a unix timestamp. */
   private function formatDate($format, $stamp, $modifier = 0)
   {
     return gmdate($format, $stamp + $modifier);
   }
 
+  /* Gets the last modified date of a file. */
   private function getModified($path, $modifier = 0)
   {
     $stamp = filemtime($path);
@@ -663,11 +717,13 @@ class Indexer
     );
   }
 
+  /* Gets a client cookie key (if it exists). */
   private function getCookie($key, $default = NULL)
   {
     return isset($_COOKIE[$key]) ? $_COOKIE[$key] : $default;
   }
 
+  /* Gets the size of a file. */
   private function getSize($path)
   {
     $fs = filesize($path);
@@ -676,6 +732,7 @@ class Indexer
     return array($size, self::readableFilesize($size));
   }
 
+  /* Gets the size of a directory. */
   private function getDirectorySize($path)
   {
     $size = 0;
@@ -698,6 +755,7 @@ class Indexer
     return $size;
   }
 
+  /* Gets the full size of a director using. */
   private function getDirectorySizeRecursively($path)
   {
     $size = 0;
@@ -716,8 +774,11 @@ class Indexer
     return $size;
   }
 
+  /* Converts bytes to a readable file size. */
   private function readableFilesize($bytes, $decimals = 2)
   {
+    /* If file size is -1, return '-'.
+     * This can happen to very large file size (PHP/Server limitations). */
     if($bytes === -1) return '-';
 
     $factor = floor((strlen($bytes) - 1) / 3);
@@ -734,11 +795,13 @@ class Indexer
     return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . $x;
   }
 
+  /* Checks if a string starts with a string. */
   private function startsWith($haystack, $needle)
   {
     return $needle === '' || strrpos($haystack, $needle, - strlen($haystack)) !== false;
   }
 
+  /* Concentrates path components into a merged path. */
   public function joinPaths(...$params)
   {
     $paths = array();
@@ -752,13 +815,16 @@ class Indexer
   }
 }
 
-$client =  isset($_COOKIE['ei-client']) ? $_COOKIE['ei-client'] : NULL;
+/* Is cookie set? */
+$client = isset($_COOKIE['ei-client']) ? $_COOKIE['ei-client'] : NULL;
 
+/* If client cookie is set, parse it. */
 if($client)
 {
   $client = json_decode($client, true);
 }
 
+/* Validate that the cookie is a valid array. */
 $validate = is_array($client);
 
 $cookies = array(
@@ -768,12 +834,13 @@ $cookies = array(
   )
 );
 
-/* override the config value if the cookie value is set */
+/* Override the config value if the cookie value is set */
 if($validate && isset($client['style']['compact']) && $client['style']['compact'])
 {
   $config['style']['compact'] = $client['style']['compact'];
 }
 
+/* Set sorting settings. */
 $sorting = array(
   'enabled' => $config['sorting']['enabled'],
   'order' => $config['sorting']['order'],
@@ -802,6 +869,7 @@ if($cookies['sorting']['ascending'] !== NULL || $cookies['sorting']['row'] !== N
   $sorting['enabled'] = true;
 }
 
+/* Is 'INDEXER_BASE_PATH' set? Change base path.*/
 if(isset($_SERVER['INDEXER_BASE_PATH']))
 {
   $base_path = $_SERVER['INDEXER_BASE_PATH'];
@@ -811,6 +879,7 @@ if(isset($_SERVER['INDEXER_BASE_PATH']))
 
 try
 {
+  /* Call class with options set. */
   $indexer = new Indexer(
       rawurldecode($_SERVER['REQUEST_URI']),
       array(
@@ -844,6 +913,7 @@ try
   exit('<p>Fatal error - Exiting.</p>');
 }
 
+/* Call 'buildTable', get content. */
 $contents = $indexer->buildTable(
   $sorting['enabled'] ? $sorting['order'] : false,
   $sorting['enabled'] ? $sorting['types'] : 0,
@@ -853,6 +923,7 @@ $contents = $indexer->buildTable(
 
 $data = $indexer->getLastData();
 
+/* Set some data like file count etc. */
 $counts = array(
     'files' => count($data['files']),
     'directories' => count($data['directories'])
@@ -860,27 +931,30 @@ $counts = array(
 
 $themes = array();
 
+/* Are themes enabled? */
 if($config['style']['themes']['path'])
 {
+  /* Trim the string of set directory path. */
   $directory = rtrim($indexer->joinPaths($base_path, $config['style']['themes']['path']), '/');
 
+  /* If set theme path is valid directory, scan it for .css files and add them to the theme pool. */
   if(is_dir($directory))
   {
     foreach(preg_grep('~\.css$~', scandir($directory, SCANDIR_SORT_NONE)) as $theme)
     {
-      if($theme[0] != '.') array_push($themes, substr($theme, 0, strrpos($theme, '.')));
+      if($theme[0] !== '.') array_push($themes, substr($theme, 0, strrpos($theme, '.')));
     }
   }
 
+  /* Prepend default theme to the beginning of the array. */
   if(count($themes) > 0) array_unshift($themes, 'default');
 }
-
-// $current_theme = count($themes) > 0 && is_array($client) && isset($client['style']['theme']) ? (in_array($client['style']['theme'], $themes) ? $client['style']['theme'] : NULL) : NULL;
 
 $current_theme = NULL;
 
 if(count($themes) > 0)
 {
+  /* Check if a theme is already set. */
   if(is_array($client) && isset($client['style']['theme']))
   {
     $current_theme = in_array($client['style']['theme'], $themes) ? $client['style']['theme'] : NULL;
@@ -892,6 +966,7 @@ if(count($themes) > 0)
 
 $compact = NULL;
 
+/* Apply compact mode if that is set. */
 if(is_array($client) && isset($client['style']['compact']))
 {
   $compact = $client['style']['compact'];
@@ -900,6 +975,8 @@ if(is_array($client) && isset($client['style']['compact']))
 }
 
 $footer = $config['footer'] === true || $config['credits'] !== false;
+
+$bust = md5($version);
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -1015,9 +1092,9 @@ if($footer)
 )));?>
 </script>
 
-<script type="text/javascript" src="/indexer/js/vendors.js?v=<?=$version;?>"></script>
-<script type="text/javascript" src="/indexer/js/gallery.js?v=<?=$version;?>"></script>
-<script type="text/javascript" src="/indexer/js/main.js?v=<?=$version;?>"></script>
+<script type="text/javascript" src="/indexer/js/vendors.js?v=<?=$bust;?>"></script>
+<script type="text/javascript" src="/indexer/js/gallery.js?v=<?=$bust;?>"></script>
+<script type="text/javascript" src="/indexer/js/main.js?v=<?=$bust;?>"></script>
 
 </body>
 </html>
