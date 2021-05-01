@@ -155,6 +155,8 @@ Leaving this off is recommended as calculating the directory sizes can be a bit 
 ## Other
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| `processor` | Boolean | `false` | Allows you to handle and modify data by passing functions to the indexer. See [docs/PROCESSOR.md](docs/PROCESSOR.md) for more information.
+| `encode_all` | Boolean | `false` | Should `?` and `#` characters be encoded when processing URLs and filenames.
 | `allow_direct_access` | Boolean | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
 | `footer` | Boolean | `true` | Setting this to `true` or `false` will enable or disable the path, site and generation time in the footer respectively.
