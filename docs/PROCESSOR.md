@@ -5,7 +5,7 @@ The `processor` option can be used if you want to alter some of the data used by
 These functions will be called by the indexer and the relevant arguments will be passed to them. If a function is passed, the indexer expects the handled `$data` to be returned in the same way that it was passed (intact structure/keys).
 
 ## Item
-Key: `processor {array} => item {function}`
+Key: `config => processor {array} => item {function}`
 
 Passed arguments: `($data {array}[directories|files], $indexer {class instance})`
 
@@ -14,34 +14,34 @@ An example of a `$data['files']` item:
 ```php
 array(7) {
   [0]=>
-  string(41) "/var/www/server/public/master/IMAGE.jpg" // absolute path of item.
+  string(41) "/var/www/server/public/master/IMAGE.jpg" // Absolute path of item.
   [1]=>
-  string(9) "IMAGE.jpg" // rendered filename.
+  string(9) "IMAGE.jpg" // Rendered filename.
   ["name"]=>
-  string(9) "image.jpg" // used for server-side sorting only (if sorted by name).
+  string(9) "image.jpg" // Used for server-side sorting only (if sorted by name).
   ["type"]=>
   array(2) {
     [0]=>
-    string(5) "image" // type of file.
+    string(5) "image" // Type of file.
     [1]=>
-    string(3) "jpg" // file extension.
+    string(3) "jpg" // File extension.
   }
   ["size"]=>
   array(2) {
     [0]=>
-    int(129923) // raw file size. used to sort items by size.
+    int(129923) // Raw file size. Used to sort items by size.
     [1]=>
-    string(6) "127 kB" // readable file size.
+    string(6) "127 kB" // Readable file size.
   }
   ["modified"]=>
   array(2) {
     [0]=>
-    int(1617952924) // raw modification data. used to sort items by date.
+    int(1617952924) // Raw modification data. used to sort items by date.
     [1]=>
-    string(90) "<span data-view=\"desktop\">04/09/21 09:22:04</span><span data-view=\"mobile\">09/04/21</span>" // html string for showing modified date.
+    string(90) "<span data-view=\"desktop\">04/09/21 09:22:04</span><span data-view=\"mobile\">09/04/21</span>" // HTML string for showing modified date.
   }
   ["url"]=>
-  string(17) "/master/IMAGE.jpg" // url to the item.
+  string(17) "/master/IMAGE.jpg" // URL to the item.
 }
 ```
 
@@ -49,25 +49,25 @@ An example of a `$data['directories']` item:
 ```php
 array(6) {
   [0]=>
-  string(41) "/var/www/server/public/master/subfolder" // absolute path of directory.
+  string(41) "/var/www/server/public/master/subfolder" // Absolute path of directory.
   [1]=>
-  string(9) "subfolder" // directory name.
+  string(9) "subfolder" // Directory name.
   ["modified"]=>
   array(2) {
     [0]=>
-    int(1619271520) // raw modification data. used to sort items by date.
+    int(1619271520) // Raw modification data. Used to sort items by date.
     [1]=>
-    string(90) "<span data-view="desktop">04/24/21 15:38:40</span><span data-view="mobile">24/04/21</span>" // html string for showing modified date.
+    string(90) "<span data-view="desktop">04/24/21 15:38:40</span><span data-view="mobile">24/04/21</span>" // HTML string for showing modified date.
   }
   ["type"]=>
-  string(9) "directory" // item type.
+  string(9) "directory" // Item type.
   ["size"]=>
-  int(8650942) // directory size. only relevant if directory_sizes is enabled.
+  int(8650942) // Directory size. Only relevant if directory_sizes is enabled.
   ["url"]=>
-  string(17) "/master/subfolder" // url to the directory.
+  string(17) "/master/subfolder" // URL to the directory.
 }
 ```
-## Example
+### Example
 
 Finally, an example of how this can be used in a configuration file:
 ```php
