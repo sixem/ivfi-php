@@ -57,7 +57,7 @@ array(6) {
     [0]=>
     int(1619271520) // Raw modification data. Used to sort items by date.
     [1]=>
-    string(90) "<span data-view="desktop">04/24/21 15:38:40</span><span data-view="mobile">24/04/21</span>" // HTML string for showing modified date.
+    string(90) "<span data-view=\"desktop\">04/24/21 15:38:40</span><span data-view=\"mobile\">24/04/21</span>" // HTML string for showing modified date.
   }
   ["type"]=>
   string(9) "directory" // Item type.
@@ -79,7 +79,7 @@ return array(
             foreach($data['files'] as $index => $file)
             {
                 // Adds some query strings to the URL of the files.
-                $file['url'] = (sprintf('%s?width=800&auth=true', $file['url']));
+                $file['url'] = (sprintf('%s?width=800&key=1', $file['url']));
 
                 // Hides the filesize.
                 $file['size'][0] = 0;
