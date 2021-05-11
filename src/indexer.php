@@ -5,7 +5,7 @@
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
  * @author   emy <admin@eyy.co>
- * @version  dev_3-1.1.8
+ * @version  1.1.8
  */
 
 /**
@@ -48,7 +48,7 @@ $config = array(
         'list_alignment' => 0, /* List alignment where 0 is right and 1 is left. */
         'fit_content' => true, /* Whether the media should be forced to fill the screen space. */
         'image_sharpen' => false, /* Attempts to disable browser blurriness on images. */
-        'blur' => true /* Enables allery background blur (can affect performance negatively on larger directories). */
+        'blur' => true /* Enables gallery background blur (can affect performance negatively on larger directories). */
     ),
     /* Preview options. */
     'preview' => array(
