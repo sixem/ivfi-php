@@ -8,18 +8,22 @@
 
 (() =>
 {
-	'use strict';
-
+    /* get configuration data */
 	const config = JSON.parse($('#__INDEXER_DATA__').html());
 
+	const store = {
+		preview : {},
+		defaults : {},
+		selection : {},
+		selected : null,
+		refresh : false
+	};
+
 	const main = {
-		store  : {
-			preview : {},
-			defaults : {},
-			selection : {},
-			selected : null,
-			refresh : false,
-		},
+		store,
+		/**
+	 	* debounce function for quick-firing events like window resize
+	 	*/
 		debounce : (f) =>
 		{
 			var timer;
@@ -34,54 +38,90 @@
 				timer = setTimeout(f, 100, e);
 			};
 		},
+		/**
+	 	* checks an object for a nested value
+	 	*/
 		checkNested : (obj, ...args) =>
 		{
 			for(var i = 0; i < args.length; i++)
 			{
-				if(!obj || !Object.prototype.hasOwnProperty.call(obj, args[i])) return false;
+				if(!obj || !Object.prototype.hasOwnProperty.call(obj, args[i]))
+				{
+					return false;
+				}
+
 				obj = obj[args[i]];
 			}
 
 			return true;
 		},
+		/**
+	 	* gets the readable size of a byte integer
+	 	* @param {integer} bytes : bytecount
+	 	*/
 		getReadableSize : (bytes = 0) =>
 		{
 			/* https://stackoverflow.com/questions/10420352/converting-file-size-in-bytes-to-human-readable-string */
 
-			if(bytes === 0) return '0.00' + config.format.sizes[0];
+			if(bytes === 0)
+			{
+				return '0.00' + config.format.sizes[0];
+			}
 
 			var i = 0;
 
 			do {
-				bytes = bytes / 1024; i++;
+				bytes = bytes / 1024;
+				i++;
 			} while (bytes > 1024);
 
 			return Math.max(bytes, 0.1).toFixed(i < 2 ? 0 : 2) + config.format.sizes[i];
 		},
+		/**
+	 	* capitalizes an input
+	 	* @param {string} input : text to capitalize
+	 	*/
 		capitalize : (input) =>
 		{
 			return input.charAt(0).toUpperCase() + input.slice(1);
 		},
+		/**
+	 	* copies text to clipboard
+	 	* @param {string} text : text to copy
+	 	*/
 		fallbackCopyTextToClipboard : (text) =>
 		{
 			/* https://stackoverflow.com/a/30810322 */
 
 			var area = document.createElement('textarea');
+			
 			area.value = text; area.style.position = 'fixed';
 
 			document.body.appendChild(area);
+
 			area.focus(); area.select();
 
 			try
 			{
 				var successful = document.execCommand('copy');
-				if(config.debug) console.log('fallback', 'copying text command was ' + (successful ? 'successful' : 'unsuccessful'));
+
+				if(config.debug)
+				{
+					console.log('fallback', 'copying text command was ' + (successful ? 'successful' : 'unsuccessful'));
+				}
 			} catch (err) {
-				if(config.debug) console.error('fallback', 'unable to copy', err);
+				if(config.debug)
+				{
+					console.error('fallback', 'unable to copy', err);
+				}
 			}
 
 			document.body.removeChild(area);
 		},
+		/**
+	 	* copies text to clipboard
+	 	* @param {string} text : text to copy
+	 	*/
 		copyTextToClipboard : (text) =>
 		{
 			/* https://stackoverflow.com/a/30810322 */
@@ -93,17 +133,29 @@
 
 			navigator.clipboard.writeText(text).then(() =>
 			{
-				if(config.debug) console.log('async', 'copying to clipboard was successful.');
+				if(config.debug)
+				{
+					console.log('async', 'copying to clipboard was successful.');
+				}
 			}, (err) =>
 			{
-				if(config.debug) console.error('async', 'could not copy text: ', err);
+				if(config.debug)
+				{
+					console.error('async', 'could not copy text: ', err);
+				}
 			});
 		},
+		/**
+	 	* gets the value of a table cell
+	 	*/
 		getCellValue : (row, index) =>
 		{
 			var attribute = $(row).children('td').eq(index).data('raw');
 			return attribute !== undefined ? attribute : $(row).children('td').eq(index).text();
 		},
+		/**
+	 	* compares cell values (table sort)
+	 	*/
 		comparer : (index) =>
 		{
 			return (a, b) =>
@@ -112,6 +164,9 @@
 				return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.localeCompare(valB);
 			};
 		},
+		/**
+	 	* scans the table for available extensions, then generates a wget command to download them specifically.
+	 	*/
 		generateWget : () =>
 		{
 			var url = window.location.href, extensions = [];
@@ -124,7 +179,9 @@
 
 			return `wget -r -np -nH -nd -e robots=off --accept "${extensions.join(',')}" "${url}"`;
 		},
-		/* Strips ? and anything that follows from a URL. */
+		/**
+	 	* strips ? and anything that follows from a URL
+	 	*/
 		stripUrl : (url) =>
 		{
 			if(!url.includes('?'))
@@ -134,7 +191,9 @@
 				return url.split('?')[0];
 			}
 		},
-		/* Pops a string, identifies extension. */
+		/**
+	 	* pops a string, identifies extension
+	 	*/
 		identifyExtension : (url) =>
 		{
 			let ext = (url).split('.').pop().toLowerCase();
@@ -149,7 +208,13 @@
 
 			return null;
 		},
+		/**
+	 	* client functions/data
+	 	*/
 		client : {
+			/**
+	 		* gets the client's stored configuration, or creates a new one if it doesn't exist
+	 		*/
 			get : () =>
 			{
 				var client, keys_required = ['gallery', 'sort', 'style'], defaults = {
@@ -200,25 +265,32 @@
 					{
 						main.client.set(client);
 					}
-				} catch (e) /* On JSON.parse() error. Means that the client does not have a valid cookie, so we're creating it. */
+				} catch (e)
 				{
+					/* on error means that the client does not have a valid cookie, so we're creating it */
 					client = {};
 
-					/* Set default theme (if any). */
+					/* set default theme (if any) */
 					if(config.style.themes.set)
 					{
 						defaults.style.theme = config.style.themes.set;
 					}
 
-					/* Create keys. */
+					/* create keys */
 					(keys_required).forEach((key) => client[key] = {});
 
-					/* Merge and set cookie. */
+					/* merge and set cookie */
 					main.client.set(Object.assign(client, defaults));
 				}
 
+				/* return client config */
 				return client;
 			},
+			/**
+	 		* save client configuration
+	 		* @param {object} client  : config
+	 		* @param {object} options : cookie settings
+	 		*/
 			set : (client, options = {}) =>
 			{
 				options = Object.assign({
@@ -229,7 +301,14 @@
 				Cookies.set('ei-client', JSON.stringify(client), options);
 			}
 		},
+		/**
+	 	* settings functions
+	 	*/
 		settings : {
+			/**
+	 		* checks if there are any available settings
+	 		* are themes enabled? gallery? if so, we settings to customize that.
+	 		*/
 			available : () =>
 			{
 				if(main.checkNested(config, 'style', 'themes', 'pool') && config.style.themes.pool.length > 0 ||
@@ -240,19 +319,30 @@
 
 				return false;
 			},
+			/**
+	 		* functions for creating settings elements
+	 		*/
 			create : {
 				option : (e, text, options = {}, title = null) =>
 				{
-					if(Object.prototype.hasOwnProperty.call(options, 'class')) options.class = ('option ' + options.class);
+					if(Object.prototype.hasOwnProperty.call(options, 'class'))
+					{
+						options.class = ('option ' + options.class);
+					}
 
 					var wrapper_attributes = Object.assign({
 						class : 'option'
-					}, options), text_attributes = {
+					}, options);
+
+					var text_attributes = {
 						class : 'option-text',
 						text : text
 					};
 
-					if(title) text_attributes.title = title;
+					if(title)
+					{
+						text_attributes.title = title;
+					}
 
 					return e
 					.wrap($('<div/>'))
@@ -270,8 +360,10 @@
 						text : header ? header : main.capitalize(id)
 					}));
 				},
-				/* creates a select option.
-				 * set options['data-key'] to override section key. */
+				/**
+	 			* creates a select option
+	 			* set options['data-key'] to override section key
+	 			*/
 				select : (values, options = {}, selected = null) =>
 				{
 					var e = $('<select/>', options);
@@ -295,21 +387,30 @@
 
 					return e;
 				},
-				/* creates a checkbox option.
-				 * set options['data-key'] to override section key. */
+				/**
+	 			* creates a checkbox element
+	 			*/
 				check : (options = {}, selected = null) =>
 				{
 					var checked = (selected !== null) ? selected() : false;
 
-					if(checked) options.checked = '';
+					if(checked)
+					{
+						options.checked = '';
+					}
 
 					var e = $('<input/>', Object.assign(options, {
 						type : 'checkbox'
-					})); e[0].checked = checked;
+					}));
+
+					e[0].checked = checked;
 
 					return e;
 				}
 			},
+			/**
+	 		* closes/removes the settings menu
+	 		*/
 			close : () =>
 			{
 				$('body > div.focus-overlay, body > div.settings-container').remove();
@@ -337,10 +438,21 @@
 								'body > div.gallery-container > div.content-container > div.list > div.drag'
 							];
 
-							elements.forEach((e) => alignment === 0 ? $(e).removeClass('reversed') : $(e).addClass('reversed'));
-							var detached = $(elements[1]).detach(), media = ('body > div.gallery-container > div.content-container > div.media');
-							alignment === 1 ? detached.insertBefore(media) : detached.insertAfter(media);
-							(main.gallery.instance).store.list.reverse = (alignment === 0 ? false : true);
+							elements.forEach((e) =>
+							{
+								alignment === 0 ? $(e).removeClass('reversed') : $(e).addClass('reversed')
+							});
+
+							var detached = $(elements[1]).detach();
+
+							var media = ('body > div.gallery-container > div.content-container > div.media');
+
+							detached[alignment === 1 ? 'insertBefore' : 'insertAfter'](media);
+
+							if((main.gallery.instance).store.list.reverse)
+							{
+								alignment === 0 ? false : true
+							}
 						}
 					},
 					reverse_options : (value) =>
@@ -348,19 +460,28 @@
 						if(main.gallery.instance)
 						{
 							main.gallery.instance.store.reverse_options = value;
+
 							var e = $('body > div.gallery-container > div.content-container > div.media > div.wrapper > div.cover .reverse');
-							if(e.length > 0) e.remove();
+
+							if(e.length > 0)
+							{
+								e.remove();
+							}
 						}
 					},
 					autoplay : (value) =>
 					{
-						if(main.gallery.instance) main.gallery.instance.store.autoplay = value;
+						if(main.gallery.instance)
+						{
+							main.gallery.instance.store.autoplay = value;
+						}
 					},
 					fit_content : (value) =>
 					{
 						if(main.gallery.instance)
 						{
 							main.gallery.instance.store.fit_content = value;
+
 							var wrapper = $('body > div.gallery-container > div.content-container > div.media > div.wrapper');
 
 							if(wrapper && value)
@@ -387,8 +508,8 @@
 				gather : (container) =>
 				{
 					/* gather set settings data */
-					var elements = ['select', 'input[type="checkbox"]'],
-						data = {};
+					var elements = ['select', 'input[type="checkbox"]'];
+					var data = {};
 
 					container.find(elements.join(',')).each((i, e) =>
 					{
@@ -396,10 +517,13 @@
 
 						if(e[0].hasAttribute('name'))
 						{
-							var id = e.attr('name'),
-								section = e[0].hasAttribute('data-key') ? e.attr('data-key') : e.closest('.section').attr('data-key');
+							var id = e.attr('name');
+							var section = e[0].hasAttribute('data-key') ? e.attr('data-key') : e.closest('.section').attr('data-key');
 
-							if(!Object.prototype.hasOwnProperty.call(data, section)) data[section] = {};
+							if(!Object.prototype.hasOwnProperty.call(data, section))
+							{
+								data[section] = {};
+							}
 
 							if(e.is('select'))
 							{
@@ -413,16 +537,24 @@
 
 					return data;
 				},
+				/**
+	 			* set gathered settings data
+	 			*/
 				set : (data, client = null) =>
 				{
-					/* set gathered settings data */
-					if(!client) client = main.client.get();
+					if(!client)
+					{
+						client = main.client.get();
+					}
 
 					Object.keys(data).forEach((key) =>
 					{
 						var is_main = (key === 'main');
 
-						if(!is_main && !Object.prototype.hasOwnProperty.call(client, key)) client[key] = {};
+						if(!is_main && !Object.prototype.hasOwnProperty.call(client, key))
+						{
+							client[key] = {};
+						}
 
 						Object.keys(data[key]).forEach((option) =>
 						{
@@ -432,9 +564,11 @@
 							{
 								case ('theme'):
 									if(data[key][option] <= (config.style.themes.pool.length - 1))
-										value = config.style.themes.pool[data[key][option]] === 'default' ? false : config.style.themes.pool[data[key][option]]; break;
+										value = config.style.themes.pool[data[key][option]] === 'default' ? false : config.style.themes.pool[data[key][option]];
+									break;
 								default:
-									value = data[key][option]; break;
+									value = data[key][option];
+									break;
 							}
 
 							var changed = (is_main ? (client[option] !== value) : (client[key][option] !== value));
@@ -462,17 +596,21 @@
 						});
 					});
 
-					if(config.debug) console.log('set settings', data);
+					if(config.debug)
+					{
+						console.log('set settings', data);
+					}
 
 					main.client.set(client);
 
 					return data;
 				}
 			},
+			/**
+	 		* apply settings (gather and set settings, then close menu)
+	 		*/
 			apply : (e, client = null) =>
 			{
-				/* apply settings (gather and set settings, then close menu) */
-
 				if(!client)
 				{
 					client = main.client.get();
@@ -481,18 +619,28 @@
 				main.settings.options.set(main.settings.options.gather(e), client);
 				main.settings.close();
 			},
+			/**
+	 		* build the `settings` menu
+	 		*/
 			show : () =>
 			{
-				/* build the settings menu */
+				if($('body > div.settings-container').length > 0)
+				{
+					return;
+				}
 
-				if($('body > div.settings-container').length > 0) return;
-
-				if($('body > div.focus-overlay').length === 0) $('<div/>', { class : 'focus-overlay' })
-					.appendTo($('body')).on('click', () => main.settings.close());
+				if($('body > div.focus-overlay').length === 0)
+				{
+					$('<div/>', {
+						class : 'focus-overlay'
+					}).appendTo($('body')).on('click', () => main.settings.close());
+				}
 
 				let container = $('<div/>', {
 					class : 'settings-container'
-				}), client = main.client.get();
+				});
+
+				let client = main.client.get();
 
 				var getMain = (section = main.settings.create.section('main'), settings = 0) =>
 				{
@@ -501,26 +649,46 @@
 						section.append(main.settings.create.option(
 							main.settings.create.select(config.style.themes.pool.map((e) =>
 							{
-								return { value : e, text : e };
-							}), { name : 'theme', 'data-key' : 'style' }, (option, index) =>
+								return {
+									value : e,
+									text : e
+								};
+							}), {
+								'name' : 'theme',
+								'data-key' : 'style'
+							}, (option, index) =>
 							{
 								return (config.style.themes.set === null && index === 0) || (option[0].value == config.style.themes.set);
-							}), 'Theme')); settings++;
+							}), 'Theme')
+						);
+
+						settings++;
 					}
 
 					if(main.checkNested(config, 'style', 'compact') && !config.mobile)
 					{
-						var label = 'Compact Style',
-							description = 'Set the page to use a more compact style.';
+						var label = 'Compact Style';
+						var description = 'Set the page to use a more compact style.';
 
 						section.append(main.settings.create.option(
-							main.settings.create.check({ name : 'compact', 'data-key' : 'style' },
-								() => {
-									return main.checkNested(client, 'style', 'compact') ? (client.style.compact) : config.style.compact;
-								}), label, { class : 'interactable' }, description)); settings++;
+							main.settings.create.check({
+								'name' : 'compact',
+								'data-key' : 'style'
+							},
+							() => {
+								return main.checkNested(client, 'style', 'compact') ? (client.style.compact) : (config.style.compact);
+							}), label, {
+								class : 'interactable'
+							}, description)
+						);
+
+						settings++;
 					}
 
-					return { settings, section };
+					return {
+						settings,
+						section
+					};
 				};
 
 				var getGallery = (section = main.settings.create.section('gallery'), settings = 0) =>
@@ -530,11 +698,19 @@
 						section.append(main.settings.create.option(
 							main.settings.create.select(['right', 'left'].map((e) =>
 							{
-								return { value : 'align-' + e, text : e };
-							}), { name : 'list_alignment' }, (option, index) =>
+								return {
+									value : ('align-' + e),
+									text : e
+								};
+							}), {
+								name : 'list_alignment'
+							}, (option, index) =>
 							{
 								return (index === client.gallery.list_alignment);
-							}), 'List Alignment')); settings++;
+							}), 'List Alignment')
+						);
+
+						settings++;
 					}
 
 					var sets = [];
@@ -551,17 +727,31 @@
 						var [label, key, description] = e;
 
 						section.append(main.settings.create.option(
-							main.settings.create.check({ name : key },
-								() => {
-									return main.checkNested(client, 'gallery', key) ? (client.gallery[key]) : config.gallery[key];
-								}), label, { class : 'interactable' }, description)); settings++;
+							main.settings.create.check({
+								name : key
+							}, () =>
+							{
+								return main.checkNested(client, 'gallery', key) ? (client.gallery[key]) : config.gallery[key];
+							}), label, {
+								class : 'interactable'
+							}, description)
+						);
+
+						settings++;
 					});
 
-					return { settings, section };
+					return {
+						settings,
+						section
+					};
 				};
 
 				var sections = [getMain()];
-				if(config.gallery.enabled) sections.push(getGallery());
+
+				if(config.gallery.enabled)
+				{
+					sections.push(getGallery());
+				}
 
 				container.append($('<div/>', {
 					class : 'wrapper'
@@ -574,13 +764,15 @@
 				$('<div/>', {
 					class : 'apply ns',
 					text : 'Apply'
-				}).appendTo(bottom)
+				})
+				.appendTo(bottom)
 				.on('click', () => main.settings.apply(container, client));
 
 				$('<div/>', {
 					class : 'cancel ns',
 					text : 'Cancel'
-				}).appendTo(bottom)
+				})
+				.appendTo(bottom)
 				.on('click', () => main.settings.close());
 
 				$('body').append(container);
@@ -589,18 +781,28 @@
 				container.find('div.section > .option.interactable').on('mouseup', (e) =>
 				{
 					/* cancel the event if any text is selected */
-					if(window.getSelection().toString()) return;
+					if(window.getSelection().toString())
+					{
+						return;
+					}
 
 					var checkbox = $(e.currentTarget).find('input[type="checkbox"]');
 
 					if(checkbox.length > 0 && !$(e.target).is('input'))
 					{
-						checkbox[0].checked = !checkbox[0].checked; return;
+						checkbox[0].checked = !checkbox[0].checked;
+						return;
 					}
 				});
 			}
 		},
+		/**
+	 	* menu functions
+	 	*/
 		menu : {
+			/**
+	 		* creates the menu
+	 		*/
 			create : () =>
 			{
 				var container = $('<div/>', {
@@ -644,7 +846,10 @@
 						class : 'ns' + (Object.prototype.hasOwnProperty.call(item, 'class') ? ' ' + item.class : '')
 					}).appendTo(container);
 
-					if(Object.prototype.hasOwnProperty.call(item, 'id')) e.attr('id', item.id);
+					if(Object.prototype.hasOwnProperty.call(item, 'id'))
+					{
+						e.attr('id', item.id);
+					}
 				});
 
 				/* event delegation */
@@ -674,6 +879,9 @@
 
 				return container;
 			},
+			/**
+	 		* toggle menu visibility
+	 		*/
 			toggle : (state = null) =>
 			{
 				var menu = $('body > div.menu');
@@ -688,14 +896,26 @@
 				return menu.is(':hidden');
 			}
 		},
+		/**
+	 	* theme functions
+	 	*/
 		theme : {
+			/**
+	 		* sets a theme for the client
+	 		* @param {string|null} theme  : theme to set (null resets themes)
+	 		* @param {boolean} set_cookie : save to client config
+	 		*/
 			set : (theme = null, set_cookie = true) =>
 			{
+				/* get current stylesheets */
 				var sheets = $('head > link[rel="stylesheet"]').filter((i, sheet) =>
 					sheet.hasAttribute('href') && (sheet.getAttribute('href')).match(new RegExp('/(themes)/', 'i')));
 
+				/* set config theme */
 				config.style.themes.set = theme;
-				
+			
+
+				/* if null theme, remove active sheets */
 				if(theme === null || !theme)
 				{
 					sheets.each((i, sheet) => sheet.remove());
@@ -704,25 +924,34 @@
 				} else {
 					if(set_cookie)
 					{
+						/* save to client */
 						main.client.set(main.client.get().style.theme = theme);
 					}
 				}
 
+				/* apply to document */
 				$('head').append($('<link/>', {
 					rel : 'stylesheet',
 					type : 'text/css',
 					href : `${config.style.themes.path}/${theme}.css`
 				}));
 
+				/* remove stylesheets that were active prior to change */
 				sheets.each((i, sheet) => sheet.remove());
 			}
 		},
+		/**
+	 	* filter functions
+	 	*/
 		filter : {
+			/**
+	 		* applies a filter
+	 		*/
 			apply : (query = null) =>
 			{
 				main.store.refresh = true;
 
-				if(!query) query = '';
+				query = query || '';
 
 				var data = {
 					reset : query === '',
@@ -754,7 +983,9 @@
 						return true;
 					}
 
-					var is_file = item.hasClass('file'), is_directory = item.hasClass('directory');
+					var is_file = item.hasClass('file');
+
+					var is_directory = item.hasClass('directory');
 
 					try
 					{
@@ -779,11 +1010,19 @@
 					if(match.valid && match.data && is_file)
 					{
 						var size = item.find('td:eq(2)').attr('data-raw');
-						if(!isNaN(size)) data.size = (data.size + parseInt(size));
+
+						if(!isNaN(size))
+						{
+							data.size = (data.size + parseInt(size));
+						}
 					} else if(directory_sizes && match.valid && match.data && is_directory)
 					{
 						var size = item.find('td:eq(2)').attr('data-raw');
-						if(!isNaN(size)) data.size = (data.size + parseInt(size));
+
+						if(!isNaN(size))
+						{
+							data.size = (data.size + parseInt(size));
+						}
 					}
 
 					(match.valid && match.data) ?
@@ -842,7 +1081,6 @@
 				}
 
 				/* hide or show the gallery menu option */
-
 				if(!data.reset && previews === 0 && option.length > 0)
 				{
 					if(option.css('display') !== 'none')
@@ -1007,6 +1245,9 @@
 
 				return _date(format, timestamp);
 			},
+			/**
+	 		* gets client timezone offset and sets hover timestamps
+	 		*/
 			load : () =>
 			{
 				/* get client's UTC offset */
@@ -1014,8 +1255,10 @@
 
 				var formatSince = (seconds) =>
 				{
-					/* formats seconds to an 'ago' string.
-					 * example: formatSince(3720); returns 1 hour and 2 minutes ago. */
+					/**
+	 				* formats seconds to an 'ago' string
+	 				* example: formatSince(3720); returns 1 hour and 2 minutes ago
+	 				*/
 
 					if(seconds === 0)
 					{
@@ -1033,7 +1276,10 @@
 						'hour' : 3600,
 						'minute' : 60,
 						'second' : 1
-					}, keys = Object.keys(t), count = (keys.length - 1), value = false;
+					};
+
+					var keys = Object.keys(t);
+					var count = (keys.length - 1), value = false;
 
 					for(var index = 0; index < keys.length; index++)
 					{
@@ -1100,9 +1346,9 @@
 					});
 				};
 
-				var offset = offsetGet(),
-					client = main.client.get(),
-					update = client.timezone_offset != offset;
+				var offset = offsetGet();
+				var	client = main.client.get();
+				var	update = client.timezone_offset != offset;
 
 				/* only update if offset is changed or unset */
 				if(update)
@@ -1130,7 +1376,8 @@
 				{
 					if(config.sorting.types === 0 || config.sorting.types === 1)
 					{
-						var asc = (config.sorting.order === 'asc' ? true : false), index = null;
+						var asc = (config.sorting.order === 'asc' ? true : false);
+						var index = null;
 
 						switch(config.sorting.sort_by)
 						{
@@ -1160,8 +1407,15 @@
 				}
 			}
 		},
+		/**
+	 	* gallery functions
+	 	*/
 		gallery : {
 			instance : null,
+			/**
+	 		* shows / loads the gallery
+	 		* @param {integer} index : index to begin at
+	 		*/
 			load : (index = 0) =>
 			{
 				if(!config.gallery.enabled)
@@ -1266,6 +1520,9 @@
 			}
 		},
 		overlay : {
+			/**
+	 		* hides any overlays visible overlays (menu, filter)
+	 		*/
 			hide : (callback = () => {}) =>
 			{
 				var i = 0;
@@ -1282,13 +1539,18 @@
 				{
 					if((obj.e).length > 0 && (obj.e).is(':visible'))
 					{
-						obj.func(); i++;
+						obj.func();
+
+						i++;
 					}
 				});
 
 				callback(i > 0);
 			}
 		},
+		/**
+	 	* retrieves the items contained in the table and parses the data
+	 	*/
 		getTableItems : () =>
 		{
 			var items = [];
@@ -1317,11 +1579,16 @@
 			return items;
 		},
 		events : {
+		 	/**
+	 	 	* called onscroll - shows/hides current path in the topbar
+	 	 	*/
 			scroll : () =>
 			{
-				var path = $('body > div.path'),
-					top = $('body > div.top-bar > div.directory-info > div.quick-path'),
-					visible = $(window).scrollTop() < path.offset().top + path.outerHeight();
+				var path = $('body > div.path');
+
+				var	top = $('body > div.top-bar > div.directory-info > div.quick-path');
+
+				var	visible = $(window).scrollTop() < path.offset().top + path.outerHeight();
 
 				if(!visible)
 				{
@@ -1340,6 +1607,9 @@
 					top.fadeOut(150);
 				}
 			},
+		 	/**
+	 	 	* sorts a table column (toggle asc/desc)
+	 	 	*/
 			sortTableColumn : (target) =>
 			{
 				var parent = $(target).parent(), index = parent.index(),
@@ -1382,7 +1652,10 @@
 				{
 					if(config.sorting.types === 0 || config.sorting.types === 2)
 					{
-						if(!skip_directories) rows.directories = rows.directories.reverse();
+						if(!skip_directories)
+						{
+							rows.directories = rows.directories.reverse();
+						}
 					}
 
 					if(config.sorting.types === 0 || config.sorting.types === 1)
@@ -1399,6 +1672,9 @@
 				$('body > table > tbody > tr.last').removeClass('last');
 			}
 		},
+		 /**
+	 	 * bind events - recalled on gallery close
+	 	 */
 		bind : () =>
 		{
 			$(document).off('keydown').on('keydown', (e) =>
@@ -1411,7 +1687,10 @@
 				{
 					main.overlay.hide((state) =>
 					{
-						if(state === true) e.preventDefault();
+						if(state === true)
+						{
+							e.preventDefault();
+						}
 					});
 				} else if(e.keyCode === 71)
 				{
@@ -1436,16 +1715,19 @@
 		}
 	};
 
+	/* menu click event */
 	$('body > div.top-bar > div.extend').on('click', (e) =>
 	{
 		main.menu.toggle(e.currentTarget);
 	});
 
+	/* filter click event */
 	$('body > div.filter-container > div.close > span').on('click', () =>
 	{
 		main.filter.toggle();
 	});
 
+	/* filter change event */
 	$('body > div.filter-container > div input[type="text"]').on('input', (e) =>
 	{
 		var target = $(e.currentTarget);
@@ -1453,12 +1735,13 @@
 		main.filter.apply(target.val());
 	});
 
+	/* item click event (show gallery if enabled and table sort) */
 	document.querySelector('body > table').addEventListener('click', (e) =>
 	{
 		if(e.target.tagName == 'SPAN' && e.target.hasAttribute('sortable'))
 		{
 			main.events.sortTableColumn(e.target);
-		} else if(e.target.tagName == 'A' && e.target.className == 'preview' && config.gallery.enabled === true)
+		} else if(config.gallery.enabled === true && e.target.tagName == 'A' && e.target.className == 'preview')
 		{
 			e.preventDefault();
 
@@ -1471,6 +1754,7 @@
 		}
 	}, true);
 
+	/* recheck mobile sizing on resize */
 	window.addEventListener('resize', main.debounce(() =>
 	{
 		if(config.debug)
@@ -1511,24 +1795,26 @@
 				preview.itemIndex = index;
 			});
 
-			let previews = {}, initial = $('body').find('> table tr.file > td > a.preview');
+			var previews = {};
+			var initial = $('body').find('> table tr.file > td > a.preview');
 
-			/* Apply a preview to the first preview element (due to browser iffyness). */
+			/* apply a preview to the first preview element (due to browser iffyness) */
 			if(initial.length > 0)
 			{
-				let asrc = initial[0].getAttribute('href'), identified = main.identifyExtension(main.stripUrl(asrc));
+				var asrc = initial[0].getAttribute('href');
+				var identified = main.identifyExtension(main.stripUrl(asrc));
 
 				if(identified)
 				{
-					let [a_ext, a_type] = identified;
+					var [asrc_ext, asrc_type] = identified;
 
 					previews[initial[0].itemIndex] = window.hoverPreview(initial[0], {
 						delay : config.preview.hover_delay,
 						cursor : config.preview.cursor_indicator,
 						encodeAll : config.encode_all,
 						force : {
-							extension : a_ext,
-							type : a_type
+							extension : asrc_ext,
+							type : asrc_type
 						}
 					});
 				}
@@ -1542,19 +1828,20 @@
 
 					if(!Object.prototype.hasOwnProperty.call(previews, index))
 					{
-						let asrc = e.target.getAttribute('href'), identified = main.identifyExtension(main.stripUrl(asrc));
+						var asrc = e.target.getAttribute('href');
+						var identified = main.identifyExtension(main.stripUrl(asrc));
 
 						if(identified)
 						{
-							let [a_ext, a_type] = identified;
+							var [asrc_ext, asrc_type] = identified;
 
 							previews[index] = window.hoverPreview(e.target, {
 								delay : config.preview.hover_delay,
 								cursor : config.preview.cursor_indicator,
 								encodeAll : config.encode_all,
 								force : {
-									extension : a_ext,
-									type : a_type
+									extension : asrc_ext,
+									type : asrc_type
 								}
 							});
 						}
@@ -1572,5 +1859,8 @@
 	/* load sorting indicators */
 	main.sort.load();
 
-	if(config.debug) console.log('config', config);
+	if(config.debug)
+	{
+		console.log('config', config);
+	}
 })();
