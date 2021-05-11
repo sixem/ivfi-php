@@ -50,7 +50,7 @@
 
 	--color-gallery-topbar: #fff;
 
-	--color-background-gallery-container: rgba(0, 0, 0, 0.5);
+	--color-background-gallery-container: rgb(4, 4, 4, 0.9);
 	--color-background-gallery-topbar: #181818ab;
 
 	--color-table-header: #fff;
@@ -260,7 +260,8 @@ body > table tr.directory a
 	color: var(--color-link-dir-regular);
 }
 
-body > table tr.file td:first-child
+body > table tr.file td:first-child,
+body > table tr.directory td:first-child
 {
 	padding-right: 5px;
 }
