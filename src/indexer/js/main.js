@@ -438,21 +438,10 @@
 								'body > div.gallery-container > div.content-container > div.list > div.drag'
 							];
 
-							elements.forEach((e) =>
-							{
-								alignment === 0 ? $(e).removeClass('reversed') : $(e).addClass('reversed')
-							});
-
-							var detached = $(elements[1]).detach();
-
-							var media = ('body > div.gallery-container > div.content-container > div.media');
-
-							detached[alignment === 1 ? 'insertBefore' : 'insertAfter'](media);
-
-							if((main.gallery.instance).store.list.reverse)
-							{
-								alignment === 0 ? false : true
-							}
+							elements.forEach((e) => alignment === 0 ? $(e).removeClass('reversed') : $(e).addClass('reversed'));
+							var detached = $(elements[1]).detach(), media = ('body > div.gallery-container > div.content-container > div.media');
+							alignment === 1 ? detached.insertBefore(media) : detached.insertAfter(media);
+							(main.gallery.instance).store.list.reverse = (alignment === 0 ? false : true);
 						}
 					},
 					reverse_options : (value) =>
