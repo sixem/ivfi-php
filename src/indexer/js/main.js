@@ -1468,6 +1468,7 @@
 				options.console = config.debug;
 				options.fade = config.gallery.fade;
 				options.blur = config.gallery.blur;
+				options.sharpen = config.gallery.image_sharpen;
 
 				options.mobile = config.mobile;
 

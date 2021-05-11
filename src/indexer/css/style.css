@@ -223,9 +223,9 @@ body > table tr td
 body > table tr td,
 body > table tr th
 {
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis
 }
 
 body > table tr td:last-child,
@@ -247,7 +247,7 @@ body > table tr td:last-child
 
 body > table tr.parent td
 {
-		padding-top: 8px;
+	padding-top: 8px;
 }
 
 body > table tr.parent a
@@ -1123,10 +1123,11 @@ select:not(.default):focus
 	border: none;
 }
 
-.gallery-container div.content-container .media .wrapper img
+.gallery-container div.content-container .media .wrapper img[sharpened]
 {
 	transform: translateZ(0);
 	-webkit-transform: translateZ(0);
+	image-rendering: optimizequality;
 }
 
 .gallery-container div.content-container .list

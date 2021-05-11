@@ -8,8 +8,6 @@
 
 (function($)
 {
-	'use strict';
-
 	$.fn.gallery = function(items, options = {})
 	{
 		const main = {
@@ -39,7 +37,6 @@
 				video : ['mp4', 'webm', 'ogv', 'ogg']
 			},
 			console : true,
-			blur : true,
 			filter : true,
 			start : 0,
 			fade : 0,
@@ -49,6 +46,8 @@
 			volume : 0,
 			reverse_options : true,
 			fit_content : false,
+			blur : true,
+			sharpen : true,
 			list : {
 				show : true,
 				reverse : false
@@ -63,6 +62,7 @@
 		{
 			return new Promise((resolve, reject) => {
 				var img = document.createElement('img');
+
 				img.src = src;
 
 				img.addEventListener('error', (e) =>
@@ -208,8 +208,9 @@
 			if(main.store.blur)
 			{
 				main.set.blur(bool);
-				main.limitBody(bool);
 			}
+
+			main.limitBody(bool);
 
 			var video = main.container.find('> div.content-container > div.media > div.wrapper video'),
 				table = main.container.find('> div.content-container > div.list > table');
@@ -584,13 +585,17 @@
 						element.parent('.cover').css('height', height);
 					}
 
+					if(main.store.sharpen)
+					{
+						element.attr('sharpened', '');
+					}
+
 					element.attr('src', '').attr('src', src).show();
 					element.parent('.cover').show();
 
 					if(video.length > 0)
 					{
 						video.off('error');
-
 						video[0].pause();
 						video.find('source').attr('src', '');
 					}
@@ -767,7 +772,8 @@
 
 				main.loadImage(encoded).then((data) =>
 				{
-					let [src, img, dimensions] = data, [w, h] = dimensions;
+					let [src, img, dimensions] = data;
+					let [w, h] = dimensions;
 
 					if(main.data.selected.src === src)
 					{
