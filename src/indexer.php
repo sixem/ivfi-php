@@ -188,7 +188,10 @@ function authenticate($users, $realm)
 }
 
 /* Call authentication function if authentication is enabled. */
-if($config['authentication'] && is_array($config['authentication']) && count($config['authentication']) > 0)
+if(isset($config['authentication']) &&
+  $config['authentication'] &&
+  is_array($config['authentication']) &&
+  count($config['authentication']) > 0)
 {
   authenticate($config['authentication'], 'Restricted content.');
 }
@@ -737,19 +740,25 @@ class Indexer
   {
     $size = 0;
 
-    foreach(scandir($path, SCANDIR_SORT_NONE) as $file)
+    try
     {
-      if($file[0] === '.')
+      foreach(scandir($path, SCANDIR_SORT_NONE) as $file)
       {
-        continue;
-      } else {
-        $filesize = filesize(self::joinPaths($path, $file));
-
-        if($filesize && $filesize > 0)
+        if($file[0] === '.')
         {
-          $size += $filesize;
+          continue;
+        } else {
+          $filesize = filesize(self::joinPaths($path, $file));
+
+          if($filesize && $filesize > 0)
+          {
+            $size += $filesize;
+          }
         }
       }
+    } catch (Exception $e)
+    {
+      $size += 0;
     }
 
     return $size;
@@ -761,14 +770,20 @@ class Indexer
     $size = 0;
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
 
-    foreach($iterator as $file)
+    try
     {
-      if($file->isDir())
+      foreach($iterator as $file)
       {
-        continue;
-      } else {
-        $size += filesize($file->getPathname());
+        if($file->isDir())
+        {
+          continue;
+        } else {
+          $size += filesize($file->getPathname());
+        }
       }
+    } catch (Exception $e)
+    {
+      $size += 0;
     }
 
     return $size;
