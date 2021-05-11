@@ -46,7 +46,8 @@ $config = array(
         'reverse_options' => false, /* Reverse search options for images (when hovering over them). */
         'scroll_interval' => 50, /* Break in ms between scroll navigation events. */
         'list_alignment' => 0, /* List alignment where 0 is right and 1 is left. */
-        'fit_content' => true /* Whether the media should be forced to fill the screen space. */
+        'fit_content' => true, /* Whether the media should be forced to fill the screen space. */
+        'blur' => true /* Enables allery background blur (can affect performance negatively on larger directories) */
     ),
     /* Preview options. */
     'preview' => array(
@@ -118,7 +119,7 @@ if(file_exists($config_file))
 }
 
 /* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'fade' => 0,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','footer' => true,'credits' => true,'debug' => false);
+$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'fade' => 0,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','footer' => true,'credits' => true,'debug' => false);
 
 /* Authentication function. */
 function authenticate($users, $realm)
@@ -359,8 +360,11 @@ class Indexer
           'ico' => 'image',
           'svg' => 'image',
           'bmp' => 'image',
+          'webp' => 'image',
           'webm' => 'video',
-          'mp4' => 'video'
+          'mp4' => 'video',
+          'ogg' => 'video',
+          'ogv' => 'video'
         );
     }
 
@@ -1085,7 +1089,8 @@ if($footer)
     'fade' => $config['gallery']['fade'],
     'scroll_interval' => $config['gallery']['scroll_interval'],
     'list_alignment' => $config['gallery']['list_alignment'],
-    'fit_content' => $config['gallery']['fit_content']
+    'fit_content' => $config['gallery']['fit_content'],
+    'blur' => $config['gallery']['blur']
   ),
   'extensions' => array(
     'image' => $config['extensions']['image'],
@@ -1107,9 +1112,9 @@ if($footer)
 )));?>
 </script>
 
-<script type="text/javascript" src="/indexer/js/vendors.js?v=<?=$bust;?>"></script>
-<script type="text/javascript" src="/indexer/js/gallery.js?v=<?=$bust;?>"></script>
-<script type="text/javascript" src="/indexer/js/main.js?v=<?=$bust;?>"></script>
+<script type="text/javascript" src="/indexer/js/vendors.js?bust=<?=$bust;?>"></script>
+<script type="text/javascript" src="/indexer/js/gallery.js?bust=<?=$bust;?>"></script>
+<script type="text/javascript" src="/indexer/js/main.js?bust=<?=$bust;?>"></script>
 
 </body>
 </html>

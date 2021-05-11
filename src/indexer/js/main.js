@@ -94,7 +94,7 @@
 			/* https://stackoverflow.com/a/30810322 */
 
 			var area = document.createElement('textarea');
-			
+
 			area.value = text; area.style.position = 'fixed';
 
 			document.body.appendChild(area);
@@ -1467,6 +1467,7 @@
 
 				options.console = config.debug;
 				options.fade = config.gallery.fade;
+				options.blur = config.gallery.blur;
 
 				options.mobile = config.mobile;
 
