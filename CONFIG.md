@@ -89,6 +89,8 @@ The gallery plugin will display a gallery of the images and videos inside the cu
 | `scroll_interval` | Integer | `50` | Adds a forced break between scroll events in the gallery (`ms`).
 | `list_alignment` | Integer | `0` | Gallery list alignment where `0` is `right` and `1` is `left`.
 | `fit_content` | Boolean | `true` | Whether images and videos should be forced to fill the available screen space.
+| `image_sharpen` | Boolean | `false` | Attempts to disable browser blurriness on images.
+| `blur` | Boolean | `true` | Enables gallery background blur (can affect performance negatively on larger directories).
 
 ## Preview
 Key: **`preview`**
