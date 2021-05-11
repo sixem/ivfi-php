@@ -15,7 +15,7 @@
  */
 
 /* Used to bust the cache and to display footer version number. */
-$version = 'dev_3-1.1.8';
+$version = '1.1.8';
 
 $config = array(
     /* Authentication options. */
@@ -1007,8 +1007,8 @@ $bust = md5($version);
     <title><?=sprintf($config['format']['title'], $indexer->getCurrentDirectory());?></title>
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
-    <link rel="stylesheet" type="text/css" href="/indexer/css/style.css?v=<?=$version;?>">
-    <?=($current_theme && strtolower($current_theme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $current_theme . '.css?v=' . $version . '">' . PHP_EOL : ''?>
+    <link rel="stylesheet" type="text/css" href="/indexer/css/style.css?bust=<?=$bust;?>">
+    <?=($current_theme && strtolower($current_theme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $current_theme . '.css?bust=' . $bust . '">' . PHP_EOL : ''?>
 
   </head>
 
