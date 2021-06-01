@@ -4,8 +4,8 @@
  * <eyy-indexer> [https://github.com/sixem/eyy-indexer]
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
- * @author   emy <admin@eyy.co>
- * @version  1.1.8
+ * @author   emy (sixem) <emy@five.sh>
+ * @version  1.1.9
  */
 
 /**
@@ -15,7 +15,7 @@
  */
 
 /* Used to bust the cache and to display footer version number. */
-$version = '1.1.8';
+$version = '1.1.9';
 
 $config = array(
     /* Authentication options. */
@@ -97,13 +97,15 @@ $config = array(
     /* Set to 'strict' or 'weak'.
      * 'strict' uses realpath() to avoid backwards directory traversal whereas 'weak' uses a similar string-based approach. */
     'path_checking' => 'strict',
+    /* Enabled the performance mode. */
+    'performance' => false,
     /* Whether extra information in the footer should be generated (page load time, path etc.). */
     'footer' => true,
     /* Displays a simple link to the git repository in the footer along with the current version.
      * I would really appreciate it if you keep this enabled. */
     'credits' => true,
     /* Enables console output in JS and PHP debugging. */
-    'debug' => false
+    'debug' => true
 );
 
 /* Look for a config file in the current directory. */
@@ -120,7 +122,7 @@ if(file_exists($config_file))
 }
 
 /* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'fade' => 0,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','footer' => true,'credits' => true,'debug' => false);
+$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'fade' => 0,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => true,'footer' => true,'credits' => true,'debug' => false);
 
 /* Authentication function. */
 function authenticate($users, $realm)
@@ -414,7 +416,7 @@ class Indexer
     $is_base = ($directory === '/');
 
     $op = sprintf(
-      '<tr class="parent"><td><a href="%s">[Parent Directory]</a></td><td>-</td><td>-</td><td>-</td></tr>',
+      '<tr class="parent"><td><a href="%s">[Parent Directory]</a></td><td><span>-</span></td><td><span>-</span></td><td><span>-</span></td></tr>',
       dirname($directory)
     );
 
@@ -560,7 +562,7 @@ class Indexer
         $this->directory_sizes['enabled'] ? self::readableFilesize($dir['size']) : '-'
       );
 
-      $op .= '<td>-</td></tr>';
+      $op .= '<td><span>-</span></td></tr>';
     }
 
     /* Iterate over the files, get and store data. */
@@ -684,19 +686,25 @@ class Indexer
   {
     $paths = explode('/', ltrim($path, '/'));
 
-    $op = ('<a href="/">/</a>');
+    $output = ('<a href="/">/</a>');
 
     foreach($paths as $i => $p)
     {
       $i++;
 
-      $op .= sprintf(
-        '<a href="/%s">%s</a>',
-        implode('/', array_slice($paths, 0, $i)), (($i !== 1 ? '/' : '') . $p)
-      );
+      $text = (($i !== 1 ? '/' : '') . $p);
+
+      if($text === '/')
+      {
+        continue;
+      }
+
+      $href = implode('/', array_slice($paths, 0, $i));
+
+      $output .= sprintf('<a href="/%s">%s</a>', $href, $text);
     }
 
-    return $op;
+    return $output;
   }
 
   /* Formats a unix timestamp. */
@@ -943,6 +951,21 @@ $contents = $indexer->buildTable(
 
 $data = $indexer->getLastData();
 
+$itemsTotal = (count($data['files']) + count($data['directories']));
+
+/* Check if performance mode depends on item count. */
+if(is_int($config['performance']))
+{
+  $itemsTotal = (count($data['files']) + count($data['directories']));
+
+  if($itemsTotal >= $config['performance'])
+  {
+    $config['performance'] = true;
+  } else {
+    $config['performance'] = false;
+  }
+}
+
 /* Set some data like file count etc. */
 $counts = array(
     'files' => count($data['files']),
@@ -996,7 +1019,7 @@ if(is_array($client) && isset($client['style']['compact']))
 
 $footer = $config['footer'] === true || $config['credits'] !== false;
 
-$bust = md5($version);
+$bust = md5($config['debug'] ? time() : $version);
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -1010,9 +1033,11 @@ $bust = md5($version);
     <link rel="stylesheet" type="text/css" href="/indexer/css/style.css?bust=<?=$bust;?>">
     <?=($current_theme && strtolower($current_theme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $current_theme . '.css?bust=' . $bust . '">' . PHP_EOL : ''?>
 
+    <script defer type="text/javascript" src="/indexer/js/main.js?bust=<?=$bust;?>"></script>
+
   </head>
 
-  <body class="directory<?=$compact ? ' compact' : ''?><?=!$footer ? ' pb' : ''?>">
+  <body class="directory<?=$compact ? ' compact' : ''?><?=!$footer ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
 
     <div class="top-bar">
         <div class="extend ns">&#x25BE;</div>
@@ -1025,18 +1050,25 @@ $bust = md5($version);
 
     <div class="path">Index of <?=$indexer->makePathClickable($indexer->getCurrentDirectory());?></div>
 
- <table>
-  <thead>
-    <tr>
-      <th><span sortable="true" title="Sort by filename">Filename</span><span class="sort-indicator"></span></th>
-      <th><span sortable="true" title="Sort by modification date">Modified</span><span class="sort-indicator"></span></th>
-      <th><span sortable="true" title="Sort by filesize">Size</span><span class="sort-indicator"></span></th>
-      <th><span sortable="true" title="Sort by filetype">Options</span><span class="sort-indicator"></span></th>
-    </tr>
-  </thead>
+    <div class="table-container">
 
-  <?=$contents;?>
-</table>
+      <table>
+      <thead>
+        <tr>
+          <th><span sortable="true" title="Sort by filename">Filename</span><span class="sort-indicator"></span></th>
+          <th><span sortable="true" title="Sort by modification date">Modified</span><span class="sort-indicator"></span></th>
+          <th><span sortable="true" title="Sort by filesize">Size</span><span class="sort-indicator"></span></th>
+          <th><span sortable="true" title="Sort by filetype">Options</span><span class="sort-indicator"></span></th>
+        </tr>
+      </thead>
+
+      <script type="text/javascript">function getScrollbarWidth(){const e=document.createElement("div");e.style.visibility="hidden",e.style.overflow="scroll",e.style.msOverflowStyle="scrollbar",document.body.appendChild(e);const t=document.createElement("div");e.appendChild(t);const l=e.offsetWidth-t.offsetWidth;return e.parentNode.removeChild(e),l};document.documentElement.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');document.documentElement.style.setProperty('--table-width', document.querySelector('body > div.table-container').offsetWidth + 'px');</script>
+
+      <?=$contents;?>
+
+      </table>
+
+    </div>
 
 <?php
 if($footer)
@@ -1059,14 +1091,8 @@ if($footer)
 }
 ?>
 
-<div class="filter-container">
-    <div>
-        <input type="text" placeholder="Search .." value="">
-        <div class="status" data-view="desktop"></div>
-    </div>
-    <div class="close">
-        <span>[Close]</span>
-    </div>
+<div class="filter-container" style="display: none;">
+    <input type="text" placeholder="Search .." value="">
 </div>
 
 <!-- [https://github.com/sixem/eyy-indexer] --> 
@@ -1074,24 +1100,24 @@ if($footer)
 <script id="__INDEXER_DATA__" type="application/json"><?=(json_encode(array(
   'preview' => array(
     'enabled' => $config['preview']['enabled'],
-    'hover_delay' => $config['preview']['hover_delay'],
-    'cursor_indicator' => $config['preview']['cursor_indicator'],
+    'hoverDelay' => $config['preview']['hover_delay'],
+    'cursorIndicator' => $config['preview']['cursor_indicator'],
   ),
   'sorting' => array(
     'enabled' => $sorting['enabled'],
     'types' => $sorting['types'],
-    'sort_by' => strtolower($sorting['sort_by']),
+    'sortBy' => strtolower($sorting['sort_by']),
     'order' => $sorting['order'] === SORT_ASC ? 'asc' : 'desc',
-    'directory_sizes' => $config['directory_sizes']['enabled']
+    'directorySizes' => $config['directory_sizes']['enabled']
   ),
   'gallery' => array(
     'enabled' => $config['gallery']['enabled'],
-    'reverse_options' => $config['gallery']['reverse_options'],
+    'reverseOptions' => $config['gallery']['reverse_options'],
     'fade' => $config['gallery']['fade'],
-    'scroll_interval' => $config['gallery']['scroll_interval'],
-    'list_alignment' => $config['gallery']['list_alignment'],
-    'fit_content' => $config['gallery']['fit_content'],
-    'image_sharpen' => $config['gallery']['image_sharpen'],
+    'scrollInterval' => $config['gallery']['scroll_interval'],
+    'listAlignment' => $config['gallery']['list_alignment'],
+    'fitContent' => $config['gallery']['fit_content'],
+    'imageSharpen' => $config['gallery']['image_sharpen'],
     'blur' => $config['gallery']['blur']
   ),
   'extensions' => array(
@@ -1107,16 +1133,13 @@ if($footer)
     'compact' => $config['style']['compact']
   ),
   'format' => array_intersect_key($config['format'], array_flip(array('sizes', 'date'))),
-  'encode_all' => $config['encode_all'],
+  'encodeAll' => $config['encode_all'],
+  'performance' => $config['performance'],
   'timestamp' => $indexer->timestamp,
   'debug' => $config['debug'],
   'mobile' => false
 )));?>
 </script>
-
-<script type="text/javascript" src="/indexer/js/vendors.js?bust=<?=$bust;?>"></script>
-<script type="text/javascript" src="/indexer/js/gallery.js?bust=<?=$bust;?>"></script>
-<script type="text/javascript" src="/indexer/js/main.js?bust=<?=$bust;?>"></script>
 
 </body>
 </html>
