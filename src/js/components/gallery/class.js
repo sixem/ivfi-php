@@ -884,8 +884,11 @@ export class galleryClass
 		this.pipe('showItem', type, element, src, init, index, data);
 
 		let wrapper = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper');
+
 		let video = null;
+
 		let source = null;
+
 		let hasEvented = false;
 
 		let applyChange = (onChange) =>
@@ -924,7 +927,7 @@ export class galleryClass
 			{
 				let duration = Math.round(this.options.fade / 2);
 
-				this.fadeOut(wrapper, duration, '', () =>
+				this.fadeOut(wrapper, duration, new String(), () =>
 				{
 					if(onChange)
 					{
@@ -933,7 +936,7 @@ export class galleryClass
 
 					hideOther();
 
-					this.fadeIn(wrapper, duration, '', () =>
+					this.fadeIn(wrapper, duration, new String(), () =>
 					{
 						this.busy(false);
 					});
@@ -965,25 +968,28 @@ export class galleryClass
 						element.setAttribute('sharpened', '');
 					}
 
+					element.onload = () =>
+					{
+						if(this.options.fitContent)
+						{
+							let height = `calc(calc(100vw - var(--width-list)) / ${(data.img.width / data.img.height).toFixed(4)})`;
+							
+							this.update.listWidth(wrapper);
+
+							dom.css.set(element, {
+								'width' : 'auto',
+								'height' : height
+							});
+
+							dom.css.set(element.closest('.cover'), {
+								'height' : height
+							});
+						}
+					}
+
 					element.setAttribute('src', src);
 					element.style.display = 'inline-block';
 					element.closest('.cover').style.display = '';
-
-					if(this.options.fitContent)
-					{
-						let height = `calc(calc(100vw - var(--width-list)) / ${(data.img.width / data.img.height).toFixed(4)})`;
-						
-						this.update.listWidth(wrapper);
-
-						dom.css.set(element, {
-							'width' : 'auto',
-							'height' : height
-						});
-
-						dom.css.set(element.closest('.cover'), {
-							'height' : height
-						});
-					}
 
 					if(video)
 					{
