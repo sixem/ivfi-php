@@ -66,6 +66,8 @@ Place the file from the [/standalone/](standalone/) directory into your root web
 
 ## 2. Server Configuration
 
+The Indexer does require you to use it as an `index` file, that way it can be automatically applied to directories that do not have a defualt `index` file present, this makes it behave just like any other default and built-in directory indexes. This can all be done easily by following the steps below, **depending** on what web server you are using.
+
 ### Nginx
 To use this script for all directories without a default index you need append `/indexer.php` to the end of your `index` line in your server configuration. This will tell Nginx to use the Indexer if none of the default indexes exist.
 
@@ -86,8 +88,9 @@ server {
 
 ```
 ### Apache
-In order to automatically use this script you need to edit your Apache configuration. To do that you can place this line in your Apache configuration:
+In order to automatically use this script as a default index, you need to edit your Apache configuration. To do this, you must place `/indexer.php` at the end of your `DirectoryIndex` directive.
 
+Example usage:
 ```
 DirectoryIndex index.php index.html index.htm /indexer.php
 ```
@@ -99,29 +102,27 @@ The Indexer can be customized by editing the config available inside of the [ind
 
 You can read the [CONFIG.md](CONFIG.md) to see a more detailed overview of the available options.
 
-# Source
-The files inside [/src/](src/) are **NOT** needed in order to run this script.
+# Building
+By using `npm`, you can build this script from source.
 
-This directory contains the uncompressed and untranspiled source files of the script (.css, .js and so on). You can use these files if you want to customize or edit the script in any way.
+**Clone and install dependencies**
+```
+git clone https://github.com/sixem/eyy-indexer && cd eyy-indexer
+npm install
+```
+
+**Build (Production)**
+```
+npm run build
+```
+
+**Build (Development)**
+```
+npm run build-dev
+```
 
 # Contributing
 You can contribute by submitting a pull request to the current [dev](https://github.com/sixem/eyy-indexer/branches) branch.
-
-# Plugins / Libraries used
-### [js-cookie](https://github.com/js-cookie/js-cookie)
-A simple, lightweight JavaScript API for handling cookies.
-
-### [modernizr.mq](https://github.com/Modernizr/Modernizr)
-Modernizr is a JavaScript library that detects HTML5 and CSS3 features in the user’s browser.
-
-### [hover-preview-js](https://github.com/sixem/hover-preview-js)
-A simple plugin that adds hoverable image and video previews to any element.
-
-### [jquery.scrollTo](https://github.com/flesler/jquery.scrollTo)
-Lightweight, cross-browser and highly customizable animated scrolling with jQuery.
-
-### [jquery.detectSwipe](http://github.com/marcandre/detect_swipe)
-Gives easy access to left/right/up/down swipe events for iOS and other touch devices.
 
 ## Disclaimer
 ***As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.***
