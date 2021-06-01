@@ -39,7 +39,7 @@ The search filter can be used to search for filenames or filetypes in the curren
 ### **Single file**
 This script can be set up as a single file script (standalone setup). Only one file needed, nothing more.
 ### **Customizable**
-This script can be customized in a number of ways. (See: [Configuration](CONFIG.md))
+This script can be customized in a number of ways. (See: [Configuration](docs/CONFIG.md))
 ### **And much more ..**
 + All dates will match the timezone of the client.
 + Persistent client-set sorting settings.
@@ -100,23 +100,29 @@ This line can be placed in either your server's `.conf` file or your `.htaccess`
 # Configuration
 The Indexer can be customized by editing the config available inside of the [indexer.php](public/indexer.php).
 
-You can read the [CONFIG.md](CONFIG.md) to see a more detailed overview of the available options.
+You can read the [CONFIG.md](docs/CONFIG.md) to see a more detailed overview of the available options.
 
 # Building
-By using `npm`, you can build this script from source.
+You can build this script from source using `npm`.
 
-**Clone and install dependencies**
+
+**Clone repository and install dependencies**
 ```
-git clone https://github.com/sixem/eyy-indexer && cd eyy-indexer
+git clone https://github.com/sixem/eyy-indexer
+cd eyy-indexer
 npm install
 ```
 
-**Build (Production)**
+**Build (production)**
+
+*Generates minified files*
 ```
 npm run build
 ```
 
-**Build (Development)**
+**Build (development)**
+
+*Generates a source mapped output*
 ```
 npm run build-dev
 ```
