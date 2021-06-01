@@ -1,0 +1,171 @@
+/* import config */
+import { config, user } from '../../config/config';
+import { data } from '../../config/data';
+
+/* import classes */
+import { galleryClass } from './class';
+
+/* require helpers */
+import { applyNested, checkNested } from '../../helpers/helpers';
+
+const pipe = data.instances.pipe;
+
+/* class component */
+export class componentGallery
+{
+	constructor(options)
+	{
+		this.main = options.main;
+
+		return this;
+	}
+
+	setOptions = (source, values) =>
+	{
+		values.forEach((data) =>
+		{
+			let key = data.shift();
+
+			source[key] = config.get(...data);
+		});
+
+		return source;
+	}
+
+	load = (index = 0) =>
+	{
+		if(!config.get('gallery.enabled'))
+		{
+			return false;
+		} else {
+			pipe('gallery.load =>', index);
+		}
+
+		let video = {
+			continue : new Object(),
+			preview : document.body.querySelector(':scope > div.preview-container > video'),
+		};
+
+		video.source = video.preview ? video.preview.querySelector('source') : null;
+
+		if(video.source)
+		{
+			video.continue.src = video.source.getAttribute('src');
+			video.continue.time = video.preview.currentTime;
+		} else {
+			video.continue = null;
+		}
+
+		/* if a gallery instance is already active, show it */
+		if(data.instances.gallery)
+		{
+			(data.instances.gallery).options.continue.video = video.continue;
+
+			data.sets.preview.video = null;
+
+			let items = data.sets.refresh ? this.main.getTableItems() : null;
+
+			data.sets.refresh = false;
+
+			if(items !== null && items.length === 0)
+			{
+				return false;
+
+			} else {
+				this.main.unbind();
+
+				data.instances.gallery.show(
+					true, index === null ? data.instances.gallery.data.selected.index : index, items
+				);
+			}
+
+			return;
+		}
+
+		/* set gallery options and start a new instance */
+		let client = user.get();
+
+		let options = new Object();
+
+		/* check if list state is saved */
+		let hasStoredListState = JSON.parse(client.gallery.hasOwnProperty('list_state'));
+
+		/* set list state */
+		let listState = hasStoredListState ? client.gallery.listState : 1;
+
+		/* set start index */
+		options.start = index === null ? 0 : index;
+
+		/* set options */
+		options = this.setOptions(options, [
+			['console', 'debug'],
+			['mobile', 'mobile'],
+			['encodeAll', 'encodeAll'],
+			['performance', 'performance'],
+			['fade', 'gallery.fade'],
+			['blur', 'gallery.blur'],
+			['sharpen', 'gallery.imageSharpen'],
+			['scrollInterval', 'gallery.scrollInterval']
+		]);
+
+		/* set defaults */
+		let defaults = {
+			reverseOptions : ['gallery', 'reverseOptions'],
+			fitContent : ['gallery', 'fitContent'],
+			autoplay : ['gallery', 'autoplay'],
+			volume : ['gallery', 'volume']
+		};
+
+		Object.keys(defaults).forEach((key) =>
+		{
+			applyNested(
+				options, key, client, (config.data).gallery[defaults[key][1]], defaults[key][0], defaults[key][1]
+			);
+		});
+
+		options.list = new Object();
+
+		options.list.show = (listState == null ? true : (listState ? true : false));
+
+		options.list.reverse = checkNested(client, 'gallery', 'listAlignment') ?
+			(client.gallery.listAlignment === 0 ? false : true) :
+			false;
+
+		options.continue = new Object();
+		options.continue.video = video.continue;
+
+		/* get table items marked as media */
+		let items = this.main.getTableItems();
+
+		/* unbind main listeners */
+		this.main.unbind();
+
+		/* initiate new gallery class */
+		let instance = new galleryClass(items, Object.assign(options, {
+			pipe : pipe
+		}));
+
+		/* store instance to variable */
+		data.instances.gallery = instance;
+
+		if(instance)
+		{
+			/* listen to gallery `volumeChange` event */
+			instance.listen('volumeChange', (volume) =>
+			{
+				client = user.get();
+
+				client.gallery.volume = volume;
+
+				user.set(client);
+
+			});
+
+			/* listen to gallery `unbound` event */
+			instance.listen('unbound', () =>
+			{
+				this.main.bind();
+			});
+		}
+	}
+}

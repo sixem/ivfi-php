@@ -1,0 +1,1770 @@
+/* import vendors */
+import cookies from 'js-cookie';
+import swipe from 'vanilla-swipe';
+
+/* import config */
+import { data } from '../../config/data';
+import { code } from '../../config/constants';
+
+/* import models */
+import { eventHandler } from '../../modules/event-handler';
+
+/* import classes */
+import { optimizeClass } from '../../classes/optimize';
+import { emitterClass } from '../../classes/emitter';
+
+/* import helpers */
+import { dom } from '../../helpers/helpers';
+
+const pipe = data.instances.pipe;
+
+export class galleryClass
+{
+	constructor(items, options)
+	{
+		options = options || new Object();
+
+		/* get default values */
+		let defaults = this.setDefaults();
+
+		/* override any default values passed as an option */
+		Object.keys(defaults).forEach((key) =>
+		{
+			if(!options.hasOwnProperty(key))
+			{
+				options[key] = defaults[key];
+			}
+		});
+
+		/* set options */
+		this.options = options;
+
+		/* logging */
+		this.pipe = this.options.pipe;
+
+		/* new event emitter */
+		this.emitter = new emitterClass();
+
+		/* initiate */
+		this.init(items);
+
+		return this;
+	}
+
+	listen = (event, callback) =>
+	{
+		this.emitter.listen(event, callback);
+	}
+
+	setDefaults = () =>
+	{
+		let data = new Object();
+
+		/* valid extensions */
+		data.extensions = {
+			image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'],
+			video : ['mp4', 'webm', 'ogv', 'ogg']
+		};
+
+		/* item list */
+		data.list = {
+			show : true,
+			reverse : false
+		};
+
+		/* video */
+		data.video = {
+			video : null
+		};
+
+		/* performance mode */
+		data.performance = false;
+
+		/* video autoplay */
+		data.autoplay = true;
+
+		/* video volume */
+		data.volume = 0;
+
+		/* verbose */
+		data.console = true;
+
+		/* reverse image search */
+		data.reverseOptions = true;
+
+		/* blurred background */
+		data.blur = true;
+
+		/* sharpen images */
+		data.sharpen = true;
+
+		/* mobile mode */
+		data.mobile = false;
+
+		/* fit content to fill space */
+		data.fitContent = false;
+
+		/* encode all characters */
+		data.encodeAll = false;
+
+		/* forced scroll break */
+		data.scrollInterval = 35;
+
+		/* start index */
+		data.start = 0;
+
+		/* fade */
+		data.fade = 0;
+
+		/* list alignment */
+		data.listAlignment = 0;
+
+		/* set class variable */
+		this.defaults = data;
+
+		return this.defaults;
+	}
+
+	init = (items) =>
+	{
+		/* create data object */
+		this.data = new Object();
+
+		/* busy state */
+		this.data.busy = false;
+
+		/* frequently used keys */
+		this.data.keys = {
+			escape : 27,
+			pageUp : 33,
+			pageDown : 34,
+			arrowLeft : 37,
+			arrowUp : 38,
+			arrowRight : 39,
+			arrowDown : 40,
+			g : 71,
+			l : 76
+		};
+
+		/* scrollbar data */
+		this.data.scrollBar = {
+			width : this.getScrollbarWidth(),
+			widthForced : this.getDocumentHeight <= window.innerHeight
+		};
+
+		/* scrollbreak state */
+		this.data.scrollbreak = false;
+
+		this.data.keyPrevent = [
+			this.data.keys.pageUp,
+			this.data.keys.pageDown,
+			this.data.keys.arrowLeft,
+			this.data.keys.arrowUp,
+			this.data.keys.arrowRight,
+			this.data.keys.arrowDown
+		];
+
+		this.data.selected = {
+			src : null,
+			ext : null,
+			index : null,
+			type : null
+		};
+
+		this.container = document.body.querySelector(':scope > div.gallery-container');
+
+		this.items = this.options.filter ? this.filterItems(items) : items;
+
+		if(this.items.length === 0)
+		{
+			return false;
+		}
+
+		if(!this.exists())
+		{
+			this.initiate(() =>
+			{
+				this.bind();
+
+				if(this.options.blur)
+				{
+					this.apply.blur();
+				}
+			});
+		} else {
+			this.show(true);
+		}
+
+		let start = this.options.start > (this.items.length - 1) ? (this.items.length - 1) : this.options.start;
+
+		this.navigate(start);
+
+		if(this.options.performance)
+		{
+			this.useOptimzer(this.table);
+		}
+	}
+
+	loadImage = (src) =>
+	{
+		return new Promise((resolve, reject) =>
+		{
+			let img = document.createElement('img');
+
+			img.src = src;
+
+			img.addEventListener('error', (e) =>
+			{
+				reject(new Error(`failed to load image URL: ${src}`));
+			});
+
+			let timer = setInterval(() =>
+			{
+				let w = img.naturalWidth, h = img.naturalHeight;
+				
+				if(w && h)
+				{
+					clearInterval(timer);
+					resolve([src, img, [w, h]])
+				}
+			}, 30);
+		});
+	}
+
+	encodeUrl = (input) => 
+	{
+		let encoded = encodeURI(input);
+
+		if(this.options.encodeAll)
+		{
+			encoded = encoded.replace('#', '%23').replace('?', '%3F');
+		}
+
+		return encoded;
+	}
+
+	getExtension = (filename) =>
+	{
+		return filename.split('.').pop().toLowerCase();
+	}
+
+	isImage = (filename, extension = null) =>
+	{
+		return this.options.extensions.image.includes(extension ? extension : this.getExtension(filename));
+	}
+
+	isVideo = (filename, extension = null) =>
+	{
+		return this.options.extensions.video.includes(extension ? extension : this.getExtension(filename));
+	}
+
+	filterItems = (items) =>
+	{
+		return items.filter((item) =>
+		{
+			return this.isImage(item.name) || this.isVideo(item.name);
+		});
+	}
+
+	getDocumentHeight = () =>
+	{
+		let body = document.body;
+
+		let root = document.documentElement;
+
+		let rootHeight = Math.max(
+			body.scrollHeight,
+			body.offsetHeight,
+			root.clientHeight,
+			root.scrollHeight,
+			root.offsetHeight
+		);
+
+		return rootHeight;
+	}
+
+	getScrollbarWidth = (force = false) =>
+	{
+		if(!force)
+		{
+			if(this.getDocumentHeight <= window.innerHeight)
+			{
+				return 0;
+			}
+		}
+
+		let outer = document.createElement('div');
+
+		dom.css.set(outer, {
+			visibility : 'hidden',
+			overflow : 'scroll',
+			msOverflowStyle : 'scrollbar'
+		});
+
+		document.body.appendChild(outer);
+
+		let inner = document.createElement('div');
+
+		outer.appendChild(inner);
+
+		let scrollbarWidth = (outer.offsetWidth - inner.offsetWidth);
+
+		outer.parentNode.removeChild(outer);
+
+		return scrollbarWidth;
+	}
+
+	limitBody = (bool = true) =>
+	{
+		let body = document.body;
+
+		let root = document.documentElement;
+
+		let scrollpadding = this.data.scrollBar.width;
+
+		if(bool === true)
+		{
+			this.data.body = {
+				'max-height' : body.style['max-height'],
+				'overflow' : body.style.overflow
+			};
+
+			if(scrollpadding > 0)
+			{
+				dom.css.set(root, {
+					'padding-right' : scrollpadding + 'px'
+				});
+			}
+
+			dom.css.set(body, {
+				'max-height' : 'calc(100vh - var(--height-gallery-top-bar))',
+				'overflow' : 'hidden'
+			});
+		} else {
+			if(Object.prototype.hasOwnProperty.call(this.data, 'body'))
+			{
+				dom.css.set(body, {
+					'max-height' : this.data.body['max-height'],
+					'overflow' : this.data.body.overflow
+				});
+			}
+
+			dom.css.set(root, {
+				'padding-right' : 'unset'
+			});
+		}
+	}
+
+	exists = () =>
+	{
+		this.container = document.body.querySelector(':scope > div.gallery-container');
+
+		return this.container ? true : false;
+	}
+
+	show = (bool = true, index = null, items = null) =>
+	{
+		if(items)
+		{
+			this.pipe('itemsUpdate', true);
+
+			this.data.selected.index = null;
+			this.items = this.options.filter ? this.filterItems(items) : items;
+
+			this.populateTable(this.items);
+		}
+
+		if(bool === true)
+		{
+			this.bind().style.display = 'block';
+
+			if(index !== this.data.selected.index)
+			{
+				let elements = this.container.querySelectorAll(
+					':scope > div.content-container > div.media > div.wrapper img, \
+					:scope > div.content-container > div.media > div.wrapper video'
+				);
+
+				elements.forEach((element) =>
+				{
+					element.style.display = 'none';
+				});
+
+				this.navigate(index);
+
+				if(items && this.options.performance)
+				{
+					this.useOptimzer(this.table);
+				}
+			}
+
+			let scrollableList = this.container.querySelector(':scope > div.content-container > div.list');
+
+			scrollableList.scrollTo(0, (scrollableList.querySelector(`tr:nth-child(${index + 1})`)).offsetTop)
+		} else {
+			this.unbind(this.data.bound);
+
+			this.container.style.display = 'none';
+		}
+
+		if(this.options.blur)
+		{
+			this.apply.blur(bool);
+		}
+
+		this.limitBody(bool);
+
+		let video = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper video');
+		let	table = this.container.querySelector(':scope > div.content-container > div.list > table');
+
+		if(video)
+		{
+			if(bool === true && video.style.display !== 'none')
+			{
+				let currentTime = video.currentTime;
+				let sourceMatch = false;
+
+				if(this.options.continue.video && this.options.continue.video.hasOwnProperty('src'))
+				{
+					sourceMatch = video.querySelector('source').getAttribute('src') == this.options.continue.video.src;
+				}
+
+				if(this.options.continue.video && sourceMatch)
+				{
+					currentTime = this.options.continue.video.time;
+					this.options.continue.video = null;
+				}
+
+				video.currentTime = currentTime;
+				video.muted = false;
+				video[this.options.autoplay ? 'play' : 'pause']();
+
+				this.video.setVolume(video, this.video.getVolume());
+			} else if(bool === false)
+			{
+				video.pause();
+			}
+		}
+	}
+
+	/**
+	 * fade in function
+	 */
+	fadeIn = (element, duration, display, callback) =>
+	{
+		display = display === undefined ? 'block' : display;
+
+		dom.css.set(element, {
+			opacity : 0,
+			display : display
+		});
+
+		let last = +new Date();
+
+		let tick = () =>
+		{
+			element.style.opacity = +element.style.opacity + (new Date() - last) / duration;
+
+			last = +new Date();
+
+			if(+element.style.opacity < 1)
+			{
+				(window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16.66);
+			} else {
+				element.style.opacity = 1;
+
+				if(callback)
+				{
+					callback();
+				}
+			}
+  		};
+
+		tick();
+	}
+
+	/**
+	 * fade out function
+	 */
+	fadeOut = (element, duration, display, callback) =>
+	{
+		display = display === undefined ? 'block' : display;
+
+		dom.css.set(element, {
+			opacity : 1,
+			display : display
+		});
+
+		let last = +new Date();
+
+		let tick = () =>
+		{
+			element.style.opacity = +element.style.opacity - (new Date() - last) / duration;
+
+			last = +new Date();
+
+			if(+element.style.opacity > 0)
+			{
+				(window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16.66);
+			} else {
+				element.style.opacity = 0;
+
+				if(callback)
+				{
+					callback();
+				}
+			}
+  		};
+
+		tick();
+	}
+
+	busy = (bool) =>
+	{
+		if(typeof bool != 'undefined')
+		{
+			this.data.busy = bool;
+
+			let loader = this.container.querySelector(':scope > div.content-container > div.media > div.spinner');
+
+			if(bool)
+			{
+				dom.css.set(loader, {
+					opacity : 1
+				});
+			} else {
+				loader.style.opacity = 0;
+			}
+		}
+
+		return this.data.busy;
+	}
+
+	useOptimzer = (table) =>
+	{
+		/* delete any previous instances */
+		if(this.optimize)
+		{
+			delete this.optimize;
+
+			eventHandler.removeListener(this.list, 'scroll', 'galleryTableScroll');
+
+			dom.css.set(this.table, {
+				height : 'auto'
+			});
+		}
+
+		const page = {
+			update : () =>
+			{
+				page.windowHeight = window.innerHeight;
+				page.windowWidth = window.innerWidth;
+				page.scrolledY = window.scrollY;
+
+				return true;
+			}
+		};
+
+		data.layer.gallery = page;
+
+		page.scope = table;
+
+		page.update = () =>
+		{
+			page.windowHeight = window.innerHeight;
+			page.windowWidth = window.innerWidth;
+			page.scrolledY = this.list.scrollTop;
+
+			return true;
+		};
+
+		page.update();
+
+		this.page = page;
+
+		this.optimize = new optimizeClass({
+			pipe : this.pipe,
+			page : page,
+			table : table,
+			scope : [this.list, 'scrollTop']
+		});
+
+		eventHandler.addListener(this.list, 'scroll', 'galleryTableScroll', (e) =>
+		{
+			if(this.options.performance && this.optimize.enabled)
+			{
+				/* get scrolled position */
+				let scrolled = this.list.scrollTop;
+
+				/* trigger optimization refresh if 175 px has been scrolled */
+				if(Math.abs(scrolled - (this.page).scrolledY) > 175)
+				{
+					this.optimize.attemptRefresh();
+				}
+			}
+		});
+
+		return this.optimize;
+	}
+
+	populateTable = (items, table) =>
+	{
+		this.pipe('Populating gallery list ..');
+
+		table = table || this.container.querySelector('div.content-container > div.list > table');
+
+		let buffer = new Array();
+
+		for(let i = 0; i <= items.length - 1; i++)
+		{
+			buffer[i] = `<tr title="${items[i].name}"><td>${items[i].name}</td></tr>`;
+		}
+
+		table.innerHTML = (buffer.join(''));
+
+		this.list = this.container.querySelector('div.content-container > div.list');
+
+		this.table = table;
+
+		return table;
+	}
+
+	update = {
+		listWidth : (wrapper) =>
+		{
+			wrapper = wrapper || this.container.querySelector(':scope > div.content-container > div.media > div.wrapper');
+
+			let list = this.data.list ? this.data.list : (this.container.querySelector(':scope > div.content-container > div.list'));
+
+			let	width = (this.options.mobile || !list || list.style.display === 'none') ? 0 : list.offsetWidth;
+
+			wrapper.style.setProperty('--width-list', `${width}px`);
+		}
+	}
+
+	getReverseOptions = (url) =>
+	{
+		url = this.encodeUrl(document.location.origin + url);
+
+		let reverseObj = new Object();
+
+		Object.keys(data.text.reverseSearch).forEach((key) =>
+		{
+			reverseObj[key] = data.text.reverseSearch[key].replace('{URL}', url);
+		});
+
+		return reverseObj;
+	}
+
+	reverse = (cover) =>
+	{
+		if(!this.options.reverseOptions)
+		{
+			return false;
+		}
+
+		let container = this.container.querySelector(':scope > div.content-container > div.media .reverse');
+
+		if(!container)
+		{
+			let reverse = dom.new('div', {
+				class : 'reverse'
+			});
+
+			cover.prepend(reverse);
+
+			container = reverse;
+		}
+
+		let options = this.getReverseOptions(this.data.selected.src);
+
+		container.innerHTML = Object.keys(options).map((site) => `<a class="reverse-link" target="_blank" href="${options[site]}">${site}</a>`).join('');
+
+		this.container.querySelector(':scope > div.content-container > div.media > div.wrapper > div.cover').append(container);
+	}
+
+	shortenString = (input, cutoff) =>
+	{
+		cutoff = cutoff || 28;
+
+		if(input.length > cutoff)
+		{
+			return [
+				input.substr(0, Math.floor((cutoff / 2) - 2)),
+				input.substr(input.length - (Math.floor((cutoff / 2) - 2)), input.length)
+			].join(' .. ');
+		} else {
+			return input;
+		}
+	}
+
+	apply = {
+		cache : {
+			info : null
+		},
+		itemInfo : (update, item = null, index = null, max = null) =>
+		{
+			if(update)
+			{
+				if(Array.isArray(this.apply.cache.info))
+				{
+					[item, index, max] = this.apply.cache.info;
+				} else if(item === null || index === null || max === null)
+				{
+					return false;
+				}
+			} else {
+				this.apply.cache.info = [item, index, max];
+
+				return false;
+			}
+
+			let download = this.container.querySelector('.bar > .right > a.download');
+			let left = this.container.querySelector(':scope > div.bar > div.left');
+			let name = this.options.mobile ? this.shortenString(item.name, 30) : item.name;
+			let url = this.encodeUrl(item.url);
+
+			dom.attributes.set(download, {
+				'filename' : item.name,
+				'href' : url,
+				'title' : `Download: ${item.name}`
+			});
+
+			left.innerHTML = `<span>${index + 1} of ${max}</span>`;
+			left.innerHTML += `<a target="_blank" href="${url}">${name}</a>`;
+
+			if(item.hasOwnProperty('size') && !this.options.mobile)
+			{
+				left.innerHTML += `<span>${item.size}</span>`;
+			}
+
+			return true;
+		},
+		blur : (bool = true) =>
+		{
+			if(bool === true)
+			{
+				this.data.blurred = new Array();
+
+				let ignore = ['.gallery-container', 'script', 'noscript', 'style'];
+
+				document.body.querySelectorAll(`:scope > *${ignore.map((e) => `:not(${e})`).join('')}`).forEach((element) =>
+				{
+					element.classList.add('blur', 'ns');
+
+					this.data.blurred.push(element);
+				});
+			} else {
+				if(Object.prototype.hasOwnProperty.call(this.data, 'blurred'))
+				{
+					this.data.blurred.forEach((element) =>
+					{
+						element.classList.remove('blur', 'ns');
+					});
+				}
+			}
+
+			return this;
+		}
+	}
+
+	/* checks if a list item is scrolled into view */
+	isScrolledIntoView = (container, element) =>
+	{
+		let parent = {
+			scrolled : container.scrollTop,
+			height : container.offsetHeight
+		};
+
+		let child = {
+			offset : element.offsetTop,
+			height : element.children[0].offsetHeight
+		};
+
+		pipe('-> isScrolledIntoView ->', parent, child);
+
+		return child.offset >= parent.scrolled &&
+			(child.offset + child.height) <= (parent.scrolled + parent.height);
+	}
+
+	calculateIndex = (current, change, max) =>
+	{
+		let adjusted = (current + change);
+
+		if(adjusted > max)
+		{
+			adjusted = (adjusted - max) - 1;
+		}
+
+		if(adjusted < 0)
+		{
+			adjusted = max - (Math.abs(adjusted) - 1);
+		}
+
+		if(adjusted < 0 || adjusted > max)
+		{
+			return this.calculateIndex(current, (max - adjusted), max);
+		}
+
+		return adjusted;
+	}
+
+	video = {
+		create : (extension) =>
+		{
+			let video = dom.new('video', {
+				controls : '',
+				preload : 'none',
+				loop : ''
+			});
+
+			let source = dom.new('source', {
+				type : `video/${extension === 'ogv' ? 'ogg' : extension}`,
+				src : ''
+			});
+
+			video.append(source);
+
+			this.video.setVolume(video, this.video.getVolume());
+
+			return [video, source];
+		},
+		getVolume : () =>
+		{
+			let volume = parseFloat(this.options.volume);
+
+			volume = (isNaN(volume) || volume < 0 || volume > 1) ? 0 : volume;
+
+			return volume;
+		},
+		setVolume : (video, i) =>
+		{
+			if(i > 0)
+			{
+				video.volume = i >= 1 ? 1.0 : i;
+			} else {
+				video.muted = true;
+			}
+
+			return i;
+		},
+		seek : (i) =>
+		{
+			let video = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper video');
+
+			if(video)
+			{
+				let current = Math.round(video.currentTime), duration = Math.round(video.duration);
+
+				if(i > 0)
+				{
+					if((current + i) > duration)
+					{
+						return true;
+					} else {
+						video.currentTime = current + i;
+					}
+				} else if(i < 0)
+				{
+					if((current + i) < 0)
+					{
+						return true;
+					} else {
+						video.currentTime = current + i;
+					}
+				}
+
+				return false;
+			}
+		}
+	}
+
+	showItem = (type, element, src, init, index, data = null) =>
+	{
+		this.pipe('showItem', type, element, src, init, index, data);
+
+		let wrapper = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper');
+		let video = null;
+		let source = null;
+		let hasEvented = false;
+
+		let applyChange = (onChange) =>
+		{
+			let elements = this.container.querySelectorAll(':scope > \
+				div.content-container > div.media > div.wrapper > div:not(.cover)');
+
+			elements.forEach((element) =>
+			{
+				if(element)
+				{
+					element.remove();
+				}
+			});
+
+			this.apply.itemInfo(true);
+
+			this.data.selected.type = type;
+
+			let hideOther = () =>
+			{
+				let opposite = wrapper.querySelector(type === 0 ? 'video' : 'img');
+
+				if(opposite && type === 1)
+				{
+					opposite.closest('.cover').style.display = 'none';
+				}
+
+				if(opposite)
+				{
+					opposite.style.display = 'none';
+				}
+			};
+
+			if(this.options.fade > 0)
+			{
+				let duration = Math.round(this.options.fade / 2);
+
+				this.fadeOut(wrapper, duration, '', () =>
+				{
+					if(onChange)
+					{
+						onChange();
+					}
+
+					hideOther();
+
+					this.fadeIn(wrapper, duration, '', () =>
+					{
+						this.busy(false);
+					});
+				});
+			} else {
+				wrapper.style.display = '';
+
+				if(onChange)
+				{
+					onChange();
+				}
+
+				hideOther();
+
+				this.busy(false);
+			}
+		};
+
+		let display = () =>
+		{
+			if(type === 0)
+			{
+				video = wrapper.querySelector('video');
+
+				applyChange(() =>
+				{
+					if(this.options.sharpen)
+					{
+						element.setAttribute('sharpened', '');
+					}
+
+					element.setAttribute('src', src);
+					element.style.display = 'inline-block';
+					element.closest('.cover').style.display = '';
+
+					if(this.options.fitContent)
+					{
+						let height = `calc(calc(100vw - var(--width-list)) / ${(data.img.width / data.img.height).toFixed(4)})`;
+						
+						this.update.listWidth(wrapper);
+
+						dom.css.set(element, {
+							'width' : 'auto',
+							'height' : height
+						});
+
+						dom.css.set(element.closest('.cover'), {
+							'height' : height
+						});
+					}
+
+					if(video)
+					{
+						let videoSource = video.querySelector('source');
+
+						video.pause();
+
+						videoSource.setAttribute('src', '');
+
+						eventHandler.removeListener(video, 'error', code.ERROR_VIDEO_ID);
+						eventHandler.removeListener(videoSource, 'error', code.ERROR_SOURCE_ID);
+					}
+				});
+			} else if(type === 1)
+			{
+				if(init === false)
+				{
+					[video, source] = this.video.create(this.data.selected.ext);
+
+					wrapper.append(video);
+				} else {
+					source = element.querySelector('source');
+					video = element;
+				}
+
+				source.setAttribute('src', src);
+
+				let error = (e) =>
+				{
+					console.error('Failed to load video source.', e);
+
+					this.busy(false);
+				}
+
+				eventHandler.addListener(video, 'error', code.ERROR_VIDEO_ID, (e) =>
+				{
+					error(e);
+				});
+
+				eventHandler.addListener(source, 'error', code.ERROR_SOURCE_ID, (e) =>
+				{
+					error(e);
+				});
+
+				eventHandler.addListener(video, ['volumechange'], null, (e) =>
+				{
+					this.emitter.dispatch('volumeChange', this.options.volume);
+					this.options.volume = video.muted ? 0 : parseFloat(parseFloat(video.volume).toFixed(2));
+				});
+
+				eventHandler.addListener(video, ['canplay', 'canplaythrough'], null, (e) =>
+				{
+					if(hasEvented)
+					{
+						return false;
+					}
+
+					applyChange(() =>
+					{
+						let height = video.videoHeight;
+						let width = video.videoWidth;
+
+						if(this.options.fitContent)
+						{
+							this.update.listWidth(wrapper);
+
+							dom.css.set(video, {
+								width : 'auto',
+								height : `calc(calc(100vw - var(--width-list)) / ${(width / height).toFixed(4)})`
+							});
+						}
+
+						if(this.options.volume)
+						{
+							video.volume = this.options.volume;
+						}
+
+						if(this.options.autoplay)
+						{
+							video.play();
+						}
+
+						video.style.display = 'inline-block';
+
+						/* if the gallery was hidden while loading, pause video and hide loader. */
+						if(this.container.display === 'none')
+						{
+							this.container.querySelector('div.content-container .media div.spinner').style.opacity = 0;
+							video.pause();
+						}
+
+						if(init === false)
+						{
+							element.remove();
+						}
+
+						hasEvented = true;
+					});
+				});
+
+				video.load();
+
+				if(this.options.continue.video && src == this.options.continue.video.src)
+				{
+					video.currentTime = this.options.continue.video.time;
+					this.options.continue.video = null;
+				}
+			}
+
+			this.data.selected.index = index;
+		};
+
+		display();
+	}
+
+	navigate = (index, step = null) =>
+	{
+		this.pipe('busyState', this.busy());
+
+		if(this.busy())
+		{
+			return false;
+		}
+
+		let max = this.items.length - 1;
+
+		if(index === null)
+		{
+			index = this.data.selected.index;
+		}
+
+		if(step !== null)
+		{
+			index = this.calculateIndex(index, step, max);
+		}
+
+		if(this.data.selected.index === index || this.busy() === true)
+		{
+			return false;
+		}
+
+		let init;
+		let item;
+
+		let image = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper img');
+		let video = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper video');
+		let list = this.container.querySelector(':scope > div.content-container > div.list');
+		let table = list.querySelector('table');
+		let element = table.querySelector(`tr:nth-child(${index + 1})`);
+
+		item = this.items[index];
+
+		let encoded = this.encodeUrl(item.url);
+
+		this.data.selected.src = encoded;
+		this.data.selected.ext = this.getExtension(item.name);
+
+		if(table.querySelector('tr.selected'))
+		{
+			table.querySelector('tr.selected').classList.remove('selected');
+		}
+
+		element.classList.add('selected');
+
+		table.querySelector('tr.selected').classList.add('selected');
+
+		this.apply.itemInfo((!image && !video) ? true : false, item, index, max + 1);
+
+		if(!this.isScrolledIntoView(list, element))
+		{
+			list.scrollTo(0, element.offsetTop);
+		}
+
+		if(this.isImage(null, this.data.selected.ext))
+		{
+			this.busy(true);
+
+			init = image ? false : true;
+
+			if(video)
+			{
+				video.pause();
+			}
+
+			if(init === true)
+			{
+				let cover = dom.new('div', {
+					class : 'cover',
+					style : 'display: none'
+				});
+
+				let wrapper = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper');
+
+				wrapper.prepend(cover);
+
+				image = dom.new('img');
+
+				cover.append(image);
+
+				cover.addEventListener('mouseenter', (e) =>
+				{
+					if(this.options.reverseOptions)
+					{
+						this.reverse(e.currentTarget);
+					}
+				});
+			}
+
+			this.loadImage(encoded).then((data) =>
+			{
+				let [src, img, dimensions] = data;
+
+				let [w, h] = dimensions;
+
+				if(this.data.selected.src === src)
+				{
+					this.showItem(0, image, src, init, index, {
+						img : {
+							width : w, height : h
+						}
+					});
+				}
+			}).catch((error) =>
+			{
+				console.error(error);
+
+				this.busy(false);
+				this.data.selected.index = index;
+
+				this.container.querySelectorAll(':scope > div.content-container > div.media > div.wrapper img, \
+					:scope > div.content-container > div.media > div.wrapper video').forEach((element) =>
+				{
+					element.style.display = 'none';
+				});
+
+				if(this.container.querySelector(':scope > div.content-container > div.media > div.wrapper > div:not(.cover)'))
+				{
+					this.container.querySelector(':scope > div.content-container > div.media > div.wrapper > div:not(.cover)').remove();
+				}
+
+				let imageError = dom.new('div', {
+					class : 'error'
+				});
+
+				imageError.innerHTML = 'Error: Image could not be displayed.';
+
+				this.container.querySelector('.media .wrapper').append(imageError);
+			});
+
+			return true;
+		}
+
+		if(this.isVideo(null, this.data.selected.ext))
+		{
+			this.busy(true);
+
+			init = (video ? false : true);
+
+			if(init)
+			{
+				video = this.video.create(this.data.selected.ext)[0];
+				/*video.appendTo(this.container.find('> div.content-container > div.media > div.wrapper'));*/
+
+				this.container.querySelector(':scope > div.content-container > div.media > div.wrapper').append(video);
+			}
+
+			this.showItem(1, video, encoded, init, index);
+
+			return true;
+		}
+	}
+
+	handleKey = (key, callback) =>
+	{
+		this.pipe('handleKey', key);
+
+		if(key === this.data.keys.escape)
+		{
+			this.show(false);
+		} else if(key === this.data.keys.arrowDown || key === this.data.keys.pageDown || key === this.data.keys.arrowRight)
+		{
+			if(key === this.data.keys.arrowRight && this.data.selected.type === 1)
+			{
+				if(this.video.seek(5)) this.navigate(null, 1);
+			} else {
+				this.navigate(null, 1);
+			}
+		} else if(key === this.data.keys.arrowUp || key === this.data.keys.pageUp || key === this.data.keys.arrowLeft)
+		{
+			if(key === this.data.keys.arrowLeft && this.data.selected.type === 1)
+			{
+				if(this.video.seek(-5)) this.navigate(null, -1);
+			} else {
+				this.navigate(null, -1);
+			}
+		} else if(key === this.data.keys.l)
+		{
+			this.toggleList();
+		}
+
+		callback(this.data.keyPrevent.includes(key));
+	}
+
+	unbind = (bound, event = true) =>
+	{
+		bound.forEach((value) =>
+		{
+			if(Object.prototype.hasOwnProperty.call(value, 'direct') && value.direct === true)
+			{
+				eventHandler.removeListener(value.trigger, value.event);
+
+				return true;
+			}
+
+			let identifier = value.hasOwnProperty('id') ? value.id : null;
+
+			if(value.trigger)
+			{
+				eventHandler.removeListener(value.trigger, value.event, identifier);
+
+			} else {
+				eventHandler.removeListener(document, value.event, identifier);
+			}
+		});
+
+		if(event === true)
+		{
+			this.emitter.dispatch('unbound', true);
+		}
+	}
+
+	scrollBreak = () =>
+	{
+		this.data.scrollbreak = false;
+	}
+
+	toggleList = (element = null) =>
+	{
+		let list = this.container.querySelector(':scope > div.content-container > div.list');
+		let visible = list.style.display !== 'none';
+		let client = JSON.parse(cookies.get('ei-client'));
+
+		client.gallery.list_state = (!visible ? 1 : 0);
+
+		cookies.set('ei-client', JSON.stringify(client), {
+			sameSite : 'lax',
+			expires : 365
+		});
+
+		if(!element)
+		{
+			element = document.body.querySelector('div.gallery-container > div.bar .right span[data-action="toggle"]');
+		}
+
+		element.textContent = `List${visible ? '+' : '-'}`;
+
+		dom.css.set(list, {
+			'display' : visible ? 'none' : 'table-cell'
+		});
+
+		this.update.listWidth();
+
+		return !visible;
+	}
+
+	bind = () =>
+	{
+		this.data.bound = [
+			{
+				event : 'click',
+				trigger : 'body > div.gallery-container > div.content-container > div.list table tr'
+			},
+			{
+				event : 'click',
+				trigger : 'body > div.gallery-container > div.content-container > div.media'
+			},
+			{
+				event : 'DOMMouseScroll mousewheel',
+				trigger : 'body > div.gallery-container > div.content-container > div.media'
+			},
+			{
+				event : 'mouseenter',
+				trigger : 'body > div.gallery-container > div.content-container > div.media > div.wrapper > div.cover'
+			},
+			{
+				event : 'mouseup',
+				trigger : 'body > div.gallery-container'
+			},
+			{
+				event : 'keydown',
+				trigger : null,
+				id : 'galleryKeyDown'
+			},
+			{
+				event : 'keyup',
+				trigger : null,
+				id : 'galleryKeyUp'
+			}
+		];
+
+		this.unbind(this.data.bound, false);
+
+		eventHandler.addListener(this.data.listDrag, 'mousedown', 'galleryListMouseDown', (e) =>
+		{
+			this.data.listDragged = true;
+
+			let windowWidth = window.innerWidth;
+			let	wrapper = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper');
+
+			dom.css.set(document.body, {
+				'cursor' : 'w-resize'
+			});
+
+			dom.css.set(wrapper, {
+				'pointer-events' : 'none'
+			});
+
+			eventHandler.addListener('body > div.gallery-container', 'mousemove', 'galleryListMouseMove', (e) =>
+			{
+				let x = e.clientX;
+
+				if(x < windowWidth)
+				{
+					let width = this.options.list.reverse ? (x + this.data.scrollbarWidth) : (windowWidth - x);
+
+					dom.css.set(this.data.list, {
+						'width' : `${width}px`
+					});
+				}
+			});
+		});
+
+		eventHandler.addListener('body > div.gallery-container', 'mouseup', 'galleryListMouseUp', (e) =>
+		{
+			if(this.data.listDragged === true)
+			{
+				eventHandler.removeListener('body > div.gallery-container', 'mousemove', 'galleryListMouseMove');
+
+				let wrapper = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper');
+
+				dom.css.set(document.body, {
+					'cursor' : ''
+				});
+
+				dom.css.set(wrapper, {
+					'pointer-events' : 'auto'
+				});
+
+				let lw = parseInt(this.data.list.style.width.replace(/[^-\d.]/g, ''));
+
+				this.pipe('Set list width', lw);
+
+				if(lw > 100)
+				{
+					let client = JSON.parse(cookies.get('ei-client'));
+
+					client.gallery.listWidth = lw;
+
+					cookies.set('ei-client', JSON.stringify(client), {
+						sameSite : 'lax',
+						expires : 365
+					});
+
+					this.update.listWidth(wrapper);
+				}
+
+				this.data.listDragged = false;
+			}
+		});
+
+		/* top bar close event listener */
+		eventHandler.addListener(
+			'body > div.gallery-container [data-action="close"]', 'click', 'barCloseClick', (e) =>
+		{
+			this.show(false);
+		});
+
+		/* top bar list toggle event listener */
+		if(!this.options.mobile) eventHandler.addListener(
+			'body > div.gallery-container [data-action="toggle"]', 'click', 'listToggleClick', (e) =>
+		{
+			this.toggleList(e.currentTarget);
+		});
+
+		/* top bar navigate event listener */
+		if(!this.options.mobile) eventHandler.addListener(
+			'body > div.gallery-container [data-action="previous"]', 'click', 'barPreviousClick', (e) =>
+		{
+			this.navigate(null, -1);
+		});
+
+		/* top bar navigate event listener */
+		if(!this.options.mobile) eventHandler.addListener(
+			'body > div.gallery-container [data-action="next"]', 'click', 'barNextClick', (e) =>
+		{
+			this.navigate(null, 1);
+		});
+
+		/* list item click listener */
+		eventHandler.addListener(
+			'body > div.gallery-container > div.content-container > div.list table', 'click', 'listNavigateClick', (e) =>
+		{
+			if(e.target.tagName == 'TD')
+			{
+				this.navigate(dom.getIndex(e.target.closest('tr')));
+
+			} else if(e.target.tagName == 'TR')
+			{
+				this.navigate(dom.getIndex(e.target));
+			}
+		});
+
+		/* gallery media click listener */
+		eventHandler.addListener(
+			'body > div.gallery-container > div.content-container > div.media', 'click', 'mediaClick', (e) =>
+		{
+			/* hide gallery if media background is clicked */
+			if(!['IMG', 'VIDEO', 'A'].includes(e.target.tagName))
+			{
+				this.show(false);
+			}
+		});
+
+		if(this.options.mobile === true)
+		{
+			/* handle swipe events */
+			let handler = (event, eventData) =>
+			{
+				switch(eventData.directionX)
+				{
+					case 'RIGHT':
+						this.navigate(null, -1);
+						break;
+
+					case 'LEFT':
+						this.navigate(null, 1);
+						break;
+				}
+			};
+
+			/* create swipe events */
+			let swipeInstance = new swipe({
+				element: document.querySelector('body > div.gallery-container'),
+				onSwiped: handler,
+				mouseTrackingEnabled: true
+			});
+
+			swipeInstance.init();
+		}
+
+		eventHandler.addListener('body > div.gallery-container > div.content-container > div.media'
+			, ['DOMMouseScroll', 'mousewheel'], 'galleryKeyUp', (e) =>
+		{
+			if(this.options.scrollInterval > 0 && this.data.scrollbreak === true)
+			{
+				return false;
+			}
+
+			this.navigate(null, (e.detail > 0 || e.wheelDelta < 0) ? 1 : -1);
+
+			if(this.options.scrollInterval > 0)
+			{
+				this.data.scrollbreak = true;
+
+				setTimeout(() => this.scrollBreak(), this.options.scrollInterval);
+			}
+		});
+
+		eventHandler.addListener(document, 'keyup', 'galleryKeyUp', (e) =>
+		{
+			this.handleKey(e.keyCode, (prevent) =>
+			{
+				if(prevent)
+				{
+					e.preventDefault();
+				}
+			});
+		});
+
+		eventHandler.addListener(document, 'keydown', 'galleryKeyDown', (e) =>
+		{
+			if(this.data.keyPrevent.includes(e.keyCode))
+			{
+				e.preventDefault();
+			}
+
+			if(e.keyCode === this.data.keys.g)
+			{
+				this.show(false);
+			}
+		});
+
+		this.emitter.dispatch('bound', true);
+
+		return this.container;
+	}
+
+	/* construct gallery top bar items */
+	barConstruct = (bar) =>
+	{
+		/* create `download` button */
+		bar.append(dom.new('a', {
+			'text' : this.options.mobile ? 'Save' : 'Download',
+			'class' : 'download',
+			'download' : ''
+		}));
+
+		if(!this.options.mobile)
+		{
+			/* create `previous` button */
+			bar.append(dom.new('span', {
+				'data-action' : 'previous',
+				'text' : 'Previous'
+			}));
+
+			/* create `next` button */
+			bar.append(dom.new('span', {
+				'data-action' : 'next',
+				'text' : 'Next'
+			}));
+
+			/* create `list toggle` button */
+			bar.append(dom.new('span', {
+				'data-action' : 'toggle',
+				'text' : this.options.list.show ? 'List-' : 'List+'
+			}));
+		}
+
+		/* create `close` button */
+		bar.append(dom.new('span', {
+			'data-action' : 'close',
+			'text' : 'Close'
+		}));
+
+		return bar;
+	}
+
+	initiate = (callback) =>
+	{
+		/* fix body overflow and paddings */
+		this.limitBody(true);
+
+		let preview = document.body.querySelector(':scope > div.preview-container');
+
+		/* remove any active hover previews just in case */
+		if(preview)
+		{
+			preview.remove();
+		}
+
+		/* create main container */
+		this.container = dom.new('div', {
+			class : 'gallery-container'
+		});
+
+		document.body.prepend(this.container);
+
+		/* create gallery top bar */
+		let top = dom.new('div', {
+			class : 'bar'
+		});
+
+		this.container.append(top);
+
+		/* create left area of top bar */
+		top.append(dom.new('div', {
+			class : 'left'
+		}));
+
+		/* create right area of top bar */
+		top.append(this.barConstruct(dom.new('div', {
+			class : 'right'
+		})));
+
+		/* create content (media) outer container */
+		let content = dom.new('div', {
+			class : 'content-container'
+		});
+
+		this.container.append(content);
+
+		let media = dom.new('div', {
+			class : 'media'
+		});
+
+		/* create list */
+		let list = dom.new('div', {
+			class : `ns list${this.options.list.reverse ? ' reversed' : ''}`
+		});
+
+		/* add to content container, respecting list reverse status */
+		content.append(this.options.list.reverse ? list : media);
+		content.append(this.options.list.reverse ? media : list);
+
+		/* create dragable element on list edge */
+		this.data.listDrag = dom.new('div', {
+			class : 'drag' + (this.options.list.reverse ? ' reversed' : '')
+		});
+
+		list.append(this.data.listDrag);
+
+		/* declare variables */
+		this.data.list = list;
+		this.data.listDragged = false;
+		this.data.scrollbarWidth = (this.data.scrollBar.widthForced ? 0 : this.data.scrollBar.width);
+
+		let client = JSON.parse(cookies.get('ei-client'));
+
+		try
+		{
+			let width = JSON.parse(client.gallery.listWidth.toString().toLowerCase());
+
+			if(width && parseInt(width) > (window.innerWidth / 2))
+			{
+				client.gallery.listWidth = Math.floor(window.innerWidth / 2);
+
+				cookies.set('ei-client', JSON.stringify(client), {
+					sameSite : 'lax',
+					expires : 365
+				});
+			}
+
+			if(width)
+			{
+				dom.css.set(this.data.list, {
+					'width' : `${width}px`
+				});
+			}
+		} catch (e) {
+			client.gallery.listWidth = false;
+
+			cookies.set('ei-client', JSON.stringify(client), {
+				sameSite : 'lax',
+				expires : 365
+			});
+		}
+
+		if(!this.options.list.show || this.options.mobile)
+		{
+			list.style.display = 'none';
+		}
+
+		/* create mobile navigation (left & right) */
+		if(this.options.mobile === true)
+		{
+			let navigateLeft = dom.new('div', {
+				'class' : 'screen-nav left',
+				'data-action' : 'previous'
+			});
+
+			let navigateRight = dom.new('div', {
+				'class' : 'screen-nav right',
+				'data-action' : 'next'
+			});
+
+			navigateLeft.append(dom.new('span'));
+			navigateRight.append(dom.new('span'));
+
+			content.append(navigateRight, navigateLeft);
+		}
+
+		media.append(dom.new('div', {
+			class : 'wrapper' + (this.options.fitContent ? ' fill' : '')
+		}));
+
+		media.append(dom.new('div', {
+			class : 'spinner' + (this.options.list.reverse ? ' reversed' : '')
+		}));
+
+		/* create list table */
+		let table = dom.new('table', {
+			cellspacing : '0'
+		});
+
+		table.append(dom.new('tbody'));
+
+		list.append(table);
+
+		/* add items to list */
+		this.populateTable(this.items);
+
+		callback(true);
+	}
+};
