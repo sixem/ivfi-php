@@ -606,6 +606,7 @@ export class componentSettings
 		}
 
 		this.client = user.get();
+		
 		this.events = new Array();
 
 		let sections = new Array();
@@ -663,7 +664,7 @@ export class componentSettings
 			text : 'Cancel'
 		});
 
-		container.append(wrapper);
+		container.appendChild(wrapper);
 		container.appendChild(bottom);
 
 		[[applyButton, () => this.apply(container, this.client)], [cancelButton, () => this.close()]].forEach((buttonData) =>
