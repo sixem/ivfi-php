@@ -2,7 +2,7 @@
   "name": "eyy-indexer",
   "version": "1.1.9",
   "description": "A directory explorer",
-  "main": "source/js/main.js",
+  "main": "src/js/main.js",
   "dependencies": {
     "js-cookie": "^2.2.1",
     "vanilla-swipe": "^2.3.0"
