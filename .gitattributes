@@ -1,7 +1,0 @@
-public/indexer/fonts/* linguist-vendored=true
-public/indexer/js/vendors.js linguist-vendored=true
-
-src/indexer/fonts/* linguist-vendored=true
-src/indexer/js/vendors.js linguist-vendored=true
-
-examples/* linguist-vendored=true
