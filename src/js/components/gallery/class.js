@@ -220,7 +220,8 @@ export class galleryClass
 
 			let timer = setInterval(() =>
 			{
-				let w = img.naturalWidth, h = img.naturalHeight;
+				let w = img.naturalWidth;
+				let h = img.naturalHeight;
 				
 				if(w && h)
 				{

@@ -119,20 +119,29 @@ export class componentGallery
 		Object.keys(defaults).forEach((key) =>
 		{
 			applyNested(
-				options, key, client, (config.data).gallery[defaults[key][1]], defaults[key][0], defaults[key][1]
+				options,
+				key,
+				client,
+				(config.data).gallery[defaults[key][1]],
+				defaults[key][0],
+				defaults[key][1]
 			);
 		});
 
-		options.list = new Object();
+		options.list = {
+			show : (listState == null ? true : (listState ? true : false))
+		};
 
-		options.list.show = (listState == null ? true : (listState ? true : false));
+		if(checkNested(client, 'gallery', 'listAlignment'))
+		{
+			options.list.reverse = (client.gallery.listAlignment === 0 ? false : true);
+		} else {
+			options.list.reverse = false;
+		}
 
-		options.list.reverse = checkNested(client, 'gallery', 'listAlignment') ?
-			(client.gallery.listAlignment === 0 ? false : true) :
-			false;
-
-		options.continue = new Object();
-		options.continue.video = video.continue;
+		options.continue = {
+			video : video.continue
+		}
 
 		/* get table items marked as media */
 		let items = this.main.getTableItems();
