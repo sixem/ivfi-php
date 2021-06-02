@@ -65,8 +65,6 @@ export class componentBind
 {
 	constructor(options)
 	{
-		this.filter = options.filter;
-
 		this.overlay = options.overlay;
 
 		this.menu = options.menu;
@@ -98,7 +96,7 @@ export class componentBind
 			{
 				e.preventDefault();
 
-				this.filter.toggle();
+				data.components.filter.toggle();
 
 			} else if(e.keyCode === 27)
 			{
