@@ -28,11 +28,17 @@ data.sets.selection = new Object();
 data.sets.selected = null;
 data.sets.refresh = false;
 
+/* create data components object */
+data.components = new Object();
+
 /* create data layer object */
 data.layer = new Object();
 
 /* create data instances object */
 data.instances = new Object();
+
+/* create data optimize instances object */
+data.instances.optimize = new Object();
 
 /* initiate selector class */
 data.instances.selector = new selectorClass();
