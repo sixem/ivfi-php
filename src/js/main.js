@@ -18,6 +18,7 @@ import { optimizeClass } from './classes/optimize';
 /* import components */
 import { componentGallery } from './components/gallery/handler';
 import { componentSettings } from './components/settings/handler';
+import { componentFilter } from './components/filter/handler';
 import { componentBind } from './components/bind/main';
 
 /* import helpers */
@@ -103,219 +104,9 @@ if(config.get('performance'))
 			rowChange : onRowChange
 		}
 	});
+
+	data.instances.optimize.main = optimize;
 }
-
-/**
- * filter functions
- */
-const filter = {
-	/**
- 	* applies a filter
- 	*/
-	apply : (query = new String()) =>
-	{
-		let _ = new Object();
-		let error = false;
-
-		data.sets.refresh = true;
-
-		_.reset = query === new String() || !query;
-		_.shown = { directories : 0, files : 0 };
-		_.size = 0;
-
-		if(data.instances.gallery)
-		{
-			data.instances.gallery.data.selected.index = 0;
-		}
-
-		/* check if directory sizes are enabled */
-		let directorySizes = (
-			Object.prototype.hasOwnProperty.call(
-				config.get('sorting'),
-				'directorySizes'
-			) &&
-			config.get('sorting.directorySizes')
-		);
-
-		let rows = optimize.enabled ? 
-			optimize.rows :
-			selector.use('TABLE').querySelectorAll('tbody > tr');
-
-		/* iterate over rows, search for query */
-		for(let i = 1; i < rows.length; i++)
-		{
-			let item = rows[i];
-
-			if(_.reset === true)
-			{
-				item.classList.remove('filtered');
-
-				if(optimize.enabled)
-				{
-					optimize.setVisibleFlag(item, true);
-				}
-
-				break;
-			}
-
-			let is = {
-				file : item.classList.contains('file'),
-				directory : item.classList.contains('directory')
-			};
-
-			let match = filter.getMatch(item.children[0].getAttribute('data-raw'), query);
-
-			if(match.valid && match.data)
-			{
-				item.classList.remove('filtered');
-
-				if(optimize.enabled)
-				{
-					optimize.setVisibleFlag(item, true);					
-				}
-
-				if(is.file)
-				{
-					_.shown.files++;
-
-				} else if(is.directory)
-				{
-					_.shown.directories++;
-				}
-
-			} else if(match && match.valid === false)
-			{
-				error = match.reason;
-
-			} else {
-				item.classList.add('filtered');
-
-				if(optimize.enabled)
-				{
-					optimize.setVisibleFlag(item, false);
-				}
-			}
-
-			/* add size to total */
-			if((match.valid && match.data && is.file) ||
-				(directorySizes && match.valid && match.data && is.directory))
-			{
-				let size = item.children[2].getAttribute('data-raw');
-				_.size = !isNaN(size) ? (_.size + parseInt(size)) : _.size;
-			}
-		}
-
-		/* set parent class so that we can hide all - .filtered -> .filtered */
-		if(_.reset)
-		{
-			selector.use('TABLE_CONTAINER').removeAttribute('is-active-filter', '');
-		} else {
-			selector.use('TABLE_CONTAINER').setAttribute('is-active-filter', '');
-
-			/* scroll to top on search */
-			window.scrollTo(0, 0);
-		}
-
-		if(optimize.enabled)
-		{
-			/* call optimization refactoring */
-			optimize.refactor();
-		}
-
-		let top = {
-			container : document.body.querySelector(':scope > div.top-bar')
-		};
-
-		(['size', 'files', 'directories']).forEach((key) =>
-		{
-			top[key] = top.container.querySelector(`[data-count="${key}"]`);
-		});
-
-		if(!Object.prototype.hasOwnProperty.call(data.sets.defaults, 'topValues'))
-		{
-			data.sets.defaults.topValues = {
-				size : top.size.textContent,
-				files : top.files.textContent,
-				directories : top.directories.textContent
-			};
-		}
-
-		top.size.textContent =
-			(_.reset) ? data.sets.defaults.topValues.size : 
-			h.getReadableSize(config.get('format.sizes'), _.size);
-
-		top.files.textContent =
-			(_.reset) ? data.sets.defaults.topValues.files : 
-			`${_.shown.files} file${_.shown.files === 1 ? '' : 's'}`;
-
-		top.directories.textContent =
-			(_.reset) ? data.sets.defaults.topValues.directories : 
-			`${_.shown.directories} ${_.shown.directories === 1 ? 'directory' : 'directories'}`;
-
-		let option = document.body.querySelector(':scope > div.menu > #gallery');
-
-		let previews = selector.use('TABLE_CONTAINER')
-			.querySelectorAll('table tr.file:not(.filtered) a.preview').length;
-
-		if(error !== false)
-		{
-			console.error(`Filter regex error: ${error}`);
-		}
-
-		/* hide or show the gallery menu option */
-		if(!_.reset && previews === 0 && option)
-		{
-			if(option.style.display !== 'none')
-			{
-				option.style.display = 'none';
-			}
-		} else if((previews > 0 || _.reset) && option)
-		{
-			if(option.style.display === 'none')
-			{
-				option.style.display = 'block';
-			}
-		}
-	},
-	getMatch : (input, query) =>
-	{
-		let match = new Object();
-
-		try
-		{
-			match.valid = true;
-
-			match.data = (input).match(new RegExp(query, 'i'));
-
-		} catch(error) {
-
-			match.valid = false;
-
-			match.reason = error;
-		}
-
-		return match;
-	},
-	toggle : () =>
-	{
-		let container = document.body.querySelector(':scope > div.filter-container');
-
-		let input = container.querySelector('input[type="text"]');
-
-		if(container.style.display !== 'none')
-		{
-			container.style.display = 'none';
-		} else {
-			input.value = new String();
-
-			filter.apply(null);
-
-			container.style.display = 'block';
-		}
-
-		input.focus();
-	}
-};
 
 const main = {
 	/**
@@ -356,7 +147,7 @@ const main = {
 			}
 
 			/* do a light check to see if any settings are available to be changed, if so, add menu item */
-			if(components.settings.available())
+			if(data.components.settings.available())
 			{
 				items.unshift({
 					text : data.text.menuLabels.settings.text,
@@ -399,7 +190,7 @@ const main = {
 
 					if(e.target.id == 'gallery' && config.get('gallery.enabled') === true)
 					{
-						toggle(false, () => components.gallery.load(null));
+						toggle(false, () => data.components.gallery.load(null));
 
 					} else if(e.target.id == 'copy')
 					{
@@ -409,7 +200,7 @@ const main = {
 
 					} else if(e.target.id == 'settings')
 					{
-						toggle(false, () => components.settings.show());
+						toggle(false, () => data.components.settings.show());
 
 					} else if(e.target.id == 'filter')
 					{
@@ -641,7 +432,7 @@ const main = {
 
 			data.push({
 				element : document.body.querySelector(':scope > div.filter-container'),
-				f : filter.toggle
+				f : data.components.filter.toggle
 			});
 
 			data.push({
@@ -825,7 +616,7 @@ eventHandler.addListener(selector.use('TOP_EXTEND'), 'click', 'sortClick', (e) =
 /* filter change event */
 eventHandler.addListener(selector.use('FILTER_INPUT'), 'input', 'filterInput', (e) =>
 {
-	filter.apply(e.currentTarget.value);
+	data.components.filter.apply(e.currentTarget.value);
 });
 
 /* item click event (show gallery if enabled and table sort) */
@@ -862,7 +653,7 @@ eventHandler.addListener(selector.use('TABLE'), 'click', 'sortClick', (e) =>
 			});
 		}
 
-		components.gallery.load(index);
+		data.components.gallery.load(index);
 	}
 });
 
@@ -959,33 +750,31 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 	});
 }
 
-/* initiate components */
-const components = new Object();
+/* create gallery component instance */
+data.components.settings = new componentSettings();
+
+/* set filter component */
+data.components.filter = componentFilter;
 
 /* create gallery component instance */
-components.gallery = new componentGallery({
+data.components.gallery = new componentGallery({
 	main : main
 });
 
 /* create bind component instance */
-components.bind = new componentBind({
-	filter, optimize,
+data.components.bind = new componentBind({
+	optimize,
 	overlay : main.overlay,
 	menu : main.menu,
 	components : {
-		gallery : components.gallery,
+		gallery : data.components.gallery,
 		page : page
 	}
 });
 
-/* create gallery component instance */
-components.settings = new componentSettings();
-
 /* store bind functions to main */
-main.bind = components.bind.load;
-main.unbind = components.bind.unbind;
-
-data.components = components;
+main.bind = data.components.bind.load;
+main.unbind = data.components.bind.unbind;
 
 /* initiate listeners */
 main.bind();
