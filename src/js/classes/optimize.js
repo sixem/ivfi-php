@@ -169,6 +169,8 @@ export class optimizeClass
 		/* store offsets */
 		let rowOffsets = new Object();
 
+		let recentHeight = 0;
+
 		/* create updated structure */
 		for(let index = 0; index < (this.rows).length; index++)
 		{
@@ -184,8 +186,17 @@ export class optimizeClass
 				rowOffsets[index] = combinedHeight;
 
 				combinedHeight += item._offsetHeight;
+
+				recentHeight = item._offsetHeight;
 			}
 		}
+
+		if(recentHeight > 0)
+		{
+			combinedHeight = (combinedHeight - recentHeight);
+		}
+
+		combinedHeight += this.padding;
 
 		/* update optimize structure */
 		this.structure = structure;
