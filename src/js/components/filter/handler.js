@@ -65,17 +65,10 @@ componentFilter.apply = (query = new String()) =>
 
 		if(item.classList.contains('file'))
 		{
-			is = {
-				file : true,
-				directory : false 
-			};
-
+			is.file = true;
 		} else if(item.classList.contains('directory'))
 		{
-			is = {
-				file : true,
-				directory : false 
-			};
+			is.directory = true;
 		}
 
 		let match = componentFilter.getMatch(item.children[0].getAttribute('data-raw'), query);
