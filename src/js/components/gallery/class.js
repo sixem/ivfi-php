@@ -398,10 +398,6 @@ export class galleryClass
 					this.useOptimzer(this.table);
 				}
 			}
-
-			let scrollableList = this.container.querySelector(':scope > div.content-container > div.list');
-
-			scrollableList.scrollTo(0, (scrollableList.querySelector(`tr:nth-child(${index + 1})`)).offsetTop)
 		} else {
 			this.unbind(this.data.bound);
 
@@ -1159,7 +1155,22 @@ export class galleryClass
 
 		this.apply.itemInfo((!image && !video) ? true : false, item, index, max + 1);
 
-		if(!this.isScrolledIntoView(list, element))
+		let hasScrolled = false;
+
+		let useScrollOptimize = this.options.performance && this.optimize && this.optimize.enabled;
+
+		if(useScrollOptimize && element.classList.contains('hid-row') && element._offsetTop >= 0)
+		{
+			let scrollPosition = element._offsetTop - (list.offsetHeight / 2);
+			/* scroll to a hidden row as a result of optimization */
+			list.scrollTo(0, scrollPosition >= 0 ? scrollPosition : 0);
+
+			/* set var to indicate that we've scrolled here instead */
+			hasScrolled = true;
+		}
+
+		/* use default scrollto, if item is out of view */
+		if(!hasScrolled && !this.isScrolledIntoView(list, element))
 		{
 			list.scrollTo(0, element.offsetTop);
 		}
@@ -1209,7 +1220,8 @@ export class galleryClass
 				{
 					this.showItem(0, image, src, init, index, {
 						img : {
-							width : w, height : h
+							width : w,
+							height : h
 						}
 					});
 				}
