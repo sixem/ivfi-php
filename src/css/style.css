@@ -963,22 +963,16 @@ select:not(.default):focus
 {
 	:root
 	{
-		--font-size-table-header: 11px;
-		--font-size-gallery: 12px;
-		--font-size-row-file: 12px;
+		--font-size-table-header: 10px;
+		--font-size-gallery: 11px;
+		--font-size-row-file: 10px;
 		--font-size-default: 12px;
-		--font-size-row-num: 11px;
+		--font-size-row-num: 10px;
 	}
 
 	body>div.table-container>table span.sort-indicator
 	{
 		margin-left: 4px!important;
-	}
-
-	body>div.table-container>table tbody tr td:last-child,
-	body>div.table-container>table thead tr th:last-child
-	{
-		text-align: right;
 	}
 
 	body,
@@ -1469,6 +1463,48 @@ select:not(.default):focus
 /* Mobile - Overrides */
 @media only screen and (max-width: 640px)
 {
+	body[optimize]>div.table-container>table tbody>tr td:nth-child(1),
+	body[optimize]>div.table-container>table thead th:nth-child(1)
+	{
+		--width: calc((var(--table-width) * 0.465) - 15px);
+		width: var(--width);
+		max-width: var(--width);
+		min-width: var(--width);
+	}
+
+	body[optimize]>div.table-container>table tbody>tr td:nth-child(2),
+	body[optimize]>div.table-container>table thead th:nth-child(2)
+	{
+		--width: calc((var(--table-width) * 0.205) - 1px);
+		width: var(--width);
+		max-width: var(--width);
+		min-width: var(--width);
+	}
+
+	body[optimize]>div.table-container>table tbody>tr td:nth-child(3),
+	body[optimize]>div.table-container>table thead th:nth-child(3)
+	{
+		--width: calc((var(--table-width) * 0.190) - 1px);
+		width: var(--width);
+		max-width: var(--width);
+		min-width: var(--width);
+	}
+
+	body>div.table-container>table thead th:nth-child(1)
+	{
+		width: 45.5%;
+	}
+
+	body>div.table-container>table thead th:nth-child(2)
+	{
+		width: 20.5%;
+	}
+
+	body>div.table-container>table thead th:nth-child(3)
+	{
+		width: 19.0%;
+	}
+
 	body>div.table-container>table thead th:nth-child(4),
 	body>div.table-container>table tbody td:nth-child(4) span
 	{
