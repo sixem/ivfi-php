@@ -63,16 +63,8 @@ events.scroll = () =>
 
 export class componentBind
 {
-	constructor(options)
+	constructor()
 	{
-		this.overlay = options.overlay;
-
-		this.menu = options.menu;
-
-		this.optimize = options.optimize;
-
-		this.components = options.components;
-
 		return this;
 	}
 
@@ -92,22 +84,22 @@ export class componentBind
 	{
 		eventHandler.addListener(document, 'keydown', 'mainKeyDown', (e) =>
 		{
-			if(e.shiftKey && e.keyCode === 70)
+			if(e.shiftKey && e.keyCode === data.keys.f)
 			{
 				e.preventDefault();
 
 				data.components.filter.toggle();
 
-			} else if(e.keyCode === 27)
+			} else if(e.keyCode === data.keys.escape)
 			{
-				this.overlay.hide((state) =>
+				data.components.main.overlay.hide((state) =>
 				{
 					if(state === true)
 					{
 						e.preventDefault();
 					}
 				});
-			} else if(e.keyCode === 71)
+			} else if(e.keyCode === data.keys.g)
 			{
 				if(config.get('gallery.enabled') === true)
 				{
@@ -116,9 +108,9 @@ export class componentBind
 					if(container.style.display === 'none' ||
 						!(document.activeElement === container.querySelector('input')))
 					{
-						this.components.gallery.load(null);
+						data.components.gallery.load(null);
 
-						this.menu.toggle(false);
+						data.components.main.menu.toggle(false);
 					}
 				}
 			}
@@ -128,11 +120,11 @@ export class componentBind
 
 		let onDebounce = () =>
 		{
-			events.scroll(this.components);
+			events.scroll();
 
-			if(this.optimize.enabled)
+			if(data.instances.optimize.main.enabled)
 			{
-				this.optimize.attemptRefresh();
+				data.instances.optimize.main.attemptRefresh();
 			}
 		};
 
@@ -142,19 +134,19 @@ export class componentBind
 
 			debounceTimer = setTimeout(() => onDebounce(), 100);
 
-			if(this.optimize.enabled)
+			if(data.instances.optimize.main.enabled)
 			{
 				/* get scrolled position */
 				let scrolled = window.scrollY;
 
 				/* trigger optimization refresh if 175 px has been scrolled */
-				if(Math.abs(scrolled - this.components.page.scrolledY) > 175)
+				if(Math.abs(scrolled - data.layer.main.scrolledY) > 175)
 				{
-					this.optimize.attemptRefresh();
+					data.instances.optimize.main.attemptRefresh();
 				}
 			}
 		});
 
-		events.scroll(this.components);
+		events.scroll();
 	}
 }

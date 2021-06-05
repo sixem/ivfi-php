@@ -14,7 +14,7 @@ import { optimizeClass } from '../../classes/optimize';
 import { emitterClass } from '../../classes/emitter';
 
 /* import helpers */
-import { dom } from '../../helpers/helpers';
+import { dom, debounce } from '../../helpers/helpers';
 
 const pipe = data.instances.pipe;
 
@@ -133,19 +133,6 @@ export class galleryClass
 		/* busy state */
 		this.data.busy = false;
 
-		/* frequently used keys */
-		this.data.keys = {
-			escape : 27,
-			pageUp : 33,
-			pageDown : 34,
-			arrowLeft : 37,
-			arrowUp : 38,
-			arrowRight : 39,
-			arrowDown : 40,
-			g : 71,
-			l : 76
-		};
-
 		/* scrollbar data */
 		this.data.scrollBar = {
 			width : this.getScrollbarWidth(),
@@ -156,12 +143,12 @@ export class galleryClass
 		this.data.scrollbreak = false;
 
 		this.data.keyPrevent = [
-			this.data.keys.pageUp,
-			this.data.keys.pageDown,
-			this.data.keys.arrowLeft,
-			this.data.keys.arrowUp,
-			this.data.keys.arrowRight,
-			this.data.keys.arrowDown
+			data.keys.pageUp,
+			data.keys.pageDown,
+			data.keys.arrowLeft,
+			data.keys.arrowUp,
+			data.keys.arrowRight,
+			data.keys.arrowDown
 		];
 
 		this.data.selected = {
@@ -585,6 +572,18 @@ export class galleryClass
 			table : table,
 			scope : [this.list, 'scrollTop']
 		});
+
+		eventHandler.removeListener(window, 'resize', 'windowGalleryResize');
+
+		eventHandler.addListener(window, 'resize', 'windowGalleryResize', debounce(() =>
+		{
+			if(this.options.performance && this.optimize.enabled)
+			{
+				pipe('windowResize (gallery)', 'Resized.');
+
+				page.update();
+			}
+		}));
 
 		eventHandler.addListener(this.list, 'scroll', 'galleryTableScroll', (e) =>
 		{
@@ -1279,26 +1278,26 @@ export class galleryClass
 	{
 		this.pipe('handleKey', key);
 
-		if(key === this.data.keys.escape)
+		if(key === data.keys.escape)
 		{
 			this.show(false);
-		} else if(key === this.data.keys.arrowDown || key === this.data.keys.pageDown || key === this.data.keys.arrowRight)
+		} else if(key === data.keys.arrowDown || key === data.keys.pageDown || key === data.keys.arrowRight)
 		{
-			if(key === this.data.keys.arrowRight && this.data.selected.type === 1)
+			if(key === data.keys.arrowRight && this.data.selected.type === 1)
 			{
 				if(this.video.seek(5)) this.navigate(null, 1);
 			} else {
 				this.navigate(null, 1);
 			}
-		} else if(key === this.data.keys.arrowUp || key === this.data.keys.pageUp || key === this.data.keys.arrowLeft)
+		} else if(key === data.keys.arrowUp || key === data.keys.pageUp || key === data.keys.arrowLeft)
 		{
-			if(key === this.data.keys.arrowLeft && this.data.selected.type === 1)
+			if(key === data.keys.arrowLeft && this.data.selected.type === 1)
 			{
 				if(this.video.seek(-5)) this.navigate(null, -1);
 			} else {
 				this.navigate(null, -1);
 			}
-		} else if(key === this.data.keys.l)
+		} else if(key === data.keys.l)
 		{
 			this.toggleList();
 		}
@@ -1428,9 +1427,12 @@ export class galleryClass
 				{
 					let width = this.options.list.reverse ? (x + this.data.scrollbarWidth) : (windowWidth - x);
 
-					dom.css.set(this.data.list, {
-						'width' : `${width}px`
-					});
+					requestAnimationFrame(() =>
+					{
+						dom.css.set(this.data.list, {
+							'width' : `${width}px`
+						});
+					})
 				}
 			});
 		});
@@ -1589,7 +1591,7 @@ export class galleryClass
 				e.preventDefault();
 			}
 
-			if(e.keyCode === this.data.keys.g)
+			if(e.keyCode === data.keys.g)
 			{
 				this.show(false);
 			}
