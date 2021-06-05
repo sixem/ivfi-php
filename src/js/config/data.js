@@ -38,7 +38,28 @@ data.layer = new Object();
 data.instances = new Object();
 
 /* create data optimize instances object */
-data.instances.optimize = new Object();
+data.instances.optimize = {
+	main : {
+		enabled : false
+	},
+	gallery : {
+		enabled : false
+	}
+}
+
+/* create keys */
+data.keys = {
+	escape : 27,
+	pageUp : 33,
+	pageDown : 34,
+	arrowLeft : 37,
+	arrowUp : 38,
+	arrowRight : 39,
+	arrowDown : 40,
+	f : 70,
+	g : 71,
+	l : 76
+};
 
 /* initiate selector class */
 data.instances.selector = new selectorClass();
