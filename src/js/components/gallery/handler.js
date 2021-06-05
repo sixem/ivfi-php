@@ -13,10 +13,8 @@ const pipe = data.instances.pipe;
 /* class component */
 export class componentGallery
 {
-	constructor(options)
+	constructor()
 	{
-		this.main = options.main;
-
 		return this;
 	}
 
@@ -63,7 +61,7 @@ export class componentGallery
 
 			data.sets.preview.video = null;
 
-			let items = data.sets.refresh ? this.main.getTableItems() : null;
+			let items = data.sets.refresh ? data.components.main.getTableItems() : null;
 
 			data.sets.refresh = false;
 
@@ -72,7 +70,7 @@ export class componentGallery
 				return false;
 
 			} else {
-				this.main.unbind();
+				data.components.main.unbind();
 
 				data.instances.gallery.show(
 					true, index === null ? data.instances.gallery.data.selected.index : index, items
@@ -144,10 +142,10 @@ export class componentGallery
 		}
 
 		/* get table items marked as media */
-		let items = this.main.getTableItems();
+		let items = data.components.main.getTableItems();
 
 		/* unbind main listeners */
-		this.main.unbind();
+		data.components.main.unbind();
 
 		/* initiate new gallery class */
 		let instance = new galleryClass(items, Object.assign(options, {
@@ -173,7 +171,7 @@ export class componentGallery
 			/* listen to gallery `unbound` event */
 			instance.listen('unbound', () =>
 			{
-				this.main.bind();
+				data.components.main.bind();
 			});
 		}
 	}
