@@ -1058,7 +1058,7 @@ $bust = md5($config['debug'] ? time() : $version);
           <th><span sortable="true" title="Sort by filename">Filename</span><span class="sort-indicator"></span></th>
           <th><span sortable="true" title="Sort by modification date">Modified</span><span class="sort-indicator"></span></th>
           <th><span sortable="true" title="Sort by filesize">Size</span><span class="sort-indicator"></span></th>
-          <th><span sortable="true" title="Sort by filetype">Options</span><span class="sort-indicator"></span></th>
+          <th><span sortable="true" title="Sort by filetype">Type</span><span class="sort-indicator"></span></th>
         </tr>
       </thead>
 
