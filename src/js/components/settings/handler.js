@@ -149,22 +149,13 @@ update.gallery.listAlignment = (alignment) =>
 	{
 		let parent = document.body.querySelector(':scope > div.gallery-container > div.content-container');
 
-		let elements = [
-			':scope > div.media > div.spinner',
-			':scope > div.list',
-			':scope > div.list > div.drag'
-		];
+		parent.classList[alignment === 0 ? 'remove' : 'add']('reversed');
 
-		elements.forEach((selector) =>
-		{
-			parent.querySelector(selector).classList[alignment === 0 ? 'remove' : 'add']('reversed');
-		});
-
-		let detached = parent.querySelector(elements[1]);
+		let detached = parent.querySelector(':scope > div.list');
 
 		let media = parent.querySelector(':scope > div.media');
 
-		parent.querySelector(elements[1]).remove();
+		parent.querySelector(':scope > div.list').remove();
 
 		media.parentNode.insertBefore(detached, (alignment === 1) ? media : media.nextSibling);
 
