@@ -698,8 +698,36 @@ export class galleryClass
 		cache : {
 			info : null
 		},
+		itemDimensions : (index) =>
+		{
+			let item = this.items[index];
+
+			let media = this.container.querySelector('div.media > div.item-info-static');
+
+			if(item.hasOwnProperty('dimensions') &&
+				item.dimensions.height > 0 &&
+				item.dimensions.width > 0)
+			{
+				if(!media)
+				{
+					media = dom.new('div', {
+						class : 'item-info-static'
+					});
+
+					this.container.querySelector('div.media').appendChild(media);
+				}
+
+				media.style.display = 'inline-block';
+
+				media.textContent = `${item.dimensions.width} x ${item.dimensions.height} (${item.size})`;
+			} else if(media) {
+				media.style.display = 'none';
+			}
+		},
 		itemInfo : (update, item = null, index = null, max = null) =>
 		{
+			console.log('---->', update, item, index, max);
+
 			if(update)
 			{
 				if(Array.isArray(this.apply.cache.info))
@@ -726,7 +754,7 @@ export class galleryClass
 				'title' : `Download: ${item.name}`
 			});
 
-			left.innerHTML = `<span>${index + 1} of ${max}</span>`;
+			left.innerHTML = `<span>${index + 1} / ${max}</span>`;
 			left.innerHTML += `<a target="_blank" href="${url}">${name}</a>`;
 
 			if(item.hasOwnProperty('size') && !this.options.mobile)
@@ -957,6 +985,13 @@ export class galleryClass
 			{
 				video = wrapper.querySelector('video');
 
+				this.items[index].dimensions = {
+					height : data.img.height,
+					width : data.img.width
+				};
+
+				this.apply.itemDimensions(index);
+
 				applyChange(() =>
 				{
 					if(this.options.sharpen)
@@ -1033,6 +1068,7 @@ export class galleryClass
 				eventHandler.addListener(video, ['volumechange'], null, (e) =>
 				{
 					this.emitter.dispatch('volumeChange', this.options.volume);
+
 					this.options.volume = video.muted ? 0 : parseFloat(parseFloat(video.volume).toFixed(2));
 				});
 
@@ -1043,11 +1079,18 @@ export class galleryClass
 						return false;
 					}
 
+					let height = video.videoHeight;
+					let width = video.videoWidth;
+
+					this.items[index].dimensions = {
+						height : height,
+						width : width
+					};
+
+					this.apply.itemDimensions(index);
+
 					applyChange(() =>
 					{
-						let height = video.videoHeight;
-						let width = video.videoWidth;
-
 						if(this.options.fitContent)
 						{
 							this.update.listWidth(wrapper);
@@ -1475,32 +1518,34 @@ export class galleryClass
 			}
 		});
 
-		/* top bar close event listener */
-		eventHandler.addListener(
-			'body > div.gallery-container [data-action="close"]', 'click', 'barCloseClick', (e) =>
+		/* add action events */
+		eventHandler.addListener('body > div.gallery-container', 'click', 'galleryContainerClick', (e) =>
 		{
-			this.show(false);
-		});
+			console.log(e.target);
 
-		/* top bar list toggle event listener */
-		if(!this.options.mobile) eventHandler.addListener(
-			'body > div.gallery-container [data-action="toggle"]', 'click', 'listToggleClick', (e) =>
-		{
-			this.toggleList(e.currentTarget);
-		});
+			if(e.target && e.target.hasAttribute('data-action'))
+			{
+				let action = e.target.getAttribute('data-action').toLowerCase();
 
-		/* top bar navigate event listener */
-		if(!this.options.mobile) eventHandler.addListener(
-			'body > div.gallery-container [data-action="previous"]', 'click', 'barPreviousClick', (e) =>
-		{
-			this.navigate(null, -1);
-		});
+				switch(action)
+				{
+					case 'next':
+						this.navigate(null, 1);
+						break;
 
-		/* top bar navigate event listener */
-		if(!this.options.mobile) eventHandler.addListener(
-			'body > div.gallery-container [data-action="next"]', 'click', 'barNextClick', (e) =>
-		{
-			this.navigate(null, 1);
+					case 'previous':
+						this.navigate(null, -1);
+						break;
+
+					case 'toggle':
+						this.toggleList(e.currentTarget);
+						break;
+
+					case 'close':
+						this.show(false);
+						break;
+				}
+			}
 		});
 
 		/* list item click listener */
@@ -1681,7 +1726,7 @@ export class galleryClass
 
 		/* create content (media) outer container */
 		let content = dom.new('div', {
-			class : 'content-container'
+			class : 'content-container' + (this.options.list.reverse ? ' reversed' : '')
 		});
 
 		this.container.append(content);
@@ -1692,7 +1737,7 @@ export class galleryClass
 
 		/* create list */
 		let list = dom.new('div', {
-			class : `ns list${this.options.list.reverse ? ' reversed' : ''}`
+			class : `ns list`
 		});
 
 		/* add to content container, respecting list reverse status */
@@ -1701,7 +1746,7 @@ export class galleryClass
 
 		/* create dragable element on list edge */
 		this.data.listDrag = dom.new('div', {
-			class : 'drag' + (this.options.list.reverse ? ' reversed' : '')
+			class : 'drag'
 		});
 
 		list.append(this.data.listDrag);
@@ -1751,12 +1796,12 @@ export class galleryClass
 		if(this.options.mobile === true)
 		{
 			let navigateLeft = dom.new('div', {
-				'class' : 'screen-nav left',
+				'class' : 'screen-navigate left',
 				'data-action' : 'previous'
 			});
 
 			let navigateRight = dom.new('div', {
-				'class' : 'screen-nav right',
+				'class' : 'screen-navigate right',
 				'data-action' : 'next'
 			});
 
@@ -1771,7 +1816,7 @@ export class galleryClass
 		}));
 
 		media.append(dom.new('div', {
-			class : 'spinner' + (this.options.list.reverse ? ' reversed' : '')
+			class : 'spinner'
 		}));
 
 		/* create list table */
