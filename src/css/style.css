@@ -1150,6 +1150,11 @@ select:not(.default):focus
     letter-spacing: 1px;
 }
 
+.gallery-container div.bar .left > span:nth-child(1)
+{
+	font-feature-settings: 'tnum';
+}
+
 .gallery-container div.bar .left > span:first-child::after,
 .gallery-container div.bar .left > span:last-child::before
 {
@@ -1183,6 +1188,23 @@ select:not(.default):focus
 	width: 100%;
 	vertical-align: middle;
 	position: relative;
+}
+
+.gallery-container div.content-container .media > div.item-info-static
+{
+	position: absolute;
+
+	right: 5px;
+	bottom: 5px;
+
+	padding: 1px 5px 2px 5px;
+	background-color: rgba(0, 0, 0, 0.5);
+
+	border-radius: 2px;
+
+	pointer-events: none;
+
+	font-feature-settings: 'tnum';
 }
 
 .gallery-container div.content-container .media .wrapper .cover .reverse
@@ -1272,7 +1294,7 @@ select:not(.default):focus
 	border-radius: 2px;
 }
 
-.gallery-container div.content-container .media .spinner.reversed
+.gallery-container div.content-container.reversed .media .spinner
 {
 	right: unset;
 	left: 10px;
@@ -1400,7 +1422,7 @@ select:not(.default):focus
 	z-index: 1;
 }
 
-.gallery-container div.content-container .list>div.drag.reversed
+.gallery-container div.content-container.reversed .list>div.drag
 {
 	left: unset;
 	right: 0;
@@ -1442,7 +1464,7 @@ select:not(.default):focus
 	background-color: var(--color-background-gallery-list-selected-hover);
 }
 
-.gallery-container div.content-container .list.reversed table tr.selected td
+.gallery-container div.content-container.reversed .list table tr.selected td
 {
 	border-left: none;
 	border-right: var(--width-border-gallery-list-selected) solid var(--color-border-gallery-list-selected);
@@ -1455,9 +1477,14 @@ select:not(.default):focus
 	color: var(--color-gallery-list-item-hover);
 }
 
-.gallery-container div.content-container .screen-nav
+.gallery-container div.content-container .screen-navigate
 {
 	display: none;
+}
+
+.gallery-container div.content-container .screen-navigate > span
+{
+	pointer-events: none;
 }
 
 /* Mobile - Overrides */
@@ -1519,7 +1546,7 @@ select:not(.default):focus
 		font-size: 0.8em!important;
 		padding: 4px 7px 4px 7px!important;
 	}
-	.gallery-container div.content-container .screen-nav
+	.gallery-container div.content-container .screen-navigate
 	{
 		background-color: rgba(0, 0, 0, 0.25);
 		position: absolute;
@@ -1530,27 +1557,31 @@ select:not(.default):focus
 		font-weight: bold;
 		cursor: pointer;
 	}
+	.gallery-container div.content-container .media > div.item-info-static
+	{
+		right: 25px!important;
+	}
 	.gallery-container div.content-container .media .wrapper .cover .reverse
 	{
 		font-size: 9px;
 	}
-	.gallery-container div.content-container .screen-nav.left
+	.gallery-container div.content-container .screen-navigate.left
 	{
 		left: 0;
 	}
-	.gallery-container div.content-container .screen-nav.right
+	.gallery-container div.content-container .screen-navigate.right
 	{
 		right: 0;
 	}
-	.gallery-container div.content-container .screen-nav.right>span::after
+	.gallery-container div.content-container .screen-navigate.right>span::after
 	{
 		content: "\2192";
 	}
-	.gallery-container div.content-container .screen-nav.left>span::after
+	.gallery-container div.content-container .screen-navigate.left>span::after
 	{
 		content: "\2190";
 	}
-	.gallery-container div.content-container .screen-nav span
+	.gallery-container div.content-container .screen-navigate span
 	{
 		display: table-cell;
 		vertical-align: middle;
