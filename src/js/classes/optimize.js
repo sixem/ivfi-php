@@ -2,7 +2,7 @@
 import { data } from '../config/data';
 
 /* import helpers */
-import { isNumeric, dom } from '../helpers/helpers';
+import { isNumeric, dom } from '../modules/helpers';
 
 const pipe = data.instances.pipe;
 

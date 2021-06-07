@@ -14,7 +14,7 @@ import { optimizeClass } from '../../classes/optimize';
 import { emitterClass } from '../../classes/emitter';
 
 /* import helpers */
-import { dom, debounce } from '../../helpers/helpers';
+import { dom, debounce } from '../../modules/helpers';
 
 const pipe = data.instances.pipe;
 

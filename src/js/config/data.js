@@ -5,12 +5,12 @@ import { config } from '../config/config';
 import { selectorClass } from '../classes/selector';
 
 /* import text data */
-import text from '../text/data.json';
+import text from '../data.json';
 
 /* import helpers */
 import {
 	logger
-} from '../helpers/helpers';
+} from '../modules/helpers';
 
 /* create main data object */
 const data = new Object();

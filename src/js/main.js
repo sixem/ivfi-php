@@ -1,6 +1,6 @@
 /* import vendors */
-import hoverPreview from './vendors/hover-preview';
-import './vendors/modernizr-mq';
+import hoverPreview from './vendors/hover-preview/hover-preview';
+import './vendors/modernizr/modernizr-mq';
 
 /* import config */
 import { config } from './config/config';
@@ -20,7 +20,7 @@ import { componentBind } from './components/bind/main';
 import { componentMain } from './components/main/handler';
 
 /* import helpers */
-import * as h from './helpers/helpers';
+import * as h from './modules/helpers';
 
 /* import stylesheets */
 import '../css/style.css';

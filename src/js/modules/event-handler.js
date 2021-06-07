@@ -1,7 +1,7 @@
 /* require helpers */
 import {
 	isString
-} from '../helpers/helpers';
+} from '../modules/helpers';
 
 /* import config */
 import { code } from '../config/constants';

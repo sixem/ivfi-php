@@ -3,7 +3,7 @@ import { config } from '../../config/config';
 import { data } from '../../config/data';
 
 /* import helpers */
-import { getReadableSize } from '../../helpers/helpers';
+import { getReadableSize } from '../../modules/helpers';
 
 const componentFilter = new Object();
 

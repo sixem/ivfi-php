@@ -6,7 +6,7 @@ import { config } from '../../config/config';
 import { data } from '../../config/data';
 
 /* import helpers */
-import { dom, getScrollTop } from '../../helpers/helpers';
+import { dom, getScrollTop } from '../../modules/helpers';
 
 const events = new Object();
 

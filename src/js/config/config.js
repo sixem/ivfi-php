@@ -6,7 +6,7 @@ import {
 	setNestedPath,
 	getNestedPath,
 	checkNestedPath,
-} from '../helpers/helpers';
+} from '../modules/helpers';
 
 /* config object */
 const config = new Object();

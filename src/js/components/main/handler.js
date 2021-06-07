@@ -1,5 +1,5 @@
 /* import vendors */
-import { formatDate } from '../../vendors/date';
+import { formatDate } from '../../vendors/date/date';
 
 /* import config */
 import { config, user } from '../../config/config';
@@ -9,7 +9,7 @@ import { data } from '../../config/data';
 import { eventHandler } from '../../modules/event-handler';
 
 /* import helpers */
-import * as h from '../../helpers/helpers';
+import * as h from '../../modules/helpers';
 
 /* references */
 const selector = data.instances.selector;

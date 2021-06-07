@@ -11,7 +11,7 @@ import {
 	dom,
 	capitalize,
 	checkNested
-} from '../../helpers/helpers';
+} from '../../modules/helpers';
 
 const pipe = data.instances.pipe;
 

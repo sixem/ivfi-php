@@ -6,7 +6,7 @@ import { data } from '../../config/data';
 import { galleryClass } from './class';
 
 /* require helpers */
-import { applyNested, checkNested } from '../../helpers/helpers';
+import { applyNested, checkNested } from '../../modules/helpers';
 
 const pipe = data.instances.pipe;
 
