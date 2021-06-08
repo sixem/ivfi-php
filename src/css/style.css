@@ -1206,7 +1206,11 @@ select:not(.default):focus
 
 	font-feature-settings: 'tnum';
 
-	opacity: 0.8;
+	opacity: 1;
+
+	transition: opacity 0.75s;
+	-moz-transition: opacity 0.75s ease-in-out;
+	-webkit-transition: opacity 0.75s ease-in-out;
 }
 
 .gallery-container div.content-container .media .wrapper .cover .reverse

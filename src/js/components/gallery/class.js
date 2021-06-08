@@ -698,6 +698,9 @@ export class galleryClass
 		cache : {
 			info : null
 		},
+		timers : {
+			dimensions : null
+		},
 		itemDimensions : (index) =>
 		{
 			let item = this.items[index];
@@ -717,12 +720,20 @@ export class galleryClass
 					this.container.querySelector('div.media').appendChild(media);
 				}
 
+				media.style.opacity = 1;
 				media.style.display = 'inline-block';
 
 				media.textContent = `${item.dimensions.width} x ${item.dimensions.height} (${item.size})`;
 			} else if(media) {
 				media.style.display = 'none';
 			}
+
+			clearTimeout(this.apply.timers.dimensions);
+
+			this.apply.timers.dimensions = setTimeout(() =>
+			{
+				media.style.opacity = 0;
+			}, 3E3);
 		},
 		itemInfo : (update, item = null, index = null, max = null) =>
 		{
@@ -754,7 +765,7 @@ export class galleryClass
 				'title' : `Download: ${item.name}`
 			});
 
-			left.innerHTML = `<span>${index + 1} / ${max}</span>`;
+			left.innerHTML = `<span>${index + 1} of ${max}</span>`;
 			left.innerHTML += `<a target="_blank" href="${url}">${name}</a>`;
 
 			if(item.hasOwnProperty('size') && !this.options.mobile)
