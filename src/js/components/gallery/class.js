@@ -1532,8 +1532,6 @@ export class galleryClass
 		/* add action events */
 		eventHandler.addListener('body > div.gallery-container', 'click', 'galleryContainerClick', (e) =>
 		{
-			console.log(e.target);
-
 			if(e.target && e.target.hasAttribute('data-action'))
 			{
 				let action = e.target.getAttribute('data-action').toLowerCase();

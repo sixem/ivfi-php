@@ -226,7 +226,7 @@ main.dates.apply = (offset, format = true) =>
 				}
 			});
 
-			item.innerHTML = span;
+			item.innerHTML = span.innerHTML;
 		}
 
 		if(since)
