@@ -1205,6 +1205,8 @@ select:not(.default):focus
 	pointer-events: none;
 
 	font-feature-settings: 'tnum';
+
+	opacity: 0.8;
 }
 
 .gallery-container div.content-container .media .wrapper .cover .reverse
@@ -1213,7 +1215,7 @@ select:not(.default):focus
 	top: 4px;
 	left: 4px;
 	border-radius: 2px;
-	font-size: 10px;
+	font-size: 11px;
 	pointer-events: none;
 	border: 1px solid #1a1a1a;
 	opacity: 0.5;
