@@ -1,5 +1,3 @@
-'use strict';
-
 function getLeft(left, eWidth, offsetX)
 {
 	if(left)
@@ -119,9 +117,46 @@ function encodeUrl(input)
 	return this.options.encodeAll ? encodeURI(input).replace('#', '%23').replace('?', '%3F') : encodeURI(input);
 }
 
+function isAudible(video)
+{
+    if(typeof video.webkitAudioDecodedByteCount !== 'undefined')
+    {
+        if(video.webkitAudioDecodedByteCount > 0)
+        {
+        	return true;
+        } else {
+        	return false;
+        }
+    } else if(typeof video.mozHasAudio !== 'undefined')
+    {
+        if(video.mozHasAudio)
+        {
+            return true;
+        } else {
+            return false;
+        }
+    } else if(typeof video.audioTracks !== 'undefined')
+    {
+        if(video.audioTracks && video.audioTracks.length)
+        {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+    	return false;
+    }
+
+    return false;
+}
+
 export function loadImage(src, callback)
 {
-	var img = document.createElement('img'), _this = this;
+	var _this = this;
+
+	var img = document.createElement('img');
+
+	this.currentElement = img;
 
 	img.style['max-width'] = 'inherit';
 	img.style['max-height'] = 'inherit';
@@ -130,11 +165,35 @@ export function loadImage(src, callback)
 
 	_this.timers.load = setInterval(function()
 	{
+		if(!_this.active)
+		{
+			callback(false);
+
+			return;
+		}
+
 		var w = img.naturalWidth, h = img.naturalHeight;
 				
 		if(w && h)
 		{
+			if(_this.data.on.hasOwnProperty('onLoaded'))
+			{
+				try
+				{
+					_this.data.on.onLoaded({
+						loaded : true,
+						type : 'IMAGE',
+						audible : false,
+						element : img
+					});
+				} catch(error)
+				{
+					console.error(error);
+				}
+			}
+
 			clearInterval(_this.timers.load);
+
 			callback(img, [w, h]);
 		}
 	}, 30);
@@ -142,7 +201,11 @@ export function loadImage(src, callback)
 
 export function loadVideo(src, callback)
 {
-	var video = document.createElement('video'), source = video.appendChild(document.createElement('source'));
+	var _this = this;
+
+	var video = document.createElement('video');
+
+	var source = video.appendChild(document.createElement('source'));
 
 	['muted', 'loop', 'autoplay'].forEach((key) =>
 	{
@@ -155,8 +218,41 @@ export function loadVideo(src, callback)
 	video.style['max-width'] = 'inherit';
 	video.style['max-height'] = 'inherit';
 
+	video.onloadeddata = function()
+	{
+		if(!_this.active)
+		{
+			callback(false);
+
+			return;
+		}
+
+		if(_this.data.on.hasOwnProperty('onLoaded'))
+		{
+			try
+			{
+				_this.data.on.onLoaded({
+					loaded : true,
+					type : 'VIDEO',
+					audible : isAudible(video),
+					element : video
+				});
+			} catch(error)
+			{
+				console.error(error);
+			}
+		}
+	}; 
+
 	video.onloadedmetadata = function()
 	{
+		if(!_this.active)
+		{
+			callback(false);
+
+			return;
+		}
+
 		callback(video, [this.videoWidth, this.videoHeight]);
 	}; 
 }

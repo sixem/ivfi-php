@@ -1,5 +1,3 @@
-'use strict';
-
 import {
 	loadImage,
 	loadVideo,
@@ -54,6 +52,7 @@ function onEnter(e)
 
 		// create preview container
 		var container = createContainer();
+
 		document.body.prepend(container);
 
 		// change cursor style if option is set
@@ -70,6 +69,16 @@ function onEnter(e)
 			(this.data.type === 0 ? loadImage : loadVideo)
 			.call(this, this.data.src, function(e, dimensions)
 			{
+				if(!e)
+				{
+					if(_this.options.cursor)
+					{
+						target.style.cursor = (_this.data.cursor ? _this.data.cursor : '');
+					}
+
+					return;
+				}
+
 				container.appendChild(e);
 
 				_this.data.container = container;
@@ -121,6 +130,8 @@ export function mousemove(e)
 
 export function mouseenter(e)
 {
+	this.active = true;
+
 	setOffset.call(this, e);
 
 	var _this = this;
@@ -129,7 +140,10 @@ export function mouseenter(e)
 	{
 		this.timers.delay = setTimeout(function()
 		{
-			onEnter.call(_this, e);
+			if(_this.active)
+			{
+				onEnter.call(_this, e);
+			}
 		}, this.options.delay);
 	} else {
 		onEnter.call(_this, e);
@@ -139,6 +153,8 @@ export function mouseenter(e)
 // destroy preview container
 export function mouseleave(e)
 {
+	this.active = false;
+
 	if(this.options.cursor && e.target.style.cursor === 'progress')
 	{
 		e.target.style.cursor = this.data.cursor ? this.data.cursor : '';
@@ -156,4 +172,20 @@ export function mouseleave(e)
 	clearInterval(this.timers.load);
 
 	this.loaded = false;
+
+	if(this.data.on.hasOwnProperty('onLoaded'))
+	{
+		try
+		{
+			this.data.on.onLoaded({
+				loaded : false,
+				type : null,
+				audible : false,
+				element : null
+			});
+		} catch(error)
+		{
+			console.error(error);
+		}
+	}
 }

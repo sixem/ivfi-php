@@ -1,5 +1,3 @@
-'use strict';
-
 import {
 	getMove
 } from './utils';
@@ -35,6 +33,7 @@ class hoverPreview
 	reload()
 	{
 		this.destroy();
+
 		setup.call(this);
 	}
 
@@ -63,6 +62,13 @@ function setup()
 		force : null
 	};
 
+	this.data.on = new Object();
+
+	if(typeof this.options.on === 'object' && this.options.on !== null)
+	{
+		this.data.on = this.options.on;
+	}
+
 	if(this.options.force)
 	{
 		this.data.force = this.options.force;
@@ -85,9 +91,11 @@ function setup()
 		mousemove : mousemove.bind(this)
 	};
 
+	this.active = false;
+
 	// add events
-	this.handle.addEventListener('mouseenter', this.events.mouseenter, false);
 	this.handle.addEventListener('mouseleave', this.events.mouseleave, false);
+	this.handle.addEventListener('mouseenter', this.events.mouseenter, false);
 	this.handle.addEventListener('mousemove', this.events.mousemove, false);
 }
 
