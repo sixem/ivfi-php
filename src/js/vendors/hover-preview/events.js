@@ -133,10 +133,10 @@ export function mouseenter(e)
 	this.active = true;
 
 	var id = parseInt(this.id);
+	
+	var _this = this;
 
 	setOffset.call(this, e);
-
-	var _this = this;
 
 	if(this.options.delay && this.options.delay > 0)
 	{
@@ -163,6 +163,9 @@ export function mouseleave(e)
 	{
 		if(this.currentElement.tagName === 'VIDEO')
 		{
+			this.currentElement.pause();
+			this.currentElement.muted = true;
+
 			this.currentElement.onloadeddata = () => {};
 			this.currentElement.onloadedmetadata = () => {};
 		}

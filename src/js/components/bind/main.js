@@ -72,10 +72,12 @@ events.handlePreviewScroll = (e) =>
 	{
 		if(e.deltaY && Math.abs(e.deltaY) !== 0)
 		{
+			let step = data.preview.volume > 5 ? 2 : 1;
+			
 			if(e.deltaY < 0)
 			{
 				/* scroll up */
-				data.preview.volume += 2;
+				data.preview.volume += step;
 
 				if(data.preview.volume > 100)
 				{
@@ -84,7 +86,7 @@ events.handlePreviewScroll = (e) =>
 			} else if(e.deltaY > 0)
 			{
 				/* scroll down */
-				data.preview.volume -= 2;
+				data.preview.volume -= step;
 
 				if(data.preview.volume < 0)
 				{
