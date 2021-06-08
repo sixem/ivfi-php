@@ -1549,7 +1549,7 @@ export class galleryClass
 						break;
 
 					case 'toggle':
-						this.toggleList(e.currentTarget);
+						this.toggleList(e.target);
 						break;
 
 					case 'close':
