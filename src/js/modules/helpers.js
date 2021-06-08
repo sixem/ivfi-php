@@ -241,6 +241,30 @@ exports.getReadableSize = (format, bytes = 0) =>
 	return Math.max(bytes, 0.1).toFixed(i < 2 ? 0 : 2) + format[i];
 };
 
+exports.setVideoVolume = (video, volume) =>
+{
+	if(!video)
+	{
+		return;
+	}
+	
+	let muted = !(volume > 0);
+
+	video.muted = muted;
+
+	video.volume = muted ? 0 : volume <= 100 ? volume : 100;
+
+	/* catch errors (uninteracted with DOM) and mute on error */
+	video.play().catch((error) =>
+	{
+		video.muted = true;
+		
+		video.volume = 0;
+
+		video.play();
+	});
+};
+
 /**
  * scans the table for available extensions, then generates a wget command to download them specifically.
  */

@@ -15,8 +15,14 @@ import {
 /* create main data object */
 const data = new Object();
 
+/* declare local storage key */
+data.storageKey = 'eyyIndexer';
+
 /* set data text object */
 data.text = text;
+
+/* set data scrolllock object */
+data.scrollLock = false;
 
 /* create data sets object */
 data.sets = new Object();
@@ -60,6 +66,29 @@ data.keys = {
 	g : 71,
 	l : 76
 };
+
+/* create preview data */
+data.preview = new Object();
+
+data.preview.volume = 0;
+data.preview.data = null;
+
+/* create preview volume */
+if(config.get('mobile') === false && config.get('preview.enabled') === true)
+{
+	data.preview.volume = localStorage.getItem(`${data.storageKey}.previewVolume`);
+
+	if(data.preview.volume === null || !(data.preview.volume >= 0))
+	{
+		data.preview.volume = 10;
+
+		localStorage.setItem(`${data.storageKey}.previewVolume`, 10);
+	} else {
+		data.preview.volume = parseInt(data.preview.volume);
+	}
+
+	console.log('-> data.previewVolume', data.preview.volume);
+}
 
 /* initiate selector class */
 data.instances.selector = new selectorClass();

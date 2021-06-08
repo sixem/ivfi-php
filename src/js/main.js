@@ -29,6 +29,15 @@ import '../css/style.css';
 const selector = data.instances.selector;
 const pipe = data.instances.pipe;
 
+/* disable media play */
+try
+{
+	navigator.mediaSession.setActionHandler('play', () => {});
+} catch(error)
+{
+	pipe(error);
+}
+
 /* set main component in data */
 data.components.main = componentMain;
 
@@ -183,6 +192,30 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 {
 	let previews = new Object();
 
+	let onLoaded = (e) =>
+	{
+		if(data.preview.data && data.preview.data.element)
+		{
+			data.preview.data.element.remove();
+		}
+
+		let [element, type] = [e.element, e.type];
+
+		data.preview.data = e;
+
+		if(element && type === 'VIDEO')
+		{
+			h.setVideoVolume(element, data.preview.volume / 100);
+		}
+
+		if(e.loaded && e.audible)
+		{
+			data.scrollLock = true;
+		} else {
+			data.scrollLock = false;
+		}
+	}
+
 	let createPreview = (element) =>
 	{
 		let src = element.getAttribute('href');
@@ -208,6 +241,11 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 
 			/* encoding */
 			options.encodeAll = config.get('encodeAll');
+
+			/* events */
+			options.on = {
+				onLoaded : onLoaded
+			};
 
 			/* force set extension data */
 			options.force = {

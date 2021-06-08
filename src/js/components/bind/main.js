@@ -6,7 +6,7 @@ import { config } from '../../config/config';
 import { data } from '../../config/data';
 
 /* import helpers */
-import { dom, getScrollTop } from '../../modules/helpers';
+import { dom, getScrollTop, setVideoVolume } from '../../modules/helpers';
 
 const events = new Object();
 
@@ -15,7 +15,7 @@ const selector = data.instances.selector;
 /**
  * called onscroll - shows/hides current path in the top bar
  */
-events.scroll = () =>
+events.handleTopBarVisibility = () =>
 {
 	let path = selector.use('PATH');
 
@@ -57,6 +57,100 @@ events.scroll = () =>
 			top.classList.remove('visible');
 
 			top._isVisible = false;
+		}
+	}
+}
+
+const scrollData = new Object();
+
+scrollData.break = false;
+scrollData.save = null;
+
+events.handlePreviewScroll = (e) =>
+{
+	if(data.scrollLock && !scrollData.break)
+	{
+		if(e.deltaY && Math.abs(e.deltaY) !== 0)
+		{
+			if(e.deltaY < 0)
+			{
+				/* scroll up */
+				data.preview.volume += 2;
+
+				if(data.preview.volume > 100)
+				{
+					data.preview.volume = 100;
+				}
+			} else if(e.deltaY > 0)
+			{
+				/* scroll down */
+				data.preview.volume -= 2;
+
+				if(data.preview.volume < 0)
+				{
+					data.preview.volume = 0;
+				}
+			}
+
+			clearTimeout(scrollData.save);
+
+			scrollData.save = setTimeout(() =>
+			{
+				localStorage.setItem(`${data.storageKey}.previewVolume`, data.preview.volume);
+			}, 100);
+
+			console.log('data.previewVolume', data.preview.volume, data.preview.data);
+
+			if(data.preview.data &&
+				data.preview.data.element &&
+				data.preview.data.audible &&
+				data.preview.data.type === 'VIDEO')
+			{
+				setVideoVolume(data.preview.data.element, data.preview.volume / 100);
+			}
+		}
+
+		scrollData.break = true;
+
+		setTimeout(() =>
+		{
+			scrollData.break = false;
+		}, 25);
+	}
+
+	if(data.scrollLock)
+	{
+		e.preventDefault();
+	}
+}
+
+let debounceTimer = null;
+
+let onDebounce = () =>
+{
+	events.handleTopBarVisibility();
+
+	if(data.instances.optimize.main.enabled)
+	{
+		data.instances.optimize.main.attemptRefresh();
+	}
+};
+
+events.handleBaseScroll = (e) =>
+{
+	clearTimeout(debounceTimer);
+
+	debounceTimer = setTimeout(() => onDebounce(), 100);
+
+	if(data.instances.optimize.main.enabled)
+	{
+		/* get scrolled position */
+		let scrolled = window.scrollY;
+
+		/* trigger optimization refresh if 175 px has been scrolled */
+		if(Math.abs(scrolled - data.layer.main.scrolledY) > 175)
+		{
+			data.instances.optimize.main.attemptRefresh();
 		}
 	}
 }
@@ -116,37 +210,34 @@ export class componentBind
 			}
 		});
 
-		let debounceTimer = null;
+		let scrollEvents = ['DOMMouseScroll', 'mousewheel', 'wheel'];
 
-		let onDebounce = () =>
+		/* remove any existing scrolling events */
+		(scrollEvents).forEach((event) =>
 		{
-			events.scroll();
-
-			if(data.instances.optimize.main.enabled)
-			{
-				data.instances.optimize.main.attemptRefresh();
-			}
-		};
-
-		eventHandler.addListener(window, 'scroll', 'windowScroll', (e) =>
-		{
-			clearTimeout(debounceTimer);
-
-			debounceTimer = setTimeout(() => onDebounce(), 100);
-
-			if(data.instances.optimize.main.enabled)
-			{
-				/* get scrolled position */
-				let scrolled = window.scrollY;
-
-				/* trigger optimization refresh if 175 px has been scrolled */
-				if(Math.abs(scrolled - data.layer.main.scrolledY) > 175)
-				{
-					data.instances.optimize.main.attemptRefresh();
-				}
-			}
+			window.removeEventListener(event, events.handlePreviewScroll, {
+				passive: false
+			});
 		});
 
-		events.scroll();
+		/* create non-passive scrolling listeners directly */
+		(scrollEvents).forEach((event) =>
+		{
+			window.addEventListener(event, events.handlePreviewScroll, {
+				passive: false
+			});
+		});
+
+		/* remove any existing `scroll` event */
+		window.removeEventListener('scroll', events.handleBaseScroll, {
+			passive: false
+		});
+
+		/* create non-passive `scroll` listener directly */
+		window.addEventListener('scroll', events.handleBaseScroll, {
+			passive: false
+		});
+
+		events.handleTopBarVisibility();
 	}
 }
