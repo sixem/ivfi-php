@@ -207,6 +207,8 @@ export function loadVideo(src, callback)
 
 	var source = video.appendChild(document.createElement('source'));
 
+	this.currentElement = video;
+
 	['muted', 'loop', 'autoplay'].forEach((key) =>
 	{
 		video[key] = true;

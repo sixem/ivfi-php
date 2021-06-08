@@ -92,6 +92,7 @@ function setup()
 	};
 
 	this.active = false;
+	this.id = 0;
 
 	// add events
 	this.handle.addEventListener('mouseleave', this.events.mouseleave, false);

@@ -132,6 +132,8 @@ export function mouseenter(e)
 {
 	this.active = true;
 
+	var id = parseInt(this.id);
+
 	setOffset.call(this, e);
 
 	var _this = this;
@@ -140,7 +142,7 @@ export function mouseenter(e)
 	{
 		this.timers.delay = setTimeout(function()
 		{
-			if(_this.active)
+			if(_this.active && id === _this.id)
 			{
 				onEnter.call(_this, e);
 			}
@@ -154,6 +156,19 @@ export function mouseenter(e)
 export function mouseleave(e)
 {
 	this.active = false;
+
+	this.id++;
+
+	if(this.currentElement)
+	{
+		if(this.currentElement.tagName === 'VIDEO')
+		{
+			this.currentElement.onloadeddata = () => {};
+			this.currentElement.onloadedmetadata = () => {};
+		}
+
+		this.currentElement.remove();
+	}
 
 	if(this.options.cursor && e.target.style.cursor === 'progress')
 	{

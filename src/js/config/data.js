@@ -86,8 +86,6 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 	} else {
 		data.preview.volume = parseInt(data.preview.volume);
 	}
-
-	console.log('-> data.previewVolume', data.preview.volume);
 }
 
 /* initiate selector class */
