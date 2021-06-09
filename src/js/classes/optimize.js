@@ -117,7 +117,9 @@ export class optimizeClass
 			/* out of viewport? hide it here - speeds up page load */
 			if(!(i >= start && i <= limit))
 			{
-				item.classList.add('hid-row');
+				//item.classList.add('hid-row');
+
+				itemClasses.push('hid-row');
 			}
 
 			/* instead of calling .add() twice, add as array - should be faster */
@@ -257,7 +259,7 @@ export class optimizeClass
 		/* call `onRowChange` function, if set */
 		if(this.on && this.on.hasOwnProperty('rowChange'))
 		{
-			this.on.rowChange(this.rows);
+			this.on.rowChange(activeRows);
 		}
 
 		/* set table height */
