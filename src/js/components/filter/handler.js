@@ -18,7 +18,12 @@ componentFilter.apply = (query = new String()) =>
 	data.sets.refresh = true;
 
 	filterData.reset = query === new String() || !query;
-	filterData.shown = { directories : 0, files : 0 };
+
+	filterData.shown = {
+		directories : 0,
+		files : 0
+	};
+
 	filterData.size = 0;
 
 	if(data.instances.gallery)
@@ -35,11 +40,15 @@ componentFilter.apply = (query = new String()) =>
 		config.get('sorting.directorySizes')
 	);
 
-	let useOptimizer = data.instances.optimize.hasOwnProperty('main');
+	/* check if optimizer is being used */
+	let useOptimizer = data.instances.optimize.hasOwnProperty('main') &&
+		data.instances.optimize.main.enabled;
 
 	let rows = useOptimizer ? 
 		data.instances.optimize.main.rows :
 		selector.use('TABLE').querySelectorAll('tbody > tr');
+
+	console.log(filterData.reset);
 
 	/* iterate over rows, search for query */
 	for(let i = 1; i < rows.length; i++)
@@ -55,7 +64,7 @@ componentFilter.apply = (query = new String()) =>
 				data.instances.optimize.main.setVisibleFlag(item, true);
 			}
 
-			break;
+			continue;
 		}
 
 		let is = {

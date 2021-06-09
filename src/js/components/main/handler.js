@@ -337,19 +337,19 @@ main.overlay.hide = (callback = () => new Object()) =>
 {
 	let i = 0;
 
-	let data = new Array();
+	let array = new Array();
 
-	data.push({
+	array.push({
 		element : document.body.querySelector(':scope > div.filter-container'),
 		f : data.components.filter.toggle
 	});
 
-	data.push({
+	array.push({
 		element : document.body.querySelector(':scope > div.menu'),
 		f : main.menu.toggle
 	});
 
-	data.forEach((obj) =>
+	array.forEach((obj) =>
 	{
 		if(obj.element && obj.element.style.display !== 'none')
 		{
