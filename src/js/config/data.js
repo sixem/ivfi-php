@@ -1,5 +1,6 @@
 /* import config */
 import { config } from '../config/config';
+import { code } from '../config/constants';
 
 /* import classes */
 import { selectorClass } from '../classes/selector';
@@ -16,7 +17,7 @@ import {
 const data = new Object();
 
 /* declare local storage key */
-data.storageKey = 'eyyIndexer';
+data.storageKey = code.STORAGE_KEY;
 
 /* set data text object */
 data.text = text;

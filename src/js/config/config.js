@@ -1,5 +1,6 @@
 /* import vendors */
 import cookies from 'js-cookie';
+import '../vendors/modernizr/modernizr-mq';
 
 /* import helpers */
 import {
@@ -56,14 +57,9 @@ user.getDefaults = () =>
 	let defaults = new Object();
 
 	defaults.gallery = {
-		'reverseOptions' : (config.data).gallery.reverse_options,
+		'reverseOptions' : (config.data).gallery.reverseOptions,
 		'listAlignment' : (config.data).gallery.listAlignment,
-		'fitContent' : (config.data).gallery.fit_content
-	};
-
-	defaults.gallery.extensions = {
-		'image' : (config.data).extensions.image,
-		'video' : (config.data).extensions.video
+		'fitContent' : (config.data).gallery.fitContent
 	};
 
 	defaults.gallery.autoplay = true;
