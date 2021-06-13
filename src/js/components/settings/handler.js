@@ -225,7 +225,7 @@ const options = new Object();
 
 options.gather = (container) =>
 {
-	let _data = new Object();
+	let gathered = new Object();
 
 	/* gather settings elements */
 	let elements = container.querySelectorAll('select, input[type="checkbox"]');
@@ -241,24 +241,24 @@ options.gather = (container) =>
 				element.getAttribute('data-key') :
 				element.closest('.section').getAttribute('data-key');
 
-			if(!Object.prototype.hasOwnProperty.call(_data, section))
+			if(!Object.prototype.hasOwnProperty.call(gathered, section))
 			{
-				_data[section] = new Object();
+				gathered[section] = new Object();
 			}
 
 			if(element.tagName === 'SELECT')
 			{
-				_data[section][id] = element.selectedIndex;
+				gathered[section][id] = element.selectedIndex;
 
 			} else if(element.tagName === 'INPUT' &&
 				element.getAttribute('type').toUpperCase() === 'CHECKBOX')
 			{
-				_data[section][id] = element.checked;
+				gathered[section][id] = element.checked;
 			}
 		}
 	});
 
-	return _data;
+	return gathered;
 };
 
 options.set = (_data, client) =>

@@ -1,6 +1,5 @@
 /* import vendors */
 import hoverPreview from './vendors/hover-preview/hover-preview';
-import './vendors/modernizr/modernizr-mq';
 
 /* import config */
 import { config } from './config/config';
