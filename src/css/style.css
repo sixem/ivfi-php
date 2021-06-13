@@ -1208,9 +1208,9 @@ select:not(.default):focus
 
 	opacity: 1;
 
-	transition: opacity 0.75s;
-	-moz-transition: opacity 0.75s ease-in-out;
-	-webkit-transition: opacity 0.75s ease-in-out;
+	transition: opacity 0.5s;
+	-moz-transition: opacity 0.5s ease-in-out;
+	-webkit-transition: opacity 0.5s ease-in-out;
 }
 
 .gallery-container div.content-container .media .wrapper .cover .reverse
@@ -1221,13 +1221,12 @@ select:not(.default):focus
 	border-radius: 2px;
 	font-size: 11px;
 	pointer-events: none;
-	border: 1px solid #1a1a1a;
 	opacity: 0.5;
 	visibility: hidden;
 
-	transition: opacity 0.2s;
-	-moz-transition: opacity 0.2s ease-in-out;
-	-webkit-transition: opacity 0.2s ease-in-out;
+	transition: opacity 0.125s;
+	-moz-transition: opacity 0.125s ease-in-out;
+	-webkit-transition: opacity 0.125s ease-in-out;
 }
 
 .gallery-container div.content-container .media .wrapper .cover .reverse:hover
@@ -1272,6 +1271,8 @@ select:not(.default):focus
 	--spinner-fade-duration: 0.25s;
 
 	position: absolute;
+
+	z-index: 1;
 
 	top: 10px;
 	right: 10px;
