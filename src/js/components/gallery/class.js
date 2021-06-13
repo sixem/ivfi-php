@@ -3,6 +3,7 @@ import cookies from 'js-cookie';
 import swipe from 'vanilla-swipe';
 
 /* import config */
+import { config, user } from '../../config/config';
 import { data } from '../../config/data';
 import { code } from '../../config/constants';
 
@@ -189,6 +190,11 @@ export class galleryClass
 		if(this.options.performance)
 		{
 			this.useOptimzer(this.table);
+		}
+
+		if(!this.options.list.show || this.options.mobile)
+		{
+			this.list.style.display = 'none';
 		}
 	}
 
@@ -1181,13 +1187,20 @@ export class galleryClass
 			return false;
 		}
 
-		let init;
-		let item;
+		let init = null;
 
-		let image = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper img');
-		let video = this.container.querySelector(':scope > div.content-container > div.media > div.wrapper video');
-		let list = this.container.querySelector(':scope > div.content-container > div.list');
+		let item = null;
+
+		let contentContainer = this.container.querySelector(':scope > div.content-container');
+
+		let image = contentContainer.querySelector(':scope > div.media > div.wrapper img');
+
+		let video = contentContainer.querySelector(':scope > div.media > div.wrapper video');
+
+		let list = contentContainer.querySelector(':scope > div.list');
+
 		let table = list.querySelector('table');
+
 		let element = table.querySelector(`tr:nth-child(${index + 1})`);
 
 		item = this.items[index];
@@ -1395,15 +1408,14 @@ export class galleryClass
 	toggleList = (element = null) =>
 	{
 		let list = this.container.querySelector(':scope > div.content-container > div.list');
+
 		let visible = list.style.display !== 'none';
-		let client = JSON.parse(cookies.get('ei-client'));
 
-		client.gallery.list_state = (!visible ? 1 : 0);
+		let client = user.get();
 
-		cookies.set('ei-client', JSON.stringify(client), {
-			sameSite : 'lax',
-			expires : 365
-		});
+		client.gallery.listState = (!visible ? 1 : 0);
+
+		user.set(client);
 
 		if(!element)
 		{
@@ -1417,6 +1429,11 @@ export class galleryClass
 		});
 
 		this.update.listWidth();
+
+		if(!visible && this.options.performance && this.optimize.enabled)
+		{
+			this.optimize.attemptRefresh();
+		}
 
 		return !visible;
 	}
@@ -1794,11 +1811,6 @@ export class galleryClass
 				sameSite : 'lax',
 				expires : 365
 			});
-		}
-
-		if(!this.options.list.show || this.options.mobile)
-		{
-			list.style.display = 'none';
 		}
 
 		/* create mobile navigation (left & right) */

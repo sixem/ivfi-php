@@ -86,7 +86,7 @@ export class componentGallery
 		let options = new Object();
 
 		/* check if list state is saved */
-		let hasStoredListState = JSON.parse(client.gallery.hasOwnProperty('list_state'));
+		let hasStoredListState = client.gallery.hasOwnProperty('listState');
 
 		/* set list state */
 		let listState = hasStoredListState ? client.gallery.listState : 1;
