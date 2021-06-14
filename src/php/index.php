@@ -1037,7 +1037,7 @@ $bust = md5($config['debug'] ? time() : $version);
 
   </head>
 
-  <body class="directory<?=$compact ? ' compact' : ''?><?=!$footer ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
+  <body class="directory-root<?=$compact ? ' compact' : ''?><?=!$footer ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
 
     <div class="top-bar">
         <div class="extend ns">&#x25BE;</div>

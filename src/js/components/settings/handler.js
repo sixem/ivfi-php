@@ -147,7 +147,7 @@ update.gallery.listAlignment = (alignment) =>
 {
 	if(data.instances.gallery)
 	{
-		let parent = document.body.querySelector(':scope > div.gallery-container > div.content-container');
+		let parent = document.body.querySelector(':scope > div.gallery-root > div.gallery-content');
 
 		parent.classList[alignment === 0 ? 'remove' : 'add']('reversed');
 
@@ -169,8 +169,8 @@ update.gallery.reverseOptions = (value) =>
 	{
 		data.instances.gallery.options.reverseOptions = value;
 
-		let element = document.body.querySelector('div.gallery-container \
-			> div.content-container > div.media > div.wrapper > div.cover .reverse');
+		let element = document.body.querySelector('div.gallery-root \
+			> div.gallery-content > div.media > div.wrapper > div.cover .reverse');
 
 		if(element)
 		{
@@ -186,8 +186,8 @@ update.gallery.fitContent = (value) =>
 		data.instances.gallery.options.fitContent = value;
 
 		/* get gallery wrapper */
-		let wrapper = document.body.querySelector('div.gallery-container \
-			> div.content-container > div.media > div.wrapper');
+		let wrapper = document.body.querySelector('div.gallery-root \
+			> div.gallery-content > div.media > div.wrapper');
 
 		if(wrapper && value)
 		{
