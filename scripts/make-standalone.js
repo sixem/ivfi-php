@@ -1,3 +1,5 @@
+const package = require('../package.json');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -14,7 +16,7 @@ let minifiedBanner = () =>
 {
 	return `
 /*!
- * eyy-indexer - A directory explorer
+ * eyy-indexer - ${package.description} (${package.version})
  *
  * [https://github.com/sixem/eyy-indexer]
  *
