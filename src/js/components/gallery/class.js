@@ -114,9 +114,6 @@ export class galleryClass
 		/* start index */
 		data.start = 0;
 
-		/* fade */
-		data.fade = 0;
-
 		/* list alignment */
 		data.listAlignment = 0;
 
@@ -441,78 +438,6 @@ export class galleryClass
 		}
 	}
 
-	/**
-	 * fade in function
-	 */
-	fadeIn = (element, duration, display, callback) =>
-	{
-		display = display === undefined ? 'block' : display;
-
-		dom.css.set(element, {
-			opacity : 0,
-			display : display
-		});
-
-		let last = +new Date();
-
-		let tick = () =>
-		{
-			element.style.opacity = +element.style.opacity + (new Date() - last) / duration;
-
-			last = +new Date();
-
-			if(+element.style.opacity < 1)
-			{
-				(window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16.66);
-			} else {
-				element.style.opacity = 1;
-
-				if(callback)
-				{
-					callback();
-				}
-			}
-  		};
-
-		tick();
-	}
-
-	/**
-	 * fade out function
-	 */
-	fadeOut = (element, duration, display, callback) =>
-	{
-		display = display === undefined ? 'block' : display;
-
-		dom.css.set(element, {
-			opacity : 1,
-			display : display
-		});
-
-		let last = +new Date();
-
-		let tick = () =>
-		{
-			element.style.opacity = +element.style.opacity - (new Date() - last) / duration;
-
-			last = +new Date();
-
-			if(+element.style.opacity > 0)
-			{
-				(window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16.66);
-			} else {
-				element.style.opacity = 0;
-
-				if(callback)
-				{
-					callback();
-				}
-			}
-  		};
-
-		tick();
-	}
-
 	busy = (bool) =>
 	{
 		if(typeof bool != 'undefined')
@@ -756,8 +681,6 @@ export class galleryClass
 		},
 		itemInfo : (update, item = null, index = null, max = null) =>
 		{
-			console.log('---->', update, item, index, max);
-
 			if(update)
 			{
 				if(Array.isArray(this.apply.cache.info))
@@ -977,36 +900,16 @@ export class galleryClass
 				}
 			};
 
-			if(this.options.fade > 0)
+			wrapper.style.display = '';
+
+			if(onChange)
 			{
-				let duration = Math.round(this.options.fade / 2);
-
-				this.fadeOut(wrapper, duration, new String(), () =>
-				{
-					if(onChange)
-					{
-						onChange();
-					}
-
-					hideOther();
-
-					this.fadeIn(wrapper, duration, new String(), () =>
-					{
-						this.busy(false);
-					});
-				});
-			} else {
-				wrapper.style.display = '';
-
-				if(onChange)
-				{
-					onChange();
-				}
-
-				hideOther();
-
-				this.busy(false);
+				onChange();
 			}
+
+			hideOther();
+
+			this.busy(false);
 		};
 
 		let display = () =>

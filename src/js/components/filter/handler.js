@@ -48,8 +48,6 @@ componentFilter.apply = (query = new String()) =>
 		data.instances.optimize.main.rows :
 		selector.use('TABLE').querySelectorAll('tbody > tr');
 
-	console.log(filterData.reset);
-
 	/* iterate over rows, search for query */
 	for(let i = 1; i < rows.length; i++)
 	{

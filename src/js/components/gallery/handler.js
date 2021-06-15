@@ -100,7 +100,6 @@ export class componentGallery
 			['mobile', 'mobile'],
 			['encodeAll', 'encodeAll'],
 			['performance', 'performance'],
-			['fade', 'gallery.fade'],
 			['blur', 'gallery.blur'],
 			['sharpen', 'gallery.imageSharpen'],
 			['scrollInterval', 'gallery.scrollInterval']

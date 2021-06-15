@@ -12,6 +12,8 @@ const events = new Object();
 
 const selector = data.instances.selector;
 
+const pipe = data.instances.pipe;
+
 /**
  * called onscroll - shows/hides current path in the top bar
  */
@@ -101,7 +103,7 @@ events.handlePreviewScroll = (e) =>
 				localStorage.setItem(`${data.storageKey}.previewVolume`, data.preview.volume);
 			}, 100);
 
-			console.log('data.previewVolume', data.preview.volume, data.preview.data);
+			pipe('data.previewVolume', data.preview.volume, data.preview.data);
 
 			if(data.preview.data &&
 				data.preview.data.element &&
