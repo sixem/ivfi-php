@@ -110,7 +110,7 @@ main.menu.create = () =>
 
 			} else if(e.target.id == 'filter')
 			{
-				toggle(null, () => main.menu.toggle());
+				toggle(null, () => data.components.filter.toggle());
 
 			}
 		}
