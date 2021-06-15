@@ -10,11 +10,11 @@
 
 ## What is this project?
 
-This is a simple file directory viewer script written in PHP and JavaScript.
+This is a file directory browser script written in PHP and JavaScript.
 
-This Indexer is designed to be a more image and video friendly Indexer while still having most of the basic functions of any other Indexer or Directory Lister. It is also designed to have a retro and simple feel to it which is why it doesn't use any fancy CSS or icon packs.
+This is designed to be a image and video friendly Indexer, while also being an Indexer that has all of the other features that you can expect from most directory listers out there. It has a lot of features, can be heavily customized, and it has a design that attempts to be appealing while also being functional and easy to use.
 
-JavaScript is not required for the Indexer but it is needed for the extra functionality.
+***JavaScript is not required for the Indexer but it is needed for the extra functionality.***
 
 ### Demo
 
@@ -51,18 +51,21 @@ This script can be customized in a number of ways. (See: [Configuration](docs/CO
 + Mobile friendly.
 
 # Setup
+
+#### PS: You can download the latest release [here](https://github.com/sixem/eyy-indexer/releases)!
+
 ## 1. Files
 
 You can choose between having a **default** setup and a **standalone** setup.
 
 The default setup will import assets (`js`, `css` etc.) as separate files, like most sites. This is the most orderly setup.
 
-The standalone setup will have all of these files bundled directly into the `.php` file. This may slightly increase the time it takes for the page to load but it usually won't be noticeable at all.
+The standalone setup will have all of these files bundled directly into the `.php` file instead.
 
 ### Default
-Place the files from the [/public/](public/) directory into your root web directory.
+Place the files from the `build` directory into your root web directory.
 ### Standalone (Single file)
-Place the file from the [/standalone/](standalone/) directory into your root web directory.
+Place the file from the `standalone` directory into your root web directory.
 
 ## 2. Server Configuration
 
@@ -98,9 +101,8 @@ DirectoryIndex index.php index.html index.htm /indexer.php
 This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist.
 
 # Configuration
-The Indexer can be customized by editing the config available inside of the [indexer.php](public/indexer.php).
 
-You can read the [CONFIG.md](docs/CONFIG.md) to see a more detailed overview of the available options.
+#### See [docs/CONFIG](docs/CONFIG.md) for a detailed overview over how this script can be customized.
 
 # Building
 You can build this script from source using `npm`.
@@ -113,22 +115,27 @@ cd eyy-indexer
 npm install
 ```
 
-**Build (production)**
+## Production builds
 
-*Generates minified files*
+Build from source, creating minified files:
 ```
 npm run build
 ```
 
-**Build (development)**
+Build a standalone file from source:
+```
+npm run make-standalone
+```
 
-*Generates a source mapped output*
+## Development builds
+
+Build source mapped, non-production files:
 ```
 npm run build-dev
 ```
 
 # Contributing
-You can contribute by submitting a pull request to the current [dev](https://github.com/sixem/eyy-indexer/branches) branch.
+You can contribute by either submitting a pull request, reporting issues or bugs, or voicing good ideas. It's all very much welcome! :relaxed:
 
 ## Disclaimer
 ***As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.***
