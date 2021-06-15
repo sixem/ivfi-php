@@ -84,7 +84,6 @@ The gallery plugin will display a gallery of the images and videos inside the cu
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `enabled` | Boolean | `true` | Whether the gallery plugin should be enabled or not.
-| `fade` | Integer | `0` | Fade duration (`ms`) when navigating the gallery. `0` will disable the effect.
 | `reverse_options` | Boolean | `false` | Whether gallery images should have reverse search options or not.
 | `scroll_interval` | Integer | `50` | Adds a forced break between scroll events in the gallery (`ms`).
 | `list_alignment` | Integer | `0` | Gallery list alignment where `0` is `right` and `1` is `left`.
