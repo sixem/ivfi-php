@@ -42,7 +42,7 @@ module.exports = (env) => {
 		},
 		output: {
 			filename: 'main.js',
-			path: __dirname + '/public/indexer/js'
+			path: __dirname + '/build/indexer/js'
 		},
 		optimization: {
 			minimize: env.production ? true : false,
@@ -58,7 +58,7 @@ module.exports = (env) => {
 				inject: false,
 				minify: false,
 				template: __dirname + '/src/php/index.php',
-				filename: __dirname + '/public/indexer.php',
+				filename: __dirname + '/build/indexer.php',
 				templateParameters: (compilation) => {
 					return {
 						version: package.version,
