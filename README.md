@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-<a href="https://github.com/sixem/eyy-indexer/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/eyy-indexer?color=37bd44&style=for-the-badge"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/eyy-indexer?style=for-the-badge"> <img src="https://img.shields.io/github/license/sixem/eyy-indexer?style=for-the-badge"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/eyy-indexer?style=for-the-badge">
+<a href="https://github.com/sixem/eyy-indexer/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/eyy-indexer?color=37bd44&style=for-the-badge"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/eyy-indexer?style=for-the-badge"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/eyy-indexer?style=for-the-badge">
 </p>
 
 <br/>
@@ -138,6 +138,9 @@ npm run build-dev
 
 # Contributing
 You can contribute by either submitting a pull request, reporting issues or bugs, or voicing good ideas. It's all very much welcome! :relaxed:
+
+## License
+This project is licensed under GPL-3.0. It also includes external libraries that are available under a variety of licenses. See [LICENSE](LICENSE) for the full license text.
 
 ## Disclaimer
 ***As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.***
