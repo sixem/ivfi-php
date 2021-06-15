@@ -52,19 +52,21 @@ This script can be customized in a number of ways. (See: [Configuration](docs/CO
 
 # Setup
 
-#### PS: You can download the latest release [here](https://github.com/sixem/eyy-indexer/releases)!
+### Download the latest release [HERE](https://github.com/sixem/eyy-indexer/releases)!
+
+Alternatively, you can also build it from source yourself, for that see: [Building](#building).
 
 ## 1. Files
 
 You can choose between having a **default** setup and a **standalone** setup.
 
-The default setup will import assets (`js`, `css` etc.) as separate files, like most sites. This is the most orderly setup.
+The default setup will import assets (`js`, `css` and fonts) as separate files, like most sites. This is the normal setup.
 
-The standalone setup will have all of these files bundled directly into the `.php` file instead.
+The standalone setup will have all of these files bundled directly into the `.php` file instead, serving everything through HTML.
 
-### Default
+### a) Default
 Place the files from the `build` directory into your root web directory.
-### Standalone (Single file)
+### b) Standalone (single file)
 Place the file from the `standalone` directory into your root web directory.
 
 ## 2. Server Configuration
@@ -77,11 +79,11 @@ To use this script for all directories without a default index you need append `
 Example usage:
 ```
 server {
-        index index.html index.htm index.php /indexer.php;
+        index index.html index.php /indexer.php;
 }
 
 ```
-Alternatively, you can only make it work for certain directories:
+Another example, here it is only being applied to a few directories:
 ```
 server {
         location ~ ^/(videos|images)/ {
@@ -95,17 +97,17 @@ In order to automatically use this script as a default index, you need to edit y
 
 Example usage:
 ```
-DirectoryIndex index.php index.html index.htm /indexer.php
+DirectoryIndex index.html index.php /indexer.php
 ```
 
 This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist.
 
 # Configuration
 
-#### See [docs/CONFIG](docs/CONFIG.md) for a detailed overview over how this script can be customized.
+#### See [Configuration](docs/CONFIG.md) for a detailed overview over how this script can be customized.
 
 # Building
-You can build this script from source using `npm`.
+You can build this script from source using `node` and `npm`.
 
 
 **Clone repository and install dependencies**
