@@ -1,5 +1,5 @@
 node_modules/
-
+build/
 .DS_Store
 *.7z
 *.zip
