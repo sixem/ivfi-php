@@ -1032,12 +1032,6 @@ select:not(.default):focus
 		display: none!important;
 	}
 
-	.filter-container>input[type="text"]
-	{
-		min-width: unset;
-		width: 30vw;
-	}
-
 	.settings-container
 	{
 		left: 20px;
