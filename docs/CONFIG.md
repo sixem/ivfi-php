@@ -64,8 +64,8 @@ Key: **`icon`**
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `path` | String | `/favicon.png` | Path to a favicon.
-| `mime` | String | `image/png` | Favicon [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
+| `path` | String | `/favicon.ico` | Path to a favicon.
+| `mime` | String | `image/x-icon` | Favicon [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
 
 ## Sorting
 Key: **`sorting`**
