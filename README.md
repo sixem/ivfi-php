@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-<a href="https://github.com/sixem/eyy-indexer/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/eyy-indexer?color=37bd44&style=for-the-badge"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/eyy-indexer?style=for-the-badge"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/eyy-indexer?style=for-the-badge">
+<a href="https://github.com/sixem/eyy-indexer/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/eyy-indexer?color=2f394f&style=flat"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/eyy-indexer?color=5a8f4e&style=flat"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/eyy-indexer?color=4b8b72&style=flat">
 </p>
 
 <br/>
@@ -12,9 +12,9 @@
 
 This is a file directory browser script written in PHP and JavaScript.
 
-This is designed to be a image and video friendly Indexer, while also being an Indexer that has all of the other features that you can expect from most directory listers out there. It has a lot of features, can be heavily customized, and it has a design that attempts to be appealing while also being functional and easy to use.
+This is designed to be a image and video friendly Indexer, while also being an Indexer that has all of the other features that you can expect from most directory listers out there. It can be heavily customized, and has a design that attempts to be appealing while also being functional and easy to use.
 
-***JavaScript is not required for the Indexer but it is needed for the extra functionality.***
+***Note: The Indexer can be used without JavaScript, but it is needed for the extra functionality.***
 
 ### Demo
 
@@ -100,7 +100,7 @@ Example usage:
 DirectoryIndex index.html index.php /indexer.php
 ```
 
-This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist.
+This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist. This can be set globally or on a per-directory basis depending on your usecase.
 
 # Configuration
 
