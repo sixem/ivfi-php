@@ -19,18 +19,22 @@ A basic example of a config file:
 <?php
 return array(
     'authentication' => array(
-        'mysecretusername' => 'supersecretpassword'
+        'my_secret_username' => 'super_secret_password'
     ),
     'icon' => array(
-        'path' => 'https://cdn1.five.sh/assets/media/five.png',
+        'path' => '/my_favicon.png',
         'mime' => 'image/png'
     ),
     'style' => array(
         'themes' => array(
             'path' => 'indexer/css/themes',
-            'default' => 'pelagic'
+            'default' => false
         ),
         'compact' => true
+    ),
+    'gallery' => array(
+        'blur' => true,
+        'image_sharpen' => true
     ),
     'debug' => true
 );
