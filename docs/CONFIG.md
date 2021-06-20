@@ -121,7 +121,7 @@ Various visual options for the script. The `compact` setting can be changed by t
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `themes => path` | Boolean / String | `false` | Set to a path relative to the root directory containing `.css` files. Example: `/indexer/css/themes/` (This directory also contains a few included **example** themes). Every `.css` in the set folder will be treated as a separate theme.
+| `themes => path` | Boolean / String | `false` | Set to a path relative to the root directory containing `.css` files (example: `/indexer/css/themes/`). Every `.css` file in the set folder will be treated as a separate theme.
 | `themes => default` | Boolean / String | `false` | Default theme for new clients to use. Takes a filename **without** the `.css` extension.
 | `compact` | Boolean | `false` | Makes the page use a more compact and centered style.
 
