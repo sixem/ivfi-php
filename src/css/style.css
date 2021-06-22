@@ -1677,3 +1677,8 @@ body[optimize]>div.table-container>table tbody>tr.rel-row td
 {
 	overflow: hidden;
 }
+
+body>div.preview-container video
+{
+	visibility: hidden;
+}
