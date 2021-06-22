@@ -191,22 +191,73 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 {
 	let previews = new Object();
 
+	let resume = null;
+
+	let timerReadyState = null;
+
 	let onLoaded = (e) =>
 	{
+		pipe('previewLoad', e);
+
 		if(data.preview.data && data.preview.data.element)
 		{
 			data.preview.data.element.remove();
 		}
 
-		let [element, type] = [e.element, e.type];
+		let [element, type, src] = [e.element, e.type, e.src];
 
 		data.preview.data = e;
 
+		/* clear timer */
+		clearInterval(timerReadyState);
+
 		if(element && type === 'VIDEO')
 		{
+			/* pause video while setting attributes */
+			element.pause();
+
+			/* if a resume is set, then set currentTime */
+			if(resume && resume.src === src)
+			{
+				element.currentTime = resume.timestamp;
+			} else {
+				resume = null;
+			}
+
+			/* set stored preview volume */
 			h.setVideoVolume(element, data.preview.volume / 100);
+
+			/* resume video */
+			element.play();
+
+			/* check for valid readystate (4,3,2) before we show the video */
+			timerReadyState = setInterval(() =>
+			{
+				if(element.readyState > 1)
+				{
+					/* show video */
+					h.dom.css.set(element, {
+						visibility : 'visible'
+					});
+
+					/* clear timer */
+					clearInterval(timerReadyState);
+				}
+			}, 25);
+		} else {
+			/* not a video, clear resume */
+			resume = null;
 		}
 
+		/* store timestamp if exists */
+		if(e.hasOwnProperty('timestamp'))
+		{
+			let timestamp = e.timestamp;
+
+			resume = { src, timestamp };
+		}
+
+		/* if video is audible, enable scrollLock */
 		if(e.loaded && e.audible)
 		{
 			data.scrollLock = true;
