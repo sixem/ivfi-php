@@ -190,9 +190,7 @@ eventHandler.addListener(window, 'resize', 'windowResize', h.debounce(() =>
 if(config.get('mobile') === false && config.get('preview.enabled') === true)
 {
 	let previews = new Object();
-
 	let resume = null;
-
 	let timerReadyState = null;
 
 	let onLoaded = (e) =>
@@ -213,9 +211,6 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 
 		if(element && type === 'VIDEO')
 		{
-			/* pause video while setting attributes */
-			element.pause();
-
 			/* if a resume is set, then set currentTime */
 			if(resume && resume.src === src)
 			{
@@ -225,10 +220,7 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 			}
 
 			/* set stored preview volume */
-			h.setVideoVolume(element, data.preview.volume / 100);
-
-			/* resume video */
-			element.play();
+			h.setVideoVolume(element, data.preview.volume / 100, false);
 
 			/* check for valid readystate (4,3,2) before we show the video */
 			timerReadyState = setInterval(() =>
@@ -254,7 +246,10 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 		{
 			let timestamp = e.timestamp;
 
-			resume = { src, timestamp };
+			resume = {
+				src,
+				timestamp
+			};
 		}
 
 		/* if video is audible, enable scrollLock */

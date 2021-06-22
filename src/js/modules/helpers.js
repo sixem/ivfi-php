@@ -241,7 +241,48 @@ exports.getReadableSize = (format, bytes = 0) =>
 	return Math.max(bytes, 0.1).toFixed(i < 2 ? 0 : 2) + format[i];
 };
 
-exports.setVideoVolume = (video, volume) =>
+let timerVolumeIndicator = null;
+
+exports.showVolumeIndicator = (volume) =>
+{
+	clearTimeout(timerVolumeIndicator);
+
+	let container = document.body.querySelector(':scope > div#indicator__preview-volume');
+
+	/* construct text */
+	volume = (volume === 0 ? 'Muted' : `Volume: ${volume}%`);
+
+	if(!container)
+	{
+		/* create element if non-existant */
+		container = exports.dom.new('div', {
+			id : 'indicator__preview-volume',
+			text : volume
+		});
+
+		document.body.prepend(container);
+	} else {
+		container.textContent = volume;
+	}
+
+	/* show element */
+	setTimeout(() =>
+	{
+		exports.dom.css.set(container, {
+			opacity : 1
+		});
+	});
+
+	/* hide element */
+	timerVolumeIndicator = setTimeout(() =>
+	{
+		exports.dom.css.set(container, {
+			opacity : 0
+		});
+	}, 2500);
+}
+
+exports.setVideoVolume = (video, volume, indicator = true) =>
 {
 	if(!video)
 	{
@@ -255,11 +296,22 @@ exports.setVideoVolume = (video, volume) =>
 	video.volume = muted ? 0 : volume <= 100 ? volume : 100;
 
 	/* catch errors (uninteracted with DOM) and mute on error */
-	video.play().catch((error) =>
+	video.play().then(() =>
+	{
+		if(indicator)
+		{
+			exports.showVolumeIndicator(Math.round(video.volume * 100));
+		}
+	}).catch((error) =>
 	{
 		video.muted = true;
 		
 		video.volume = 0;
+
+		if(indicator)
+		{
+			exports.showVolumeIndicator(Math.round(video.volume * 100));
+		}
 
 		video.play();
 	});
