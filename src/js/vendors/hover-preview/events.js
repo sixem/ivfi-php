@@ -15,7 +15,7 @@ function setOffset(e)
 
 function onEnter(e)
 {
-	var target = e.target;
+	let target = e.target;
 
 	// get source
 	if(Object.prototype.hasOwnProperty.call(this.options, 'source') && this.options.source)
@@ -45,13 +45,13 @@ function onEnter(e)
 	// if valid source type
 	if(this.data.type != null)
 	{
-		var _this = this;
+		let _this = this;
 
 		// whether the cursor is on the left or ride side of the viewport
 		this.data.left = this.data.offset.x <= (window.innerWidth / 2);
 
 		// create preview container
-		var container = createContainer();
+		let container = createContainer();
 
 		document.body.prepend(container);
 
@@ -132,9 +132,9 @@ export function mouseenter(e)
 {
 	this.active = true;
 
-	var id = parseInt(this.id);
+	let id = parseInt(this.id);
 	
-	var _this = this;
+	let _this = this;
 
 	setOffset.call(this, e);
 
@@ -155,6 +155,8 @@ export function mouseenter(e)
 // destroy preview container
 export function mouseleave(e)
 {
+	let timestamp = null;
+
 	this.active = false;
 
 	this.id++;
@@ -163,6 +165,8 @@ export function mouseleave(e)
 	{
 		if(this.currentElement.tagName === 'VIDEO')
 		{
+			timestamp = this.currentElement.currentTime;
+
 			this.currentElement.pause();
 			this.currentElement.muted = true;
 
@@ -179,7 +183,7 @@ export function mouseleave(e)
 		this.data.cursor = null;
 	}
 
-	var container = document.querySelector('.preview-container');
+	let container = document.querySelector('.preview-container');
 
 	if(container)
 	{
@@ -199,7 +203,9 @@ export function mouseleave(e)
 				loaded : false,
 				type : null,
 				audible : false,
-				element : null
+				element : null,
+				timestamp : timestamp,
+				src : this.data.src
 			});
 		} catch(error)
 		{

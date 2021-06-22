@@ -184,7 +184,8 @@ export function loadImage(src, callback)
 						loaded : true,
 						type : 'IMAGE',
 						audible : false,
-						element : img
+						element : img,
+						src : src
 					});
 				} catch(error)
 				{
@@ -237,7 +238,8 @@ export function loadVideo(src, callback)
 					loaded : true,
 					type : 'VIDEO',
 					audible : isAudible(video),
-					element : video
+					element : video,
+					src : src
 				});
 			} catch(error)
 			{
