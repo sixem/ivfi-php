@@ -43,8 +43,7 @@ componentFilter.apply = (query = new String()) =>
 		Object.prototype.hasOwnProperty.call(
 			config.get('sorting'),
 			'directorySizes'
-		) &&
-		config.get('sorting.directorySizes')
+		) && config.get('sorting.directorySizes')
 	);
 
 	/* check if optimizer is being used */
