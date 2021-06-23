@@ -3,7 +3,7 @@
  */
 export class emitterClass
 {
-	constructor(items, options)
+	constructor()
 	{
 		this.data = new Object();
 
@@ -12,7 +12,7 @@ export class emitterClass
 
 	listen = (event, callback) =>
 	{
-		if(!this.data.hasOwnProperty(event))
+		if(!Object.prototype.hasOwnProperty.call(this.data, event))
 		{
 			this.data[event] = new Array();
 		}
@@ -22,7 +22,7 @@ export class emitterClass
 
 	dispute = (event) =>
 	{
-		if(this.data.hasOwnProperty(event))
+		if(Object.prototype.hasOwnProperty.call(this.data, event))
 		{
 			this.data[event] = new Array();
 
@@ -32,7 +32,7 @@ export class emitterClass
 
 	dispatch = (event, data = null) =>
 	{
-		if(this.data.hasOwnProperty(event))
+		if(Object.prototype.hasOwnProperty.call(this.data, event))
 		{
 			this.data[event].forEach((e) =>
 			{

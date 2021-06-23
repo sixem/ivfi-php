@@ -1,8 +1,13 @@
 /* import config */
-import { data } from '../config/data';
+import {
+	data
+} from '../config/data';
 
 /* import helpers */
-import { isNumeric, dom } from '../modules/helpers';
+import {
+	isNumeric,
+	dom
+} from '../modules/helpers';
 
 const pipe = data.instances.pipe;
 
@@ -25,7 +30,7 @@ export class optimizeClass
 
 		this.padding = options.padding || 0;
 
-		if(options.hasOwnProperty('on'))
+		if(Object.prototype.hasOwnProperty.call(options, 'on'))
 		{
 			this.on = options.on;
 		} else {
@@ -67,7 +72,7 @@ export class optimizeClass
 			rows[index]._isVisible = true;
 		}
 
-		if(this.on && this.on.hasOwnProperty('rowChange'))
+		if(this.on && Object.prototype.hasOwnProperty.call(this.on, 'rowChange'))
 		{
 			this.on.rowChange(rows);
 		}
@@ -100,7 +105,7 @@ export class optimizeClass
 
 		let margin = Math.ceil(Math.ceil(this.page.windowHeight / rowHeight) * 2);
 
-		let [activeRows, activeIndexes] = this.getActiveData();
+		this.getActiveData();
 
 		index = this.scanForClosest(origin, 1E3, index);
 
@@ -160,10 +165,6 @@ export class optimizeClass
 
 		/* `this.padding` is to adjust for any table container paddings */
 		let combinedHeight = (this.tableOffsetBegin) + this.padding;
-
-		let hidden = 0;
-
-		let visible = 0;
 
 		/* create new structure */
 		let structure = new Object();
@@ -247,17 +248,13 @@ export class optimizeClass
 			if(item._isVisible)
 			{
 				item.style.top = `${rowOffsets[index]}px`;
-
-				visible++;
 			} else {
-				item.style.top = `-2500px`;
-
-				hidden++;
+				item.style.top = '-2500px';
 			}
 		}
 
 		/* call `onRowChange` function, if set */
-		if(this.on && this.on.hasOwnProperty('rowChange'))
+		if(this.on && Object.prototype.hasOwnProperty.call(this.on, 'rowChange'))
 		{
 			this.on.rowChange(activeRows);
 		}
@@ -510,7 +507,7 @@ export class optimizeClass
 	{
 		if(!this.initiated)
 		{
-			return new Promise((resolve, reject) => reject(`Not initiated.`));
+			return new Promise((resolve, reject) => reject('Not initiated.'));
 		}
 
 		/* start measuring execution time */
@@ -572,14 +569,12 @@ export class optimizeClass
 		{
 			this.refreshing = true;
 
-			this.refresh(this.refreshId)
-			.then((refreshId) =>
+			this.refresh(this.refreshId).then(() =>
 			{
 				this.refreshing = false;
 
-				log.pipe('Refreshed', refreshId);
-			})
-			.catch(() =>
+				/* pipe('Refreshed', refreshId); */
+			}).catch(() =>
 			{
 				this.refreshing = false;
 			});

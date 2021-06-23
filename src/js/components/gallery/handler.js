@@ -1,12 +1,23 @@
 /* import config */
-import { config, user } from '../../config/config';
-import { data } from '../../config/data';
+import {
+	config,
+	user
+} from '../../config/config';
+
+import {
+	data
+} from '../../config/data';
 
 /* import classes */
-import { galleryClass } from './class';
+import {
+	galleryClass
+} from './class';
 
 /* require helpers */
-import { applyNested, checkNested } from '../../modules/helpers';
+import {
+	applyNested,
+	checkNested
+} from '../../modules/helpers';
 
 const pipe = data.instances.pipe;
 
@@ -86,7 +97,7 @@ export class componentGallery
 		let options = new Object();
 
 		/* check if list state is saved */
-		let hasStoredListState = client.gallery.hasOwnProperty('listState');
+		let hasStoredListState = Object.prototype.hasOwnProperty.call(client.gallery, 'listState');
 
 		/* set list state */
 		let listState = hasStoredListState ? client.gallery.listState : 1;
@@ -138,7 +149,7 @@ export class componentGallery
 
 		options.continue = {
 			video : video.continue
-		}
+		};
 
 		/* get table items marked as media */
 		let items = data.components.main.getTableItems();

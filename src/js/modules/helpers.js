@@ -51,7 +51,7 @@ exports.debounce = (f) =>
 exports.isNumeric = (n) =>
 {
 	return !isNaN(parseFloat(n)) && isFinite(n);
-}
+};
 
 /**
  * checks if a value is a string
@@ -59,7 +59,7 @@ exports.isNumeric = (n) =>
 exports.isString = (s) =>
 {
 	return (typeof s === 'string');
-}
+};
 
 /**
  * get window scrolltop in vanilla js
@@ -67,14 +67,14 @@ exports.isString = (s) =>
 exports.getScrollTop = () =>
 {
 	return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-}
+};
 
 /**
  * checks an object for the existance nested path
  */
 exports.checkNestedPath = (obj, path) =>
 {
- 	path = Array.isArray(path) ? path : path.split('.');
+	path = Array.isArray(path) ? path : path.split('.');
 
 	for(let i = 0; i < path.length; i++)
 	{
@@ -87,7 +87,7 @@ exports.checkNestedPath = (obj, path) =>
 	}
 
 	return true;
-}
+};
 
 /**
  * checks an object for a nested value
@@ -105,16 +105,16 @@ exports.checkNested = (obj, ...args) =>
 	}
 
 	return true;
-}
+};
 
 /**
  * sets an obj value using path
  */
 exports.setNestedPath = function (obj, path, value)
- {
- 	path = Array.isArray(path) ? path : path.split('.');
+{
+	path = Array.isArray(path) ? path : path.split('.');
 
- 	let wasSet = false;
+	let wasSet = false;
 
 	for(let i = 0; i < path.length; i++)
 	{
@@ -134,14 +134,14 @@ exports.setNestedPath = function (obj, path, value)
 	}
 
 	return wasSet;
- };
+};
 
 /**
  * retrieves an obj value using path
  */
 exports.getNestedPath = function (obj, path, def)
- {
- 	path = Array.isArray(path) ? path : path.split('.');
+{
+	path = Array.isArray(path) ? path : path.split('.');
 
 	for(let i = 0; i < path.length; i++)
 	{
@@ -154,13 +154,13 @@ exports.getNestedPath = function (obj, path, def)
 	}
 
 	return obj;
- };
+};
 
 /**
  * retrieves a obj value using path
  */
 exports.getNested = function (obj, def, ...args)
- {
+{
 	for(let i = 0; i < args.length; i++)
 	{
 		if(!obj || !Object.prototype.hasOwnProperty.call(obj, args[i]))
@@ -172,7 +172,7 @@ exports.getNested = function (obj, def, ...args)
 	}
 
 	return obj;
- };
+};
 
 /**
  * applies a nested value to an object key
@@ -280,7 +280,7 @@ exports.showVolumeIndicator = (volume) =>
 			opacity : 0
 		});
 	}, 2500);
-}
+};
 
 exports.setVideoVolume = (video, volume, indicator = true) =>
 {
@@ -302,7 +302,7 @@ exports.setVideoVolume = (video, volume, indicator = true) =>
 		{
 			exports.showVolumeIndicator(Math.round(video.volume * 100));
 		}
-	}).catch((error) =>
+	}).catch(() =>
 	{
 		video.muted = true;
 		
@@ -326,7 +326,7 @@ exports.generateWget = (table) =>
 
 	let extensions = new Array();
 
-	table.querySelectorAll('tr.file:not(.filtered) > td:first-child > a').forEach((element, index) =>
+	table.querySelectorAll('tr.file:not(.filtered) > td:first-child > a').forEach((element) =>
 	{
 		let extension = element.textContent.split('.').pop().toLowerCase().trim();
 
@@ -377,7 +377,7 @@ exports.clipboard = {
 
 		if(!navigator.clipboard)
 		{
-			clipboard.copyFallback(text);
+			exports.clipboard.copyFallback(text);
 
 			return;
 		}
@@ -403,7 +403,7 @@ exports.clipboard = {
 
 		try
 		{
-			let successful = document.execCommand('copy');
+			document.execCommand('copy');
 		} catch (error)
 		{
 			console.error(error);
@@ -411,7 +411,7 @@ exports.clipboard = {
 
 		document.body.removeChild(area);
 	}
-}
+};
 
 /**
  * manipulates the DOM
@@ -488,6 +488,6 @@ exports.dom = {
 	{
 		return Array.from(element.parentNode.children).indexOf(element);
 	}
-}
+};
 
 exports.logger = logger;

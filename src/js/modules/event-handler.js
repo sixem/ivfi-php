@@ -4,7 +4,9 @@ import {
 } from '../modules/helpers';
 
 /* import config */
-import { code } from '../config/constants';
+import {
+	code
+} from '../config/constants';
 
 /**
  * handles event listeners
@@ -16,13 +18,12 @@ export const eventHandler = {
 	 */
 	insert : (id, unique) =>
 	{
-		if(!eventHandler.data.hasOwnProperty(id))
+		if(!Object.prototype.hasOwnProperty.call(eventHandler.data, id))
 		{
 			eventHandler.data[id] = new Object();
 
 			eventHandler.data[id][unique] = new Object;
-
-		} else if(!eventHandler.data[id].hasOwnProperty(unique))
+		} else if(!Object.prototype.hasOwnProperty.call(eventHandler.data[id], unique))
 		{
 			eventHandler.data[id][unique] = new Object;
 		}
@@ -37,7 +38,7 @@ export const eventHandler = {
 			{
 				id = selector.domId;
 			} else {
-				throw new Error(`No assigned ID was found.`);
+				throw new Error('No assigned ID was found.');
 			}
 		} else {
 			id = id || (Array.isArray(events) ? events[0] : events);
@@ -52,7 +53,7 @@ export const eventHandler = {
 	{
 		if((!selector) || (!events) || (!callback))
 		{
-			throw new Error(`Unset arguments.`);
+			throw new Error('Unset arguments.');
 		}
 
 		if(isString(selector))
@@ -92,7 +93,7 @@ export const eventHandler = {
 	{
 		if((!selector) || (!events))
 		{
-			throw new Error(`Unset arguments.`);
+			throw new Error('Unset arguments.');
 		}
 
 		if(isString(selector))
@@ -102,7 +103,7 @@ export const eventHandler = {
 
 		id = eventHandler.assignId(selector, events, id);
 
-		if(!eventHandler.data.hasOwnProperty(id))
+		if(!Object.prototype.hasOwnProperty.call(eventHandler.data, id))
 		{
 			return false;
 		}
@@ -127,4 +128,4 @@ export const eventHandler = {
 
 		return removed;
 	}
-}
+};

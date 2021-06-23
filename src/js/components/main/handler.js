@@ -1,12 +1,22 @@
 /* import vendors */
-import { formatDate } from '../../vendors/date/date';
+import {
+	formatDate
+} from '../../vendors/date/date';
 
 /* import config */
-import { config, user } from '../../config/config';
-import { data } from '../../config/data';
+import {
+	config,
+	user
+} from '../../config/config';
+
+import {
+	data
+} from '../../config/data';
 
 /* import models */
-import { eventHandler } from '../../modules/event-handler';
+import {
+	eventHandler
+} from '../../modules/event-handler';
 
 /* import helpers */
 import * as h from '../../modules/helpers';
@@ -66,10 +76,10 @@ main.menu.create = () =>
 	{
 		let element = dom.new('div', {
 			text : item.text,
-			class : `ns${item.hasOwnProperty('class') ? ` ${item.class}` : ''}`
+			class : `ns${Object.prototype.hasOwnProperty.call(item, 'class') ? ` ${item.class}` : ''}`
 		});
 
-		if(item.hasOwnProperty('id'))
+		if(Object.prototype.hasOwnProperty.call(item, 'id'))
 		{
 			element.setAttribute('id', item.id);
 		}
@@ -145,7 +155,7 @@ main.dates = new Object();
 main.dates.offsetGet = () =>
 {
 	return new Date().getTimezoneOffset();
-}
+};
 
 main.dates.formatSince = (seconds) =>
 {
@@ -195,12 +205,13 @@ main.dates.formatSince = (seconds) =>
 main.dates.apply = (offset, format = true) =>
 {
 	let onLoadTimestamp = config.get('timestamp');
+
 	let dateFormat = config.get('format.date');
 
-	selector.use('TABLE')
-	.querySelectorAll('tr.directory > td:nth-child(2), \
-		tr.file > td[data-raw]:nth-child(2)')
-	.forEach((item, index) =>
+	let dateSelector = 'tr.directory > td:nth-child(2), \
+		tr.file > td[data-raw]:nth-child(2)';
+
+	selector.use('TABLE').querySelectorAll(dateSelector).forEach((item) =>
 	{
 		let timestamp = parseInt(item.getAttribute('data-raw'));
 		let	since = main.dates.formatSince(onLoadTimestamp - timestamp);
@@ -219,7 +230,7 @@ main.dates.apply = (offset, format = true) =>
 
 					if(config.get('format.date').length > 1)
 					{
-						element.setAttribute('data-view', index === 0 ? 'desktop' : 'mobile')
+						element.setAttribute('data-view', index === 0 ? 'desktop' : 'mobile');
 					}
 
 					span.appendChild(element);
@@ -235,13 +246,14 @@ main.dates.apply = (offset, format = true) =>
 		}
 	});
 
-	document.body.querySelectorAll('div.top-bar > .directory-info div[data-count="files"], \
-		div.top-bar > .directory-info div[data-count="directories"]')
-	.forEach((item, index) =>
+	let infoSelector = 'div.top-bar > .directory-info div[data-count="files"], \
+		div.top-bar > .directory-info div[data-count="directories"]';
+
+	document.body.querySelectorAll(infoSelector).forEach((item) =>
 	{
 		if(item.hasAttribute('data-raw'))
 		{
-			item.setAttribute('title', 'Newest: ' + formatDate(dateFormat[0], parseInt(item.getAttribute('data-raw'))))
+			item.setAttribute('title', `Newest: ${formatDate(dateFormat[0], parseInt(item.getAttribute('data-raw')))}`);
 		}
 	});
 };
@@ -368,7 +380,7 @@ main.getTableItems = () =>
 
 	if(data.instances.optimize.main.enabled)
 	{
-		let [activeRows, activeIndexes] = data.instances.optimize.main.getActiveData();
+		let [activeRows] = data.instances.optimize.main.getActiveData();
 
 		for(let i = 0; i < activeRows.length; i++)
 		{
@@ -499,7 +511,7 @@ main.sortTableColumn = (target) =>
 			rows[key].forEach((item) =>
 			{
 				tableBody.append(item);
-			})
+			});
 		});
 	}
 

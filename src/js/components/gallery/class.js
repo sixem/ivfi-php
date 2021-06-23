@@ -3,19 +3,37 @@ import cookies from 'js-cookie';
 import swipe from 'vanilla-swipe';
 
 /* import config */
-import { config, user } from '../../config/config';
-import { data } from '../../config/data';
-import { code } from '../../config/constants';
+import {
+	user
+} from '../../config/config';
+
+import {
+	data
+} from '../../config/data';
+
+import {
+	code
+} from '../../config/constants';
 
 /* import models */
-import { eventHandler } from '../../modules/event-handler';
+import {
+	eventHandler
+} from '../../modules/event-handler';
 
 /* import classes */
-import { optimizeClass } from '../../classes/optimize';
-import { emitterClass } from '../../classes/emitter';
+import {
+	optimizeClass
+} from '../../classes/optimize';
+
+import {
+	emitterClass
+} from '../../classes/emitter';
 
 /* import helpers */
-import { dom, debounce } from '../../modules/helpers';
+import {
+	dom,
+	debounce
+} from '../../modules/helpers';
 
 const pipe = data.instances.pipe;
 
@@ -31,7 +49,7 @@ export class galleryClass
 		/* override any default values passed as an option */
 		Object.keys(defaults).forEach((key) =>
 		{
-			if(!options.hasOwnProperty(key))
+			if(!Object.prototype.hasOwnProperty.call(options, key))
 			{
 				options[key] = defaults[key];
 			}
@@ -203,7 +221,7 @@ export class galleryClass
 
 			img.src = src;
 
-			img.addEventListener('error', (e) =>
+			img.addEventListener('error', () =>
 			{
 				reject(new Error(`failed to load image URL: ${src}`));
 			});
@@ -216,7 +234,7 @@ export class galleryClass
 				if(w && h)
 				{
 					clearInterval(timer);
-					resolve([src, img, [w, h]])
+					resolve([src, img, [w, h]]);
 				}
 			}, 30);
 		});
@@ -406,7 +424,6 @@ export class galleryClass
 		this.limitBody(bool);
 
 		let video = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper video');
-		let	table = this.container.querySelector(':scope > div.gallery-content > div.list > table');
 
 		if(video)
 		{
@@ -415,7 +432,8 @@ export class galleryClass
 				let currentTime = video.currentTime;
 				let sourceMatch = false;
 
-				if(this.options.continue.video && this.options.continue.video.hasOwnProperty('src'))
+				if(this.options.continue.video &&
+					Object.prototype.hasOwnProperty.call(this.options.continue.video, 'src'))
 				{
 					sourceMatch = video.querySelector('source').getAttribute('src') == this.options.continue.video.src;
 				}
@@ -522,7 +540,7 @@ export class galleryClass
 
 		let scrollEndTimer = null;
 
-		eventHandler.addListener(this.list, 'scroll', 'galleryTableScroll', (e) =>
+		eventHandler.addListener(this.list, 'scroll', 'galleryTableScroll', () =>
 		{
 			if(this.options.performance && this.optimize.enabled)
 			{
@@ -651,7 +669,7 @@ export class galleryClass
 
 			let media = this.container.querySelector('div.media > div.item-info-static');
 
-			if(item.hasOwnProperty('dimensions') &&
+			if(Object.prototype.hasOwnProperty.call(item, 'dimensions') &&
 				item.dimensions.height > 0 &&
 				item.dimensions.width > 0)
 			{
@@ -710,7 +728,7 @@ export class galleryClass
 			left.innerHTML = `<span>${index + 1} of ${max}</span>`;
 			left.innerHTML += `<a target="_blank" href="${url}">${name}</a>`;
 
-			if(item.hasOwnProperty('size') && !this.options.mobile)
+			if(Object.prototype.hasOwnProperty.call(item, 'size') && !this.options.mobile)
 			{
 				left.innerHTML += `<span>${item.size}</span>`;
 			}
@@ -949,7 +967,7 @@ export class galleryClass
 								'height' : height
 							});
 						}
-					}
+					};
 
 					element.setAttribute('src', src);
 					element.style.display = 'inline-block';
@@ -986,7 +1004,7 @@ export class galleryClass
 					console.error('Failed to load video source.', e);
 
 					this.busy(false);
-				}
+				};
 
 				eventHandler.addListener(video, 'error', code.ERROR_VIDEO_ID, (e) =>
 				{
@@ -998,14 +1016,14 @@ export class galleryClass
 					error(e);
 				});
 
-				eventHandler.addListener(video, ['volumechange'], null, (e) =>
+				eventHandler.addListener(video, ['volumechange'], null, () =>
 				{
 					this.options.volume = video.muted ? 0 : parseFloat(parseFloat(video.volume).toFixed(2));
 
 					this.emitter.dispatch('volumeChange', this.options.volume);
 				});
 
-				eventHandler.addListener(video, ['canplay', 'canplaythrough'], null, (e) =>
+				eventHandler.addListener(video, ['canplay', 'canplaythrough'], null, () =>
 				{
 					if(hasEvented)
 					{
@@ -1194,7 +1212,7 @@ export class galleryClass
 
 			this.loadImage(encoded).then((data) =>
 			{
-				let [src, img, dimensions] = data;
+				let [src, , dimensions] = data;
 
 				let [w, h] = dimensions;
 
@@ -1212,6 +1230,7 @@ export class galleryClass
 				console.error(error);
 
 				this.busy(false);
+
 				this.data.selected.index = index;
 
 				this.container.querySelectorAll(':scope > div.gallery-content > div.media > div.wrapper img, \
@@ -1299,7 +1318,7 @@ export class galleryClass
 				return true;
 			}
 
-			let identifier = value.hasOwnProperty('id') ? value.id : null;
+			let identifier = Object.prototype.hasOwnProperty.call(value, 'id') ? value.id : null;
 
 			if(value.trigger)
 			{
@@ -1391,7 +1410,7 @@ export class galleryClass
 
 		this.unbind(this.data.bound, false);
 
-		eventHandler.addListener(this.data.listDrag, 'mousedown', 'galleryListMouseDown', (e) =>
+		eventHandler.addListener(this.data.listDrag, 'mousedown', 'galleryListMouseDown', () =>
 		{
 			this.data.listDragged = true;
 
@@ -1419,12 +1438,12 @@ export class galleryClass
 						dom.css.set(this.data.list, {
 							'width' : `${width}px`
 						});
-					})
+					});
 				}
 			});
 		});
 
-		eventHandler.addListener('body > div.gallery-root', 'mouseup', 'galleryListMouseUp', (e) =>
+		eventHandler.addListener('body > div.gallery-root', 'mouseup', 'galleryListMouseUp', () =>
 		{
 			if(this.data.listDragged === true)
 			{
@@ -1491,8 +1510,8 @@ export class galleryClass
 		});
 
 		/* list item click listener */
-		eventHandler.addListener(
-			'body > div.gallery-root > div.gallery-content > div.list table', 'click', 'listNavigateClick', (e) =>
+		eventHandler.addListener('body > div.gallery-root > div.gallery-content \
+			> div.list table', 'click', 'listNavigateClick', (e) =>
 		{
 			if(e.target.tagName == 'TD')
 			{
@@ -1505,8 +1524,8 @@ export class galleryClass
 		});
 
 		/* gallery media click listener */
-		eventHandler.addListener(
-			'body > div.gallery-root > div.gallery-content > div.media', 'click', 'mediaClick', (e) =>
+		eventHandler.addListener('body > div.gallery-root > div.gallery-content \
+			> div.media', 'click', 'mediaClick', (e) =>
 		{
 			/* hide gallery if media background is clicked */
 			if(!['IMG', 'VIDEO', 'A'].includes(e.target.tagName))
@@ -1542,8 +1561,8 @@ export class galleryClass
 			swipeInstance.init();
 		}
 
-		eventHandler.addListener('body > div.gallery-root > div.gallery-content > div.media'
-			, ['DOMMouseScroll', 'mousewheel'], 'galleryKeyUp', (e) =>
+		eventHandler.addListener('body > div.gallery-root \
+			> div.gallery-content > div.media', ['DOMMouseScroll', 'mousewheel'], 'galleryKeyUp', (e) =>
 		{
 			if(this.options.scrollInterval > 0 && this.data.scrollbreak === true)
 			{
@@ -1679,7 +1698,7 @@ export class galleryClass
 
 		/* create list */
 		let list = dom.new('div', {
-			class : `ns list`
+			class : 'ns list'
 		});
 
 		/* add to content container, respecting list reverse status */
@@ -1770,4 +1789,4 @@ export class galleryClass
 
 		callback(true);
 	}
-};
+}

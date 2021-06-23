@@ -93,7 +93,7 @@ if(config.get('performance'))
 				mediaIndex++;
 			}
 		}
-	}
+	};
 
 	setTimeout(() =>
 	{
@@ -242,7 +242,7 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 		}
 
 		/* store timestamp if exists */
-		if(e.hasOwnProperty('timestamp'))
+		if(Object.prototype.hasOwnProperty.call(e, 'timestamp'))
 		{
 			let timestamp = e.timestamp;
 
@@ -259,7 +259,7 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 		} else {
 			data.scrollLock = false;
 		}
-	}
+	};
 
 	let createPreview = (element) =>
 	{

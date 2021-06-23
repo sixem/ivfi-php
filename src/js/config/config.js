@@ -20,27 +20,27 @@ config.init = () =>
 	config.data = JSON.parse(document.getElementById('__INDEXER_DATA__').innerHTML);
 
 	config.data.mobile = Modernizr.mq('(max-width: 640px)');
-}
+};
 
 config.isMobile = () =>
 {
 	return config.data.mobile;
-}
+};
 
 config.exists = (path) =>
 {
 	return checkNestedPath(config.data, path);
-}
+};
 
 config.set = (path, value) =>
 {
 	return setNestedPath(config.data, path, value);
-}
+};
 
 config.get = (path) =>
 {
 	return getNestedPath(config.data, path, null);
-}
+};
 
 user.set = (client, options = new Object()) =>
 {
@@ -50,7 +50,7 @@ user.set = (client, options = new Object()) =>
 	}, options);
 
 	cookies.set('ei-client', JSON.stringify(client), options);
-}
+};
 
 user.getDefaults = () =>
 {
@@ -71,7 +71,7 @@ user.getDefaults = () =>
 	};
 
 	return defaults;
-}
+};
 
 user.get = () =>
 {
@@ -140,7 +140,7 @@ user.get = () =>
 
 	/* return client config */
 	return client;
-}
+};
 
 config.init();
 
@@ -149,4 +149,4 @@ user.get();
 export {
 	config,
 	user
-}
+};

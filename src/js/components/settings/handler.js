@@ -1,10 +1,21 @@
 /* import config */
-import { data } from '../../config/data';
-import { code } from '../../config/constants';
-import { config, user } from '../../config/config';
+import {
+	data
+} from '../../config/data';
+
+import {
+	code
+} from '../../config/constants';
+
+import {
+	config,
+	user
+} from '../../config/config';
 
 /* import models */
-import { eventHandler } from '../../modules/event-handler';
+import {
+	eventHandler
+} from '../../modules/event-handler';
 
 /* require helpers */
 import {
@@ -64,7 +75,7 @@ create.section = (id, header = null) =>
 	}));
 
 	return container;
-}
+};
 
 /**
  * creates a select option
@@ -278,7 +289,7 @@ options.set = (_data, client) =>
 		{
 			let value = null;
 
-			config.get(`style.themes.pool.${_data[key][option]}`)
+			config.get(`style.themes.pool.${_data[key][option]}`);
 
 			switch(option)
 			{
@@ -364,7 +375,7 @@ theme.set = (theme = null, setCookie = true) =>
 		{
 			stylesheets.forEach((sheet) =>
 			{
-				sheet.remove()
+				sheet.remove();
 			});
 		}
 
@@ -392,10 +403,10 @@ theme.set = (theme = null, setCookie = true) =>
 	{
 		stylesheets.forEach((sheet) =>
 		{
-			sheet.remove()
+			sheet.remove();
 		});
 	}
-}
+};
 
 export class componentSettings
 {
@@ -564,7 +575,7 @@ export class componentSettings
 				} else {
 					return config.get('style.compact');
 				} 
-			})
+			});
 
 			let checkElement = create.check(...checkTemplate);
 
@@ -612,7 +623,7 @@ export class componentSettings
 
 			this.events.push([overlay, 'click', code.USE_ASSIGNED_DOM_ID]);
 
-			eventHandler.addListener(overlay, 'click', code.USE_ASSIGNED_DOM_ID, (e) =>
+			eventHandler.addListener(overlay, 'click', code.USE_ASSIGNED_DOM_ID, () =>
 			{
 				data.components.settings.close();
 			});
@@ -666,7 +677,7 @@ export class componentSettings
 
 			this.events.push([element, 'click', code.USE_ASSIGNED_DOM_ID]);
 
-			eventHandler.addListener(element, 'click', code.USE_ASSIGNED_DOM_ID, (e) =>
+			eventHandler.addListener(element, 'click', code.USE_ASSIGNED_DOM_ID, () =>
 			{
 				f();
 			});

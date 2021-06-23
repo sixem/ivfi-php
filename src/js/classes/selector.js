@@ -56,7 +56,7 @@ export class selectorClass
 			identifier = identifier.toUpperCase();
 		}
 
-		if(!this.data.hasOwnProperty(identifier))
+		if(!Object.prototype.hasOwnProperty.call(this.data, identifier))
 		{
 			let selected = document.body.querySelector(identifier);
 

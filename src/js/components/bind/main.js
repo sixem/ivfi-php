@@ -1,12 +1,23 @@
 /* import models */
-import { eventHandler } from '../../modules/event-handler';
+import {
+	eventHandler
+} from '../../modules/event-handler';
 
 /* import config */
-import { config } from '../../config/config';
-import { data } from '../../config/data';
+import {
+	config
+} from '../../config/config';
+
+import {
+	data
+} from '../../config/data';
 
 /* import helpers */
-import { dom, getScrollTop, setVideoVolume } from '../../modules/helpers';
+import {
+	dom,
+	getScrollTop,
+	setVideoVolume
+} from '../../modules/helpers';
 
 const events = new Object();
 
@@ -45,7 +56,7 @@ events.handleTopBarVisibility = () =>
 			{
 				requestAnimationFrame(() =>
 				{
-					top.classList.add('visible')
+					top.classList.add('visible');
 				});
 			} else {
 				top.classList.add('visible');
@@ -61,7 +72,7 @@ events.handleTopBarVisibility = () =>
 			top._isVisible = false;
 		}
 	}
-}
+};
 
 const scrollData = new Object();
 
@@ -126,7 +137,7 @@ events.handlePreviewScroll = (e) =>
 	{
 		e.preventDefault();
 	}
-}
+};
 
 let debounceTimer = null;
 
@@ -140,7 +151,7 @@ let onDebounce = () =>
 	}
 };
 
-events.handleBaseScroll = (e) =>
+events.handleBaseScroll = () =>
 {
 	clearTimeout(debounceTimer);
 
@@ -157,7 +168,7 @@ events.handleBaseScroll = (e) =>
 			data.instances.optimize.main.attemptRefresh();
 		}
 	}
-}
+};
 
 export class componentBind
 {
@@ -166,7 +177,7 @@ export class componentBind
 		return this;
 	}
 
-    /**
+	/**
 	 * unbind events - recalled on gallery show
 	 */
 	unbind = () =>
@@ -175,7 +186,7 @@ export class componentBind
 		eventHandler.removeListener(window, 'scroll', 'windowScroll');
 	}
 
-    /**
+	/**
      * bind events - recalled on gallery close
      */
 	load = () =>

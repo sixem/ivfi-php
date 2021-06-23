@@ -1,9 +1,16 @@
 /* import config */
-import { config } from '../../config/config';
-import { data } from '../../config/data';
+import {
+	config
+} from '../../config/config';
+
+import {
+	data
+} from '../../config/data';
 
 /* import helpers */
-import { getReadableSize } from '../../modules/helpers';
+import {
+	getReadableSize
+} from '../../modules/helpers';
 
 const componentFilter = new Object();
 
@@ -41,7 +48,7 @@ componentFilter.apply = (query = new String()) =>
 	);
 
 	/* check if optimizer is being used */
-	let useOptimizer = data.instances.optimize.hasOwnProperty('main') &&
+	let useOptimizer = Object.prototype.hasOwnProperty.call(data.instances.optimize, 'main') &&
 		data.instances.optimize.main.enabled;
 
 	let rows = useOptimizer ? 
@@ -157,15 +164,15 @@ componentFilter.apply = (query = new String()) =>
 
 	top.size.textContent =
 		(filterData.reset) ? data.sets.defaults.topValues.size : 
-		getReadableSize(config.get('format.sizes'), filterData.size);
+			getReadableSize(config.get('format.sizes'), filterData.size);
 
 	top.files.textContent =
 		(filterData.reset) ? data.sets.defaults.topValues.files : 
-		`${filterData.shown.files} file${filterData.shown.files === 1 ? '' : 's'}`;
+			`${filterData.shown.files} file${filterData.shown.files === 1 ? '' : 's'}`;
 
 	top.directories.textContent =
 		(filterData.reset) ? data.sets.defaults.topValues.directories : 
-		`${filterData.shown.directories} ${filterData.shown.directories === 1 ? 'directory' : 'directories'}`;
+			`${filterData.shown.directories} ${filterData.shown.directories === 1 ? 'directory' : 'directories'}`;
 
 	let option = document.body.querySelector(':scope > div.menu > #gallery');
 

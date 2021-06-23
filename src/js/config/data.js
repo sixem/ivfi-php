@@ -1,6 +1,11 @@
 /* import config */
-import { config } from '../config/config';
-import { code } from '../config/constants';
+import {
+	config
+} from '../config/config';
+
+import {
+	code
+} from '../config/constants';
 
 /* import classes */
 import { selectorClass } from '../classes/selector';
@@ -52,7 +57,7 @@ data.instances.optimize = {
 	gallery : {
 		enabled : false
 	}
-}
+};
 
 /* create keys */
 data.keys = {
