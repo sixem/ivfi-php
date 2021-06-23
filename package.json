@@ -8,6 +8,8 @@
     "vanilla-swipe": "^2.3.0"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "^7.14.7",
+    "@babel/preset-env": "^7.14.7",
     "css-loader": "^5.2.5",
     "css-minimizer-webpack-plugin": "^3.0.0",
     "file-loader": "^6.2.0",
@@ -21,7 +23,9 @@
     "build": "webpack --config webpack.config.js --env production",
     "build-dev": "webpack --config webpack.config.js --env development",
     "build-dev-watch": "webpack --config webpack.config.js --env development --watch",
-    "make-standalone": "webpack --config webpack.config.js --env production && node ./scripts/make-standalone.js"
+    "make-standalone": "webpack --config webpack.config.js --env production && node ./scripts/make-standalone.js",
+    "lint": "eslint ./src/js",
+    "test": "npm run lint && npm run build"
   },
   "repository": {
     "type": "git",
