@@ -1,13 +1,17 @@
-<p align="center">
-<img src="https://raw.githubusercontent.com/sixem/eyy-indexer/master/logo.svg">
-</p>
+<h1 align="center">
+  <img src="https://raw.githubusercontent.com/sixem/eyy-indexer/master/logo.svg" width="75%">
+</h1>
+
+<h3 align="center">
+  <span>An image and video friendly Indexer</span><br>
+</h3>
 
 <p align="center">
 <a href="https://github.com/sixem/eyy-indexer/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/eyy-indexer?color=2f394f&style=flat"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/eyy-indexer?color=5a8f4e&style=flat"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/eyy-indexer?color=4b8b72&style=flat"> 
 <img alt="Travis (.com)" src="https://img.shields.io/travis/com/sixem/eyy-indexer?style=flat">
 </p>
 
-<br/>
+---
 
 ## What is this project?
 
