@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://raw.githubusercontent.com/sixem/eyy-indexer/master/logo.svg" width="75%">
+  <img src="https://raw.githubusercontent.com/sixem/eyy-indexer/master/logo.svg">
 </h1>
 
 <h3 align="center">
