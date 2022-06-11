@@ -20,7 +20,7 @@ let minifiedBanner = () =>
  *
  * [https://github.com/sixem/eyy-indexer]
  *
- * Copyright (c) 2021 emy | five.sh | github.com/sixem
+ * Copyright (c) 2022 emy | five.sh | github.com/sixem
  * Licensed under GPL-3.0
  */
  `;
