@@ -82,7 +82,7 @@ export class galleryClass
 		/* valid extensions */
 		data.extensions = {
 			image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'],
-			video : ['mp4', 'webm', 'ogv', 'ogg']
+			video : ['mp4', 'webm', 'ogg', 'ogv', 'mov']
 		};
 
 		/* item list */
@@ -814,7 +814,7 @@ export class galleryClass
 			});
 
 			let source = dom.new('source', {
-				type : `video/${extension === 'ogv' ? 'ogg' : extension}`,
+				type : `video/${extension === 'mov' ? 'mp4' : (extension === 'ogv' ? 'ogg' : extension)}`,
 				src : ''
 			});
 

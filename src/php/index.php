@@ -59,7 +59,7 @@ $config = array(
      * These extensions will have potential previews and will be included in the gallery. */
     'extensions' => array(
         'image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),
-        'video' => array('webm', 'mp4', 'ogg', 'ogv')
+        'video' => array('webm', 'mp4', 'ogg', 'ogv', 'mov')
     ),
     /* Styling options. */
     'style' => array(
