@@ -2,7 +2,7 @@
 
 Here is an overview of what each configurable option does.
 
-These options can be found and changed at the top of the [indexer.php](public/indexer.php) file, or you can create a config file that makes updating a bit easier (see below).
+These options can be found and changed at the top of the `indexer.php` file, or you can create a config file that makes updating a bit easier (see below).
 
 Some of these settings can be changed by the client/user. These are only values for the script to use as defaults.
 
