@@ -157,6 +157,16 @@ Leaving this off is recommended as calculating the directory sizes can be a bit 
 | `enabled` | Boolean | `false` | Whether directory sizes should be calculated or not.
 | `recursive` | Boolean | `false` | Recursively scans the directories when calculating the size.
 
+## Footer
+Key: **`footer`**
+
+Shows a footer with some general information at the bottom of the page.
+
+| Child key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `enabled` | Boolean | `true` | Whether the footer should be displayed or not.
+| `show_server_name` | Boolean | `true` | Shows the `server_name` of the current server in the footer.
+
 ## Other
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
