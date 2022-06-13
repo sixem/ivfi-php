@@ -6,7 +6,7 @@ These options can be found and changed at the top of the `indexer.php` file, or 
 
 Some of these settings can be changed by the client/user. These are only values for the script to use as defaults.
 
-## First.. How do i keep config values between updates?
+## First.. How do I keep config values between updates?
 
 You can edit the configuration in the file directly, but if you wish to keep a separate config file that does not reset between updates, then creating your own config file can be a good solution.
 
