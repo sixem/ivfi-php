@@ -35,6 +35,9 @@ import {
 	debounce
 } from '../../modules/helpers';
 
+/* import stylesheet */
+import '../../../css/gallery.css';
+
 const pipe = data.instances.pipe;
 
 export class galleryClass

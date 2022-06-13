@@ -99,7 +99,10 @@ $config = array(
     /* Enabled the performance mode. */
     'performance' => false,
     /* Whether extra information in the footer should be generated (page load time, path etc.). */
-    'footer' => true,
+    'footer' => array(
+      'enabled' => true,
+      'show_server_name' => true
+    ),
     /* Displays a simple link to the git repository in the footer along with the current version.
      * I would really appreciate it if you keep this enabled. */
     'credits' => true,
@@ -121,7 +124,7 @@ if(file_exists($config_file))
 }
 
 /* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => true,'credits' => true,'debug' => false);
+$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
 
 /* Authentication function. */
 function authenticate($users, $realm)
@@ -219,7 +222,8 @@ foreach($defaults as $key => $value)
 }
 
 $footer = array(
-  'enabled' => is_array($config['footer']) ? ($config['footer']['enabled'] ? true : false) : $config['footer'] ? true : false
+  'enabled' => is_array($config['footer']) ? ($config['footer']['enabled'] ? true : false) : $config['footer'] ? true : false,
+  'show_server_name' => is_array($config['footer']) ? $config['footer']['show_server_name'] : true
 );
 
 /* Set start time for page render calculations. */
@@ -1077,10 +1081,12 @@ if($footer['enabled'])
   echo '<div class="bottom">';
 
   echo sprintf(
-    '  <div>Page generated in %f seconds</div><div>Browsing <span>%s</span>%s</div>',
-    (microtime(true) - $render),
+    '  <div class="%s">Page generated in <span class="%s">%f</span> seconds</div><div>Browsing <span>%s</span>%s</div>',
+    'current-page-info',
+    'generation-time',
+    microtime(true) - $render,
     $indexer->getCurrentDirectory(),
-    !empty($_SERVER['SERVER_NAME']) ? sprintf(' @ <a href="/">%s</a>', $_SERVER['SERVER_NAME']) : ''
+    $footer['show_server_name'] && !empty($_SERVER['SERVER_NAME']) ? sprintf(' @ <a href="/">%s</a>', $_SERVER['SERVER_NAME']) : ''
   );
 
   echo ($config['credits'] !== false) ? sprintf(
