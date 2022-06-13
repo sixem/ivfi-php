@@ -1,6 +1,6 @@
 {
   "name": "eyy-indexer",
-  "version": "1.1.9",
+  "version": "1.2.0-beta",
   "description": "A directory explorer",
   "main": "./src/js/main.js",
   "dependencies": {
