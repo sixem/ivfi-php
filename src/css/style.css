@@ -86,7 +86,7 @@
 :root
 {
 	--height-gallery-top-bar: 31px;
-	--color-background-body: #101014;
+	--color-background-body: #0f0f13;
 	--color-background-table: #121318;
 	--color-body: #d6d3ce;
 	--color-border-main: #19191d;
@@ -97,10 +97,10 @@
 	--color-link-download-visited: #515978;
 	--color-link-file: #9b9b9b;
 	--color-link-file-visited: #757575;
-    --color-link-media-file: #6270ae;
-    --color-link-media-file-hover: #6173c0;
-    --color-link-media-file-visited: #515978;
-	--color-link-dir-regular: #d56161;
+    --color-link-media-file: #6379d5;
+    --color-link-media-file-hover: #6379d5;
+    --color-link-media-file-visited: #475282;
+	--color-link-dir-regular: #f45656;
 	--color-link-dir-parent: #ffc752;
 	--color-gallery-list-item: #d4d4d4;
 	--color-gallery-list-item-selected: #fff;
@@ -218,9 +218,9 @@ div.top-bar>div.directory-info>div.quick-path
 	vertical-align: middle;
 	position: absolute;
 
-	transition: opacity 0.25s;
-	-moz-transition: opacity 0.25s ease-in-out;
-	-webkit-transition: opacity 0.25s ease-in-out;
+	transition: opacity 0.175s;
+	-moz-transition: opacity 0.175s ease-in-out;
+	-webkit-transition: opacity 0.175s ease-in-out;
 
 	opacity: 0;
 }
@@ -531,13 +531,12 @@ body>div.table-container>table span.sort-indicator.down::after
 
 body>div.bottom
 {
-	padding: 9px 0px 10px 7px;
+	padding: 6px 0px 10px 10px;
 	position: relative;
 	border-top: 1px solid var(--color-border-main);
 
 	color: #3d414a;
 	font-size: 13px;
-	font-weight: bold;
 	letter-spacing: 1px;
 }
 
@@ -591,7 +590,8 @@ body>div.bottom a:hover
 div.git-reference
 {
 	position: absolute;
-	right: 7px;
+	right: 10px;
+	font-style: italic;
 }
 
 div.git-reference>span
@@ -999,9 +999,9 @@ select:not(.default):focus
 
 	body>div.bottom
 	{
-		padding-top: 16px;
-		margin-bottom: 32px;
-		text-align: center;
+		padding-top: 0px;
+		margin-bottom: 2px;
+		text-align: left;
 		font-size: 10px!important;
 	}
 
@@ -1199,7 +1199,7 @@ html[gallery-is-visible] > div:not(.gallery-root):not(script):not(noscript):not(
 	position: absolute;
 
 	right: 5px;
-	bottom: 5px;
+	top: 5px;
 
 	padding: 1px 5px 2px 5px;
 	background-color: rgba(0, 0, 0, 0.5);
@@ -1605,7 +1605,7 @@ html[gallery-is-visible] > div:not(.gallery-root):not(script):not(noscript):not(
 	}
 	div.git-reference
 	{
-		text-align: center!important;
+		text-align: left!important;
 		margin-top: 14px;
 		position: unset!important;
 		right: unset!important;
