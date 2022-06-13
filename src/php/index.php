@@ -121,7 +121,7 @@ if(file_exists($config_file))
 }
 
 /* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogg', 'ogv')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => true,'credits' => true,'debug' => false);
+$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => true,'credits' => true,'debug' => false);
 
 /* Authentication function. */
 function authenticate($users, $realm)
@@ -200,7 +200,7 @@ if(isset($config['authentication']) &&
 }
 
 /* Set default configuration values if the config is missing any keys.
- * This does not go too deep at all. */
+ * This does not traverse too deep at all. */
 foreach($defaults as $key => $value)
 {
   if(!isset($config[$key]))
@@ -218,8 +218,12 @@ foreach($defaults as $key => $value)
   }
 }
 
+$footer = array(
+  'enabled' => is_array($config['footer']) ? ($config['footer']['enabled'] ? true : false) : $config['footer'] ? true : false
+);
+
 /* Set start time for page render calculations. */
-if($config['footer'] === true)
+if($footer['enabled'])
 {
   $render = microtime(true);
 }
@@ -1016,8 +1020,6 @@ if(is_array($client) && isset($client['style']['compact']))
   $compact = $config['style']['compact'];
 }
 
-$footer = $config['footer'] === true || $config['credits'] !== false;
-
 $bust = md5($config['debug'] ? time() : $version);
 ?>
 <!DOCTYPE HTML>
@@ -1036,7 +1038,7 @@ $bust = md5($config['debug'] ? time() : $version);
 
   </head>
 
-  <body class="directory-root<?=$compact ? ' compact' : ''?><?=!$footer ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
+  <body class="directory-root<?=$compact ? ' compact' : ''?><?=!$footer['enabled'] ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
 
     <div class="top-bar">
         <div class="extend ns">&#x25BE;</div>
@@ -1070,20 +1072,21 @@ $bust = md5($config['debug'] ? time() : $version);
     </div>
 
 <?php
-if($footer)
+if($footer['enabled'])
 {
   echo '<div class="bottom">';
 
-  echo ($config['footer'] === true) ? sprintf(
-    '  <div>Page generated in %f seconds</div><div>Browsing <span>%s</span> @ <a href="/">%s</a></div>',
-    (microtime(true) - $render), $indexer->getCurrentDirectory(), $_SERVER['SERVER_NAME']
-  ) : '';
+  echo sprintf(
+    '  <div>Page generated in %f seconds</div><div>Browsing <span>%s</span>%s</div>',
+    (microtime(true) - $render),
+    $indexer->getCurrentDirectory(),
+    !empty($_SERVER['SERVER_NAME']) ? sprintf(' @ <a href="/">%s</a>', $_SERVER['SERVER_NAME']) : ''
+  );
 
   echo ($config['credits'] !== false) ? sprintf(
-    '<div class="git-reference%s">
+    '<div class="git-reference">
     <a target="_blank" href="https://github.com/sixem/eyy-indexer">eyy-indexer</a><span class="version">%s</span>
-  </div>',
-      ($config['footer'] !== true ? ' single' : ''), $version
+  </div>', $version
   ) : '';
 
   echo '</div>';
