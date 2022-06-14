@@ -1,0 +1,6 @@
+{
+    "extraFeatures": {
+        "readmeSupport": true
+    },
+    "extrasDir": "build_extras"
+}

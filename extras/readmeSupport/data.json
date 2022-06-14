@@ -1,0 +1,28 @@
+{
+    "integral": {
+        "PARSEDOWN_LIBRARY": {
+            "path": "parsedown/parsedown.php",
+            "extractor": "filePhp",
+            "type": "buildInject",
+            "options": {
+                "stripTags": true
+            }
+        },
+        "DISPLAY_SNIPPET": {
+            "path": "display/displayReadme.php",
+            "extractor": "filePhp",
+            "type": "buildInject",
+            "options": {
+                "stripTags": false
+            }
+        },
+        "STYLESHEET": {
+            "path": "css/stylesheet.css",
+            "extractor": "fileCss",
+            "type": "additonalCss",
+            "options": {
+                "minimize": true
+            }
+        }
+    }
+}
