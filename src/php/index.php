@@ -465,6 +465,8 @@ class Indexer
         array_push($data['directories'], array($path, $file)); continue;
       } else if(file_exists($path))
       {
+        if($file === 'README.md') $data['readme'] = $path;
+        
         if($is_base && $file === $script_name)
         {
           continue;
@@ -472,8 +474,6 @@ class Indexer
         {
           continue;
         }
-
-        if($file === 'README.md') $data['readme'] = $path;
 
         array_push($data['files'], array($path, $file)); continue;
       }
