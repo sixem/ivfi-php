@@ -45,6 +45,8 @@ The search filter can be used to search for filenames or filetypes in the curren
 This script can be set up as a single file script (standalone setup). Only one file needed, nothing more.
 ### **Customizable**
 This script can be customized in a number of ways. (See: [Configuration](docs/CONFIG.md))
+### **Additonal Features**
+It can be built with additional features, like support for displaying `README.md` files on each directory!
 ### **And much more ..**
 + All dates will match the timezone of the client.
 + Persistent client-set sorting settings.
@@ -111,13 +113,23 @@ This line can be placed in either your server's `.conf` file or your `.htaccess`
 
 #### See [Configuration](docs/CONFIG.md) for a detailed overview over how this script can be customized.
 
+## Additional features
+
+When building the Indexer, one can enable additional features. These features are not bundled with the pre-built releases, and must be flagged as enabled prior to building the Indexer yourself (see below for how the building process is done).
+
+The reason why these features are not included in the default version, is because they may rely on larger libraries and other scripts, which I don't feel should be pushed into the vanilla version unless the user desires to do so themselves! :upside_down_face:
+
+See [extras](/extras/) for a list over the features and how these can be implemented.
+
 # Building
-:grey_exclamation: _This has been tested to work with node version 18.3.0_
+:grey_exclamation: **This has been tested to work with node 18.3**
 
-You can build this script from source using `node` and `npm`:
+You can build this script from source using `node` and `npm`.
+
+_PS: Don't have node installed? I would recommend checking out this [repository](https://github.com/nodesource/distributions) then!_ slightly_smiling_face:
 
 
-**Clone repository and install dependencies**
+**Clone repository and install dependencies:**
 ```
 git clone https://github.com/sixem/eyy-indexer
 cd eyy-indexer
