@@ -57,7 +57,7 @@ This script can be customized in a number of ways. (See: [Configuration](docs/CO
 
 # Setup
 
-### Download the latest release [HERE](https://github.com/sixem/eyy-indexer/releases)!
+### Download the latest release [HERE](https://github.com/sixem/eyy-indexer/releases)! :heavy_check_mark:
 
 Alternatively, you can also build it from source yourself, for that see: [Building](#building).
 
@@ -112,7 +112,9 @@ This line can be placed in either your server's `.conf` file or your `.htaccess`
 #### See [Configuration](docs/CONFIG.md) for a detailed overview over how this script can be customized.
 
 # Building
-You can build this script from source using `node` and `npm`.
+:grey_exclamation: _This has been tested to work with node version 18.3.0_
+
+You can build this script from source using `node` and `npm`:
 
 
 **Clone repository and install dependencies**
@@ -148,4 +150,4 @@ You can contribute by either submitting a pull request, reporting issues or bugs
 This project is licensed under GPL-3.0. It also includes external libraries that are available under a variety of licenses. See [LICENSE](LICENSE) for the full license text.
 
 ## Disclaimer
-***As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.***
+:heavy_exclamation_mark: **As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.**
