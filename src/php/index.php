@@ -113,6 +113,10 @@ $config = array(
 /* Look for a config file in the current directory. */
 $config_file = (basename(__FILE__, '.php') . '.config.php');
 
+<%= buildInject.readmeSupport &&
+buildInject.readmeSupport.PARSEDOWN_LIBRARY ?
+buildInject.readmeSupport.PARSEDOWN_LIBRARY : null %>
+
 /* If found, it'll override the above configuration values.
  * Any unset values in the file will take the default values. */
 if(file_exists($config_file))
@@ -430,6 +434,7 @@ class Indexer
     $data = array(
       'files' => array(),
       'directories' => array(),
+      'readme' => NULL,
       'recent' => array(
         'file' => 0,
         'directory' => 0
@@ -467,6 +472,8 @@ class Indexer
         {
           continue;
         }
+
+        if($file === 'README.md') $data['readme'] = $path;
 
         array_push($data['files'], array($path, $file)); continue;
       }
@@ -1033,13 +1040,14 @@ $bust = md5($config['debug'] ? time() : $version);
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title><?=sprintf($config['format']['title'], $indexer->getCurrentDirectory());?></title>
+    
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
     <link rel="stylesheet" type="text/css" href="<%= indexerPath %>css/style.css?bust=<?=$bust;?>">
     <?=($current_theme && strtolower($current_theme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $current_theme . '.css?bust=' . $bust . '">' . PHP_EOL : ''?>
 
     <script defer type="text/javascript" src="<%= indexerPath %>js/main.js?bust=<?=$bust;?>"></script>
-
+    <%= additonalCss ? `\n    <style>${additonalCss.join('')}</style>` : null %>
   </head>
 
   <body class="directory-root<?=$compact ? ' compact' : ''?><?=!$footer['enabled'] ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
@@ -1054,6 +1062,9 @@ $bust = md5($config['debug'] ? time() : $version);
     </div>
 
     <div class="path">Index of <?=$indexer->makePathClickable($indexer->getCurrentDirectory());?></div>
+    <%= buildInject.readmeSupport &&
+    buildInject.readmeSupport.DISPLAY_SNIPPET ?
+    buildInject.readmeSupport.DISPLAY_SNIPPET : null %>
 
     <div class="table-container">
 
