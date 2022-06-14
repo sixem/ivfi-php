@@ -115,7 +115,7 @@ This line can be placed in either your server's `.conf` file or your `.htaccess`
 
 ## Additional features
 
-When building the Indexer, one can enable additional features. These features are not bundled with the pre-built releases, and must be flagged as enabled prior to building the Indexer yourself (see below for how the building process is done).
+When building the Indexer, additional features can be enabled. These features are not bundled with the pre-built releases, and must be flagged as enabled prior to building the Indexer yourself (see below for how the building process is done).
 
 The reason why these features are not included in the default version, is because they may rely on larger libraries and other scripts, which I don't feel should be pushed into the vanilla version unless the user desires to do so themselves! :upside_down_face:
 
@@ -126,7 +126,7 @@ See [extras](/extras/) for a list over the features and how these can be impleme
 
 You can build this script from source using `node` and `npm`.
 
-_PS: Don't have node installed? I would recommend checking out this [repository](https://github.com/nodesource/distributions) then!_ slightly_smiling_face:
+_PS: Don't have node installed? I would recommend checking out this [repository](https://github.com/nodesource/distributions) then!_ :slightly_smiling_face:
 
 
 **Clone repository and install dependencies:**
