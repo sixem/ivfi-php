@@ -458,7 +458,7 @@ export class galleryClass
 			}
 		}
 
-		if(this.options.performance && this.optimize && this.list && this.table && bool)
+		if(bool && this.options.performance && this.optimize && this.list && this.table)
 		{
 			let selectedItem = this.table.querySelector('tr.selected');
 			let selectedItemTop = parseInt(selectedItem.style.top.replace(/\D+/g, ''));
@@ -715,7 +715,10 @@ export class galleryClass
 
 			this.apply.timers.dimensions = setTimeout(() =>
 			{
-				media.style.opacity = 0;
+				if(media)
+				{
+					media.style.opacity = 0;
+				}
 			}, 3E3);
 		},
 		itemInfo : (update, item = null, index = null, max = null) =>
