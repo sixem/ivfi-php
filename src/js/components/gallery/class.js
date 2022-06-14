@@ -457,6 +457,24 @@ export class galleryClass
 				video.pause();
 			}
 		}
+
+		if(this.options.performance && this.optimize && this.list && this.table && bool)
+		{
+			let selectedItem = this.table.querySelector('tr.selected');
+			let selectedItemTop = parseInt(selectedItem.style.top.replace(/\D+/g, ''));
+
+			if(Number.isInteger(selectedItemTop) && !(selectedItemTop >= 0))
+			{
+				selectedItemTop = false;
+			}
+
+			if(!(this.list.scrollTop <= selectedItemTop && selectedItemTop <= (this.list.scrollTop + this.list.offsetHeight)))
+			{
+				this.list.scrollTo(0, selectedItemTop);
+			}
+
+			this.optimize.attemptRefresh();
+		}
 	}
 
 	busy = (bool) =>
