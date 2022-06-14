@@ -1,4 +1,5 @@
 const package = require('./package.json');
+const build = require('./build.helpers.js');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
@@ -8,6 +9,85 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 const webpack = require('webpack');
 const moment = require('moment');
+
+/**
+ * Parameters passed with `HtmlWebpackPlugin`
+ */
+let templateParameters = {
+	buildInject: {},
+	additonalCss: [],
+	version: package.version,
+	indexerPath : '/indexer/'
+};
+
+/**
+ * Read build.options.js if it exists
+ */
+let buildOptions = build.readJson('./build.options.json');
+
+if(buildOptions)
+{
+	console.info('Build options:', JSON.stringify(buildOptions, null, 2), '\n');
+} else {
+	console.info('No build options was found - skipping any potential build options during the build.\n');
+}
+
+/**
+ * Handle any extra build features
+ */
+if(buildOptions.extraFeatures)
+{
+	Object.keys(buildOptions.extraFeatures).forEach((key) =>
+	{
+		/** Is this feature enabled? */
+		if(buildOptions.extraFeatures[key] === true)
+		{
+			/** Construct path, read the feature's JSON data */
+			let path = `${buildOptions.extrasDir}/${key}`, data = build.readJson(`${path}/data.json`);
+
+			if(data && data.integral && Object.keys(data.integral).length > 0)
+			{
+				let integrals = data.integral;
+
+				/** Iterate over the feature's parts/snippets, read it and so on */
+				Object.keys(integrals).forEach((part) =>
+				{
+					let relativePath = build.trimPartPath(integrals[part].path);
+					let extractor = integrals[part].extractor;
+					let partType = integrals[part].type || 'buildInject';
+
+					let fullPath = `${path}/${relativePath}`;
+
+					let options = typeof integrals[part].options === 'object' &&
+						integrals[part].options !== null ? integrals[part].options : {};
+
+					if(build.extractors.hasOwnProperty(extractor))
+					{
+						let integral = build.extractors[extractor](fullPath, options);
+
+						/** If reading was successful - set injection values */
+						if(integral)
+						{
+							if(partType === 'additonalCss')
+							{
+								templateParameters[partType].push(integral);
+							} else {
+								if(!templateParameters[partType].hasOwnProperty(key))
+								{
+									templateParameters[partType][key] = {};
+								}
+		
+								templateParameters[partType][key][part] = integral;
+							}
+						}
+					} else {
+						build.exit('Extractor ', `'${extractor}'`, 'was not found.');
+					}
+				});
+			}
+		}
+	});
+}
 
 const banner = () =>
 {
@@ -60,10 +140,7 @@ module.exports = (env) => {
 				template: __dirname + '/src/php/index.php',
 				filename: __dirname + '/build/indexer.php',
 				templateParameters: (compilation) => {
-					return {
-						version: package.version,
-						indexerPath : '/indexer/'
-					}
+					return templateParameters;
 				}
 			}),
 			new MiniCssExtractPlugin({
