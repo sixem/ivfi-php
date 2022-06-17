@@ -40,7 +40,9 @@ A gallery mode where you can view images and videos of the current directory wit
 ### **Hover Previews**
 Displays a preview of the image or video when hovering over the name.
 ### **Search Filter**
-The search filter can be used to search for filenames or filetypes in the current directory. Usage (Desktop): `Shift + F`.
+The search filter can be used to search for filenames or filetypes in the current directory.
+
+Usage (Desktop): `Shift + F`.
 ### **Single file**
 This script can be set up as a single file script (standalone setup). Only one file needed, nothing more.
 ### **Customizable**
@@ -59,7 +61,7 @@ It can be built with additional features, like support for displaying `README.md
 
 # Setup
 
-### Download the latest release [HERE](https://github.com/sixem/eyy-indexer/releases)! :heavy_check_mark:
+### Download the latest release [HERE](https://github.com/sixem/eyy-indexer/releases)!
 
 Alternatively, you can also build it from source yourself, for that see: [Building](#building).
 
@@ -78,7 +80,7 @@ Place the file from the `standalone` directory into your root web directory.
 
 ## 2. Server Configuration
 
-The Indexer does require you to use it as an `index` file, that way it can be automatically applied to directories that do not have a defualt `index` file present, this makes it behave just like any other default and built-in directory indexes. This can all be done easily by following the steps below, **depending** on what web server you are using.
+The Indexer does require you to use it as an `index` file, that way it can be automatically applied to directories that do not have a defualt `index` file present. This makes it behave just like any other default and built-in directory indexes. This can all be done easily by following the steps below, **depending** on what web server you are using.
 
 ### Nginx
 To use this script for all directories without a default index you need append `/indexer.php` to the end of your `index` line in your server configuration. This will tell Nginx to use the Indexer if none of the default indexes exist.
@@ -126,9 +128,6 @@ See [extras](/extras/) for a list over the features and how these can be impleme
 
 You can build this script from source using `node` and `npm`.
 
-_PS: Don't have node installed? I would recommend checking out this [repository](https://github.com/nodesource/distributions) then!_ :slightly_smiling_face:
-
-
 **Clone repository and install dependencies:**
 ```
 git clone https://github.com/sixem/eyy-indexer
@@ -162,4 +161,4 @@ You can contribute by either submitting a pull request, reporting issues or bugs
 This project is licensed under GPL-3.0. It also includes external libraries that are available under a variety of licenses. See [LICENSE](LICENSE) for the full license text.
 
 ## Disclaimer
-:heavy_exclamation_mark: **As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.**
+**As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.**
