@@ -245,7 +245,7 @@ html[gallery-is-visible] > div:not(.gallery-root):not(script):not(noscript):not(
 
 	z-index: 1;
 
-	top: 10px;
+	top: 35px;
 	right: 10px;
 
 	/* By Sam Herbert (@sherb), for everyone. More @ http://goo.gl/7AJzbL */

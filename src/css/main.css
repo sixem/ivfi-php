@@ -386,7 +386,7 @@ body>div.table-container>table span.sort-indicator.down::after
 
 body>div.bottom
 {
-	padding: 6px 0px 10px 10px;
+	padding: 8px 0px 10px 10px;
 	position: relative;
 	border-top: 1px solid var(--color-border-main);
 
