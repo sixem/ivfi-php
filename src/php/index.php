@@ -69,6 +69,10 @@ $config = array(
           'path' => false,
           'default' => false
         ),
+         /* Cascading style sheets options. */
+        'css' => array(
+          'additional' => false
+        ),
         /* Enables a more compact styling of the page. */
         'compact' => false
     ),
@@ -104,15 +108,17 @@ $config = array(
       'show_server_name' => true
     ),
     /* Displays a simple link to the git repository in the footer along with the current version.
-     * I would really appreciate it if you keep this enabled. */
+     * I would really appreciate it if you would keep this enabled. */
     'credits' => true,
-    /* Enables console output in JS and PHP debugging. */
+    /* Enables console output in JS and PHP debugging.
+     * Also enables random query-strings for js/css files to bust the cache. */
     'debug' => true
 );
 
 /* Look for a config file in the current directory. */
 $config_file = (basename(__FILE__, '.php') . '.config.php');
 
+/* Any potential libraries and so on for extra features will appear here. */
 <%= buildInject.readmeSupport &&
 buildInject.readmeSupport.PARSEDOWN_LIBRARY ?
 buildInject.readmeSupport.PARSEDOWN_LIBRARY : null %>
@@ -128,7 +134,7 @@ if(file_exists($config_file))
 }
 
 /* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'style' => array('themes' => array('path' => false,'default' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
+$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'style' => array('themes' => array('path' => false,'default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
 
 /* Authentication function. */
 function authenticate($users, $realm)
@@ -1031,7 +1037,29 @@ if(is_array($client) && isset($client['style']['compact']))
   $compact = $config['style']['compact'];
 }
 
+/* Used to bust the cache (query-strings for js and css files). */
 $bust = md5($config['debug'] ? time() : $version);
+
+/* Set any additional CSS. */
+$additional_css = "<%= additonalCss ? additonalCss.join('') : null %>";
+
+if(is_array($config['style']['css']['additional']))
+{
+  foreach($config['style']['css']['additional'] as $key => $value)
+  {
+    [$selector, $values] = array($key, (string) NULL);
+
+    foreach($value as $key => $value)
+    {
+      $values .= sprintf('%s: %s;', $key, rtrim($value, ';'));
+    }
+
+    $additional_css .= sprintf('%s{ %s }', $selector, $values);
+  }
+} else if(is_string($config['style']['css']['additional']))
+{
+  $additional_css .= str_replace('"', '\"', $config['style']['css']['additional']);
+}
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -1047,7 +1075,7 @@ $bust = md5($config['debug'] ? time() : $version);
     <?=($current_theme && strtolower($current_theme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $current_theme . '.css?bust=' . $bust . '">' . PHP_EOL : ''?>
 
     <script defer type="text/javascript" src="<%= indexerPath %>js/main.js?bust=<?=$bust;?>"></script>
-    <%= additonalCss ? `\n    <style>${additonalCss.join('')}</style>` : null %>
+    <?= !(empty($additional_css)) ? sprintf('<style>%s</style>', $additional_css) : NULL?>
   </head>
 
   <body class="directory-root<?=$compact ? ' compact' : ''?><?=!$footer['enabled'] ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
@@ -1114,7 +1142,7 @@ if($footer['enabled'])
     <input type="text" placeholder="Search .." value="">
 </div>
 
-<!-- [https://github.com/sixem/eyy-indexer] --> 
+<!-- [https://github.com/sixem/eyy-indexer] -->  
 
 <script id="__INDEXER_DATA__" type="application/json"><?=(json_encode(array(
   'preview' => array(
