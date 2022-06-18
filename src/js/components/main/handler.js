@@ -143,7 +143,12 @@ main.menu.toggle = (state = null) =>
 		display
 	});
 
-	selector.use('TOP_EXTEND').innerHTML = (isHidden ? '&#x25B4;' : '&#x25BE;');
+	if(isHidden)
+	{
+		selector.use('TOP_EXTEND').setAttribute('extended', true);
+	} else {
+		selector.use('TOP_EXTEND').removeAttribute('extended');
+	}
 
 	return isHidden;
 };

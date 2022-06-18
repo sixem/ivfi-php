@@ -22,9 +22,9 @@ import { componentMain } from './components/main/handler';
 import * as h from './modules/helpers';
 
 /* import stylesheets */
-import '../css/root.css';
-import '../css/fonts.css';
-import '../css/main.css';
+import '../css/root.scss';
+import '../css/fonts.scss';
+import '../css/main.scss';
 
 /* references */
 const selector = data.instances.selector;

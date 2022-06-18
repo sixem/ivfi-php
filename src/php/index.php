@@ -1081,7 +1081,7 @@ if(is_array($config['style']['css']['additional']))
   <body class="directory-root<?=$compact ? ' compact' : ''?><?=!$footer['enabled'] ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
 
     <div class="top-bar">
-        <div class="extend ns">&#x25BE;</div>
+        <div class="extend ns">&#9881;</div>
         <div class="directory-info">
           <div data-count="size"><?=$data['size']['readable'];?></div>
           <div <?=$data['recent']['file'] !== 0 ? 'data-raw="' . $data['recent']['file'] . '" ' : '';?>data-count="files"><?=$counts['files'] . ($counts['files'] === 1 ? ' file' : ' files');?></div>

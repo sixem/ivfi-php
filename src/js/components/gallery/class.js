@@ -36,7 +36,7 @@ import {
 } from '../../modules/helpers';
 
 /* import stylesheet */
-import '../../../css/gallery.css';
+import '../../../css/gallery.scss';
 
 const pipe = data.instances.pipe;
 
