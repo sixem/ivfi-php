@@ -154,8 +154,19 @@ module.exports = (env) => {
 		module: {
 			rules: [
 				{
-					test: /\.css$/i,
-					use: [MiniCssExtractPlugin.loader, 'css-loader']
+					test: /\.s[ac]ss$/i,
+					use: [
+						MiniCssExtractPlugin.loader,
+						{
+							loader: 'css-loader',
+							options: {
+								sourceMap: env.production ? false : true
+							}
+						},
+						{
+							loader: 'sass-loader'
+						}
+					],
 				},
 				{
 					test: /\.(woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
