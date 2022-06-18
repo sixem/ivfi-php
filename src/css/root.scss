@@ -1,0 +1,39 @@
+@charset "UTF-8";
+
+* {
+  box-sizing: inherit;
+
+  &:before, &:after {
+    box-sizing: inherit;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: #131315;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #424242;
+
+  &:hover {
+    background-color: #383838;
+  }
+}
+
+select:not(.default) {
+  &::-ms-expand {
+    display: none;
+  }
+
+  &:hover {
+    border: 1px solid #393c4a;
+    background-color: #262835;
+  }
+
+  &:focus {
+    border: 1px solid #393c4a;
+    background-color: #262835;
+    outline: none;
+  }
+}
