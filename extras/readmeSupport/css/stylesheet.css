@@ -1,9 +1,14 @@
 .readme-container
 {
-    background-color: var(--color-background-table);
+    background-color: #121318;
     margin-bottom: 18px;
-    border-top: 1px solid var(--color-border-main);
-    border-bottom: 1px solid var(--color-border-main);
+    border-top: 1px solid #19191d;
+    border-bottom: 1px solid #19191d;
+}
+
+.readme-container pre
+{
+    white-space: pre-wrap;
 }
 
 .readme-container > div.readme-inner
@@ -26,7 +31,7 @@
 
 .readme-container::before
 {
-    content: 'README.md';
+    content: "README.md";
     background-color: #15161e;
     display: block;
     padding: 3px 8px 5px 6px;
