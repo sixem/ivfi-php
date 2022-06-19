@@ -111,7 +111,10 @@ exports.readJson = (path) =>
 
                 if(options.minimize)
                 {
-                    data = data.replace(/\n/g, '').replace(/\s\s+/g, ' ');
+                    data = data.
+                        replace(/\n/g, '').
+                        replace(/\s\s+/g, ' ').
+                        replace(/"/g, '\\"');
                 }
 			} else {
 				exports.exit(`File not found: ${path}`);
