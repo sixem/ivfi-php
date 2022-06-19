@@ -1,6 +1,6 @@
 {
     "extraFeatures": {
-        "readmeSupport": true
+        "readmeSupport": false
     },
     "extrasDir": "extras"
 }
