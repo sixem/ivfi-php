@@ -1047,7 +1047,8 @@ if(is_array($config['style']['css']['additional']))
 {
   foreach($config['style']['css']['additional'] as $key => $value)
   {
-    [$selector, $values] = array($key, (string) NULL);
+    $selector = $key;
+    $values = (string) NULL;
 
     foreach($value as $key => $value)
     {
