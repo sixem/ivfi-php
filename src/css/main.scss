@@ -80,6 +80,10 @@ div.top-bar > div.directory-info > div.quick-path {
     opacity: 1;
   }
 
+  &:not(.visible) {
+    pointer-events: none;
+  }
+
   a {
     color: white;
     text-decoration: none;
