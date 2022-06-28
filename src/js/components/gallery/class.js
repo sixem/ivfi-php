@@ -252,6 +252,8 @@ export class galleryClass
 			encoded = encoded.replace('#', '%23').replace('?', '%3F');
 		}
 
+		encoded = encoded.replace('+', '%2B');
+
 		return encoded;
 	}
 
