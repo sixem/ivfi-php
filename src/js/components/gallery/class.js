@@ -1043,7 +1043,7 @@ export class galleryClass
 
 				eventHandler.addListener(video, [
 					'canplay', 'canplaythrough', 'loadeddata', 'playing'
-				], null, (e) =>
+				], null, () =>
 				{
 					if(hasEvented)
 					{
