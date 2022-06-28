@@ -833,7 +833,7 @@ export class galleryClass
 		{
 			let video = dom.new('video', {
 				controls : '',
-				preload : 'none',
+				preload : 'auto',
 				loop : ''
 			});
 
@@ -903,11 +903,7 @@ export class galleryClass
 		this.pipe('showItem', type, element, src, init, index, data);
 
 		let wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
-
-		let video = null;
-
-		let source = null;
-
+		let video, source = null;
 		let hasEvented = false;
 
 		let applyChange = (onChange) =>
@@ -924,7 +920,6 @@ export class galleryClass
 			});
 
 			this.apply.itemInfo(true);
-
 			this.data.selected.type = type;
 
 			let hideOther = () =>
@@ -1043,11 +1038,12 @@ export class galleryClass
 				eventHandler.addListener(video, ['volumechange'], null, () =>
 				{
 					this.options.volume = video.muted ? 0 : parseFloat(parseFloat(video.volume).toFixed(2));
-
 					this.emitter.dispatch('volumeChange', this.options.volume);
 				});
 
-				eventHandler.addListener(video, ['canplay', 'canplaythrough'], null, () =>
+				eventHandler.addListener(video, [
+					'canplay', 'canplaythrough', 'loadeddata', 'playing'
+				], null, (e) =>
 				{
 					if(hasEvented)
 					{
@@ -1145,20 +1141,15 @@ export class galleryClass
 			return false;
 		}
 
-		let init = null;
-
-		let item = null;
+		let init = null, item = null;
 
 		let contentContainer = this.container.querySelector(':scope > div.gallery-content');
 
 		let image = contentContainer.querySelector(':scope > div.media > div.wrapper img');
-
 		let video = contentContainer.querySelector(':scope > div.media > div.wrapper video');
 
 		let list = contentContainer.querySelector(':scope > div.list');
-
 		let table = list.querySelector('table');
-
 		let element = table.querySelector(`tr:nth-child(${index + 1})`);
 
 		item = this.items[index];
@@ -1180,7 +1171,6 @@ export class galleryClass
 		this.apply.itemInfo((!image && !video) ? true : false, item, index, max + 1);
 
 		let hasScrolled = false;
-
 		let useScrollOptimize = this.options.performance && this.optimize && this.optimize.enabled;
 
 		if(useScrollOptimize && element.classList.contains('hid-row') && element._offsetTop >= 0)
@@ -1219,10 +1209,9 @@ export class galleryClass
 
 				let wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
 
-				wrapper.prepend(cover);
-
 				image = dom.new('img');
 
+				wrapper.prepend(cover);
 				cover.append(image);
 
 				cover.addEventListener('mouseenter', (e) =>
@@ -1237,7 +1226,6 @@ export class galleryClass
 			this.loadImage(encoded).then((data) =>
 			{
 				let [src, , dimensions] = data;
-
 				let [w, h] = dimensions;
 
 				if(this.data.selected.src === src)
@@ -1289,7 +1277,7 @@ export class galleryClass
 			if(init)
 			{
 				video = this.video.create(this.data.selected.ext)[0];
-				/*video.appendTo(this.container.find('> div.gallery-content > div.media > div.wrapper'));*/
+				/* video.appendTo(this.container.find('> div.gallery-content > div.media > div.wrapper')); */
 
 				this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper').append(video);
 			}
