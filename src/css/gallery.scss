@@ -227,7 +227,6 @@ html[gallery-is-visible] > div:not(.gallery-root):not(script):not(noscript):not(
           $spinner-fade-duration:0.25s;
           position: absolute;
           z-index: 1;
-          top: 35px;
           right: 10px;
 
           /* By Sam Herbert (@sherb), for everyone. More @ http://goo.gl/7AJzbL */
@@ -386,6 +385,14 @@ html[gallery-is-visible] > div:not(.gallery-root):not(script):not(noscript):not(
         float: right;
         border-left: none;
         border-right: 2px solid variables.$color-gallery-border;
+      }
+
+      &.reversed div.spinner {
+        top: 10px;
+      }
+
+      &:not(.reversed) div.spinner {
+        top: 35px;
       }
 
       .list table {
