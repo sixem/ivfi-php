@@ -392,7 +392,7 @@ theme.set = (theme = null, setCookie = true) =>
 	let sheet = dom.new('link', {
 		rel : 'stylesheet',
 		type : 'text/css',
-		href : `${themesPath}/${theme}.css`.replace(/\/\//g, '/')
+		href : `${themesPath}/${theme}.css?bust=${config.data.bust}`.replace(/\/\//g, '/')
 	});
 
 	/* apply to document */
