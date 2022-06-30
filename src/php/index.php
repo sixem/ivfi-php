@@ -1146,6 +1146,7 @@ if($footer['enabled'])
 <!-- [https://github.com/sixem/eyy-indexer] -->  
 
 <script id="__INDEXER_DATA__" type="application/json"><?=(json_encode(array(
+  'bust' => $bust,
   'preview' => array(
     'enabled' => $config['preview']['enabled'],
     'hoverDelay' => $config['preview']['hover_delay'],
