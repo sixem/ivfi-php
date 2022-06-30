@@ -1,0 +1,44 @@
+body > div.table-container > table tr.file a.preview, body > div.table-container > table tr.file a.preview:hover {
+    color: #7458a9;
+}
+
+body > div.table-container > table tr.file a.preview:visited {
+    color: #443660;
+}
+
+body > div.table-container > table tr.directory a {
+    color: #f86f8d;
+}
+
+body > div.table-container > table tr.parent a {
+    color: #ffc561;
+}
+
+body > div.table-container > table tr.file td.download a {
+    color: #794c6b;
+}
+
+body > div.table-container > table tr.file td.download a:visited {
+    color: #3e2b38;
+}
+
+body.compact > div.path {
+    text-align: center;
+}
+
+body > div.path a {
+    color: #ab8fdf;
+    font-weight: normal;
+}
+
+.gallery-root div.gallery-content .list table tr.selected td {
+    background-color: #342d4294;
+}
+
+.gallery-root div.gallery-content .list table tr.selected td:hover {
+    background-color: #342d4294;
+}
+
+.gallery-root div.gallery-content .list table tr:not(.selected) td:hover {
+    background-color: #342d422e;
+}
