@@ -4,7 +4,7 @@
     "mail": "emy@five.sh"
   },
   "name": "eyy-indexer",
-  "version": "1.2.0-beta_2",
+  "version": "1.2.0",
   "description": "A directory explorer",
   "main": "./src/js/main.js",
   "dependencies": {
