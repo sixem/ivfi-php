@@ -76,7 +76,7 @@ export function getType()
 
 	this.data.extension = this.data.src.split('.').pop().toLowerCase();
 
-	if(['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'].includes(this.data.extension))
+	if(['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'].includes(this.data.extension))
 	{
 		return 0;
 	} else if(['webm', 'mp4', 'ogg', 'ogv', 'mov'].includes(this.data.extension))
