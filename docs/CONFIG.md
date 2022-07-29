@@ -115,7 +115,7 @@ This basically means that the extensions included here will have previews and wi
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `image` | Array | `'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'` | Extensions marked as `image`.
+| `image` | Array | `'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp' | Extensions marked as `image`.
 | `video` | Array | `'webm', 'mp4', 'ogv', 'ogg', 'mov'` | Extensions marked as `video`.
 
 ## Style
