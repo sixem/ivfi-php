@@ -84,7 +84,7 @@ export class galleryClass
 
 		/* valid extensions */
 		data.extensions = {
-			image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'],
+			image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp'],
 			video : ['mp4', 'webm', 'ogg', 'ogv', 'mov']
 		};
 
