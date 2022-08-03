@@ -196,10 +196,10 @@ function authenticate($users, $realm)
   $a1 = md5($data['username'] . ':' . $realm . ':' . $users[$data['username']]);
   $a2 = md5($_SERVER['REQUEST_METHOD'] . ':' . $data['uri']);
 
-  $valid_response = md5($a1 . ':' . $data['nonce'] . ':' . $data['nc'] . ':' . $data['cnonce'] . ':' . $data['qop'] . ':' . $a2);
+  $validResponse = md5($a1 . ':' . $data['nonce'] . ':' . $data['nc'] . ':' . $data['cnonce'] . ':' . $data['qop'] . ':' . $a2);
 
   /* Deny access if data can't be verified. */
-  if($data['response'] != $valid_response)
+  if($data['response'] != $validResponse)
   {
     createHeader($realm);
     die('Invalid credentials.');
