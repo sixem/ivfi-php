@@ -115,22 +115,25 @@ $config = array(
     'debug' => true
 );
 
+/* Get current request URI. */
+$currentUri = rawurldecode($_SERVER['REQUEST_URI']);
+
 /* Look for a config file in the current directory. */
-$config_file = (basename(__FILE__, '.php') . '.config.php');
+$configFile = (basename(__FILE__, '.php') . '.config.php');
 
 /* Any potential libraries and so on for extra features will appear here. */
 <%= buildInject.readmeSupport &&
-buildInject.readmeSupport.PARSEDOWN_LIBRARY ?
-buildInject.readmeSupport.PARSEDOWN_LIBRARY : null %>
+  buildInject.readmeSupport.PARSEDOWN_LIBRARY ?
+  buildInject.readmeSupport.PARSEDOWN_LIBRARY : null %>
 
 /* If found, it'll override the above configuration values.
  * Any unset values in the file will take the default values. */
-if(file_exists($config_file))
+if(file_exists($configFile))
 {
-  $config = include($config_file);
-} else if(file_exists('.' . $config_file)) /* Also check for hidden (.) file. */
+  $config = include($configFile);
+} else if(file_exists('.' . $configFile)) /* Also check for hidden (.) file. */
 {
-  $config = include('.' . $config_file);
+  $config = include('.' . $configFile);
 }
 
 /* Default configuration values. Used if values from the above config are unset. */
@@ -142,7 +145,7 @@ function authenticate($users, $realm)
   function http_digest_parse($text)
   {
     /* Protect against missing data. */
-    $needed_parts = array(
+    $neededParts = array(
       'nonce' => 1,
       'nc' => 1,
       'cnonce' => 1,
@@ -153,17 +156,17 @@ function authenticate($users, $realm)
     );
 
     $data = array();
-    $keys = implode('|', array_keys($needed_parts));
+    $keys = implode('|', array_keys($neededParts));
 
     preg_match_all('@(' . $keys . ')=(?:([\'"])([^\2]+?)\2|([^\s,]+))@', $text, $matches, PREG_SET_ORDER);
 
     foreach($matches as $m)
     {
       $data[$m[1]] = $m[3] ? $m[3] : $m[4];
-      unset($needed_parts[$m[1]]);
+      unset($neededParts[$m[1]]);
     }
 
-    return $needed_parts ? false : $data;
+    return $neededParts ? false : $data;
   }
 
   /* Create header for when unathorized. */
@@ -206,10 +209,31 @@ function authenticate($users, $realm)
 /* Call authentication function if authentication is enabled. */
 if(isset($config['authentication']) &&
   $config['authentication'] &&
-  is_array($config['authentication']) &&
-  count($config['authentication']) > 0)
+  is_array($config['authentication']))
 {
-  authenticate($config['authentication'], 'Restricted content.');
+  /* If `users` key is an array, make way for it and check for restrictions. */
+  if(isset($config['authentication']['users']) &&
+    is_array($config['authentication']['users']))
+  {
+    $isRestricted = true;
+
+    /* A `restrict` key is set, check if it matches current path. */
+    if(isset($config['authentication']['restrict']) &&
+      is_string($config['authentication']['restrict']))
+    {
+      /* Check if `restrict` filter matches the current requested URI. */
+      $isRestricted = preg_match($config['authentication']['restrict'], $currentUri);
+    }
+
+    /* Restrict content if `restrict` filter matches successfully or it is unset. */
+    if($isRestricted)
+    {
+      authenticate($config['authentication']['users'], 'Restricted content.');
+    }
+  } else {
+    /* Don't use any potential `users` array to authenticate, use main array instead. */
+    authenticate($config['authentication'], 'Restricted content.');
+  }
 }
 
 /* Set default configuration values if the config is missing any keys.
@@ -719,9 +743,8 @@ class Indexer
         continue;
       }
 
-      $href = implode('/', array_slice($paths, 0, $i));
-
-      $output .= sprintf('<a href="/%s">%s</a>', $href, $text);
+      $anchor = implode('/', array_slice($paths, 0, $i));
+      $output .= sprintf('<a href="/%s">%s</a>', $anchor, $text);
     }
 
     return $output;
@@ -740,9 +763,9 @@ class Indexer
 
     if(count($this->format['date']) > 1)
     {
-      $format = sprintf('<\s\p\a\n \d\a\t\a-\v\i\e\w="\d\e\s\k\t\o\p">%s\<\/\s\p\a\n\>'.
-      '<\s\p\a\n \d\a\t\a-\v\i\e\w="\m\o\b\i\l\e">%s\<\/\s\p\a\n\>',
-      $this->format['date'][0], $this->format['date'][1]);
+      $format = sprintf('<\s\p\a\n \d\a\t\a-\v\i\e\w="\d\e\s\k\t\o\p">%s\<\/\s\p\a\n\>' .
+        '<\s\p\a\n \d\a\t\a-\v\i\e\w="\m\o\b\i\l\e">%s\<\/\s\p\a\n\>',
+        $this->format['date'][0], $this->format['date'][1]);
     } else {
       $format = $this->format['date'][0];
     }
@@ -920,19 +943,19 @@ if($cookies['sorting']['ascending'] !== NULL || $cookies['sorting']['row'] !== N
 /* Is 'INDEXER_BASE_PATH' set? Change base path.*/
 if(isset($_SERVER['INDEXER_BASE_PATH']))
 {
-  $base_path = $_SERVER['INDEXER_BASE_PATH'];
+  $basePath = $_SERVER['INDEXER_BASE_PATH'];
 } else {
-  $base_path = dirname(__FILE__);
+  $basePath = dirname(__FILE__);
 }
 
 try
 {
   /* Call class with options set. */
   $indexer = new Indexer(
-      rawurldecode($_SERVER['REQUEST_URI']),
+      $currentUri,
       array(
           'path' => array(
-            'relative' => $base_path
+            'relative' => $basePath
           ),
           'format' => array(
             'date' => isset($config['format']['date']) ? $config['format']['date'] : NULL,
@@ -998,7 +1021,7 @@ $themes = array();
 if($config['style']['themes']['path'])
 {
   /* Trim the string of set directory path. */
-  $directory = rtrim($indexer->joinPaths($base_path, $config['style']['themes']['path']), '/');
+  $directory = rtrim($indexer->joinPaths($basePath, $config['style']['themes']['path']), '/');
 
   /* If set theme path is valid directory, scan it for .css files and add them to the theme pool. */
   if(is_dir($directory))
@@ -1013,17 +1036,17 @@ if($config['style']['themes']['path'])
   if(count($themes) > 0) array_unshift($themes, 'default');
 }
 
-$current_theme = NULL;
+$currentTheme = NULL;
 
 if(count($themes) > 0)
 {
   /* Check if a theme is already set. */
   if(is_array($client) && isset($client['style']['theme']))
   {
-    $current_theme = in_array($client['style']['theme'], $themes) ? $client['style']['theme'] : NULL;
+    $currentTheme = in_array($client['style']['theme'], $themes) ? $client['style']['theme'] : NULL;
   } elseif(isset($config['style']['themes']['default']) && in_array($config['style']['themes']['default'], $themes))
   {
-    $current_theme = $config['style']['themes']['default'];
+    $currentTheme = $config['style']['themes']['default'];
   }
 }
 
@@ -1041,7 +1064,7 @@ if(is_array($client) && isset($client['style']['compact']))
 $bust = md5($config['debug'] ? time() : $version);
 
 /* Set any additional CSS. */
-$additional_css = "<%= additonalCss ? additonalCss.join('') : null %>";
+$additionalCss = "<%= additonalCss ? additonalCss.join('') : null %>";
 
 if(is_array($config['style']['css']['additional']))
 {
@@ -1052,14 +1075,14 @@ if(is_array($config['style']['css']['additional']))
 
     foreach($value as $key => $value)
     {
-      $values .= sprintf('%s: %s;', $key, rtrim($value, ';'));
+      $values .= sprintf('%s:%s;', $key, rtrim($value, ';'));
     }
 
-    $additional_css .= sprintf('%s{ %s }', $selector, $values);
+    $additionalCss .= sprintf('%s{%s}', $selector, $values);
   }
 } else if(is_string($config['style']['css']['additional']))
 {
-  $additional_css .= str_replace('"', '\"', $config['style']['css']['additional']);
+  $additionalCss .= str_replace('"', '\"', $config['style']['css']['additional']);
 }
 ?>
 <!DOCTYPE HTML>
@@ -1073,10 +1096,10 @@ if(is_array($config['style']['css']['additional']))
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
     <link rel="stylesheet" type="text/css" href="<%= indexerPath %>css/style.css?bust=<?=$bust;?>">
-    <?=($current_theme && strtolower($current_theme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $current_theme . '.css?bust=' . $bust . '">' . PHP_EOL : ''?>
+    <?=($currentTheme && strtolower($currentTheme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $currentTheme . '.css?bust=' . $bust . '">' . PHP_EOL : ''?>
 
     <script defer type="text/javascript" src="<%= indexerPath %>js/main.js?bust=<?=$bust;?>"></script>
-    <?= !(empty($additional_css)) ? sprintf('<style>%s</style>', $additional_css) : NULL?>
+    <?= !(empty($additionalCss)) ? sprintf('<style>%s</style>' . PHP_EOL, $additionalCss) : NULL?>
   </head>
 
   <body class="directory-root<?=$compact ? ' compact' : ''?><?=!$footer['enabled'] ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
@@ -1092,8 +1115,8 @@ if(is_array($config['style']['css']['additional']))
 
     <div class="path">Index of <?=$indexer->makePathClickable($indexer->getCurrentDirectory());?></div>
     <%= buildInject.readmeSupport &&
-    buildInject.readmeSupport.DISPLAY_SNIPPET ?
-    buildInject.readmeSupport.DISPLAY_SNIPPET : null %>
+      buildInject.readmeSupport.DISPLAY_SNIPPET ?
+      buildInject.readmeSupport.DISPLAY_SNIPPET : null %>
 
     <div class="table-container">
 
@@ -1176,7 +1199,7 @@ if($footer['enabled'])
     'themes' => array(
       'path' => $config['style']['themes']['path'],
       'pool' => $themes,
-      'set' => $current_theme ? $current_theme : 'default'
+      'set' => $currentTheme ? $currentTheme : 'default'
     ),
     'compact' => $config['style']['compact']
   ),
