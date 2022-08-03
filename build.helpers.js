@@ -114,7 +114,10 @@ exports.readJson = (path) =>
                     data = data.
                         replace(/\n/g, '').
                         replace(/\s\s+/g, ' ').
-                        replace(/"/g, '\\"');
+                        replace(/"/g, '\\"').
+                        replace(': ', ':').replace('; ', ';').
+                        replace(' }', '}').replace('} ', '}').
+                        replace('{ ', '{').replace(' {', '{');
                 }
 			} else {
 				exports.exit(`File not found: ${path}`);
