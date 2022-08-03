@@ -19,7 +19,11 @@ A basic example of a config file:
 <?php
 return array(
     'authentication' => array(
-        'my_secret_username' => 'super_secret_password'
+        'users' => array(
+            'admin' => file_get_contents('/home/admin/.pwd'),
+            'user' => 'secretPassword123'
+        ),
+        'restrict' => '/^(\/videos\/?|\/files\/images\/?)$/i'
     ),
     'icon' => array(
         'path' => '/my_favicon.png',
@@ -44,11 +48,12 @@ return array(
 ## Authentication
 Key: **`authentication`**
 
-Enables HTTP authentication through PHP. Don't rely on this for any strong protection.
+Enables HTTP authentication through PHP (digest access authentication). Don't rely on this for 100% protection.
 
-| Child key | Type | Value | Description |
+| Child key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `username` | String | `password` | Each key in the array represents a valid user where the value is the password.
+| `users` | Array | `Unset` | Each key in the array represents a valid user where the value is the password.
+| `restrict` | String | `Unset` | All URIs matching this regex will have authentication enabled. Leave this unset to apply authentication to every directory.
 
 ## Format
 Key: **`format`**
