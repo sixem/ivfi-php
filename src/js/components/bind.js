@@ -1,23 +1,23 @@
 /* import models */
 import {
 	eventHandler
-} from '../../modules/event-handler';
+} from '../modules/event-handler';
 
 /* import config */
 import {
 	config
-} from '../../config/config';
+} from '../config/config';
 
 import {
 	data
-} from '../../config/data';
+} from '../config/data';
 
 /* import helpers */
 import {
 	dom,
 	getScrollTop,
 	setVideoVolume
-} from '../../modules/helpers';
+} from '../modules/helpers';
 
 const events = new Object();
 

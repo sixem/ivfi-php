@@ -1,25 +1,25 @@
 /* import vendors */
 import {
 	formatDate
-} from '../../vendors/date/date';
+} from '../vendors/date/date';
 
 /* import config */
 import {
 	config,
 	user
-} from '../../config/config';
+} from '../config/config';
 
 import {
 	data
-} from '../../config/data';
+} from '../config/data';
 
 /* import models */
 import {
 	eventHandler
-} from '../../modules/event-handler';
+} from '../modules/event-handler';
 
 /* import helpers */
-import * as h from '../../modules/helpers';
+import * as h from '../modules/helpers';
 
 /* references */
 const selector = data.instances.selector;

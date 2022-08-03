@@ -5,38 +5,38 @@ import swipe from 'vanilla-swipe';
 /* import config */
 import {
 	user
-} from '../../config/config';
+} from '../config/config';
 
 import {
 	data
-} from '../../config/data';
+} from '../config/data';
 
 import {
 	code
-} from '../../config/constants';
+} from '../config/constants';
 
-/* import models */
+/* import modules */
 import {
 	eventHandler
-} from '../../modules/event-handler';
+} from '../modules/event-handler';
 
 /* import classes */
 import {
 	optimizeClass
-} from '../../classes/optimize';
+} from './optimize';
 
 import {
 	emitterClass
-} from '../../classes/emitter';
+} from './emitter';
 
 /* import helpers */
 import {
 	dom,
 	debounce
-} from '../../modules/helpers';
+} from '../modules/helpers';
 
 /* import stylesheet */
-import '../../../css/gallery.scss';
+import '../../css/gallery.scss';
 
 const pipe = data.instances.pipe;
 

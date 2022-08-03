@@ -2,22 +2,22 @@
 import {
 	config,
 	user
-} from '../../config/config';
+} from '../config/config';
 
 import {
 	data
-} from '../../config/data';
+} from '../config/data';
 
 /* import classes */
 import {
 	galleryClass
-} from './class';
+} from '../classes/gallery';
 
 /* require helpers */
 import {
 	applyNested,
 	checkNested
-} from '../../modules/helpers';
+} from '../modules/helpers';
 
 const pipe = data.instances.pipe;
 
@@ -185,4 +185,4 @@ export class componentGallery
 			});
 		}
 	}
-}
+};

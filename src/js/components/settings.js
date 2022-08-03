@@ -1,28 +1,28 @@
 /* import config */
 import {
 	data
-} from '../../config/data';
+} from '../config/data';
 
 import {
 	code
-} from '../../config/constants';
+} from '../config/constants';
 
 import {
 	config,
 	user
-} from '../../config/config';
+} from '../config/config';
 
 /* import models */
 import {
 	eventHandler
-} from '../../modules/event-handler';
+} from '../modules/event-handler';
 
 /* require helpers */
 import {
 	dom,
 	capitalize,
 	checkNested
-} from '../../modules/helpers';
+} from '../modules/helpers';
 
 const pipe = data.instances.pipe;
 

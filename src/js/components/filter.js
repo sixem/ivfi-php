@@ -1,16 +1,16 @@
 /* import config */
 import {
 	config
-} from '../../config/config';
+} from '../config/config';
 
 import {
 	data
-} from '../../config/data';
+} from '../config/data';
 
 /* import helpers */
 import {
 	getReadableSize
-} from '../../modules/helpers';
+} from '../modules/helpers';
 
 const componentFilter = new Object();
 

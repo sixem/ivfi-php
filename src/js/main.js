@@ -12,11 +12,11 @@ import { eventHandler } from './modules/event-handler';
 import { optimizeClass } from './classes/optimize';
 
 /* import components */
-import { componentGallery } from './components/gallery/handler';
-import { componentSettings } from './components/settings/handler';
-import { componentFilter } from './components/filter/handler';
-import { componentBind } from './components/bind/main';
-import { componentMain } from './components/main/handler';
+import { componentGallery } from './components/gallery';
+import { componentSettings } from './components/settings';
+import { componentFilter } from './components/filter';
+import { componentBind } from './components/bind';
+import { componentMain } from './components/';
 
 /* import helpers */
 import * as h from './modules/helpers';
