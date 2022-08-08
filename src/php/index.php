@@ -243,7 +243,8 @@ foreach($defaults as $key => $value)
   if(!isset($config[$key]))
   {
     $config[$key] = $defaults[$key];
-  } else if(is_array($config[$key]))
+  } else if(is_array($config[$key]) &&
+    is_array($defaults[$key]))
   {
     foreach($defaults[$key] as $k => $v)
     {
