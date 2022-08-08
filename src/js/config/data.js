@@ -1,55 +1,56 @@
-/* import config */
+/** Import `config` */
 import {
 	config
 } from '../config/config';
 
+/** Import `code` */
 import {
 	code
 } from '../config/constants';
 
-/* import classes */
-import { selectorClass } from '../classes/selector';
+/** Import `selectorClass` */
+import selectorClass from '../classes/selector';
 
-/* import text data */
+/** Import `text` */
 import text from '../data.json';
 
-/* import helpers */
+/** Import `logger` */
 import {
 	logger
 } from '../modules/helpers';
 
-/* create main data object */
-const data = new Object();
+/* Create main data object */
+const data = {};
 
-/* declare local storage key */
+/* Declare local storage key */
 data.storageKey = code.STORAGE_KEY;
 
-/* set data text object */
+/* Set data text object */
 data.text = text;
 
-/* set data scrolllock object */
+/* Set data scrolllock object */
 data.scrollLock = false;
 
-/* create data sets object */
-data.sets = new Object();
+/* Create data sets object */
+data.sets = {};
 
-/* set data sets object */
-data.sets.preview = new Object();
-data.sets.defaults = new Object();
-data.sets.selection = new Object();
+/* Set data sets object */
+data.sets.preview = {};
+data.sets.defaults = {};
+data.sets.selection = {};
 data.sets.selected = null;
 data.sets.refresh = false;
 
-/* create data components object */
-data.components = new Object();
+/* Create data components object */
+data.components = {};
 
-/* create data layer object */
-data.layer = new Object();
+/* Create data layer object */
+data.layer = {};
 
-/* create data instances object */
-data.instances = new Object();
+/* Create data instances object */
+data.instances = {};
 
-/* create data optimize instances object */
+/* Create data optimize instances object */
 data.instances.optimize = {
 	main : {
 		enabled : false
@@ -59,7 +60,7 @@ data.instances.optimize = {
 	}
 };
 
-/* create keys */
+/* Create keys */
 data.keys = {
 	escape : 27,
 	pageUp : 33,
@@ -73,34 +74,31 @@ data.keys = {
 	l : 76
 };
 
-/* create preview data */
-data.preview = new Object();
-
+/* Create preview data */
+data.preview = {};
 data.preview.volume = 0;
 data.preview.data = null;
 
-/* create preview volume */
-if(config.get('mobile') === false && config.get('preview.enabled') === true)
+/* Create preview volume */
+if(config.get('mobile') === false &&
+	config.get('preview.enabled') === true)
 {
 	data.preview.volume = localStorage.getItem(`${data.storageKey}.previewVolume`);
 
 	if(data.preview.volume === null || !(data.preview.volume >= 0))
 	{
 		data.preview.volume = 10;
-
 		localStorage.setItem(`${data.storageKey}.previewVolume`, 10);
 	} else {
 		data.preview.volume = parseInt(data.preview.volume);
 	}
 }
 
-/* initiate selector class */
+/* Initiate selector class */
 data.instances.selector = new selectorClass();
 
-/* initiate logging class */
+/* Initiate logging class */
 data.instances.pipe = new logger(config.get('debug')).pipe;
 
-/* export data */
-export {
-	data
-};
+/* Export data */
+export default data;

@@ -1,30 +1,27 @@
-/* import config */
+/** Import `config` */
 import {
 	config
 } from '../config/config';
 
-import {
-	data
-} from '../config/data';
+/** Import `data` */
+import data from '../config/data';
 
-/* import helpers */
+/** Import `getReadableSize` */
 import {
 	getReadableSize
 } from '../modules/helpers';
 
-const componentFilter = new Object();
+const componentFilter = {},
+	selector = data.instances.selector;
 
-const selector = data.instances.selector;
-
-componentFilter.apply = (query = new String()) =>
+componentFilter.apply = (query = '') =>
 {
-	let filterData = new Object();
-	
-	let errorData = false;
+	let filterData = {},
+		errorData = false;
 
 	data.sets.refresh = true;
 
-	filterData.reset = query === new String() || !query;
+	filterData.reset = query === '' || !query;
 
 	filterData.shown = {
 		directories : 0,
@@ -38,7 +35,7 @@ componentFilter.apply = (query = new String()) =>
 		data.instances.gallery.data.selected.index = 0;
 	}
 
-	/* check if directory sizes are enabled */
+	/* Check if directory sizes are enabled */
 	let directorySizes = (
 		Object.prototype.hasOwnProperty.call(
 			config.get('sorting'),
@@ -46,7 +43,7 @@ componentFilter.apply = (query = new String()) =>
 		) && config.get('sorting.directorySizes')
 	);
 
-	/* check if optimizer is being used */
+	/* Check if optimizer is being used */
 	let useOptimizer = Object.prototype.hasOwnProperty.call(data.instances.optimize, 'main') &&
 		data.instances.optimize.main.enabled;
 
@@ -54,7 +51,7 @@ componentFilter.apply = (query = new String()) =>
 		data.instances.optimize.main.rows :
 		selector.use('TABLE').querySelectorAll('tbody > tr');
 
-	/* iterate over rows, search for query */
+	/* Iterate over rows and search for query */
 	for(let i = 1; i < rows.length; i++)
 	{
 		let item = rows[i];
@@ -117,7 +114,7 @@ componentFilter.apply = (query = new String()) =>
 			}
 		}
 
-		/* add size to total */
+		/* Add size to total */
 		if((match.valid && match.data && is.file) ||
 			(directorySizes && match.valid && match.data && is.directory))
 		{
@@ -126,20 +123,20 @@ componentFilter.apply = (query = new String()) =>
 		}
 	}
 
-	/* set parent class so that we can hide all - .filtered -> .filtered */
+	/* Set parent class so that we can hide all - .filtered -> .filtered */
 	if(filterData.reset)
 	{
 		selector.use('TABLE_CONTAINER').removeAttribute('is-active-filter', '');
 	} else {
 		selector.use('TABLE_CONTAINER').setAttribute('is-active-filter', '');
 
-		/* scroll to top on search */
+		/* Scroll to top on search */
 		window.scrollTo(0, 0);
 	}
 
 	if(useOptimizer)
 	{
-		/* call optimization refactoring */
+		/* Call optimization refactoring */
 		data.instances.optimize.main.refactor();
 	}
 
@@ -173,17 +170,15 @@ componentFilter.apply = (query = new String()) =>
 		(filterData.reset) ? data.sets.defaults.topValues.directories : 
 			`${filterData.shown.directories} ${filterData.shown.directories === 1 ? 'directory' : 'directories'}`;
 
-	let option = document.body.querySelector(':scope > div.menu > #gallery');
-
-	let previews = selector.use('TABLE_CONTAINER')
-		.querySelectorAll('table tr.file:not(.filtered) a.preview').length;
+	let option = document.body.querySelector(':scope > div.menu > #gallery'),
+		previews = selector.use('TABLE_CONTAINER').querySelectorAll('table tr.file:not(.filtered) a.preview').length;
 
 	if(errorData !== false)
 	{
 		console.error(`Filter regex error: ${errorData}`);
 	}
 
-	/* hide or show the gallery menu option */
+	/* Hide or show the gallery menu option */
 	if(!filterData.reset && previews === 0 && option)
 	{
 		if(option.style.display !== 'none')
@@ -201,7 +196,7 @@ componentFilter.apply = (query = new String()) =>
 
 componentFilter.getMatch = (input, query) =>
 {
-	let match = new Object();
+	let match = {};
 
 	try
 	{
@@ -218,15 +213,14 @@ componentFilter.getMatch = (input, query) =>
 
 componentFilter.toggle = () =>
 {
-	let container = document.body.querySelector(':scope > div.filter-container');
-
-	let input = container.querySelector('input[type="text"]');
+	let container = document.body.querySelector(':scope > div.filter-container'),
+		input = container.querySelector('input[type="text"]');
 
 	if(container.style.display !== 'none')
 	{
 		container.style.display = 'none';
 	} else {
-		input.value = new String();
+		input.value = '';
 
 		componentFilter.apply(null);
 
@@ -236,6 +230,4 @@ componentFilter.toggle = () =>
 	input.focus();
 };
 
-export {
-	componentFilter
-};
+export default componentFilter;

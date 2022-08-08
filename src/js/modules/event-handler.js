@@ -1,31 +1,31 @@
-/* require helpers */
+/** Import `isString` */
 import {
 	isString
 } from '../modules/helpers';
 
-/* import config */
+/** Import `code` */
 import {
 	code
 } from '../config/constants';
 
 /**
- * handles event listeners
+ * Handles event listeners
  */
-export const eventHandler = {
-	data : new Object,
+const eventHandler = {
+	data : {},
 	/**
-	 * adds event listener data
+	 * Adds event listener data
 	 */
 	insert : (id, unique) =>
 	{
 		if(!Object.prototype.hasOwnProperty.call(eventHandler.data, id))
 		{
-			eventHandler.data[id] = new Object();
+			eventHandler.data[id] = {};
 
-			eventHandler.data[id][unique] = new Object;
+			eventHandler.data[id][unique] = {};
 		} else if(!Object.prototype.hasOwnProperty.call(eventHandler.data[id], unique))
 		{
-			eventHandler.data[id][unique] = new Object;
+			eventHandler.data[id][unique] = {};
 		}
 
 		return eventHandler.data[id];
@@ -47,7 +47,7 @@ export const eventHandler = {
 		return id;
 	},
 	/**
-	 * listens to an event
+	 * Listens to an event
 	 */
 	addListener : (selector, events, id, callback, unique = 0) =>
 	{
@@ -87,7 +87,7 @@ export const eventHandler = {
 		return entry;
 	},
 	/**
-	 * removes a listener from an event
+	 * Removes a listener from an event
 	 */
 	removeListener : (selector, events, id, unique = 0) =>
 	{
@@ -108,9 +108,8 @@ export const eventHandler = {
 			return false;
 		}
 
-		let removed = 0;
-
-		let entry = eventHandler.data[id];
+		let removed = 0,
+			entry = eventHandler.data[id];
 
 		if(entry[unique].callback)
 		{
@@ -129,3 +128,5 @@ export const eventHandler = {
 		return removed;
 	}
 };
+
+export default eventHandler;

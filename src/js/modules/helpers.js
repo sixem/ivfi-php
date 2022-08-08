@@ -1,5 +1,5 @@
 /**
- * console logging class
+ * Console logging class
  */
 class logger
 {
@@ -20,7 +20,7 @@ class logger
 }
 
 /**
- * capitalizes an input
+ * Capitalizes an input
  */
 exports.capitalize = (input) =>
 {
@@ -28,7 +28,7 @@ exports.capitalize = (input) =>
 };
 
 /**
- * debounce function for quick-firing events like window resize
+ * Debounce function for quick-firing events like window resize
  */
 exports.debounce = (f) =>
 {
@@ -46,7 +46,7 @@ exports.debounce = (f) =>
 };
 
 /**
- * checks if a value is numeric
+ * Checks if a value is numeric
  */
 exports.isNumeric = (n) =>
 {
@@ -54,7 +54,7 @@ exports.isNumeric = (n) =>
 };
 
 /**
- * checks if a value is a string
+ * Checks if a value is a `string`
  */
 exports.isString = (s) =>
 {
@@ -62,7 +62,7 @@ exports.isString = (s) =>
 };
 
 /**
- * get window scrolltop in vanilla js
+ * Get window `scrollTop`
  */
 exports.getScrollTop = () =>
 {
@@ -70,7 +70,7 @@ exports.getScrollTop = () =>
 };
 
 /**
- * checks an object for the existance nested path
+ * Checks an object for the existance nested path
  */
 exports.checkNestedPath = (obj, path) =>
 {
@@ -90,7 +90,7 @@ exports.checkNestedPath = (obj, path) =>
 };
 
 /**
- * checks an object for a nested value
+ * Checks an object for a nested value
  */
 exports.checkNested = (obj, ...args) =>
 {
@@ -108,7 +108,7 @@ exports.checkNested = (obj, ...args) =>
 };
 
 /**
- * sets an obj value using path
+ * Sets an object value using a path
  */
 exports.setNestedPath = function (obj, path, value)
 {
@@ -137,7 +137,7 @@ exports.setNestedPath = function (obj, path, value)
 };
 
 /**
- * retrieves an obj value using path
+ * Retrieves an object value using path
  */
 exports.getNestedPath = function (obj, path, def)
 {
@@ -157,7 +157,7 @@ exports.getNestedPath = function (obj, path, def)
 };
 
 /**
- * retrieves a obj value using path
+ * Retrieves an object value using path
  */
 exports.getNested = function (obj, def, ...args)
 {
@@ -175,7 +175,7 @@ exports.getNested = function (obj, def, ...args)
 };
 
 /**
- * applies a nested value to an object key
+ * Applies a nested value to an object key
  */
 exports.applyNested = (dest, key, origin, def, ...nested) =>
 {
@@ -192,7 +192,7 @@ exports.applyNested = (dest, key, origin, def, ...nested) =>
 };
 
 /**
- * gets the value of a table cell
+ * Gets the value of a table cell
  */
 const getCellValue = (row, index) =>
 {
@@ -202,15 +202,14 @@ const getCellValue = (row, index) =>
 };
 
 /**
- * compares cell values (table sort)
+ * Compares cell values (table sort)
  */
 exports.comparer = (index) =>
 {
 	return (a, b) =>
 	{
-		let valA = getCellValue(a, index);
-
-		let valB = getCellValue(b, index);
+		let valA = getCellValue(a, index),
+			valB = getCellValue(b, index);
 
 		return module.exports.isNumeric(valA) &&
 			module.exports.isNumeric(valB) ? valA - valB :
@@ -219,8 +218,9 @@ exports.comparer = (index) =>
 };
 
 /**
- * gets the readable size of a byte integer
- * @param {integer} bytes : bytecount
+ * Gets the readable size of a byte integer
+ * 
+ * @param {integer} bytes
  */
 exports.getReadableSize = (format, bytes = 0) =>
 {
@@ -249,13 +249,13 @@ exports.showVolumeIndicator = (volume) =>
 
 	let container = document.body.querySelector(':scope > div#indicator__preview-volume');
 
-	/* construct text */
+	/* Create text */
 	volume = (volume === 0 ? 'Muted' : `Volume: ${volume}%`);
 
 	if(!container)
 	{
-		/* create element if non-existant */
-		container = exports.dom.new('div', {
+		/* Create element if non-existant */
+		container = exports.DOM.new('div', {
 			id : 'indicator__preview-volume',
 			text : volume
 		});
@@ -265,18 +265,18 @@ exports.showVolumeIndicator = (volume) =>
 		container.textContent = volume;
 	}
 
-	/* show element */
+	/* Show element */
 	setTimeout(() =>
 	{
-		exports.dom.css.set(container, {
+		exports.DOM.css.set(container, {
 			opacity : 1
 		});
 	});
 
-	/* hide element */
+	/* Hide element */
 	timerVolumeIndicator = setTimeout(() =>
 	{
-		exports.dom.css.set(container, {
+		exports.DOM.css.set(container, {
 			opacity : 0
 		});
 	}, 2500);
@@ -292,10 +292,9 @@ exports.setVideoVolume = (video, volume, indicator = true) =>
 	let muted = !(volume > 0);
 
 	video.muted = muted;
-
 	video.volume = muted ? 0 : volume <= 100 ? volume : 100;
 
-	/* catch errors (uninteracted with DOM) and mute on error */
+	/* Catch errors (uninteracted with DOM) and mute on error */
 	video.play().then(() =>
 	{
 		if(indicator)
@@ -318,7 +317,8 @@ exports.setVideoVolume = (video, volume, indicator = true) =>
 };
 
 /**
- * scans the table for available extensions, then generates a wget command to download them specifically.
+ * Scans the table for available extensions, then
+ * generates a `wget` command to download them specifically
  */
 exports.generateWget = (table) =>
 {
@@ -340,7 +340,7 @@ exports.generateWget = (table) =>
 };
 
 /**
- * strips ? and anything that follows from a URL
+ * Strips `?` and anything that follows from a URL
  */
 exports.stripUrl = (url) =>
 {
@@ -348,7 +348,7 @@ exports.stripUrl = (url) =>
 };
 
 /**
-* pops a string, identifies extension
+* Identifies extension
 */
 exports.identifyExtension = (url, extensions = new Object()) =>
 {
@@ -368,8 +368,9 @@ exports.identifyExtension = (url, extensions = new Object()) =>
 
 exports.clipboard = {
 	/**
- 	* copies text to clipboard
- 	* @param {string} text : text to copy
+ 	* Copies text to clipboard
+
+ 	* @param {string} text
  	*/
 	copy : (text) =>
 	{
@@ -385,8 +386,9 @@ exports.clipboard = {
 		navigator.clipboard.writeText(text);
 	},
 	/**
- 	* copies text to clipboard
- 	* @param {string} text : text to copy
+ 	* Copies text to clipboard
+
+ 	* @param {string} text
  	*/
 	copyFallback : (text) =>
 	{
@@ -414,22 +416,21 @@ exports.clipboard = {
 };
 
 /**
- * manipulates the DOM
+ * Manipulates the DOM
  */
-exports.dom = {
+exports.DOM = {
 	cache : {
 		id : 0
 	},
 	/**
-	 * creates a new DOM element
+	 * Creates a new DOM element
 	 */
 	new : (type, options = new Object()) =>
 	{
-		let element = document.createElement(type);
+		let element = document.createElement(type),
+			attributes = Object.keys(options);
 
-		element.domId = module.exports.dom.cache.id;
-
-		let attributes = Object.keys(options);
+		element.domId = module.exports.DOM.cache.id;
 
 		attributes.forEach((attribute) =>
 		{
@@ -441,13 +442,13 @@ exports.dom = {
 			}
 		});
 
-		module.exports.dom.cache.id++;
+		module.exports.DOM.cache.id++;
 
 		return element;
 	},
 	wrap : (element, type, options) =>
 	{
-		let container = module.exports.dom.new('div', options);
+		let container = module.exports.DOM.new('div', options);
 
 		container.appendChild(element);
 
@@ -455,7 +456,7 @@ exports.dom = {
 	},
 	css : {
 		/**
-		 * set css using objects
+		 * Set CSS using objects
 		 */
 		set : (element, styling) =>
 		{

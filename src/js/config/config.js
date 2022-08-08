@@ -1,24 +1,25 @@
-/* import vendors */
+/** Import `cookies` */
 import cookies from 'js-cookie';
+
+/** Import `modernizr-mq` to `window` */
 import '../vendors/modernizr/modernizr-mq';
 
-/* import helpers */
+/** Import `setNestedPath`, `getNestedPath`, `checkNestedPath` */
 import {
 	setNestedPath,
 	getNestedPath,
 	checkNestedPath,
 } from '../modules/helpers';
 
-/* config object */
-const config = new Object();
+/* Config object */
+const config = {};
 
-/* user/client object */
-const user = new Object();
+/* User (client) object */
+const user = {};
 
 config.init = () =>
 {
 	config.data = JSON.parse(document.getElementById('__INDEXER_DATA__').innerHTML);
-
 	config.data.mobile = Modernizr.mq('(max-width: 640px)');
 };
 
@@ -42,7 +43,7 @@ config.get = (path) =>
 	return getNestedPath(config.data, path, null);
 };
 
-user.set = (client, options = new Object()) =>
+user.set = (client, options = {}) =>
 {
 	options = Object.assign({
 		sameSite : 'lax',
@@ -54,7 +55,7 @@ user.set = (client, options = new Object()) =>
 
 user.getDefaults = () =>
 {
-	let defaults = new Object();
+	let defaults = {};
 
 	defaults.gallery = {
 		'reverseOptions' : (config.data).gallery.reverseOptions,
@@ -75,13 +76,10 @@ user.getDefaults = () =>
 
 user.get = () =>
 {
-	let required = ['gallery', 'sort', 'style'];
-
-	let defaults = user.getDefaults();
-
-	let client = new Object();
-
-	let update = false;
+	let required = ['gallery', 'sort', 'style'],
+		defaults = user.getDefaults(),
+		client = {},
+		update = false;
 
 	try
 	{
@@ -91,7 +89,7 @@ user.get = () =>
 		{
 			if(!Object.prototype.hasOwnProperty.call(client, key))
 			{
-				client[key] = Object.prototype.hasOwnProperty.call(defaults, key) ? defaults[key] : new Object();
+				client[key] = Object.prototype.hasOwnProperty.call(defaults, key) ? defaults[key] : {};
 			}
 		});
 
@@ -114,31 +112,31 @@ user.get = () =>
 		}
 	} catch (e)
 	{
-		/* on error means that the client does not have a valid cookie, so we're creating it */
-		client = new Object();
+		/* On error means that the client does not have a valid cookie, so we're creating it */
+		client = {};
 
-		/* set default theme (if any) */
+		/* Set default theme (if any) */
 		if((config.data).style.themes.set)
 		{
 			if(!defaults.style)
 			{
-				defaults.style = new Object();
+				defaults.style = {};
 			}
 
 			defaults.style.theme = (config.data).style.themes.set;
 		}
 
-		/* create keys */
+		/* Create keys */
 		(required).forEach((key) =>
 		{
-			client[key] = new Object();
+			client[key] = {};
 		});
 
-		/* merge and set cookie */
+		/* Merge and set cookie */
 		user.set(Object.assign(client, defaults));
 	}
 
-	/* return client config */
+	/* Return client config */
 	return client;
 };
 

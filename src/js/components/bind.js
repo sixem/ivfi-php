@@ -1,46 +1,42 @@
-/* import models */
-import {
-	eventHandler
-} from '../modules/event-handler';
+/** Import `eventHandler` */
+import eventHandler from '../modules/event-handler';
 
-/* import config */
+/** Import `config` */
 import {
 	config
 } from '../config/config';
 
-import {
-	data
-} from '../config/data';
+/** Import `data` */
+import data from '../config/data';
 
-/* import helpers */
+/** Import `DOM`, `getScrollTop`, `setVideoVolume` */
 import {
-	dom,
+	DOM,
 	getScrollTop,
 	setVideoVolume
 } from '../modules/helpers';
 
-const events = new Object();
+const events = {},
+	scrollData = {},
+	selector = data.instances.selector,
+	pipe = data.instances.pipe;
 
-const selector = data.instances.selector;
-
-const pipe = data.instances.pipe;
+let debounceTimer = null;
 
 /**
- * called onscroll - shows/hides current path in the top bar
+ * Called `onScroll` — Shows or hides the current path in the top bar
  */
 events.handleTopBarVisibility = () =>
 {
-	let path = selector.use('PATH');
-
-	let	top = document.body.querySelector(':scope > div.top-bar > div.directory-info > div.quick-path');
-
-	let	visible = getScrollTop() < (path.offsetTop + path.offsetHeight);
+	let path = selector.use('PATH'),
+		top = document.body.querySelector(':scope > div.top-bar > div.directory-info > div.quick-path'),
+		visible = getScrollTop() < (path.offsetTop + path.offsetHeight);
 
 	if(!visible)
 	{
 		if(!top)
 		{
-			top = dom.new('div', {
+			top = DOM.new('div', {
 				'class' : 'quick-path',
 				'data-view' : 'desktop'
 			});
@@ -74,8 +70,6 @@ events.handleTopBarVisibility = () =>
 	}
 };
 
-const scrollData = new Object();
-
 scrollData.break = false;
 scrollData.save = null;
 
@@ -85,11 +79,12 @@ events.handlePreviewScroll = (e) =>
 	{
 		if(e.deltaY && Math.abs(e.deltaY) !== 0)
 		{
+			/* Increase (-/+) by 2 if >5, else increase (-/+) by 1 */
 			let step = data.preview.volume > 5 ? 2 : 1;
 			
 			if(e.deltaY < 0)
 			{
-				/* scroll up */
+				/* Scroll up */
 				data.preview.volume += step;
 
 				if(data.preview.volume > 100)
@@ -98,7 +93,7 @@ events.handlePreviewScroll = (e) =>
 				}
 			} else if(e.deltaY > 0)
 			{
-				/* scroll down */
+				/* Scroll down */
 				data.preview.volume -= step;
 
 				if(data.preview.volume < 0)
@@ -127,10 +122,7 @@ events.handlePreviewScroll = (e) =>
 
 		scrollData.break = true;
 
-		setTimeout(() =>
-		{
-			scrollData.break = false;
-		}, 25);
+		setTimeout(() => scrollData.break = false, 25);
 	}
 
 	if(data.scrollLock)
@@ -138,8 +130,6 @@ events.handlePreviewScroll = (e) =>
 		e.preventDefault();
 	}
 };
-
-let debounceTimer = null;
 
 let onDebounce = () =>
 {
@@ -151,6 +141,9 @@ let onDebounce = () =>
 	}
 };
 
+/**
+ * Handles scroll events
+ */
 events.handleBaseScroll = () =>
 {
 	clearTimeout(debounceTimer);
@@ -159,10 +152,10 @@ events.handleBaseScroll = () =>
 
 	if(data.instances.optimize.main.enabled)
 	{
-		/* get scrolled position */
+		/* Get scrolled position */
 		let scrolled = window.scrollY;
 
-		/* trigger optimization refresh if 175 px has been scrolled */
+		/* Trigger optimization refresh if `175px` has been scrolled */
 		if(Math.abs(scrolled - data.layer.main.scrolledY) > 175)
 		{
 			data.instances.optimize.main.attemptRefresh();
@@ -170,7 +163,7 @@ events.handleBaseScroll = () =>
 	}
 };
 
-export class componentBind
+export default class componentBind
 {
 	constructor()
 	{
@@ -178,7 +171,7 @@ export class componentBind
 	}
 
 	/**
-	 * unbind events - recalled on gallery show
+	 * Unbind events — Recalled on gallery show
 	 */
 	unbind = () =>
 	{
@@ -187,7 +180,7 @@ export class componentBind
 	}
 
 	/**
-     * bind events - recalled on gallery close
+     * Bind events — Recalled on gallery close
      */
 	load = () =>
 	{
@@ -225,9 +218,10 @@ export class componentBind
 			}
 		});
 
+		/* Scroll events to listen to */
 		let scrollEvents = ['DOMMouseScroll', 'mousewheel', 'wheel'];
 
-		/* remove any existing scrolling events */
+		/* Remove any existing scrolling events */
 		(scrollEvents).forEach((event) =>
 		{
 			window.removeEventListener(event, events.handlePreviewScroll, {
@@ -235,7 +229,7 @@ export class componentBind
 			});
 		});
 
-		/* create non-passive scrolling listeners directly */
+		/* Create non-passive scrolling listeners directly */
 		(scrollEvents).forEach((event) =>
 		{
 			window.addEventListener(event, events.handlePreviewScroll, {
@@ -243,16 +237,16 @@ export class componentBind
 			});
 		});
 
-		/* remove any existing `scroll` event */
+		/* Remove any existing `scroll` event */
 		window.removeEventListener('scroll', events.handleBaseScroll, {
 			passive: false
 		});
 
-		/* create non-passive `scroll` listener directly */
+		/* Create non-passive `scroll` listener directly */
 		window.addEventListener('scroll', events.handleBaseScroll, {
 			passive: false
 		});
 
 		events.handleTopBarVisibility();
 	}
-}
+};

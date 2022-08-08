@@ -1,55 +1,50 @@
-/* import vendors */
+/** Import `cookies`, `swipe` */
 import cookies from 'js-cookie';
 import swipe from 'vanilla-swipe';
 
-/* import config */
+/** Import `config` */
 import {
 	user
 } from '../config/config';
 
-import {
-	data
-} from '../config/data';
+/** Import `data` */
+import data from '../config/data';
 
+/** Import `code` */
 import {
 	code
 } from '../config/constants';
 
-/* import modules */
-import {
-	eventHandler
-} from '../modules/event-handler';
+/** Import `eventHandler` */
+import eventHandler from '../modules/event-handler';
 
-/* import classes */
-import {
-	optimizeClass
-} from './optimize';
+/** Import `optimizeClass` */
+import optimizeClass from './optimize';
 
-import {
-	emitterClass
-} from './emitter';
+/** Import `emitterClass` */
+import emitterClass from './emitter';
 
-/* import helpers */
+/** Import `DOM`, `debounce` */
 import {
-	dom,
+	DOM,
 	debounce
 } from '../modules/helpers';
 
-/* import stylesheet */
+/* Import stylesheet */
 import '../../css/gallery.scss';
 
 const pipe = data.instances.pipe;
 
-export class galleryClass
+export default class galleryClass
 {
 	constructor(items, options)
 	{
 		options = options || new Object();
 
-		/* get default values */
+		/* Get default values */
 		let defaults = this.setDefaults();
 
-		/* override any default values passed as an option */
+		/* Override any default values passed as an option */
 		Object.keys(defaults).forEach((key) =>
 		{
 			if(!Object.prototype.hasOwnProperty.call(options, key))
@@ -58,16 +53,16 @@ export class galleryClass
 			}
 		});
 
-		/* set options */
+		/* Set options */
 		this.options = options;
 
-		/* logging */
+		/* Logging */
 		this.pipe = this.options.pipe;
 
-		/* new event emitter */
+		/* New event emitter */
 		this.emitter = new emitterClass();
 
-		/* initiate */
+		/* Initiate */
 		this.init(items);
 
 		return this;
@@ -82,63 +77,63 @@ export class galleryClass
 	{
 		let data = new Object();
 
-		/* valid extensions */
+		/* Valid extensions */
 		data.extensions = {
 			image : ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'],
 			video : ['mp4', 'webm', 'ogg', 'ogv', 'mov']
 		};
 
-		/* item list */
+		/* Item list */
 		data.list = {
 			show : true,
 			reverse : false
 		};
 
-		/* video */
+		/* Video */
 		data.video = {
 			video : null
 		};
 
-		/* performance mode */
+		/* Performance mode */
 		data.performance = false;
 
-		/* video autoplay */
+		/* Video autoplay */
 		data.autoplay = true;
 
-		/* video volume */
+		/* Video volume */
 		data.volume = 0;
 
-		/* verbose */
+		/* Verbose */
 		data.console = true;
 
-		/* reverse image search */
+		/* Reverse image search */
 		data.reverseOptions = true;
 
-		/* blurred background */
+		/* Blurred background */
 		data.blur = true;
 
-		/* sharpen images */
+		/* Sharpen images */
 		data.sharpen = true;
 
-		/* mobile mode */
+		/* Mobile mode */
 		data.mobile = false;
 
-		/* fit content to fill space */
+		/* Fit content to fill space */
 		data.fitContent = false;
 
-		/* encode all characters */
+		/* Encode all characters */
 		data.encodeAll = false;
 
-		/* forced scroll break */
+		/* Forced scroll break */
 		data.scrollInterval = 35;
 
-		/* start index */
+		/* Start index */
 		data.start = 0;
 
-		/* list alignment */
+		/* List alignment */
 		data.listAlignment = 0;
 
-		/* set class variable */
+		/* Set class variable */
 		this.defaults = data;
 
 		return this.defaults;
@@ -146,19 +141,13 @@ export class galleryClass
 
 	init = (items) =>
 	{
-		/* create data object */
+		/* Create data object */
 		this.data = new Object();
 
-		/* busy state */
+		/* Busy state */
 		this.data.busy = false;
 
-		/* scrollbar data */
-		this.data.scrollBar = {
-			width : this.getScrollbarWidth(),
-			widthForced : this.getDocumentHeight <= window.innerHeight
-		};
-
-		/* scrollbreak state */
+		/* Scrollbreak state */
 		this.data.scrollbreak = false;
 
 		this.data.keyPrevent = [
@@ -243,6 +232,23 @@ export class galleryClass
 		});
 	}
 
+	elementHasScrollbar = (element) =>
+	{
+		let height = element.getBoundingClientRect().height,
+			style = window.getComputedStyle(element);
+
+		height = ['top', 'bottom'].map((side) =>
+		{
+			return parseInt(style['margin-' + side], 10);
+		})
+		.reduce((total, side) =>
+		{
+			return total + side
+		}, height);
+
+		return height > window.innerHeight;
+	}
+
 	encodeUrl = (input) => 
 	{
 		let encoded = encodeURI(input);
@@ -280,36 +286,16 @@ export class galleryClass
 		});
 	}
 
-	getDocumentHeight = () =>
+	getScrollbarWidth = () =>
 	{
-		let body = document.body;
-
-		let root = document.documentElement;
-
-		let rootHeight = Math.max(
-			body.scrollHeight,
-			body.offsetHeight,
-			root.clientHeight,
-			root.scrollHeight,
-			root.offsetHeight
-		);
-
-		return rootHeight;
-	}
-
-	getScrollbarWidth = (force = false) =>
-	{
-		if(!force)
+		if(!this.elementHasScrollbar(document.body))
 		{
-			if(this.getDocumentHeight <= window.innerHeight)
-			{
-				return 0;
-			}
+			return 0;
 		}
 
 		let outer = document.createElement('div');
 
-		dom.css.set(outer, {
+		DOM.css.set(outer, {
 			visibility : 'hidden',
 			overflow : 'scroll',
 			msOverflowStyle : 'scrollbar'
@@ -330,11 +316,9 @@ export class galleryClass
 
 	limitBody = (bool = true) =>
 	{
-		let body = document.body;
-
-		let root = document.documentElement;
-
-		let scrollpadding = this.data.scrollBar.width;
+		let body = document.body,
+			root = document.documentElement,
+			scrollpadding = this.getScrollbarWidth();
 
 		if(bool === true)
 		{
@@ -347,12 +331,12 @@ export class galleryClass
 
 			if(scrollpadding > 0)
 			{
-				dom.css.set(root, {
+				DOM.css.set(root, {
 					'padding-right' : scrollpadding + 'px'
 				});
 			}
 
-			dom.css.set(body, {
+			DOM.css.set(body, {
 				'max-height' : 'calc(100vh - var(--height-gallery-top-bar))',
 				'overflow' : 'hidden'
 			});
@@ -361,13 +345,13 @@ export class galleryClass
 
 			if(Object.prototype.hasOwnProperty.call(this.data, 'body'))
 			{
-				dom.css.set(body, {
+				DOM.css.set(body, {
 					'max-height' : this.data.body['max-height'],
 					'overflow' : this.data.body.overflow
 				});
 			}
 
-			dom.css.set(root, {
+			DOM.css.set(root, {
 				'padding-right' : 'unset'
 			});
 		}
@@ -462,8 +446,8 @@ export class galleryClass
 
 		if(bool && this.options.performance && this.optimize && this.list && this.table)
 		{
-			let selectedItem = this.table.querySelector('tr.selected');
-			let selectedItemTop = parseInt(selectedItem.style.top.replace(/\D+/g, ''));
+			let selectedItem = this.table.querySelector('tr.selected'),
+				selectedItemTop = parseInt(selectedItem.style.top.replace(/\D+/g, ''));
 
 			if(Number.isInteger(selectedItemTop) && !(selectedItemTop >= 0))
 			{
@@ -489,7 +473,7 @@ export class galleryClass
 
 			if(bool)
 			{
-				dom.css.set(loader, {
+				DOM.css.set(loader, {
 					opacity : 1
 				});
 			} else {
@@ -509,7 +493,7 @@ export class galleryClass
 
 			eventHandler.removeListener(this.list, 'scroll', 'galleryTableScroll');
 
-			dom.css.set(this.table, {
+			DOM.css.set(this.table, {
 				height : 'auto'
 			});
 		}
@@ -567,10 +551,10 @@ export class galleryClass
 		{
 			if(this.options.performance && this.optimize.enabled)
 			{
-				/* get scrolled position */
+				/* Get scrolled position */
 				let scrolled = this.list.scrollTop;
 
-				/* trigger optimization refresh if 175 px has been scrolled */
+				/* Trigger optimization refresh if 175 px has been scrolled */
 				if(Math.abs(scrolled - (this.page).scrolledY) > 175)
 				{
 					this.optimize.attemptRefresh();
@@ -604,7 +588,6 @@ export class galleryClass
 		table.innerHTML = (buffer.join(''));
 
 		this.list = this.container.querySelector('div.gallery-content > div.list');
-
 		this.table = table;
 
 		return table;
@@ -615,9 +598,8 @@ export class galleryClass
 		{
 			wrapper = wrapper || this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
 
-			let list = this.data.list ? this.data.list : (this.container.querySelector(':scope > div.gallery-content > div.list'));
-
-			let	width = (this.options.mobile || !list || list.style.display === 'none') ? 0 : list.offsetWidth;
+			let list = this.data.list ? this.data.list : (this.container.querySelector(':scope > div.gallery-content > div.list')),
+				width = (this.options.mobile || !list || list.style.display === 'none') ? 0 : list.offsetWidth;
 
 			wrapper.style.setProperty('--width-list', `${width}px`);
 		}
@@ -648,7 +630,7 @@ export class galleryClass
 
 		if(!container)
 		{
-			let reverse = dom.new('div', {
+			let reverse = DOM.new('div', {
 				class : 'reverse'
 			});
 
@@ -688,9 +670,8 @@ export class galleryClass
 		},
 		itemDimensions : (index) =>
 		{
-			let item = this.items[index];
-
-			let media = this.container.querySelector('div.media > div.item-info-static');
+			let item = this.items[index],
+				media = this.container.querySelector('div.media > div.item-info-static');
 
 			if(Object.prototype.hasOwnProperty.call(item, 'dimensions') &&
 				item.dimensions.height > 0 &&
@@ -698,7 +679,7 @@ export class galleryClass
 			{
 				if(!media)
 				{
-					media = dom.new('div', {
+					media = DOM.new('div', {
 						class : 'item-info-static'
 					});
 
@@ -740,12 +721,12 @@ export class galleryClass
 				return false;
 			}
 
-			let download = this.container.querySelector('.gallery-bar > .gallery-bar__right > a.download');
-			let left = this.container.querySelector(':scope > div.gallery-bar > div.gallery-bar__left');
-			let name = this.options.mobile ? this.shortenString(item.name, 30) : item.name;
-			let url = this.encodeUrl(item.url);
+			let download = this.container.querySelector('.gallery-bar > .gallery-bar__right > a.download'),
+				left = this.container.querySelector(':scope > div.gallery-bar > div.gallery-bar__left'),
+				name = this.options.mobile ? this.shortenString(item.name, 30) : item.name,
+				url = this.encodeUrl(item.url);
 
-			dom.attributes.set(download, {
+			DOM.attributes.set(download, {
 				'filename' : item.name,
 				'href' : url,
 				'title' : `Download: ${item.name}`
@@ -789,7 +770,7 @@ export class galleryClass
 		}
 	}
 
-	/* checks if a list item is scrolled into view */
+	/* Checks if a list item is scrolled into view */
 	isScrolledIntoView = (container, element) =>
 	{
 		let parent = {
@@ -833,13 +814,13 @@ export class galleryClass
 	video = {
 		create : (extension) =>
 		{
-			let video = dom.new('video', {
+			let video = DOM.new('video', {
 				controls : '',
 				preload : 'auto',
 				loop : ''
 			});
 
-			let source = dom.new('source', {
+			let source = DOM.new('source', {
 				type : `video/${extension === 'mov' ? 'mp4' : (extension === 'ogv' ? 'ogg' : extension)}`,
 				src : ''
 			});
@@ -904,9 +885,9 @@ export class galleryClass
 	{
 		this.pipe('showItem', type, element, src, init, index, data);
 
-		let wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
-		let video, source = null;
-		let hasEvented = false;
+		let wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper'),
+			video, source = null,
+			hasEvented = false;
 
 		let applyChange = (onChange) =>
 		{
@@ -979,12 +960,12 @@ export class galleryClass
 							
 							this.update.listWidth(wrapper);
 
-							dom.css.set(element, {
+							DOM.css.set(element, {
 								'width' : 'auto',
 								'height' : height
 							});
 
-							dom.css.set(element.closest('.cover'), {
+							DOM.css.set(element.closest('.cover'), {
 								'height' : height
 							});
 						}
@@ -1052,8 +1033,8 @@ export class galleryClass
 						return false;
 					}
 
-					let height = video.videoHeight;
-					let width = video.videoWidth;
+					let height = video.videoHeight,
+						width = video.videoWidth;
 
 					this.items[index].dimensions = {
 						height : height,
@@ -1068,7 +1049,7 @@ export class galleryClass
 						{
 							this.update.listWidth(wrapper);
 
-							dom.css.set(video, {
+							DOM.css.set(video, {
 								width : 'auto',
 								height : `calc(calc(100vw - var(--width-list)) / ${(width / height).toFixed(4)})`
 							});
@@ -1086,7 +1067,7 @@ export class galleryClass
 
 						video.style.display = 'inline-block';
 
-						/* if the gallery was hidden while loading, pause video and hide loader. */
+						/* If the gallery was hidden while loading, pause video and hide loader. */
 						if(this.container.display === 'none')
 						{
 							this.container.querySelector('div.gallery-content .media div.spinner').style.opacity = 0;
@@ -1117,6 +1098,9 @@ export class galleryClass
 		display();
 	}
 
+	/**
+	 * Navigates the gallery
+	 */
 	navigate = (index, step = null) =>
 	{
 		this.pipe('busyState', this.busy());
@@ -1143,16 +1127,16 @@ export class galleryClass
 			return false;
 		}
 
-		let init = null, item = null;
+		let init = null,
+			item = null,
+			contentContainer = this.container.querySelector(':scope > div.gallery-content');
 
-		let contentContainer = this.container.querySelector(':scope > div.gallery-content');
+		let image = contentContainer.querySelector(':scope > div.media > div.wrapper img'),
+			video = contentContainer.querySelector(':scope > div.media > div.wrapper video');
 
-		let image = contentContainer.querySelector(':scope > div.media > div.wrapper img');
-		let video = contentContainer.querySelector(':scope > div.media > div.wrapper video');
-
-		let list = contentContainer.querySelector(':scope > div.list');
-		let table = list.querySelector('table');
-		let element = table.querySelector(`tr:nth-child(${index + 1})`);
+		let list = contentContainer.querySelector(':scope > div.list'),
+			table = list.querySelector('table'),
+			element = table.querySelector(`tr:nth-child(${index + 1})`);
 
 		item = this.items[index];
 
@@ -1172,20 +1156,20 @@ export class galleryClass
 
 		this.apply.itemInfo((!image && !video) ? true : false, item, index, max + 1);
 
-		let hasScrolled = false;
-		let useScrollOptimize = this.options.performance && this.optimize && this.optimize.enabled;
+		let hasScrolled = false,
+			useScrollOptimize = this.options.performance && this.optimize && this.optimize.enabled;
 
 		if(useScrollOptimize && element.classList.contains('hid-row') && element._offsetTop >= 0)
 		{
 			let scrollPosition = element._offsetTop - (list.offsetHeight / 2);
-			/* scroll to a hidden row as a result of optimization */
+			/* Scroll to a hidden row as a result of optimization */
 			list.scrollTo(0, scrollPosition >= 0 ? scrollPosition : 0);
 
-			/* set var to indicate that we've scrolled here instead */
+			/* Set variable to indicate that we've scrolled here instead */
 			hasScrolled = true;
 		}
 
-		/* use default scrollto, if item is out of view */
+		/* Use default `scrollto` if item is out of view */
 		if(!hasScrolled && !this.isScrolledIntoView(list, element))
 		{
 			list.scrollTo(0, element.offsetTop);
@@ -1204,16 +1188,17 @@ export class galleryClass
 
 			if(init === true)
 			{
-				let cover = dom.new('div', {
+				let cover = DOM.new('div', {
 					class : 'cover',
 					style : 'display: none'
 				});
 
 				let wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
 
-				image = dom.new('img');
+				image = DOM.new('img');
 
 				wrapper.prepend(cover);
+
 				cover.append(image);
 
 				cover.addEventListener('mouseenter', (e) =>
@@ -1244,7 +1229,6 @@ export class galleryClass
 				console.error(error);
 
 				this.busy(false);
-
 				this.data.selected.index = index;
 
 				this.container.querySelectorAll(':scope > div.gallery-content > div.media > div.wrapper img, \
@@ -1258,7 +1242,7 @@ export class galleryClass
 					this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper > div:not(.cover)').remove();
 				}
 
-				let imageError = dom.new('div', {
+				let imageError = DOM.new('div', {
 					class : 'error'
 				});
 
@@ -1290,31 +1274,40 @@ export class galleryClass
 		}
 	}
 
+	/**
+	 * Handles keypresses
+	 */
 	handleKey = (key, callback) =>
 	{
 		this.pipe('handleKey', key);
 
 		if(key === data.keys.escape)
 		{
+			/* Close gallery on `escape` */
 			this.show(false);
 		} else if(key === data.keys.arrowDown || key === data.keys.pageDown || key === data.keys.arrowRight)
 		{
 			if(key === data.keys.arrowRight && this.data.selected.type === 1)
 			{
+				/* Seek (+) video on `arrowRight` (video elements) */
 				if(this.video.seek(5)) this.navigate(null, 1);
 			} else {
+				/* Next gallery item on `arrowRight` (image elements) */
 				this.navigate(null, 1);
 			}
 		} else if(key === data.keys.arrowUp || key === data.keys.pageUp || key === data.keys.arrowLeft)
 		{
 			if(key === data.keys.arrowLeft && this.data.selected.type === 1)
 			{
+				/* Seek (-) video on `arrowLeft` (video elements) */
 				if(this.video.seek(-5)) this.navigate(null, -1);
 			} else {
+				/* Previous gallery item on `arrowLeft` (image elements) */
 				this.navigate(null, -1);
 			}
 		} else if(key === data.keys.l)
 		{
+			/* Toggle list on `l` */
 			this.toggleList();
 		}
 
@@ -1356,11 +1349,9 @@ export class galleryClass
 
 	toggleList = (element = null) =>
 	{
-		let list = this.container.querySelector(':scope > div.gallery-content > div.list');
-
-		let visible = list.style.display !== 'none';
-
-		let client = user.get();
+		let list = this.container.querySelector(':scope > div.gallery-content > div.list'),
+			visible = list.style.display !== 'none',
+			client = user.get();
 
 		client.gallery.listState = (!visible ? 1 : 0);
 
@@ -1373,7 +1364,7 @@ export class galleryClass
 
 		element.textContent = `List${visible ? '+' : '-'}`;
 
-		dom.css.set(list, {
+		DOM.css.set(list, {
 			'display' : visible ? 'none' : 'table-cell'
 		});
 
@@ -1431,11 +1422,11 @@ export class galleryClass
 			let windowWidth = window.innerWidth;
 			let	wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
 
-			dom.css.set(document.body, {
+			DOM.css.set(document.body, {
 				'cursor' : 'w-resize'
 			});
 
-			dom.css.set(wrapper, {
+			DOM.css.set(wrapper, {
 				'pointer-events' : 'none'
 			});
 
@@ -1445,11 +1436,11 @@ export class galleryClass
 
 				if(x < windowWidth)
 				{
-					let width = this.options.list.reverse ? (x + this.data.scrollbarWidth) : (windowWidth - x);
+					let width = this.options.list.reverse ? (x + this.getScrollbarWidth()) : (windowWidth - x);
 
 					requestAnimationFrame(() =>
 					{
-						dom.css.set(this.data.list, {
+						DOM.css.set(this.data.list, {
 							'width' : `${width}px`
 						});
 					});
@@ -1465,11 +1456,11 @@ export class galleryClass
 
 				let wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
 
-				dom.css.set(document.body, {
+				DOM.css.set(document.body, {
 					'cursor' : ''
 				});
 
-				dom.css.set(wrapper, {
+				DOM.css.set(wrapper, {
 					'pointer-events' : 'auto'
 				});
 
@@ -1495,7 +1486,7 @@ export class galleryClass
 			}
 		});
 
-		/* add action events */
+		/* Add action events */
 		eventHandler.addListener('body > div.gallery-root', 'click', 'galleryContainerClick', (e) =>
 		{
 			if(e.target && e.target.hasAttribute('data-action'))
@@ -1523,25 +1514,25 @@ export class galleryClass
 			}
 		});
 
-		/* list item click listener */
+		/* List item click listener */
 		eventHandler.addListener('body > div.gallery-root > div.gallery-content \
 			> div.list table', 'click', 'listNavigateClick', (e) =>
 		{
 			if(e.target.tagName == 'TD')
 			{
-				this.navigate(dom.getIndex(e.target.closest('tr')));
+				this.navigate(DOM.getIndex(e.target.closest('tr')));
 
 			} else if(e.target.tagName == 'TR')
 			{
-				this.navigate(dom.getIndex(e.target));
+				this.navigate(DOM.getIndex(e.target));
 			}
 		});
 
-		/* gallery media click listener */
+		/* Gallery media click listener */
 		eventHandler.addListener('body > div.gallery-root > div.gallery-content \
 			> div.media', 'click', 'mediaClick', (e) =>
 		{
-			/* hide gallery if media background is clicked */
+			/* Hide gallery if media background is clicked */
 			if(!['IMG', 'VIDEO', 'A'].includes(e.target.tagName))
 			{
 				this.show(false);
@@ -1550,7 +1541,7 @@ export class galleryClass
 
 		if(this.options.mobile === true)
 		{
-			/* handle swipe events */
+			/* Handle swipe events */
 			let handler = (event, eventData) =>
 			{
 				switch(eventData.directionX)
@@ -1565,7 +1556,7 @@ export class galleryClass
 				}
 			};
 
-			/* create swipe events */
+			/* Create swipe events */
 			let swipeInstance = new swipe({
 				element: document.querySelector('body > div.gallery-root'),
 				onSwiped: handler,
@@ -1622,11 +1613,11 @@ export class galleryClass
 		return this.container;
 	}
 
-	/* construct gallery top bar items */
+	/* Construct gallery top bar items */
 	barConstruct = (bar) =>
 	{
-		/* create `download` button */
-		bar.append(dom.new('a', {
+		/* Create `download` button */
+		bar.append(DOM.new('a', {
 			'text' : this.options.mobile ? 'Save' : 'Download',
 			'class' : 'download',
 			'download' : ''
@@ -1634,27 +1625,27 @@ export class galleryClass
 
 		if(!this.options.mobile)
 		{
-			/* create `previous` button */
-			bar.append(dom.new('span', {
+			/* Create `previous` button */
+			bar.append(DOM.new('span', {
 				'data-action' : 'previous',
 				'text' : 'Previous'
 			}));
 
-			/* create `next` button */
-			bar.append(dom.new('span', {
+			/* Create `next` button */
+			bar.append(DOM.new('span', {
 				'data-action' : 'next',
 				'text' : 'Next'
 			}));
 
-			/* create `list toggle` button */
-			bar.append(dom.new('span', {
+			/* Create `list toggle` button */
+			bar.append(DOM.new('span', {
 				'data-action' : 'toggle',
 				'text' : this.options.list.show ? 'List-' : 'List+'
 			}));
 		}
 
-		/* create `close` button */
-		bar.append(dom.new('span', {
+		/* Create `close` button */
+		bar.append(DOM.new('span', {
 			'data-action' : 'close',
 			'text' : 'Close'
 		}));
@@ -1664,72 +1655,71 @@ export class galleryClass
 
 	initiate = (callback) =>
 	{
-		/* fix body overflow and paddings */
+		/* Fix body overflow and paddings */
 		this.limitBody(true);
 
 		let preview = document.body.querySelector(':scope > div.preview-container');
 
-		/* remove any active hover previews just in case */
+		/* Remove any active hover previews just in case */
 		if(preview)
 		{
 			preview.remove();
 		}
 
-		/* create main container */
-		this.container = dom.new('div', {
+		/* Create main container */
+		this.container = DOM.new('div', {
 			class : 'gallery-root'
 		});
 
 		document.body.prepend(this.container);
 
-		/* create gallery top bar */
-		let top = dom.new('div', {
+		/* Create gallery top bar */
+		let top = DOM.new('div', {
 			class : 'gallery-bar'
 		});
 
 		this.container.append(top);
 
-		/* create left area of top bar */
-		top.append(dom.new('div', {
+		/* Create left area of top bar */
+		top.append(DOM.new('div', {
 			class : 'gallery-bar__left'
 		}));
 
-		/* create right area of top bar */
-		top.append(this.barConstruct(dom.new('div', {
+		/* Create right area of top bar */
+		top.append(this.barConstruct(DOM.new('div', {
 			class : 'gallery-bar__right'
 		})));
 
-		/* create content (media) outer container */
-		let content = dom.new('div', {
+		/* Create content (media) outer container */
+		let content = DOM.new('div', {
 			class : 'gallery-content' + (this.options.list.reverse ? ' reversed' : '')
 		});
 
 		this.container.append(content);
 
-		let media = dom.new('div', {
+		let media = DOM.new('div', {
 			class : 'media'
 		});
 
-		/* create list */
-		let list = dom.new('div', {
+		/* Create list */
+		let list = DOM.new('div', {
 			class : 'ns list'
 		});
 
-		/* add to content container, respecting list reverse status */
+		/* Add to content container, respecting list reverse status */
 		content.append(this.options.list.reverse ? list : media);
 		content.append(this.options.list.reverse ? media : list);
 
-		/* create dragable element on list edge */
-		this.data.listDrag = dom.new('div', {
+		/* Create dragable element on list edge */
+		this.data.listDrag = DOM.new('div', {
 			class : 'drag'
 		});
 
 		list.append(this.data.listDrag);
 
-		/* declare variables */
+		/* Declare variables */
 		this.data.list = list;
 		this.data.listDragged = false;
-		this.data.scrollbarWidth = (this.data.scrollBar.widthForced ? 0 : this.data.scrollBar.width);
 
 		let client = JSON.parse(cookies.get('ei-client'));
 
@@ -1749,7 +1739,7 @@ export class galleryClass
 
 			if(width)
 			{
-				dom.css.set(this.data.list, {
+				DOM.css.set(this.data.list, {
 					'width' : `${width}px`
 				});
 			}
@@ -1762,45 +1752,45 @@ export class galleryClass
 			});
 		}
 
-		/* create mobile navigation (left & right) */
+		/* Create mobile navigation (left & right) */
 		if(this.options.mobile === true)
 		{
-			let navigateLeft = dom.new('div', {
+			let navigateLeft = DOM.new('div', {
 				'class' : 'screen-navigate left',
 				'data-action' : 'previous'
 			});
 
-			let navigateRight = dom.new('div', {
+			let navigateRight = DOM.new('div', {
 				'class' : 'screen-navigate right',
 				'data-action' : 'next'
 			});
 
-			navigateLeft.append(dom.new('span'));
-			navigateRight.append(dom.new('span'));
+			navigateLeft.append(DOM.new('span'));
+			navigateRight.append(DOM.new('span'));
 
 			content.append(navigateRight, navigateLeft);
 		}
 
-		media.append(dom.new('div', {
+		media.append(DOM.new('div', {
 			class : 'wrapper' + (this.options.fitContent ? ' fill' : '')
 		}));
 
-		media.append(dom.new('div', {
+		media.append(DOM.new('div', {
 			class : 'spinner'
 		}));
 
-		/* create list table */
-		let table = dom.new('table', {
+		/* Create list table */
+		let table = DOM.new('table', {
 			cellspacing : '0'
 		});
 
-		table.append(dom.new('tbody'));
+		table.append(DOM.new('tbody'));
 
 		list.append(table);
 
-		/* add items to list */
+		/* Add items to list */
 		this.populateTable(this.items);
 
 		callback(true);
 	}
-}
+};

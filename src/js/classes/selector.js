@@ -1,12 +1,12 @@
-/* require helpers */
+/** Import `isString` */
 import {
 	isString
 } from '../modules/helpers';
 
 /**
- * selector class
+ * Selector class
  */
-export class selectorClass
+export default class selectorClass
 {
 	constructor()
 	{
@@ -37,9 +37,8 @@ export class selectorClass
 
 	define = (selector, id = null, scope = null) =>
 	{
-		let element = (scope ? scope : document.body).querySelector(selector);
-
-		let identifier = id ? id : selector;
+		let element = (scope ? scope : document.body).querySelector(selector),
+			identifier = id ? id : selector;
 
 		if(isString(identifier))
 		{

@@ -1,17 +1,15 @@
-/* import config */
-import {
-	data
-} from '../config/data';
+/** Import `data` */
+import data from '../config/data';
 
-/* import helpers */
+/** Import `isNumeric`, `DOM` */
 import {
 	isNumeric,
-	dom
+	DOM
 } from '../modules/helpers';
 
 const pipe = data.instances.pipe;
 
-export class optimizeClass
+export default class optimizeClass
 {
 	constructor(options)
 	{
@@ -23,11 +21,8 @@ export class optimizeClass
 	init = (options) =>
 	{
 		this.page = options.page;
-
 		this.table = options.table;
-
 		this.scope = options.scope;
-
 		this.padding = options.padding || 0;
 
 		if(Object.prototype.hasOwnProperty.call(options, 'on'))
@@ -43,7 +38,7 @@ export class optimizeClass
 	}
 
 	/**
-	 * initiate the variables and set required data
+	 * Initiate the variables and set required data
 	 */
 	setup = () =>
 	{
@@ -63,7 +58,7 @@ export class optimizeClass
 
 		let measureStart = performance.now();
 
-		/* store table structure (offset + height + index) */
+		/* Store table structure (offset + height + index) */
 		for(let index = 0; index < rows.length; index++)
 		{
 			/* `this.padding` is to adjust for any table container paddings */
@@ -81,12 +76,12 @@ export class optimizeClass
 
 		pipe(`Calculated rows in ${performance.now() - measureStart} ms.`);
 
-		/* apply table height */
-		dom.css.set(table, {
+		/* Apply table height */
+		DOM.css.set(table, {
 			'height' : `${tableHeight}px`
 		});
 
-		/* iterate rows, create structure object */
+		/* Iterate rows, create structure object */
 		for(let i = 0; i < rows.length; i++)
 		{
 			structure[rows[i]._offsetTop] = {
@@ -98,7 +93,7 @@ export class optimizeClass
 
 		let index = 0;
 
-		/* get current positioning and decide what rows can be hidden on page load */
+		/* Get current positioning and decide what rows can be hidden on page load */
 		let tablePosTop = table.getBoundingClientRect().top;
 
 		let origin = Math.ceil(this.page.scrolledY - (tablePosTop + this.page.scrolledY) + (this.page.windowHeight / 2));
@@ -112,22 +107,20 @@ export class optimizeClass
 		/* get visible range relative to origin index */
 		let [start, limit] = this.calculateRange(index, margin);
 
-		/* use data from above to hide rows that are out of viewport before setting position */
+		/* Use data from above to hide rows that are out of viewport before setting position */
 		for(let i = 0; i < rows.length; i++)
 		{
 			let item = rows[i];
 
 			let itemClasses = ['rel-row'];
 
-			/* out of viewport? hide it here - speeds up page load */
+			/* Out of viewport? hide it here - speeds up page load */
 			if(!(i >= start && i <= limit))
 			{
-				//item.classList.add('hid-row');
-
 				itemClasses.push('hid-row');
 			}
 
-			/* instead of calling .add() twice, add as array - should be faster */
+			/* Instead of calling .add() twice, add as array - should be faster */
 			item.classList.add(...itemClasses);
 
 			item.style.top = `${item._offsetTop}px`;
@@ -143,45 +136,45 @@ export class optimizeClass
 
 		this.activeHasChanged = true;
 
-		/* call a refresh after initiated */
+		/* Call a refresh after initiated */
 		this.attemptRefresh();
 
 		return this.initiated;
 	}
 
 	/**
-	 * called after table manipulation
-	 * recreates the table using only active rows
+	 * Called after table manipulation
+	 * This recreates the table using only active rows
 	 */
 	refactor = () =>
 	{
-		/* start measuring execution time */
+		/* Start measuring execution time */
 		let measureStart = performance.now();
 
 		pipe('->', 'optimize.refactor');
 
-		/* declare variables */
+		/* Declare variables */
 		let table = this.table;
 
 		/* `this.padding` is to adjust for any table container paddings */
 		let combinedHeight = (this.tableOffsetBegin) + this.padding;
 
-		/* create new structure */
+		/* Create new structure */
 		let structure = new Object();
 
-		/* store offsets */
+		/* Store offsets */
 		let rowOffsets = new Object();
 
 		let recentHeight = 0;
 
-		/* create updated structure */
+		/* Create updated structure */
 		for(let index = 0; index < (this.rows).length; index++)
 		{
 			let item = (this.rows[index]);
 
 			if(item._isVisible)
 			{
-				/* add visible item to structure */
+				/* Add visible item to structure */
 				structure[combinedHeight] = {
 					index : index
 				};
@@ -201,7 +194,7 @@ export class optimizeClass
 
 		combinedHeight += this.padding;
 
-		/* update optimize structure */
+		/* Update optimize structure */
 		this.structure = structure;
 
 		this.activeHasChanged = true;
@@ -210,7 +203,7 @@ export class optimizeClass
 
 		let index = 0;
 
-		/* get visible index range and margins */
+		/* Get visible index range and margins */
 
 		let tablePosTop = table.getBoundingClientRect().top;
 
@@ -220,17 +213,17 @@ export class optimizeClass
 
 		let [activeRows, activeIndexes] = this.getActiveData();
 
-		/* detect origin index */
+		/* Detect origin index */
 		index = this.scanForClosest(origin, 1E3, index);
 
 		index = this.getRelativeIndex(activeIndexes, index) || index;
 
-		/* find visible row range */
+		/* Find visible row range */
 		let [start, limit] = this.calculateRange(index, margin);
 
 		/* 
-		 * prior to setting positions, show all elements that WILL be visible in the viewport
-		 * this eliminates some flashing etc.
+		 * Prior to setting positions, show all elements that WILL be visible
+		 * in the viewport. This eliminates some flashing etc.
 		 */
 		for(let i = 0; i < activeRows.length; i++)
 		{
@@ -240,7 +233,7 @@ export class optimizeClass
 			}
 		}
 
-		/* iterate over stored rows, check status and arrange new table */
+		/* Iterate over stored rows, check status and arrange new table */
 		for(let index = 0; index < (this.rows).length; index++)
 		{
 			let item = this.rows[index];
@@ -253,18 +246,18 @@ export class optimizeClass
 			}
 		}
 
-		/* call `onRowChange` function, if set */
+		/* Call `onRowChange` function, if set */
 		if(this.on && Object.prototype.hasOwnProperty.call(this.on, 'rowChange'))
 		{
 			this.on.rowChange(activeRows);
 		}
 
-		/* set table height */
+		/* Set table height */
 		table.style.height = `${combinedHeight + 6}px`;
 
 		pipe(`Ran refactor in ${performance.now() - measureStart} ms.`);
 
-		/* call a refresh after refactor */
+		/* Call a refresh after refactor */
 		this.refresh();
 
 		return true;
@@ -291,10 +284,10 @@ export class optimizeClass
 
 	sortRows = (column = 0, sort = 'asc') =>
 	{
-		/* convert sorting direction to an integer */
+		/* Convert sorting direction to an integer */
 		sort = (sort.toLowerCase() === 'asc' ? 1 : 0);
 
-		/* cache arrays */
+		/* Cache arrays */
 		let rows = new Array();
 		let items = new Array();
 		let keepIntact = new Array();
@@ -303,7 +296,7 @@ export class optimizeClass
 
 		for(let i = 0; i < this.rows.length; i++)
 		{
-			/* skip parent directory as we'll unshift that in at the end instead */
+			/* Skip parent directory as we'll unshift that in at the end instead */
 			if(i === 0)
 			{
 				continue;
@@ -345,7 +338,7 @@ export class optimizeClass
 	}
 
 	/**
-	 * calculates the active index range
+	 * Calculates the active index range
 	 */
 	calculateRange = (index, margin) =>
 	{
@@ -361,7 +354,7 @@ export class optimizeClass
 	}
 
 	/**
-	 * gets the active rows and their indexes from stored rows
+	 * Gets the active rows and their indexes from stored rows
 	 */
 	getActiveData = () =>
 	{
@@ -392,7 +385,7 @@ export class optimizeClass
 	}
 
 	/**
-	 * scans the strcture for the closest element from origin
+	 * Scans the strcture for the closest element from origin
 	 */
 	scanForClosest = (origin, range, fallback = null) =>
 	{
@@ -412,7 +405,7 @@ export class optimizeClass
 	}
 
 	/**
-	 * find index relative to the active rows
+	 * Find index relative to the active rows
 	 */
 	getRelativeIndex = (activeIndexes, index) =>
 	{
@@ -420,7 +413,7 @@ export class optimizeClass
 
 		let relative = null;
 
-		/* find index relative to the active rows */
+		/* Find index relative to the active rows */
 		for(let i = 0; i < indexes.length; i++)
 		{
 			if(parseInt(indexes[i]) === index)
@@ -445,14 +438,14 @@ export class optimizeClass
 			hide : new Array()
 		};
 
-		/* iterate over active rows, hide and show rows */
+		/* Iterate over active rows, hide and show rows */
 		for(let i = 0; i < rows.length; i++)
 		{
 			let item = rows[i];
 
 			if(i >= start && i <= limit)
 			{
-				/* only trigger class change if required */
+				/* Only trigger class change if required */
 				if(item._isHidden)
 				{
 					updated++;
@@ -461,7 +454,7 @@ export class optimizeClass
 
 				visible++;
 			} else {
-				/* only trigger class change if required */
+				/* Only trigger class change if required */
 				if(!item._isHidden)
 				{
 					updated++;
@@ -501,7 +494,7 @@ export class optimizeClass
 	}
 
 	/**
-	 * hides rows that are out of view - called on scroll, resize and so on
+	 * Hides rows that are out of view - called on scroll, resize and so on
 	 */
 	refresh = (refreshId = 0) =>
 	{
@@ -510,15 +503,15 @@ export class optimizeClass
 			return new Promise((resolve, reject) => reject('Not initiated.'));
 		}
 
-		/* start measuring execution time */
+		/* Start measuring execution time */
 		let measureStart = performance.now();
 
 		pipe('->', 'optimize.refresh');
 
-		/* get scroll pos */
+		/* Get scroll pos */
 		this.page.scrolledY = (this.scope[0])[this.scope[1]];
 
-		/* get origin point */
+		/* Get origin point */
 		let tablePosTop = this.table.getBoundingClientRect().top;
 
 		let origin = Math.ceil(this.page.scrolledY - (tablePosTop + this.page.scrolledY) + (this.page.windowHeight / 2));
@@ -527,30 +520,30 @@ export class optimizeClass
 		{
 			let index = 0;
 
-			/* calculate how many rows we need to show (-/+ viewport) */
+			/* Calculate how many rows we need to show (-/+ viewport) */
 			let margin = Math.ceil(Math.ceil(this.page.windowHeight / this.rowHeight) * 2);
 
-			/* get active rows and their respective indexes */
+			/* Get active rows and their respective indexes */
 			let [activeRows, activeIndexes] = this.getActiveData();
 
-			/* scan for closest structure row */
+			/* Scan for closest structure row */
 			index = this.scanForClosest(origin, 1E3, index);
 
-			/* find relative index (active rows only) of the full scoped index */
+			/* Find relative index (active rows only) of the full scoped index */
 			index = this.getRelativeIndex(activeIndexes, index) || index;
 
 			if(index >= 0 && margin)
 			{
-				/* push code execution block to separate queue */
+				/* Push code execution block to separate queue */
 				setTimeout(() =>
 				{
-					/* apply status to rows */
+					/* Apply status to rows */
 					this.setRows(index, activeRows, margin);
 
-					/* show execution time */
+					/* Show execution time */
 					pipe(`Ran refresh in ${performance.now() - measureStart} ms.`);
 
-					/* resolve the promise */
+					/* Resolve the promise */
 					resolve(refreshId);
 				}, 0);
 			} else {
@@ -580,4 +573,4 @@ export class optimizeClass
 			});
 		}
 	}
-}
+};

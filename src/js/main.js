@@ -1,36 +1,46 @@
-/* import vendors */
+/** Import `hoverPreview` */
 import hoverPreview from './vendors/hover-preview/hover-preview';
 
-/* import config */
+/** Import `config` */
 import { config } from './config/config';
-import { data } from './config/data';
 
-/* import models */
-import { eventHandler } from './modules/event-handler';
+/** Import `data` */
+import data from './config/data';
 
-/* import classes */
-import { optimizeClass } from './classes/optimize';
+/** Import `eventHandler` */
+import eventHandler from './modules/event-handler';
 
-/* import components */
-import { componentGallery } from './components/gallery';
-import { componentSettings } from './components/settings';
-import { componentFilter } from './components/filter';
-import { componentBind } from './components/bind';
-import { componentMain } from './components/';
+/** Import `optimizeClass` */
+import optimizeClass from './classes/optimize';
 
-/* import helpers */
-import * as h from './modules/helpers';
+/** Import `optimizeClass` */
+import componentGallery from './components/gallery';
 
-/* import stylesheets */
+/** Import `componentSettings` */
+import componentSettings from './components/settings';
+
+/** Import `componentFilter` */
+import componentFilter from './components/filter';
+
+/** Import `componentBind` */
+import componentBind from './components/bind';
+
+/** Import `componentMain` */
+import componentMain from './components/';
+
+/** Import `helpers.*` */
+import * as helpers from './modules/helpers';
+
+/** Import stylesheets */
 import '../css/root.scss';
 import '../css/fonts.scss';
 import '../css/main.scss';
 
-/* references */
+/* References */
 const selector = data.instances.selector;
 const pipe = data.instances.pipe;
 
-/* disable media play */
+/* Disable media play */
 try
 {
 	navigator.mediaSession.setActionHandler('play', () => {});
@@ -39,16 +49,16 @@ try
 	pipe(error);
 }
 
-/* set main component in data */
+/* Set main component in data */
 data.components.main = componentMain;
 
-/* set page dom object */
+/* Set page dom object */
 data.layer.main = {
 	windowHeight : window.innerHeight,
 	windowWidth : window.innerWidth,
 	scrolledY : window.scrollY,
 	/**
- 	* updates page data (dimensions etc.) - called on resize etc.
+ 	* Updates page data (dimensions etc) — called on resize etc.
  	*/
 	update : () =>
 	{
@@ -63,8 +73,8 @@ data.layer.main = {
 		{
 			document.documentElement.style.setProperty('--table-width', `${data.layer.main.tableWidth}px`);
 		} else {
-			let root = document.documentElement;
-			let isVerticalScrollbar = root.scrollHeight > root.clientHeight;
+			let root = document.documentElement,
+				isVerticalScrollbar = root.scrollHeight > root.clientHeight;
 
 			document.documentElement.style.setProperty(
 				'--table-width', !isVerticalScrollbar ? `${data.layer.main.tableWidth}px` : `calc(${data.layer.main.tableWidth}px + var(--scrollbar-width))`
@@ -75,13 +85,13 @@ data.layer.main = {
 	}
 };
 
-/* update page values */
+/* Update page values */
 data.layer.main.update();
 
-/* enable performance mode */
+/* Enable performance mode */
 if(config.get('performance'))
 {
-	/* called on row change, updates index properties (for media indexing) */
+	/* Called on row change, updates index properties (for media indexing) */
 	let onRowChange = (rows) =>
 	{
 		let mediaIndex = 0;
@@ -91,7 +101,6 @@ if(config.get('performance'))
 			if(rows[index].children[0].children[0].classList.contains('preview'))
 			{
 				rows[index]._mediaIndex = mediaIndex;
-
 				mediaIndex++;
 			}
 		}
@@ -101,7 +110,7 @@ if(config.get('performance'))
 	{
 		requestAnimationFrame(() =>
 		{
-			/* create optimize instance */
+			/* Create optimize instance */
 			data.instances.optimize.main = new optimizeClass({
 				page : data.layer.main,
 				table : selector.use('TABLE'),
@@ -115,19 +124,19 @@ if(config.get('performance'))
 	}, 1);
 }
 
-/* menu click event */
+/* Menu click event */
 eventHandler.addListener(selector.use('TOP_EXTEND'), 'click', 'sortClick', (e) =>
 {
 	data.components.main.menu.toggle(e.currentTarget);
 });
 
-/* filter change event */
+/* Filter change event */
 eventHandler.addListener(selector.use('FILTER_INPUT'), 'input', 'filterInput', (e) =>
 {
 	data.components.filter.apply(e.currentTarget.value);
 });
 
-/* item click event (show gallery if enabled and table sort) */
+/* Item click event (show gallery if enabled and table sort) */
 eventHandler.addListener(selector.use('TABLE'), 'click', 'sortClick', (e) =>
 {
 	if(e.target.tagName == 'SPAN' && e.target.hasAttribute('sortable'))
@@ -142,10 +151,10 @@ eventHandler.addListener(selector.use('TABLE'), 'click', 'sortClick', (e) =>
 
 		if(data.instances.optimize.main.enabled)
 		{
-			/* get `tr` parent */
+			/* Get `tr` parent */
 			let parent = e.target.closest('tr');
 
-			/* check for a index property, use as index if found */
+			/* Check for a index property, use as index if found */
 			if(parent._mediaIndex)
 			{
 				index = parent._mediaIndex;
@@ -165,8 +174,8 @@ eventHandler.addListener(selector.use('TABLE'), 'click', 'sortClick', (e) =>
 	}
 });
 
-/* recheck mobile sizing on resize */
-eventHandler.addListener(window, 'resize', 'windowResize', h.debounce(() =>
+/* Recheck mobile sizing on resize */
+eventHandler.addListener(window, 'resize', 'windowResize', helpers.debounce(() =>
 {
 	pipe('windowResize (main)', 'Resized.');
 
@@ -178,22 +187,22 @@ eventHandler.addListener(window, 'resize', 'windowResize', h.debounce(() =>
 		(data.instances.gallery).update.listWidth();
 	}
 
-	/* update page values */
+	/* Update page values */
 	data.layer.main.update();
 
-	/* refresh performance rows */
+	/* Refresh performance rows */
 	if(data.instances.optimize.main.enabled)
 	{
 		data.instances.optimize.main.attemptRefresh();
 	}
 }));
 
-/* create preview events if enabled (and not mobile) */
+/* Create preview events if enabled (and not on mobile) */
 if(config.get('mobile') === false && config.get('preview.enabled') === true)
 {
-	let previews = new Object();
-	let resume = null;
-	let timerReadyState = null;
+	let previews = {},
+		resume = null,
+		timerReadyState = null;
 
 	let onLoaded = (e) =>
 	{
@@ -208,12 +217,12 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 
 		data.preview.data = e;
 
-		/* clear timer */
+		/* Clear timer */
 		clearInterval(timerReadyState);
 
 		if(element && type === 'VIDEO')
 		{
-			/* if a resume is set, then set currentTime */
+			/* If a resume is set, then set currentTime */
 			if(resume && resume.src === src)
 			{
 				element.currentTime = resume.timestamp;
@@ -221,29 +230,29 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 				resume = null;
 			}
 
-			/* set stored preview volume */
-			h.setVideoVolume(element, data.preview.volume / 100, false);
+			/* Set stored preview volume */
+			helpers.setVideoVolume(element, data.preview.volume / 100, false);
 
-			/* check for valid readystate (4,3,2) before we show the video */
+			/* Check for valid readystate (4, 3, 2) before we show the video */
 			timerReadyState = setInterval(() =>
 			{
 				if(element.readyState > 1)
 				{
-					/* show video */
-					h.dom.css.set(element, {
+					/* Show video */
+					helpers.DOM.css.set(element, {
 						visibility : 'visible'
 					});
 
-					/* clear timer */
+					/* Clear timer */
 					clearInterval(timerReadyState);
 				}
 			}, 25);
 		} else {
-			/* not a video, clear resume */
+			/* Not a video, clear resume */
 			resume = null;
 		}
 
-		/* store timestamp if exists */
+		/* Store timestamp if exists */
 		if(Object.prototype.hasOwnProperty.call(e, 'timestamp'))
 		{
 			let timestamp = e.timestamp;
@@ -254,7 +263,7 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 			};
 		}
 
-		/* if video is audible, enable scrollLock */
+		/* If video is audible, enable scrollLock */
 		if(e.loaded && e.audible)
 		{
 			data.scrollLock = true;
@@ -265,50 +274,47 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 
 	let createPreview = (element) =>
 	{
-		let src = element.getAttribute('href');
-
-		let extensions = config.get('extensions');
-
-		let identified = h.identifyExtension(h.stripUrl(src), {
-			image : extensions.image,
-			video : extensions.video
-		});
+		let src = element.getAttribute('href'),
+			extensions = config.get('extensions'),
+			identified = helpers.identifyExtension(helpers.stripUrl(src), {
+				image : extensions.image,
+				video : extensions.video
+			});
 
 		if(identified)
 		{
-			let [extension, type] = identified;
+			let [extension, type] = identified,
+				options = {};
 
-			let options = new Object();
-
-			/* delay prior to showing preview */
+			/* Delay prior to showing preview */
 			options.delay = config.get('preview.hoverDelay');
 
-			/* loading cursor */
+			/* Loading cursor */
 			options.cursor = config.get('preview.cursorIndicator');
 
-			/* encoding */
+			/* Encoding */
 			options.encodeAll = config.get('encodeAll');
 
-			/* events */
+			/* Events */
 			options.on = {
 				onLoaded : onLoaded
 			};
 
-			/* force set extension data */
+			/* Force set extension data */
 			options.force = {
 				extension,
 				type
 			};
 
-			/* create preview */
+			/* Create preview */
 			previews[element.itemIndex] = hoverPreview(element, options);
 		}
 	};
 
-	/* get previewable elements */
+	/* Get previewable elements */
 	let previewable = document.querySelectorAll('body > div.table-container > table tr.file > td > a.preview');
 
-	/* set preview indexes */
+	/* Set preview indexes */
 	previewable.forEach((preview, index) =>
 	{
 		preview.itemIndex = index;
@@ -319,10 +325,10 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 		}
 	});
 
-	/* add preview hover listener */
+	/* Add preview hover listener */
 	eventHandler.addListener(selector.use('TABLE'), 'mouseover', 'previewMouseEnter', (e) =>
 	{
-		/* check if element is `a` element with a preview class */
+		/* Check if element is `a` element with a preview class */
 		if(e.target.tagName == 'A' && e.target.className == 'preview')
 		{
 			let index = (e.target.itemIndex);
@@ -335,51 +341,51 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 	});
 }
 
-/* create gallery component instance */
+/* Create gallery component instance */
 data.components.settings = new componentSettings();
 
-/* set filter component */
+/* Set filter component */
 data.components.filter = componentFilter;
 
-/* create gallery component instance */
+/* Create gallery component instance */
 data.components.gallery = new componentGallery();
 
-/* create bind component instance */
+/* Create bind component instance */
 data.components.bind = new componentBind();
 
-/* store bind functions to main */
+/* Store bind functions to main */
 data.components.main.bind = data.components.bind.load;
 data.components.main.unbind = data.components.bind.unbind;
 
-/* initiate listeners */
+/* Initiate listeners */
 data.components.main.bind();
 
-/* load modification dates */
+/* Load modification dates */
 data.components.main.dates.load();
 
-/* reset filter input */
+/* Reset filter input */
 document.body.querySelector(':scope > .filter-container > input[type="text"]').value = '';
 
-/* create menu */
+/* Create menu */
 let menu = data.components.main.menu.create();
 
-/* get top bar height */
+/* Get top bar height */
 let height = document.querySelector('body > div.top-bar').offsetHeight;
 
-/* set menu styling to match top bar */
+/* Set menu styling to match top bar */
 if(menu && height)
 {
-	h.dom.css.set(menu, {
+	helpers.DOM.css.set(menu, {
 		top : `${height}px`,
 		visibility : 'unset',
 		display : 'none'
 	});
 }
 
-/* load sorting indicators */
+/* Load sorting indicators */
 componentMain.sort.load();
 
-/* remove loading state */
+/* Remove loading state */
 document.body.removeAttribute('is-loading');
 
 pipe('Config', config.data);

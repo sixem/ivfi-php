@@ -1,34 +1,39 @@
-/* import config */
-import {
-	data
-} from '../config/data';
+/** Import `data` */
+import data from '../config/data';
 
+/** Import `code` */
 import {
 	code
 } from '../config/constants';
 
+/** Import `config`, `user` */
 import {
 	config,
 	user
 } from '../config/config';
 
-/* import models */
-import {
-	eventHandler
-} from '../modules/event-handler';
+/** Import `eventHandler` */
+import eventHandler from '../modules/event-handler';
 
-/* require helpers */
+/** Import `DOM`, `capitalize`, `checkNested` */
 import {
-	dom,
+	DOM,
 	capitalize,
 	checkNested
 } from '../modules/helpers';
 
-const pipe = data.instances.pipe;
+const pipe = data.instances.pipe,
+	create = {};
 
-const create = new Object();
+/**
+ * Update functions for settings which require live updating
+ */
+ const update = {
+	style : {},
+	gallery : {}
+};
 
-create.option = (element, text, options = new Object(), title = null) =>
+create.option = (element, text, options = {}, title = null) =>
 {
 	if(Object.prototype.hasOwnProperty.call(options, 'class'))
 	{
@@ -49,27 +54,27 @@ create.option = (element, text, options = new Object(), title = null) =>
 		textAttributes.title = title;
 	}
 
-	let wrapper = dom.wrap(
-		dom.wrap(
+	let wrapper = DOM.wrap(
+		DOM.wrap(
 			element, 'div'
 		),
 		'div',
 		wrapperAttributes
 	);
 
-	wrapper.prepend(dom.new('div', textAttributes));
+	wrapper.prepend(DOM.new('div', textAttributes));
 
 	return wrapper;
 };
 
 create.section = (id, header = null) =>
 {
-	let container = dom.new('div', {
+	let container = DOM.new('div', {
 		'class' : 'section',
 		'data-key' : id
 	});
 
-	container.appendChild(dom.new('div', {
+	container.appendChild(DOM.new('div', {
 		class : 'header',
 		text : header ? header : capitalize(id)
 	}));
@@ -78,18 +83,19 @@ create.section = (id, header = null) =>
 };
 
 /**
- * creates a select option
- * set options['data-key'] to override section key
+ * Creates a select option
+ * 
+ * Set options['data-key'] to override section key
  */
-create.select = (values, options = new Object(), selected = null) =>
+create.select = (values, options = {}, selected = null) =>
 {
-	let element = dom.new('select', options);
+	let element = DOM.new('select', options);
 
 	element.append(...values.map((value, index) =>
 	{
 		value.text = capitalize(value.text);
 
-		let option = dom.new('option', value);
+		let option = DOM.new('option', value);
 
 		if(selected !== null)
 		{
@@ -108,9 +114,9 @@ create.select = (values, options = new Object(), selected = null) =>
 };
 
 /**
- * creates a checkbox element
+ * Creates a checkbox element
  */
-create.check = (options = new Object(), selected = null) =>
+create.check = (options = {}, selected = null) =>
 {
 	let checked = (selected !== null) ? selected() : false;
 
@@ -119,7 +125,7 @@ create.check = (options = new Object(), selected = null) =>
 		options.checked = '';
 	}
 
-	let checkbox = dom.new('input', Object.assign(options, {
+	let checkbox = DOM.new('input', Object.assign(options, {
 		type : 'checkbox'
 	}));
 
@@ -129,17 +135,8 @@ create.check = (options = new Object(), selected = null) =>
 };
 
 /**
- * update functions for settings which require live updating
+ * Style update
  */
-const update = {
-	style : new Object(),
-	gallery : new Object()
-};
-
-/**
- * style update
- */
-
 update.style.theme = (value) =>
 {
 	theme.set(value === false ? null : value, false);
@@ -151,9 +148,8 @@ update.style.compact = (value) =>
 };
 
 /**
- * gallery update
+ * Gallery update
  */
-
 update.gallery.listAlignment = (alignment) =>
 {
 	if(data.instances.gallery)
@@ -162,9 +158,8 @@ update.gallery.listAlignment = (alignment) =>
 
 		parent.classList[alignment === 0 ? 'remove' : 'add']('reversed');
 
-		let detached = parent.querySelector(':scope > div.list');
-
-		let media = parent.querySelector(':scope > div.media');
+		let detached = parent.querySelector(':scope > div.list'),
+			media = parent.querySelector(':scope > div.media');
 
 		parent.querySelector(':scope > div.list').remove();
 
@@ -196,7 +191,7 @@ update.gallery.fitContent = (value) =>
 	{
 		data.instances.gallery.options.fitContent = value;
 
-		/* get gallery wrapper */
+		/* Get gallery wrapper */
 		let wrapper = document.body.querySelector('div.gallery-root \
 			> div.gallery-content > div.media > div.wrapper');
 
@@ -204,7 +199,7 @@ update.gallery.fitContent = (value) =>
 		{
 			wrapper.classList.add('fill');
 
-			/* force height recalculation */
+			/* Force height recalculation */
 			data.sets.refresh = true;
 			data.sets.selected = null;
 
@@ -212,10 +207,10 @@ update.gallery.fitContent = (value) =>
 		{
 			wrapper.classList.remove('fill');
 
-			/* reset dimensions of wrapper elements */
+			/* Reset dimensions of wrapper elements */
 			(['.cover', '.cover img', 'video']).forEach((selector) =>
 			{
-				dom.css.set(wrapper.querySelector(selector), {
+				DOM.css.set(wrapper.querySelector(selector), {
 					height : '',
 					width : ''
 				});
@@ -232,16 +227,16 @@ update.gallery.autoplay = (value) =>
 	}
 };
 
-const options = new Object();
+const options = {};
 
 options.gather = (container) =>
 {
-	let gathered = new Object();
+	let gathered = {};
 
-	/* gather settings elements */
+	/* Gather settings elements */
 	let elements = container.querySelectorAll('select, input[type="checkbox"]');
 
-	/* iterate over elements, get settings */
+	/* Iterate over elements, get settings */
 	elements.forEach((element) =>
 	{
 		if(element.hasAttribute('name'))
@@ -254,7 +249,7 @@ options.gather = (container) =>
 
 			if(!Object.prototype.hasOwnProperty.call(gathered, section))
 			{
-				gathered[section] = new Object();
+				gathered[section] = {};
 			}
 
 			if(element.tagName === 'SELECT')
@@ -272,45 +267,43 @@ options.gather = (container) =>
 	return gathered;
 };
 
-options.set = (_data, client) =>
+options.set = (setData, client) =>
 {
 	client = client || user.get();
 
-	Object.keys(_data).forEach((key) =>
+	Object.keys(setData).forEach((key) =>
 	{
 		let isMain = (key === 'main');
 
 		if(!isMain && !Object.prototype.hasOwnProperty.call(client, key))
 		{
-			client[key] = new Object();
+			client[key] = {};
 		}
 
-		Object.keys(_data[key]).forEach((option) =>
+		Object.keys(setData[key]).forEach((option) =>
 		{
 			let value = null;
 
-			config.get(`style.themes.pool.${_data[key][option]}`);
+			config.get(`style.themes.pool.${setData[key][option]}`);
 
 			switch(option)
 			{
 				case 'theme':
-					if(_data[key][option] <= (config.get('style.themes.pool').length - 1))
+					if(setData[key][option] <= (config.get('style.themes.pool').length - 1))
 					{
-						let selected = config.get(`style.themes.pool.${_data[key][option]}`);
+						let selected = config.get(`style.themes.pool.${setData[key][option]}`);
 
 						value = selected === 'default' ? false : selected;
 					}
-
 					break;
 				default:
-					value = _data[key][option];
-
+					value = setData[key][option];
 					break;
 			}
 
 			let changed = (isMain ? (client[option] !== value) : (client[key][option] !== value));
 
-			_data[key][option] = { value, changed };
+			setData[key][option] = { value, changed };
 
 			if(isMain)
 			{
@@ -321,7 +314,7 @@ options.set = (_data, client) =>
 
 			if(changed)
 			{
-				/* call the live update function (if any) for the changed settings */
+				/* Call the live update function (if any) for the changed settings */
 				if(isMain && Object.prototype.hasOwnProperty.call(update, option))
 				{
 					update[option](value);
@@ -333,42 +326,43 @@ options.set = (_data, client) =>
 		});
 	});
 
-	pipe('Set settings', _data);
+	pipe('Set settings', setData);
 
 	user.set(client);
 
-	return _data;
+	return setData;
 };
 
-const theme = new Object();
+const theme = {};
 
 /**
- * sets a theme for the client
- * @param {string|null} theme  : theme to set (null resets themes)
- * @param {boolean} setCookie : save to client config
+ * Sets a theme for the client
+ * 
+ * @param {string|null} theme
+ * @param {boolean} setCookie
  */
 theme.set = (theme = null, setCookie = true) =>
 {
 	let themesPath = config.get('style.themes.path');
 
-	/* get current stylesheets */
+	/* Get current stylesheets */
 	let stylesheets = document.querySelectorAll('head > link[rel="stylesheet"]');
 
 	if(stylesheets.length > 0)
 	{
 		stylesheets = Array.from(stylesheets);
 
-		/* filter sheets that are not themes */
+		/* Filter sheets that are not themes */
 		stylesheets = (stylesheets).filter((sheet) =>
 		{
 			return sheet.hasAttribute('href') && sheet.getAttribute('href').includes(themesPath);
 		});
 	}
 
-	/* set config theme */
+	/* Set config theme */
 	config.set('style.themes.set', theme);
 
-	/* if null theme, remove active sheets */
+	/* If null theme, then remove active sheets */
 	if(theme === null || !theme)
 	{
 		if(stylesheets.length > 0)
@@ -383,22 +377,22 @@ theme.set = (theme = null, setCookie = true) =>
 	} else {
 		if(setCookie)
 		{
-			/* save client */
+			/* Save client */
 			user.set(user.get().style.theme = theme);
 		}
 	}
 
-	/* create stylesheet element */
-	let sheet = dom.new('link', {
+	/* Create stylesheet element */
+	let sheet = DOM.new('link', {
 		rel : 'stylesheet',
 		type : 'text/css',
 		href : `${themesPath}/${theme}.css?bust=${config.data.bust}`.replace(/\/\//g, '/')
 	});
 
-	/* apply to document */
+	/* Apply to document */
 	document.querySelector('head').append(sheet);
 
-	/* remove stylesheets that were active prior to change */
+	/* Remove stylesheets that were active prior to change */
 	if(stylesheets.length > 0)
 	{
 		stylesheets.forEach((sheet) =>
@@ -408,7 +402,7 @@ theme.set = (theme = null, setCookie = true) =>
 	}
 };
 
-export class componentSettings
+export default class componentSettings
 {
 	constructor()
 	{
@@ -428,7 +422,7 @@ export class componentSettings
 	}
 
 	/**
-	 * apply settings (gather and set settings, then close menu)
+	 * Apply settings (gather and set settings, then close menu)
 	 */
 	apply = (element, client) =>
 	{
@@ -442,13 +436,13 @@ export class componentSettings
 	}
 
 	/**
-	 * close settings menu
+	 * Close settings menu
 	 */
 	close = () =>
 	{
 		if(Array.isArray(this.events))
 		{
-			/* remove events */
+			/* Remove events */
 			(this.events).forEach((event) =>
 			{
 				let [selector, events, id] = event;
@@ -488,7 +482,7 @@ export class componentSettings
 			settings++;
 		}
 
-		let sets = new Array();
+		let sets = [];
 
 		sets.push([
 			data.text.settingsLabels.galleryReverseSearch.text,
@@ -560,7 +554,7 @@ export class componentSettings
 
 		if(config.exists('style.compact') && !config.get('mobile'))
 		{
-			let checkTemplate = new Array();
+			let checkTemplate = [];
 
 			checkTemplate.push({
 				'name' : 'compact',
@@ -598,7 +592,7 @@ export class componentSettings
 	}
 
 	/**
-	 * create and show the settings menu
+	 * Create and show the settings menu
 	 */
 	show = () =>
 	{
@@ -609,13 +603,13 @@ export class componentSettings
 
 		this.client = user.get();
 		
-		this.events = new Array();
+		this.events = [];
 
-		let sections = new Array();
+		let sections = [];
 
 		if(!document.body.querySelector(':scope > div.focus-overlay'))
 		{
-			let overlay = dom.new('div', {
+			let overlay = DOM.new('div', {
 				class : 'focus-overlay'
 			});
 
@@ -629,7 +623,7 @@ export class componentSettings
 			});
 		}
 
-		let container = dom.new('div', {
+		let container = DOM.new('div', {
 			class : 'settings-container'
 		});
 
@@ -640,7 +634,7 @@ export class componentSettings
 			sections.push(this.getSectionGallery());
 		}
 
-		let wrapper = dom.new('div', {
+		let wrapper = DOM.new('div', {
 			class : 'wrapper'
 		});
 
@@ -652,16 +646,16 @@ export class componentSettings
 			return item !== null;
 		}));
 
-		let bottom = dom.new('div', {
+		let bottom = DOM.new('div', {
 			class : 'bottom'
 		});
 
-		let applyButton = dom.new('div', {
+		let applyButton = DOM.new('div', {
 			class : 'apply ns',
 			text : 'Apply'
 		});
 
-		let cancelButton = dom.new('div', {
+		let cancelButton = DOM.new('div', {
 			class : 'cancel ns',
 			text : 'Cancel'
 		});
@@ -669,7 +663,8 @@ export class componentSettings
 		container.appendChild(wrapper);
 		container.appendChild(bottom);
 
-		[[applyButton, () => this.apply(container, this.client)], [cancelButton, () => this.close()]].forEach((buttonData) =>
+		[[applyButton, () => this.apply(container, this.client)],
+			[cancelButton, () => this.close()]].forEach((buttonData) =>
 		{
 			let [element, f] = buttonData;
 
@@ -710,4 +705,4 @@ export class componentSettings
 			});
 		});
 	}
-}
+};

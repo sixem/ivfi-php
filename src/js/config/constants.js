@@ -7,4 +7,6 @@ code.ERROR_SOURCE_ID  = Symbol('sourceError');
 
 code.STORAGE_KEY  = 'indexer';
 
-export { code };
+export {
+    code
+};

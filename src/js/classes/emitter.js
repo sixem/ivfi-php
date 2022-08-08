@@ -1,7 +1,7 @@
 /**
- * listen/dispatch (events) class
+ * Listen and dispatch events class
  */
-export class emitterClass
+export default class emitterClass
 {
 	constructor()
 	{
@@ -44,4 +44,4 @@ export class emitterClass
 
 		return false;
 	}
-}
+};

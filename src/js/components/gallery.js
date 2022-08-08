@@ -1,19 +1,16 @@
-/* import config */
+/** Import `config`, `user` */
 import {
 	config,
 	user
 } from '../config/config';
 
-import {
-	data
-} from '../config/data';
+/** Import `data` */
+import data from '../config/data';
 
-/* import classes */
-import {
-	galleryClass
-} from '../classes/gallery';
+/** Import `galleryClass` */
+import galleryClass from '../classes/gallery';
 
-/* require helpers */
+/** Import `applyNested`, `checkNested` */
 import {
 	applyNested,
 	checkNested
@@ -21,8 +18,7 @@ import {
 
 const pipe = data.instances.pipe;
 
-/* class component */
-export class componentGallery
+export default class componentGallery
 {
 	constructor()
 	{
@@ -65,7 +61,7 @@ export class componentGallery
 			video.continue = null;
 		}
 
-		/* if a gallery instance is already active, show it */
+		/* If a gallery instance is already active, then show it */
 		if(data.instances.gallery)
 		{
 			(data.instances.gallery).options.continue.video = video.continue;
@@ -91,21 +87,21 @@ export class componentGallery
 			return;
 		}
 
-		/* set gallery options and start a new instance */
+		/* Set gallery options and start a new instance */
 		let client = user.get();
 
 		let options = new Object();
 
-		/* check if list state is saved */
+		/* Check if list state is saved */
 		let hasStoredListState = Object.prototype.hasOwnProperty.call(client.gallery, 'listState');
 
-		/* set list state */
+		/* Set list state */
 		let listState = hasStoredListState ? client.gallery.listState : 1;
 
-		/* set start index */
+		/* Set start index */
 		options.start = index === null ? 0 : index;
 
-		/* set options */
+		/* Set options */
 		options = this.setOptions(options, [
 			['console', 'debug'],
 			['mobile', 'mobile'],
@@ -116,7 +112,7 @@ export class componentGallery
 			['scrollInterval', 'gallery.scrollInterval']
 		]);
 
-		/* set defaults */
+		/* Set defaults */
 		let defaults = {
 			reverseOptions : ['gallery', 'reverseOptions'],
 			fitContent : ['gallery', 'fitContent'],
@@ -151,23 +147,23 @@ export class componentGallery
 			video : video.continue
 		};
 
-		/* get table items marked as media */
+		/* Get table items marked as media */
 		let items = data.components.main.getTableItems();
 
-		/* unbind main listeners */
+		/* Unbind main listeners */
 		data.components.main.unbind();
 
-		/* initiate new gallery class */
+		/* Initiate new `galleryClass` */
 		let instance = new galleryClass(items, Object.assign(options, {
 			pipe : pipe
 		}));
 
-		/* store instance to variable */
+		/* Store instance to variable */
 		data.instances.gallery = instance;
 
 		if(instance)
 		{
-			/* listen to gallery `volumeChange` event */
+			/* Listen to gallery `volumeChange` event */
 			instance.listen('volumeChange', (volume) =>
 			{
 				client = user.get();
@@ -178,7 +174,7 @@ export class componentGallery
 
 			});
 
-			/* listen to gallery `unbound` event */
+			/* Listen to gallery `unbound` event */
 			instance.listen('unbound', () =>
 			{
 				data.components.main.bind();

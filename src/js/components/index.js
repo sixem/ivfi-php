@@ -1,45 +1,46 @@
-/* import vendors */
+/** Import `formatDate` */
 import {
 	formatDate
 } from '../vendors/date/date';
 
-/* import config */
+/** Import `config`, `user` */
 import {
 	config,
 	user
 } from '../config/config';
 
-import {
-	data
-} from '../config/data';
+/** Import `data` */
+import data from '../config/data';
 
-/* import models */
-import {
-	eventHandler
-} from '../modules/event-handler';
+/** Import `eventHandler` */
+import eventHandler from '../modules/event-handler';
 
-/* import helpers */
+/** Import `h.*` */
 import * as h from '../modules/helpers';
 
-/* references */
-const selector = data.instances.selector;
-const dom = h.dom;
+/* References */
+const selector = data.instances.selector,
+	DOM = h.DOM;
 
-/* create main object */
-const main = new Object();
+/* Create main object */
+const main = {};
 
-/* create menu object */
-main.menu = new Object();
+/* Create menu object */
+main.menu = {};
+
+/* Create sort object */
+main.sort = {};
+
+/* Create overlay object */
+main.overlay = {};
 
 main.menu.create = () =>
 {
-	let container = dom.new('div', {
+	let container = DOM.new('div', {
 		class : 'menu'
-	});
+	}), items = [];
 
 	selector.use('BODY').append(container);
-
-	let items = new Array();
 
 	items.push({
 		text : data.text.menuLabels.filter.text,
@@ -51,7 +52,7 @@ main.menu.create = () =>
 		id : 'copy'
 	});
 
-	/* add menu item if gallery is enabled */
+	/* Add menu item if gallery is enabled */
 	if(config.get('gallery.enabled') === true &&
 		selector.use('TABLE').querySelectorAll(':scope > tbody > \
 			tr.file > td > a.preview').length > 0)
@@ -62,7 +63,7 @@ main.menu.create = () =>
 		});
 	}
 
-	/* do a light check to see if any settings are available to be changed, if so, add menu item */
+	/* Do a light check to see if any settings are available to be changed, if so, add menu item */
 	if(data.components.settings.available())
 	{
 		items.unshift({
@@ -74,7 +75,7 @@ main.menu.create = () =>
 
 	items.forEach((item) =>
 	{
-		let element = dom.new('div', {
+		let element = DOM.new('div', {
 			text : item.text,
 			class : `ns${Object.prototype.hasOwnProperty.call(item, 'class') ? ` ${item.class}` : ''}`
 		});
@@ -87,7 +88,7 @@ main.menu.create = () =>
 		container.append(element);
 	});
 
-	/* event delegation */
+	/* Event delegation */
 	eventHandler.addListener(container, 'click', 'menuItemClick', (e) =>
 	{
 		if(e.target.tagName == 'DIV')
@@ -131,15 +132,13 @@ main.menu.create = () =>
 
 main.menu.toggle = (state = null) =>
 {
-	let menu = document.querySelector('body > div.menu');
+	let menu = document.querySelector('body > div.menu'),
+		isHidden = (menu.style.display === 'none'),
+		display = typeof state === 'boolean' ?
+			(state ? 'inline-block' : 'none') :
+			(isHidden ? 'inline-block' : 'none');
 
-	let isHidden = (menu.style.display === 'none');
-
-	let display = typeof state === 'boolean' ?
-		(state ? 'inline-block' : 'none') :
-		(isHidden ? 'inline-block' : 'none');
-
-	dom.css.set(menu, {
+	DOM.css.set(menu, {
 		display
 	});
 
@@ -153,22 +152,20 @@ main.menu.toggle = (state = null) =>
 	return isHidden;
 };
 
-/* create dates object */
-main.dates = new Object();
+/* Create dates object */
+main.dates = {};
 
-/* get UTC offset of client */
+/* Get UTC offset of client */
 main.dates.offsetGet = () =>
 {
 	return new Date().getTimezoneOffset();
 };
 
+/**
+ * Formats seconds to an 'ago' string
+ */
 main.dates.formatSince = (seconds) =>
 {
-	/**
-	 * formats seconds to an 'ago' string
-	 * example: formatSince(3720); returns 1 hour and 2 minutes ago
-	 */
-
 	if(seconds === 0)
 	{
 		return 'Now';
@@ -193,11 +190,16 @@ main.dates.formatSince = (seconds) =>
 
 	for(let index = 0; index < keys.length; index++)
 	{
-		let key = keys[index]; if(seconds <= t[key]) continue;
+		let key = keys[index];
+		
+		if(seconds <= t[key])
+		{
+			continue;
+		}
 
-		let n = count >= (index+1) ? keys[(index+1)] : null;
-		let	f = Math.floor(seconds / t[key]);
-		let	s = n ? Math.floor((seconds - (f * t[key])) / t[n]) : 0;
+		let n = count >= (index+1) ? keys[(index+1)] : null,
+			f = Math.floor(seconds / t[key]),
+			s = n ? Math.floor((seconds - (f * t[key])) / t[n]) : 0;
 
 		value = `${f} ${key}${f == 1 ? '' : 's'}` + (s > 0 ? (` and ${s} ${n}${s == 1 ? '' : 's'}`) : '') + ' ago';
 
@@ -209,27 +211,24 @@ main.dates.formatSince = (seconds) =>
 
 main.dates.apply = (offset, format = true) =>
 {
-	let onLoadTimestamp = config.get('timestamp');
-
-	let dateFormat = config.get('format.date');
-
-	let dateSelector = 'tr.directory > td:nth-child(2), \
-		tr.file > td[data-raw]:nth-child(2)';
+	let onLoadTimestamp = config.get('timestamp'),
+		dateFormat = config.get('format.date'),
+		dateSelector = 'tr.directory > td:nth-child(2), tr.file > td[data-raw]:nth-child(2)';
 
 	selector.use('TABLE').querySelectorAll(dateSelector).forEach((item) =>
 	{
-		let timestamp = parseInt(item.getAttribute('data-raw'));
-		let	since = main.dates.formatSince(onLoadTimestamp - timestamp);
-		let	span = (format === true ? dom.new('span') : item.querySelector(':scope > span'));
+		let timestamp = parseInt(item.getAttribute('data-raw')),
+			since = main.dates.formatSince(onLoadTimestamp - timestamp),
+			span = (format === true ? DOM.new('span') : item.querySelector(':scope > span'));
 
-		/* update the date formats if the offset has been changed or set for the first time */
+		/* Update the date formats if the offset has been changed or set for the first time */
 		if(format === true)
 		{
 			(dateFormat).forEach((f, index) =>
 			{
 				if(index <= 1)
 				{
-					let element = dom.new('span', {
+					let element = DOM.new('span', {
 						text : formatDate(f, timestamp)
 					});
 
@@ -264,7 +263,7 @@ main.dates.apply = (offset, format = true) =>
 };
 
 /**
- * gets client timezone offset and sets hover timestamps
+ * Gets client timezone offset and sets hover timestamps
  */
 main.dates.load = () =>
 {
@@ -272,7 +271,7 @@ main.dates.load = () =>
 	let	client = user.get();
 	let	update = client.timezone_offset != offset;
 
-	/* only update if offset is changed or unset */
+	/* Only update if offset is changed or unset */
 	if(update)
 	{
 		client.timezone_offset = offset;
@@ -289,9 +288,6 @@ main.dates.load = () =>
 
 	main.dates.apply(offset, update);
 };
-
-/* create sort object */
-main.sort = new Object();
 
 main.sort.load = () =>
 {
@@ -347,14 +343,10 @@ main.sort.load = () =>
 	}
 };
 
-/* create sort object */
-main.overlay = new Object();
-
-main.overlay.hide = (callback = () => new Object()) =>
+main.overlay.hide = (callback = () => {}) =>
 {
-	let i = 0;
-
-	let array = new Array();
+	let i = 0,
+		array = [];
 
 	array.push({
 		element : document.body.querySelector(':scope > div.filter-container'),
@@ -381,7 +373,7 @@ main.overlay.hide = (callback = () => new Object()) =>
 
 main.getTableItems = () =>
 {
-	let items = new Array();
+	let items = [];
 
 	if(data.instances.optimize.main.enabled)
 	{
@@ -394,14 +386,13 @@ main.getTableItems = () =>
 				continue;
 			}
 
-			let row = activeRows[i];
+			let row = activeRows[i],
+				anchor = row.children[0].children[0];
 
-			let a = row.children[0].children[0];
-
-			if(a.classList.contains('preview'))
+			if(anchor.classList.contains('preview'))
 			{
 				items.push({
-					url : a.getAttribute('href'),
+					url : anchor.getAttribute('href'),
 					name : row.children[0].getAttribute('data-raw'),
 					size : row.children[2].textContent
 				});
@@ -413,10 +404,9 @@ main.getTableItems = () =>
 
 		(previews).forEach((element) =>
 		{
-			let parent = element.parentNode;
-			let container = parent.parentNode;
-
-			let url = element.getAttribute('href');
+			let parent = element.parentNode,
+				container = parent.parentNode,
+				url = element.getAttribute('href');
 
 			if(typeof url !== 'undefined')
 			{
@@ -434,23 +424,21 @@ main.getTableItems = () =>
 
 main.sortTableColumn = (target) =>
 {
-	let parent = target.closest('th');
+	let parent = target.closest('th'),
+		column = !(target.tagName === 'TH') ? parent : target,
+		columnIndex = DOM.getIndex(column),
+		rows = {
+			directories : Array.from(selector.use('TABLE').querySelectorAll('tbody > tr.directory')),
+			files : Array.from(selector.use('TABLE').querySelectorAll('tbody > tr.file'))
+		};
 
-	let	column = !(target.tagName === 'TH') ? parent : target;
-
-	let columnIndex = dom.getIndex(column);
-
-	let rows = {
-		directories : Array.from(selector.use('TABLE').querySelectorAll('tbody > tr.directory')),
-		files : Array.from(selector.use('TABLE').querySelectorAll('tbody > tr.file'))
-	};
-
-	/* set a skip directory var if we're only sorting sizes or types
-	 * they should be unaffected by these unless directory sizes are enabled. */
-	let skipDirectories = !(Object.prototype.hasOwnProperty.call(config.get('sorting'), 'directorySizes')
-		&& config.get('sorting.directorySizes')) &&
-	(config.exists('sorting.sortBy')
-		&& (columnIndex === 2 || columnIndex === 3));
+	/**
+	 * Set a skip directory var if we're only sorting sizes or types
+	 * They should be unaffected by these unless directory sizes are enabled
+	 */
+	let skipDirectories = !(Object.prototype.hasOwnProperty.call(config.get('sorting'), 'directorySizes') &&
+		config.get('sorting.directorySizes')) &&
+		(config.exists('sorting.sortBy') && (columnIndex === 2 || columnIndex === 3));
 
 	if(data.instances.optimize.main.enabled)
 	{
@@ -524,4 +512,6 @@ main.sortTableColumn = (target) =>
 	data.sets.selected = null;
 };
 
-export const componentMain = main;
+const componentMain = main;
+
+export default componentMain;
