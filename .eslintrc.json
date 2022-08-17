@@ -15,6 +15,7 @@
     },
     "rules": {
         "no-var": 1,
+        "no-dupe-class-members": "error",
         "indent": [
             "error",
             "tab",
