@@ -1,46 +1,68 @@
-$mobile-width: 640px;
+/* Root values */
+$root: (
+  "color-a-download": #6270ae,
+  "color-a-download-visited": #515978,
+  "color-a-file": #9b9b9b,
+  "color-a-file-visited": #757575,
+  "color-a-media": #627be3,
+  "color-a-media-hover": #627be3,
+  "color-a-media-visited": #475282,
+  "color-a-regular": #f45656,
+  "color-a-parent": #ffc752,
+  "color-body": #d6d3ce,
+  "color-border-main": #19191d,
+  "color-border-settings-menu": #17171b,
+  "color-background-settings-menu": #121216f0,
+  "color-background-settings-item-hover": #17171b,
+  "color-background-body": #0f0f13,
+  "color-background-table": #121318,
+  "color-header-table": #fff,
+  "color-background-table-hover": #17181d8c
+);
 
-$height-gallery-top-bar: 31px;
-$gallery-blur: blur(3px);
-$color-gallery-border: #161616de;
-$color-gallery-link-download: #6173c5;
-$color-gallery-link-download-hover: #6a83f5;
-$color-gallery-list-item: #d4d4d4;
-$color-gallery-list-item-selected: #fff;
+/* Gallery */
+$gallery: (
+  "height-top-bar": 31px,
+  "blur-intensity": 3px,
+  "color-border": #161616de,
+  "color-top-bar": #fff,
+  "color-a-download": #6173c5,
+  "color-a-download-hover": #6a83f5,
+  "color-list-item": #d4d4d4,
+  "color-list-item-selected": #fff,
+  "color-list-item-hover": auto,
+  "color-background-overlay": rgb(4 4 4 / 80%),
+  "color-background-list-selected": #1c2333,
+  "color-background-list-selected-hover": #1c2333,
+  "color-background-list-item-hover": rgb(44 54 81 / 20%),
+  "color-background-top-bar": #121216d6,
+  "color-list-selected-border": #fbfcff,
+  "width-list-selected-border": 5px
+);
 
-$color-link-download: #6270ae;
-$color-link-download-visited: #515978;
-$color-link-file: #9b9b9b;
-$color-link-file-visited: #757575;
-$color-link-media-file: #627be3;
-$color-link-media-file-hover: #627be3;
-$color-link-media-file-visited: #475282;
-$color-link-dir-regular: #f45656;
-$color-link-dir-parent: #ffc752;
+/* Font sizing */
+$font-sizing: (
+  /* General */
+  "default": 14px,
+  /* Gallery */
+  "gallery": 13px,
+  /* Table header (Filename, Modified et cetera.) */
+  "table-header": 13px,
+  /* Fixed top bar */
+  "top-bar": 12px,
+  /* Modified and size column */
+  "row-num": 13px,
+  /* Filename column */
+  "row-file": 13px
+);
 
-$color-background-gallery-root: rgb(4, 4, 4, 0.8);
-$color-background-gallery-list-selected: #1c2333;
-$color-background-gallery-list-selected-hover: #1c2333;
-$color-background-gallery-list-item-hover: rgba(44, 54, 81, 0.20);
-$color-background-gallery-topbar: #121216d6;
-$color-border-gallery-list-selected: #fbfcff;
-$width-border-gallery-list-selected: 5px;
-$color-gallery-list-item-hover: auto;
-$color-gallery-topbar: #fff;
+/* Breakpoints */
+$breakpoints: (
+  "mobile-max-width": 768px
+);
 
-$color-background-body: #0f0f13;
-$color-background-table: #121318;
-$color-background-settings-menu: #121216f0;
-$color-background-settings-item-hover: #17171b;
-$color-table-background-color-hover: #17181d8c;
-$color-table-header: #fff;
-$color-body: #d6d3ce;
-$color-border-main: #19191d;
-$color-border-settings-menu: #17171b;
-
-$font-size-default: 14px;
-$font-size-gallery: 13px;
-$font-size-table-header: 13px;
-$font-size-top-bar: 12px;
-$font-size-row-num: 13px;
-$font-size-row-file: 13px;
+/* Table column width values for deskop and mobile */
+$table-sizing: (
+  "desktop": (50%, 20%, 15%, 11.5%),
+  "mobile": (40.5%, 21%, 19%, 19.5)
+);

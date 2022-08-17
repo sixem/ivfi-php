@@ -1,0 +1,77 @@
+@use "sass:map";
+@use "variables";
+
+/* Meida query condition translator */
+@function translate-media-condition($c) {
+  $condition-map: (
+    "screen": "only screen",
+    "isMobile": "(max-width: #{map.get(variables.$breakpoints, "mobile-max-width")})",
+    "isDesktop": "(min-width: #{map.get(variables.$breakpoints, "mobile-max-width")})"
+  );
+
+  @return map-get($condition-map, $c);
+}
+  
+/* Media query mixin */
+@mixin media-query($arguments...) {
+  $query: "";
+
+  @each $argument in $arguments {
+    $output: "";
+
+    @if ($query != "") {
+      $output: " and ";
+    }
+
+    $query: $query + $output + translate-media-condition($argument);
+  }
+
+  @media #{$query} {
+      @content;
+  }
+}
+
+/* Removes text selection */
+@mixin no-select {
+    user-select: none;
+}
+
+/* Font sizing mixin */
+@mixin fonting(
+  $key: false,
+  $align: false,
+  $spacing: false,
+  $weight: false,
+  $color-scope: false,
+  $color-key: false,
+  $color: false
+) {
+  /* Set font size */
+  @if $key {
+    font-size: map.get(variables.$font-sizing, $key);
+  }
+
+  /* Set text alignment */
+  @if $align {
+    text-align: $align;
+  }
+
+  /* Set font weight */
+  @if $weight {
+    font-weight: $weight;
+  }
+
+  /* Set letter spacing */
+  @if $spacing {
+    letter-spacing: $spacing;
+  }
+
+  /* Set color */
+  @if $color-scope and $color-key {
+    color: map.get($color-scope, $color-key);
+  } @else {
+    @if $color {
+      color: $color;
+    }
+  }
+}

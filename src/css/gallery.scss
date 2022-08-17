@@ -1,56 +1,19 @@
-@charset "UTF-8";
+@use "sass:map";
+@use "variables";
+@use "mixins";
 
-@use 'variables';
-
-.gallery-root div {
-  &.gallery-content .list table tr td {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-
-  &.gallery-bar .gallery-bar__right {
-    span[data-action], a {
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-  }
-
-  &.gallery-content .media {
-    .wrapper {
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-}
-
-.blur {
-  filter: variables.$gallery-blur;
-  -webkit-filter: variables.$gallery-blur;
-  -moz-filter: variables.$gallery-blur;
-  -o-filter: variables.$gallery-blur;
-  -ms-filter: variables.$gallery-blur;
-}
-
-html[gallery-is-visible] > div:not(.gallery-root):not(script):not(noscript):not(style) {
+html[gallery-is-visible] > div:not(.rootGallery, script, noscript, style) {
   pointer-events: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
   user-select: none;
 }
 
-.gallery-root {
+body {
+  .blur {
+    filter: blur(map.get(variables.$gallery, "blur-intensity"));
+  }
+}
+
+html > body > .rootGallery {
   position: fixed;
   top: 0;
   left: 0;
@@ -59,87 +22,106 @@ html[gallery-is-visible] > div:not(.gallery-root):not(script):not(noscript):not(
   max-height: 100vh;
   max-width: 100vw;
   z-index: 1000;
-  background-color: variables.$color-background-gallery-root;
+  background-color: map.get(variables.$gallery, "color-background-overlay");
 
-  div {
-    &.gallery-bar {
-      height: calc(variables.$height-gallery-top-bar - 2px);
-      max-height: calc(variables.$height-gallery-top-bar - 2px);
-      min-height: calc(variables.$height-gallery-top-bar - 2px);
-      background-color: variables.$color-background-gallery-topbar;
-      border-bottom: 2px solid variables.$color-gallery-border;
+  > div {
+    &.galleryBar {
+      height: calc(map.get(variables.$gallery, "height-top-bar") - 2px);
+      max-height: calc(map.get(variables.$gallery, "height-top-bar") - 2px);
+      min-height: calc(map.get(variables.$gallery, "height-top-bar") - 2px);
+      background-color: map.get(variables.$gallery, "color-background-top-bar");
+      border-bottom: 2px solid map.get(variables.$gallery, "color-border");
       width: 100%;
       display: table;
-      color: variables.$color-gallery-topbar;
+      color: map.get(variables.$gallery, "color-top-bar");
 
-      div {
+      > div {
         display: table-cell;
         vertical-align: middle;
       }
 
-      .gallery-bar__right {
+      > .galleryBarRight {
         padding-right: 10px;
         text-align: right;
         white-space: nowrap;
         width: 1%;
 
-        > span[data-action] {
-          margin: 0px 2px;
+        > span[data-action],
+        > a {
+          user-select: none;
         }
 
-        a.download {
-          color: variables.$color-gallery-link-download;
+        > span[data-action] {
+          margin: 0 2px;
+        }
+
+        > span[data-action="toggle"] > span {
+          width: 13px;
+          text-align: center;
+          display: inline-block;
+        }
+
+        > a.download {
+          color: map.get(variables.$gallery, "color-a-download");
           text-decoration: none;
 
           &:hover {
-            color: variables.$color-gallery-link-download-hover;
+            color: map.get(variables.$gallery, "color-a-download-hover");
             text-decoration: underline;
           }
         }
 
-        *:not(:last-child) {
+        > *:not(:last-child) {
           margin-right: 3px;
         }
 
-        a.download, span[data-action] {
+        > a.download,
+        > span[data-action] {
           cursor: pointer;
         }
 
-        a.download::before, span[data-action]::before {
-          content: '[';
+        > a.download::before,
+        > span[data-action]::before {
+          content: "[";
         }
 
-        a.download::after, span[data-action]::after {
-          content: ']';
+        > a.download::after,
+        > span[data-action]::after {
+          content: "]";
         }
       }
 
-      .gallery-bar__left {
-        padding: 0px 10px 0px 10px;
+      > div.galleryBarLeft {
+        @include mixins.fonting(
+          $key: "gallery",
+          $spacing: 1px
+        );
+
+        padding: 0 10px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 0px;
-        font-size: variables.$font-size-gallery;
-        letter-spacing: 1px;
-        @media only screen and (max-width : variables.$mobile-width) {
+        max-width: 0;
+
+        @include mixins.media-query("screen", "isMobile") {
           font-size: 11px;
         }
 
         > span {
           &:nth-child(1) {
-            font-feature-settings: 'tnum';
+            font-feature-settings: "tnum";
           }
 
-          &:first-child::after, &:last-child::before {
-            content: '|';
-            margin: 0px 7px;
+          &:first-child::after,
+          &:last-child::before {
+            content: "|";
+            margin: 0 7px;
             color: #3c3c49;
           }
         }
 
-        a {
-          color: variables.$color-gallery-topbar;
+        > a {
+          color: map.get(variables.$gallery, "color-top-bar");
           text-decoration: none;
 
           &:hover {
@@ -149,35 +131,96 @@ html[gallery-is-visible] > div:not(.gallery-root):not(script):not(noscript):not(
       }
     }
 
-    &.gallery-content {
+    &.galleryContent {
       display: table;
       width: 100vw;
-      height: calc(100vh - variables.$height-gallery-top-bar);
+      height: calc(100vh - map.get(variables.$gallery, "height-top-bar"));
 
-      .media {
+      > div.list > div.drag {
+        content: " ";
+        width: 5px;
+        min-height: 100%;
+        cursor: w-resize;
+        position: sticky;
+        top: 0;
+        bottom: 0;
+        border-left: 2px solid rgb(28 28 28 / 87%);
+        z-index: 1;
+      }
+
+      &.reversed > div.list > div.drag {
+        left: unset;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        float: right;
+        border-left: none;
+        border-right: 2px solid map.get(variables.$gallery, "color-border");
+      }
+
+      &.reversed > div.media > div.spinner {
+        top: 10px;
+      }
+
+      &:not(.reversed) > div.media > div.spinner {
+        top: 35px;
+      }
+
+      > div.list > table {
+        width: 100%;
+        max-width: 100%;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+      }
+
+      &.reversed > div.list > table > tbody > tr.selected > td {
+        $width-list-selected-border: map.get(variables.$gallery, "width-list-selected-border");
+        $color-list-selected-border: map.get(variables.$gallery, "color-list-selected-border");
+
+        border-left: none;
+        border-right: $width-list-selected-border solid $color-list-selected-border;
+        background-color: map.get(variables.$gallery, "color-background-list-selected");
+      }
+
+      > div.list > table > tbody > tr:not(.selected) > td:hover {
+        background-color: map.get(variables.$gallery, "color-background-list-item-hover");
+        color: map.get(variables.$gallery, "color-list-item-hover");
+      }
+
+      > div.screenNavigate {
+        display: none;
+
+        > span {
+          pointer-events: none;
+        }
+      }
+
+      > div.media {
         display: table-cell;
         text-align: center;
         width: 100%;
         vertical-align: middle;
         position: relative;
+        user-select: none;
 
         > div.item-info-static {
           position: absolute;
           right: 5px;
           top: 5px;
-          padding: 1px 5px 2px 5px;
-          background-color: rgba(0, 0, 0, 0.5);
+          padding: 1px 5px 2px;
+          background-color: rgb(0 0 0 / 50%);
           border-radius: 2px;
           pointer-events: none;
-          font-feature-settings: 'tnum';
+          font-feature-settings: "tnum";
           opacity: 1;
           transition: opacity 0.5s;
-          -moz-transition: opacity 0.5s ease-in-out;
-          -webkit-transition: opacity 0.5s ease-in-out;
+          transition: opacity 0.5s ease-in-out;
+          transition: opacity 0.5s ease-in-out;
         }
 
-        .wrapper .cover {
-          .reverse {
+        > div.wrapper > div.cover {
+          > div.reverse {
             position: absolute;
             top: 4px;
             left: 4px;
@@ -185,46 +228,47 @@ html[gallery-is-visible] > div:not(.gallery-root):not(script):not(noscript):not(
             font-size: 11px;
             pointer-events: none;
             opacity: 0.5;
+            overflow: hidden;
             visibility: hidden;
-            transition: opacity 0.125s;
-            -moz-transition: opacity 0.125s ease-in-out;
-            -webkit-transition: opacity 0.125s ease-in-out;
+            transition: opacity 0.1s;
+            transition: opacity 0.1s ease-in-out;
+            transition: opacity 0.1s ease-in-out;
 
             &:hover {
-              opacity: 0.7;
+              opacity: 0.85;
             }
           }
 
-          &:hover .reverse {
+          &:hover > div.reverse {
             visibility: visible;
           }
 
-          .reverse a {
+          > .reverse > a {
             display: inline-block;
-            color: white;
             text-decoration: none;
             pointer-events: auto;
-            padding: 3px 6px 4px 6px;
+            padding: 3px 6px 4px;
             color: #e5e5e5;
             background-color: #151515;
             transition: background-color 0.2s;
-            -moz-transition: background-color 0.2s ease-in-out;
-            -webkit-transition: background-color 0.2s ease-in-out;
+            transition: background-color 0.2s ease-in-out;
+            transition: background-color 0.2s ease-in-out;
 
             &:not(:last-child) {
               border-right: 1px solid #1a1a1a;
             }
 
             &:hover {
-              background-color: rgba(0, 0, 0, 0.975);
+              background-color: rgb(0 0 0 / 97.5%);
               color: #fff;
             }
           }
         }
 
-        div.spinner {
-          $spinner-size:26px;
-          $spinner-fade-duration:0.25s;
+        > div.spinner {
+          $spinner-size: 26px;
+          $spinner-fade-duration: 0.25s;
+
           position: absolute;
           z-index: 1;
           right: 10px;
@@ -235,212 +279,161 @@ html[gallery-is-visible] > div:not(.gallery-root):not(script):not(noscript):not(
           width: $spinner-size;
           height: $spinner-size;
           transition: opacity $spinner-fade-duration;
-          -moz-transition: opacity $spinner-fade-duration ease-in-out;
-          -webkit-transition: opacity $spinner-fade-duration ease-in-out;
+          transition: opacity $spinner-fade-duration ease-in-out;
+          transition: opacity $spinner-fade-duration ease-in-out;
           opacity: 0;
         }
 
-        .loader {
+        > div.loader {
           position: absolute;
           top: 10px;
           right: 10px;
           background-color: #000000a1;
-          padding: 7px 9px 7px 9px;
+          padding: 7px 9px;
           border-radius: 2px;
         }
       }
 
-      &.reversed .media .spinner {
+      &.reversed > .media > .spinner {
         right: unset;
         left: 10px;
       }
 
-      .media .wrapper {
-        > div.error {
+      max-height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
+
+      > .media > .wrapper {
+        display: flex;
+        flex-flow: column wrap;
+        align-items: center;
+        justify-content: center;
+
+        div.error {
           color: #d83232;
           display: block;
           width: 100%;
         }
 
-        .cover, img, video {
-          max-height: calc(100vh - variables.$height-gallery-top-bar - 2px);
+        > .cover,
+        > .cover > img,
+        > .cover > video {
+          max-height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
         }
 
-        max-height: calc(100vh - variables.$height-gallery-top-bar - 2px);
-      }
+        max-height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
 
-      max-height: calc(100vh - variables.$height-gallery-top-bar - 2px);
-
-      .list {
-        max-height: calc(100vh - variables.$height-gallery-top-bar - 2px);
-      }
-
-      .media .wrapper {
-        display: flex;
-        flex-direction: column;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-
-        .cover {
+        > .cover {
           position: relative;
         }
 
         &.fill {
-          height: calc(100vh - variables.$height-gallery-top-bar - 2px);
+          height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
 
-          .cover {
+          > .cover {
             height: 100%;
           }
 
-          img, video {
+          > img,
+          > video {
             object-fit: contain;
             height: 100%;
             overflow: hidden;
           }
 
-          img {
+          > img {
             width: 100%;
           }
 
-          video {
+          > video {
             width: auto;
           }
         }
 
-        img {
+        > .cover > img {
           object-fit: contain;
           max-width: 100%;
           display: none;
         }
 
-        video {
+        > .cover > img[sharpened] {
+          transform: translateZ(0);
+          transform: translateZ(0);
+          image-rendering: optimizequality;
+        }
+
+        > video {
           object-fit: contain;
           max-width: 100%;
           display: none;
           outline: none;
           border: none;
         }
-
-        img[sharpened] {
-          transform: translateZ(0);
-          -webkit-transform: translateZ(0);
-          image-rendering: optimizequality;
-        }
       }
 
-      .list {
+      > div.list {
         display: table-cell;
         background-color: #121216f0;
         max-width: 50vw;
         min-width: 275px;
         width: 25vw;
-        height: calc(100vh - variables.$height-gallery-top-bar - 2px);
+        height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
         float: right;
         overflow-y: scroll;
         overflow-x: hidden;
         border-top: 1px solid #101010b8;
         position: relative;
+        max-height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
+        scrollbar-color: #222 #131315;
 
-        table tr {
-          text-align: left;
-          color: variables.$color-gallery-list-item;
-          font-size: variables.$font-size-gallery;
-          letter-spacing: 1px;
-          @media only screen and (max-width : variables.$mobile-width) {
+        > table > tbody > tr {
+          @include mixins.fonting(
+            $key: "gallery",
+            $align: false,
+            $spacing: 1px,
+            $color-scope: variables.$gallery,
+            $color-key: "color-list-item"
+          );
+
+          > td {
+            padding: 6px 4px 6px 6px;
+            cursor: pointer;
+            max-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            border-left: 3px solid transparent;
+            user-select: none;
+          }
+
+          &.selected > td {
+            border-left:
+              map.get(variables.$gallery, "width-list-selected-border")
+              solid
+              map.get(variables.$gallery, "color-list-selected-border");
+            background-color: map.get(variables.$gallery, "color-background-list-selected");
+            color: map.get(variables.$gallery, "color-list-item-selected");
+
+            &:hover {
+              background-color: map.get(variables.$gallery, "color-background-list-selected-hover");
+            }
+          }
+
+          @include mixins.media-query("screen", "isMobile") {
             font-size: 11px;
           }
         }
       }
     }
 
-    &.gallery-bar .gallery-bar__right {
-      a.download, span[data-action] {
-        font-size: variables.$font-size-gallery;
-        letter-spacing: 1px;
-        @media only screen and (max-width : variables.$mobile-width) {
+    &.galleryBar > div.galleryBarRight {
+      > a.download,
+      > span[data-action] {
+        @include mixins.fonting(
+          $key: "gallery",
+          $spacing: 1px,
+        );
+
+        @include mixins.media-query("screen", "isMobile") {
           font-size: 11px;
-        }
-      }
-    }
-
-    &.gallery-content {
-      .list > div.drag {
-        content: " ";
-        width: 5px;
-        min-height: 100%;
-        cursor: w-resize;
-        position: sticky;
-        top: 0;
-        bottom: 0;
-        border-left: 2px solid variables.$color-gallery-border;
-        z-index: 1;
-      }
-
-      &.reversed .list > div.drag {
-        left: unset;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        float: right;
-        border-left: none;
-        border-right: 2px solid variables.$color-gallery-border;
-      }
-
-      &.reversed div.spinner {
-        top: 10px;
-      }
-
-      &:not(.reversed) div.spinner {
-        top: 35px;
-      }
-
-      .list table {
-        width: 100%;
-        max-width: 100%;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-
-        tr {
-          td {
-            padding: 6px 4px 6px 6px;
-            cursor: pointer;
-            max-width: 0px;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            border-left: 3px solid transparent;
-          }
-
-          &.selected td {
-            border-left: variables.$width-border-gallery-list-selected solid variables.$color-border-gallery-list-selected;
-            background-color: variables.$color-background-gallery-list-selected;
-            color: variables.$color-gallery-list-item-selected;
-
-            &:hover {
-              background-color: variables.$color-background-gallery-list-selected-hover;
-            }
-          }
-        }
-      }
-
-      &.reversed .list table tr.selected td {
-        border-left: none;
-        border-right: variables.$width-border-gallery-list-selected solid variables.$color-border-gallery-list-selected;
-        background-color: variables.$color-background-gallery-list-selected;
-      }
-
-      .list table tr:not(.selected) td:hover {
-        background-color: variables.$color-background-gallery-list-item-hover;
-        color: variables.$color-gallery-list-item-hover;
-      }
-
-      .screen-navigate {
-        display: none;
-
-        > span {
-          pointer-events: none;
         }
       }
     }
