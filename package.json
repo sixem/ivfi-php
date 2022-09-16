@@ -4,24 +4,33 @@
     "mail": "emy@five.sh"
   },
   "name": "eyy-indexer",
-  "version": "1.2.1_beta-1",
+  "version": "1.2.1",
   "description": "A directory explorer",
-  "main": "./src/js/main.js",
+  "main": "./core/js/main.ts",
   "dependencies": {
     "js-cookie": "^2.2.1",
-    "vanilla-swipe": "^2.3.0"
+    "vanilla-swipe": "^2.4.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.14.7",
     "@babel/preset-env": "^7.14.7",
+    "@babel/preset-typescript": "^7.18.6",
+    "@types/js-cookie": "^3.0.2",
+    "@types/modernizr": "^3.5.3",
+    "autoprefixer": "^10.4.8",
     "css-loader": "^5.2.5",
     "css-minimizer-webpack-plugin": "^3.0.0",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.3.1",
     "mini-css-extract-plugin": "^1.6.0",
     "moment": "^2.29.1",
+    "postcss-loader": "^7.0.1",
     "sass": "^1.52.3",
     "sass-loader": "^13.0.0",
+    "source-map-loader": "^4.0.0",
+    "stylelint-config-standard-scss": "^5.0.0",
+    "ts-loader": "^9.3.1",
+    "typescript": "^4.8.2",
     "webpack": "^5.73.0",
     "webpack-cli": "^4.9.2"
   },
@@ -30,7 +39,7 @@
     "build-dev": "webpack --config webpack.config.js --env development",
     "build-dev-watch": "webpack --config webpack.config.js --env development --watch",
     "make-standalone": "webpack --config webpack.config.js --env production && node ./scripts/make-standalone.js",
-    "lint": "eslint ./src/js",
+    "lint": "eslint ./src && stylelint ./src/**/*.scss",
     "test": "npm run lint && npm run build"
   },
   "repository": {
