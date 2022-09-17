@@ -17,6 +17,8 @@
     "@babel/preset-typescript": "^7.18.6",
     "@types/js-cookie": "^3.0.2",
     "@types/modernizr": "^3.5.3",
+    "@typescript-eslint/eslint-plugin": "^5.37.0",
+    "@typescript-eslint/parser": "^5.37.0",
     "autoprefixer": "^10.4.8",
     "css-loader": "^5.2.5",
     "css-minimizer-webpack-plugin": "^3.0.0",
@@ -39,7 +41,7 @@
     "build-dev": "webpack --config webpack.config.js --env development",
     "build-dev-watch": "webpack --config webpack.config.js --env development --watch",
     "make-standalone": "webpack --config webpack.config.js --env production && node ./scripts/make-standalone.js",
-    "lint": "eslint ./src && stylelint ./src/**/*.scss",
+    "lint": "eslint ./src/core/**/*.ts && stylelint ./src/css/**/*.scss",
     "test": "npm run lint && npm run build"
   },
   "repository": {
