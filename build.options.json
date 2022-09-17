@@ -2,5 +2,6 @@
     "extraFeatures": {
         "readmeSupport": false
     },
-    "extrasDir": "extras"
+    "extrasDir": "extras",
+    "assetDir": "indexer"
 }
