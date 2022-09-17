@@ -7,6 +7,7 @@
 
 <p>Download the latest release <a href="https://github.com/sixem/eyy-indexer/releases">HERE</a>!</p>
 <p>Alternatively, you can also build it from source yourself, for that see: <a href="#building">building</a></p>
+<p>You can also find every release and specific builds here: <a href="https://five.sh/releases/eyy-indexer/">https://five.sh/releases/eyy-indexer/</a></p>
 
 ## Files
 
@@ -54,3 +55,35 @@ DirectoryIndex index.html index.php /indexer.php
 ```
 
 This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist. This can be set globally or on a per-directory basis depending on your usecase.
+
+## Docker
+The script can also be run through a simple docker container using `docker compose`.
+#### Clone the repository and install dependencies:
+`npm install` can be skipped if you are manually creating `docker/public` without building from source.
+```bash
+git clone https://github.com/sixem/eyy-indexer
+cd eyy-indexer
+npm install
+```
+
+#### Build and populate the docker directory:
+This is not required as it can be done manually by simply placing the Indexer files in `docker/public`. This command will however build it from source and place the files there automatically. 
+
+This directory (`docker/public`) will serve as the root path of the webserver from where we serve the script.
+```bash
+npm run docker-populate
+```
+
+#### Edit the configuration:
+Find `docker/.env.local` and edit it to fit your liking:
+
+`SERVEPOINT` is the root directory containing files that should be browsable and `PORT` are the ports being used.
+
+Any Indexer configurations can be placed in `docker/config.php` prior to starting the container.
+
+#### Run the container:
+```bash
+cd docker
+docker compose --env-file .env.local up
+```
+The script should now be running on `http://localhost:8080/` if you are using the default ports. You can also add a `-d` flag to the command in order to run the container in detached mode.

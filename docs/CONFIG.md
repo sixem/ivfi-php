@@ -240,6 +240,7 @@ Shows a footer with some general information at the bottom of the page.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `processor` | Bool | `false` | Allows you to handle and modify data by passing functions to the indexer. See [PROCESSOR](processor.md) for more information.
+| `single_page` | Bool | `false` | Enables navigation between folders without forcing a page reload (experimental).
 | `encode_all` | Bool | `false` | Should `?` and `#` characters be encoded when processing URLs and filenames.
 | `allow_direct_access` | Bool | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
@@ -249,8 +250,6 @@ Shows a footer with some general information at the bottom of the page.
 | `debug` | Bool | `false` | Enables PHP debugging and `console.log()` info messages.
 
 # Advanced
-Advanced settings that are not a part of the regular configuration.
-
 ## Server <!-- {docsify-ignore} -->
 
 Some server variables can be passed to the script via your web server in order to modify some of the more advanced features of the script.
@@ -298,3 +297,7 @@ location /file/upstream/ {
 If `X-Indexer-Prepend-Path` is excluded from this configuration, the script would not know that it is actually supposed to serve the files from `/file/upstream/` instead of `/`, thus the navigation and file links would point to incorrect directories and files.
 
 By setting the prepend value to `/file/upstream/`, every link will have that string prepended to it, so a file like `/image.jpg` would correctly point to `/file/upstream/image.jpg`.
+
+#### Note:
+
+This does not prepend any assets file, so the assets will have to be placed in the root directory or forwarded from a directory or a proxy to `/indexer/` in the web root.
