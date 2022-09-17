@@ -820,7 +820,7 @@ class Indexer
     {
       return '/';
     } else {
-      return $requested[strlen($requested) - 1] === '/' ? rtrim($requested, '/') . '/' : rtrim($requested, '/');
+      return preg_replace('#/+#','/', $requested[strlen($requested) - 1] === '/' ? rtrim($requested, '/') . '/' : rtrim($requested, '/'));
     }
   }
 
