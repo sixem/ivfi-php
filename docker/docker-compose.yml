@@ -1,7 +1,6 @@
 version: '3'
 services:
   indexer:
-    build: .
     image: nginx:1.23.1
     volumes:
       # Serve point (browsable directory)
@@ -15,7 +14,6 @@ services:
     links:
       - php
   php:
-    build: .
     image: php:7.4-fpm
     volumes:
       # Serve point (browsable directory)
