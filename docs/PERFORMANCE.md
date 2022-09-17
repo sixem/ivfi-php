@@ -1,8 +1,10 @@
-# Performance Mode
+<h1 align="center">Performance Mode</h1>
+
+<br/>
 
 The `performance mode` is an option that can be enabled on all or some directories. It can be useful for larger directories where all the DOM elements present can cause browser lag because of long style recalculations and so on.
 
-### Example
+## Example <!-- {docsify-ignore} -->
 
 Enable it on all directories.
 ```php
