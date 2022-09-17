@@ -123,10 +123,12 @@ const banner = () =>
 	\n`;
 };
 
-module.exports = (env) => {
+module.exports = (env, argv) => {
+	const isProduction = argv.mode === 'production';
+
 	return {
 		context: __dirname,
-		mode: env.production ? 'production' : 'development',
+		mode: isProduction ? 'production' : 'development',
 		entry: {
 			index: './src/core/main.ts'
 		},
@@ -138,7 +140,7 @@ module.exports = (env) => {
 			path: __dirname + `/build/${assetDir}`
 		},
 		optimization: {
-			minimize: env.production ? true : false,
+			minimize: isProduction ? true : false,
 			minimizer: [
 				new TerserPlugin({
 					extractComments: false
@@ -177,7 +179,7 @@ module.exports = (env) => {
 						{
 							loader: 'css-loader',
 							options: {
-								sourceMap: env.production ? false : true
+								sourceMap: isProduction ? false : true
 							}
 						},
 						{
