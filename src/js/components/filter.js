@@ -141,7 +141,7 @@ componentFilter.apply = (query = '') =>
 	}
 
 	let top = {
-		container : document.body.querySelector(':scope > div.top-bar')
+		container : document.body.querySelector(':scope > div.topBar')
 	};
 
 	(['size', 'files', 'directories']).forEach((key) =>
@@ -213,7 +213,7 @@ componentFilter.getMatch = (input, query) =>
 
 componentFilter.toggle = () =>
 {
-	let container = document.body.querySelector(':scope > div.filter-container'),
+	let container = document.body.querySelector(':scope > div.filterContainer'),
 		input = container.querySelector('input[type="text"]');
 
 	if(container.style.display !== 'none')

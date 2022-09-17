@@ -38,7 +38,9 @@ main.menu.create = () =>
 {
 	let container = DOM.new('div', {
 		class : 'menu'
-	}), items = [];
+	});
+	
+	let items = [];
 
 	selector.use('BODY').append(container);
 
@@ -77,7 +79,7 @@ main.menu.create = () =>
 	{
 		let element = DOM.new('div', {
 			text : item.text,
-			class : `ns${Object.prototype.hasOwnProperty.call(item, 'class') ? ` ${item.class}` : ''}`
+			class : `${Object.prototype.hasOwnProperty.call(item, 'class') ? `${item.class}` : ''}`
 		});
 
 		if(Object.prototype.hasOwnProperty.call(item, 'id'))
@@ -250,8 +252,8 @@ main.dates.apply = (offset, format = true) =>
 		}
 	});
 
-	let infoSelector = 'div.top-bar > .directory-info div[data-count="files"], \
-		div.top-bar > .directory-info div[data-count="directories"]';
+	let infoSelector = 'div.topBar > .directoryInfo div[data-count="files"], \
+		div.topBar > .directoryInfo div[data-count="directories"]';
 
 	document.body.querySelectorAll(infoSelector).forEach((item) =>
 	{
@@ -331,7 +333,7 @@ main.sort.load = () =>
 				{
 					th.asc = asc;
 
-					let indicator = th.querySelector(':scope > span.sort-indicator');
+					let indicator = th.querySelector(':scope > span.sortingIndicator');
 
 					if(indicator)
 					{
@@ -349,7 +351,7 @@ main.overlay.hide = (callback = () => {}) =>
 		array = [];
 
 	array.push({
-		element : document.body.querySelector(':scope > div.filter-container'),
+		element : document.body.querySelector(':scope > div.filterContainer'),
 		f : data.components.filter.toggle
 	});
 
@@ -462,13 +464,13 @@ main.sortTableColumn = (target) =>
 
 	column.asc = !column.asc;
 
-	document.body.querySelectorAll(':scope > div.table-container > table > \
-		thead > tr > th span.sort-indicator').forEach((indicator) =>
+	document.body.querySelectorAll(':scope > div.tableContainer > table > \
+		thead > tr > th span.sortingIndicator').forEach((indicator) =>
 	{
 		indicator.classList.remove('up', 'down', 'visible');
 	});
 
-	parent.querySelector(':scope > span.sort-indicator').classList.add(column.asc ? 'down' : 'up', 'visible');
+	parent.querySelector(':scope > span.sortingIndicator').classList.add(column.asc ? 'down' : 'up', 'visible');
 
 	let client = user.get();
 

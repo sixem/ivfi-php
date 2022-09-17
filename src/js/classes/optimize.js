@@ -229,7 +229,7 @@ export default class optimizeClass
 		{
 			if(i >= start && i <= limit)
 			{
-				activeRows[i].style.display = 'block';
+				activeRows[i].style.display = 'flex';
 			}
 		}
 
@@ -573,4 +573,4 @@ export default class optimizeClass
 			});
 		}
 	}
-};
+}

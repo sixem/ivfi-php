@@ -10,6 +10,9 @@ import data from './config/data';
 /** Import `eventHandler` */
 import eventHandler from './modules/event-handler';
 
+/** Import `eventHooks` */
+import eventHooks from './modules/event-hooks';
+
 /** Import `optimizeClass` */
 import optimizeClass from './classes/optimize';
 
@@ -37,8 +40,8 @@ import '../css/fonts.scss';
 import '../css/main.scss';
 
 /* References */
-const selector = data.instances.selector;
-const pipe = data.instances.pipe;
+const selector = data.instances.selector,
+	pipe = data.instances.pipe;
 
 /* Disable media play */
 try
@@ -68,18 +71,6 @@ data.layer.main = {
 		data.layer.main.windowWidth = window.innerWidth;
 		data.layer.main.scrolledY = window.scrollY;
 		data.layer.main.tableWidth = table.offsetWidth;
-
-		if(config.get('mobile'))
-		{
-			document.documentElement.style.setProperty('--table-width', `${data.layer.main.tableWidth}px`);
-		} else {
-			let root = document.documentElement,
-				isVerticalScrollbar = root.scrollHeight > root.clientHeight;
-
-			document.documentElement.style.setProperty(
-				'--table-width', !isVerticalScrollbar ? `${data.layer.main.tableWidth}px` : `calc(${data.layer.main.tableWidth}px + var(--scrollbar-width))`
-			);
-		}
 
 		return true;
 	}
@@ -117,7 +108,7 @@ if(config.get('performance'))
 				scope : [window, 'scrollY'],
 				padding : 10,
 				on : {
-					rowChange : onRowChange
+					rowChange: onRowChange
 				}
 			});
 		});
@@ -213,6 +204,11 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 			data.preview.data.element.remove();
 		}
 
+		if(!data.preview.isLoadable)
+		{
+			return null;
+		}
+
 		let [element, type, src] = [e.element, e.type, e.src];
 
 		data.preview.data = e;
@@ -297,7 +293,7 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 
 			/* Events */
 			options.on = {
-				onLoaded : onLoaded
+				onLoaded: onLoaded
 			};
 
 			/* Force set extension data */
@@ -312,7 +308,7 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 	};
 
 	/* Get previewable elements */
-	let previewable = document.querySelectorAll('body > div.table-container > table tr.file > td > a.preview');
+	let previewable = document.querySelectorAll('body > div.tableContainer > table > tbody > tr.file > td > a.preview');
 
 	/* Set preview indexes */
 	previewable.forEach((preview, index) =>
@@ -341,19 +337,129 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 	});
 }
 
-/* Create gallery component instance */
-data.components.settings = new componentSettings();
+if(config.get('singlePage'))
+{
+	const pageNavigate = (location) =>
+	{
+		/* Get location data */
+		let windowProtocol = window.location.protocol,
+			windowHostName = window.location.hostname,
+			windowSubPath = location.replace(/([^:]\/)\/+/g, '$1').replace(/^\/|\/$/g, '');
 
-/* Set filter component */
+		/* Construct upcoming title and URL */
+		let nextLocation = `${windowProtocol}//${windowHostName}/${windowSubPath ? windowSubPath + '/' : ''}`,
+			nextTitle = config.get('format').title.replace('%s', `/${windowSubPath}/`);
+
+		/* Create POST body */
+		let postData = Object.entries({
+			navigateType: 'dynamic'
+		}).map((([key, value], index) => `${index > 0 ? '&' : ''}${key}=${value}`)).join('');
+
+		/* Avoid any new previews */
+		data.preview.isLoadable = false;
+
+		/* Create spinner */
+		let indicator = document.createElement('div');
+		indicator.classList.add('navigateLoad');
+		document.body.prepend(indicator);
+		setTimeout(() => indicator.style.opacity = 1 , 10);
+
+		/* Fetch new document */
+		fetch(`/${windowSubPath}/`, {
+			method: 'POST',
+			redirect: 'follow',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: postData
+		}).then((response) =>
+		{
+			/* Check if the correct response headers are set
+			 * This removes any accidental navigates to unknown sources */
+			if(response.headers.get('navigateType') === 'dynamic')
+			{
+				pipe('Valid header. Navigating pages ..');
+				
+				response.text().then((content) =>
+				{
+					/* Update URL */
+					window.history.pushState({
+						path: '/' + windowSubPath
+					}, nextTitle, nextLocation);
+	
+					/* Write changes to document */
+					document.open();
+					document.write(content);
+					document.close();
+
+					window.scrollTo({
+						top: 0,
+						behavior: 'smooth'
+					});
+				});
+			} else {
+				/* Incorrect document type - fallback to normal redirection */
+				window.location.replace(nextLocation);
+			}
+		}).catch(() =>
+		{
+			/* Fallback to a normal redirection */
+			window.location.replace(nextLocation);
+		});
+	};
+
+	eventHooks.subscribe(selector.use('TABLE'), 'click', 'tableClick', (e) =>
+	{
+		if(e.target.tagName == 'A')
+		{
+			let parent = e.target.closest('tr');
+	
+			if(parent &&
+				(parent.classList.contains('directory') || parent.classList.contains('parent')))
+			{
+				e.preventDefault();
+
+				pageNavigate(e.target.getAttribute('href'));
+			}
+		}
+	});
+
+	let quickPath = document.body.querySelector(':scope > div.topBar > div.directoryInfo'),
+		topBar = document.body.querySelector(':scope > div.path');
+
+	eventHooks.subscribe(quickPath, 'click', 'quickPathClick', (e) =>
+	{
+		if(e.target.tagName == 'A')
+		{
+			let parent = e.target.parentNode;
+
+			if(parent && parent.classList.contains('quickPath'))
+			{
+				e.preventDefault();
+
+				pageNavigate(e.target.getAttribute('href'));
+			}
+		}
+	});
+
+	eventHooks.subscribe(topBar, 'click', 'pathClick', (e) =>
+	{
+		if(e.target.tagName == 'A')
+		{
+			e.preventDefault();
+
+			pageNavigate(e.target.getAttribute('href'));
+		}
+	});
+}
+
+/* Assign components */
+data.components.settings = new componentSettings();
+data.components.gallery = new componentGallery();
+data.components.bind = new componentBind();
 data.components.filter = componentFilter;
 
-/* Create gallery component instance */
-data.components.gallery = new componentGallery();
-
-/* Create bind component instance */
-data.components.bind = new componentBind();
-
-/* Store bind functions to main */
+/* Create references for bind functions*/
 data.components.main.bind = data.components.bind.load;
 data.components.main.unbind = data.components.bind.unbind;
 
@@ -364,13 +470,13 @@ data.components.main.bind();
 data.components.main.dates.load();
 
 /* Reset filter input */
-document.body.querySelector(':scope > .filter-container > input[type="text"]').value = '';
+document.body.querySelector(':scope > .filterContainer > input[type="text"]').value = '';
 
 /* Create menu */
 let menu = data.components.main.menu.create();
 
 /* Get top bar height */
-let height = document.querySelector('body > div.top-bar').offsetHeight;
+let height = document.querySelector('body > div.topBar').offsetHeight;
 
 /* Set menu styling to match top bar */
 if(menu && height)

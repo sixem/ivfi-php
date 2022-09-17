@@ -28,7 +28,7 @@ const pipe = data.instances.pipe,
 /**
  * Update functions for settings which require live updating
  */
- const update = {
+const update = {
 	style : {},
 	gallery : {}
 };
@@ -154,7 +154,7 @@ update.gallery.listAlignment = (alignment) =>
 {
 	if(data.instances.gallery)
 	{
-		let parent = document.body.querySelector(':scope > div.gallery-root > div.gallery-content');
+		let parent = document.body.querySelector(':scope > div.rootGallery > div.galleryContent');
 
 		parent.classList[alignment === 0 ? 'remove' : 'add']('reversed');
 
@@ -175,8 +175,8 @@ update.gallery.reverseOptions = (value) =>
 	{
 		data.instances.gallery.options.reverseOptions = value;
 
-		let element = document.body.querySelector('div.gallery-root \
-			> div.gallery-content > div.media > div.wrapper > div.cover .reverse');
+		let element = document.body.querySelector('div.rootGallery \
+			> div.galleryContent > div.media > div.wrapper > div.cover .reverse');
 
 		if(element)
 		{
@@ -192,8 +192,8 @@ update.gallery.fitContent = (value) =>
 		data.instances.gallery.options.fitContent = value;
 
 		/* Get gallery wrapper */
-		let wrapper = document.body.querySelector('div.gallery-root \
-			> div.gallery-content > div.media > div.wrapper');
+		let wrapper = document.body.querySelector('div.rootGallery \
+			> div.galleryContent > div.media > div.wrapper');
 
 		if(wrapper && value)
 		{
@@ -431,7 +431,6 @@ export default class componentSettings
 		options.set(options.gather(element), client);
 
 		data.components.settings.close();
-
 		data.layer.main.update();
 	}
 
@@ -453,8 +452,8 @@ export default class componentSettings
 			delete this.events;
 		}
 
-		document.body.querySelectorAll(':scope > div.focus-overlay, \
-			:scope > div.settings-container').forEach((element) =>
+		document.body.querySelectorAll(':scope > div.focusOverlay, \
+			:scope > div.settingsContainer').forEach((element) =>
 		{
 			element.remove();
 		});
@@ -596,7 +595,7 @@ export default class componentSettings
 	 */
 	show = () =>
 	{
-		if(document.body.querySelector(':scope > div.settings-container'))
+		if(document.body.querySelector(':scope > div.settingsContainer'))
 		{
 			return;
 		}
@@ -607,10 +606,10 @@ export default class componentSettings
 
 		let sections = [];
 
-		if(!document.body.querySelector(':scope > div.focus-overlay'))
+		if(!document.body.querySelector(':scope > div.focusOverlay'))
 		{
 			let overlay = DOM.new('div', {
-				class : 'focus-overlay'
+				class : 'focusOverlay'
 			});
 
 			document.body.appendChild(overlay);
@@ -624,7 +623,7 @@ export default class componentSettings
 		}
 
 		let container = DOM.new('div', {
-			class : 'settings-container'
+			class : 'settingsContainer'
 		});
 
 		sections.push(this.getSectionMain());
@@ -705,4 +704,4 @@ export default class componentSettings
 			});
 		});
 	}
-};
+}

@@ -29,7 +29,7 @@ let debounceTimer = null;
 events.handleTopBarVisibility = () =>
 {
 	let path = selector.use('PATH'),
-		top = document.body.querySelector(':scope > div.top-bar > div.directory-info > div.quick-path'),
+		top = document.body.querySelector(':scope > div.topBar > div.directoryInfo > div.quickPath'),
 		visible = getScrollTop() < (path.offsetTop + path.offsetHeight);
 
 	if(!visible)
@@ -37,13 +37,13 @@ events.handleTopBarVisibility = () =>
 		if(!top)
 		{
 			top = DOM.new('div', {
-				'class' : 'quick-path',
+				'class' : 'quickPath',
 				'data-view' : 'desktop'
 			});
 
 			top.innerHTML = path.innerHTML;
 
-			document.body.querySelector(':scope > div.top-bar > div.directory-info').append(top);
+			document.body.querySelector(':scope > div.topBar > div.directoryInfo').append(top);
 		}
 
 		if(!top._isVisible)
@@ -180,8 +180,8 @@ export default class componentBind
 	}
 
 	/**
-     * Bind events — Recalled on gallery close
-     */
+	 * Bind events — Recalled on gallery close
+	 */
 	load = () =>
 	{
 		eventHandler.addListener(document, 'keydown', 'mainKeyDown', (e) =>
@@ -205,7 +205,7 @@ export default class componentBind
 			{
 				if(config.get('gallery.enabled') === true)
 				{
-					let container = document.body.querySelector(':scope > div.filter-container');
+					let container = document.body.querySelector(':scope > div.filterContainer');
 
 					if(container.style.display === 'none' ||
 						!(document.activeElement === container.querySelector('input')))
@@ -249,4 +249,4 @@ export default class componentBind
 
 		events.handleTopBarVisibility();
 	}
-};
+}

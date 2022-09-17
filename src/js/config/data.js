@@ -32,14 +32,13 @@ data.text = text;
 data.scrollLock = false;
 
 /* Create data sets object */
-data.sets = {};
-
-/* Set data sets object */
-data.sets.preview = {};
-data.sets.defaults = {};
-data.sets.selection = {};
-data.sets.selected = null;
-data.sets.refresh = false;
+data.sets = {
+	preview: {},
+	defaults: {},
+	selection: {},
+	selected: null,
+	refresh: false
+};
 
 /* Create data components object */
 data.components = {};
@@ -52,32 +51,34 @@ data.instances = {};
 
 /* Create data optimize instances object */
 data.instances.optimize = {
-	main : {
-		enabled : false
+	main: {
+		enabled: false
 	},
-	gallery : {
-		enabled : false
+	gallery: {
+		enabled: false
 	}
 };
 
 /* Create keys */
 data.keys = {
-	escape : 27,
-	pageUp : 33,
-	pageDown : 34,
-	arrowLeft : 37,
-	arrowUp : 38,
-	arrowRight : 39,
-	arrowDown : 40,
-	f : 70,
-	g : 71,
-	l : 76
+	escape: 27,
+	pageUp: 33,
+	pageDown: 34,
+	arrowLeft: 37,
+	arrowUp: 38,
+	arrowRight: 39,
+	arrowDown: 40,
+	f: 70,
+	g: 71,
+	l: 76
 };
 
 /* Create preview data */
-data.preview = {};
-data.preview.volume = 0;
-data.preview.data = null;
+data.preview = {
+	volume: 0,
+	isLoadable: true,
+	data: null
+};
 
 /* Create preview volume */
 if(config.get('mobile') === false &&

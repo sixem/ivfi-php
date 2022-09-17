@@ -1,5 +1,7 @@
-/** Import `cookies`, `swipe` */
+/** Import `cookies` */
 import cookies from 'js-cookie';
+
+/** Import `swipe` */
 import swipe from 'vanilla-swipe';
 
 /** Import `config` */
@@ -52,6 +54,8 @@ export default class galleryClass
 				options[key] = defaults[key];
 			}
 		});
+
+		this.isVisible = null;
 
 		/* Set options */
 		this.options = options;
@@ -150,6 +154,7 @@ export default class galleryClass
 		/* Scrollbreak state */
 		this.data.scrollbreak = false;
 
+		/* Apply prevent default to these keys */
 		this.data.keyPrevent = [
 			data.keys.pageUp,
 			data.keys.pageDown,
@@ -166,8 +171,7 @@ export default class galleryClass
 			type : null
 		};
 
-		this.container = document.body.querySelector(':scope > div.gallery-root');
-
+		this.container = document.body.querySelector(':scope > div.rootGallery');
 		this.items = this.options.filter ? this.filterItems(items) : items;
 
 		if(this.items.length === 0)
@@ -218,6 +222,18 @@ export default class galleryClass
 				reject(new Error(`failed to load image URL: ${src}`));
 			});
 
+			img.addEventListener('load', () =>
+			{
+				let w = img.naturalWidth;
+				let h = img.naturalHeight;
+
+				resolve([src, img, [w, h]]);
+			});
+
+			/*
+
+			[Previous method for returning width and height]
+
 			let timer = setInterval(() =>
 			{
 				let w = img.naturalWidth;
@@ -229,6 +245,8 @@ export default class galleryClass
 					resolve([src, img, [w, h]]);
 				}
 			}, 30);
+
+			*/
 		});
 	}
 
@@ -240,10 +258,9 @@ export default class galleryClass
 		height = ['top', 'bottom'].map((side) =>
 		{
 			return parseInt(style['margin-' + side], 10);
-		})
-		.reduce((total, side) =>
+		}).reduce((total, side) =>
 		{
-			return total + side
+			return total + side;
 		}, height);
 
 		return height > window.innerHeight;
@@ -323,6 +340,7 @@ export default class galleryClass
 		if(bool === true)
 		{
 			document.documentElement.setAttribute('gallery-is-visible', '');
+			this.isVisible = true;
 
 			this.data.body = {
 				'max-height' : body.style['max-height'],
@@ -342,6 +360,7 @@ export default class galleryClass
 			});
 		} else {
 			document.documentElement.removeAttribute('gallery-is-visible');
+			this.isVisible = false;
 
 			if(Object.prototype.hasOwnProperty.call(this.data, 'body'))
 			{
@@ -359,7 +378,7 @@ export default class galleryClass
 
 	exists = () =>
 	{
-		this.container = document.body.querySelector(':scope > div.gallery-root');
+		this.container = document.body.querySelector(':scope > div.rootGallery');
 
 		return this.container ? true : false;
 	}
@@ -383,8 +402,8 @@ export default class galleryClass
 			if(index !== this.data.selected.index)
 			{
 				let elements = this.container.querySelectorAll(
-					':scope > div.gallery-content > div.media > div.wrapper img, \
-					:scope > div.gallery-content > div.media > div.wrapper video'
+					':scope > div.galleryContent > div.media > div.wrapper img, \
+					:scope > div.galleryContent > div.media > div.wrapper video'
 				);
 
 				elements.forEach((element) =>
@@ -412,7 +431,7 @@ export default class galleryClass
 
 		this.limitBody(bool);
 
-		let video = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper video');
+		let video = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper video');
 
 		if(video)
 		{
@@ -469,7 +488,7 @@ export default class galleryClass
 		{
 			this.data.busy = bool;
 
-			let loader = this.container.querySelector(':scope > div.gallery-content > div.media > div.spinner');
+			let loader = this.container.querySelector(':scope > div.galleryContent > div.media > div.spinner');
 
 			if(bool)
 			{
@@ -576,7 +595,7 @@ export default class galleryClass
 	{
 		this.pipe('Populating gallery list ..');
 
-		table = table || this.container.querySelector('div.gallery-content > div.list > table');
+		table = table || this.container.querySelector('div.galleryContent > div.list > table');
 
 		let buffer = new Array();
 
@@ -587,7 +606,7 @@ export default class galleryClass
 
 		table.innerHTML = (buffer.join(''));
 
-		this.list = this.container.querySelector('div.gallery-content > div.list');
+		this.list = this.container.querySelector('div.galleryContent > div.list');
 		this.table = table;
 
 		return table;
@@ -596,9 +615,9 @@ export default class galleryClass
 	update = {
 		listWidth : (wrapper) =>
 		{
-			wrapper = wrapper || this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
+			wrapper = wrapper || this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
 
-			let list = this.data.list ? this.data.list : (this.container.querySelector(':scope > div.gallery-content > div.list')),
+			let list = this.data.list ? this.data.list : (this.container.querySelector(':scope > div.galleryContent > div.list')),
 				width = (this.options.mobile || !list || list.style.display === 'none') ? 0 : list.offsetWidth;
 
 			wrapper.style.setProperty('--width-list', `${width}px`);
@@ -626,7 +645,7 @@ export default class galleryClass
 			return false;
 		}
 
-		let container = this.container.querySelector(':scope > div.gallery-content > div.media .reverse');
+		let container = this.container.querySelector(':scope > div.galleryContent > div.media .reverse');
 
 		if(!container)
 		{
@@ -643,7 +662,7 @@ export default class galleryClass
 
 		container.innerHTML = Object.keys(options).map((site) => `<a class="reverse-link" target="_blank" href="${options[site]}">${site}</a>`).join('');
 
-		this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper > div.cover').append(container);
+		this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper > div.cover').append(container);
 	}
 
 	shortenString = (input, cutoff) =>
@@ -721,8 +740,8 @@ export default class galleryClass
 				return false;
 			}
 
-			let download = this.container.querySelector('.gallery-bar > .gallery-bar__right > a.download'),
-				left = this.container.querySelector(':scope > div.gallery-bar > div.gallery-bar__left'),
+			let download = this.container.querySelector('.galleryBar > .galleryBarRight > a.download'),
+				left = this.container.querySelector(':scope > div.galleryBar > div.galleryBarLeft'),
 				name = this.options.mobile ? this.shortenString(item.name, 30) : item.name,
 				url = this.encodeUrl(item.url);
 
@@ -748,7 +767,7 @@ export default class galleryClass
 			{
 				this.data.blurred = new Array();
 
-				let ignore = ['.gallery-root', 'script', 'noscript', 'style'];
+				let ignore = ['.rootGallery', 'script', 'noscript', 'style'];
 
 				document.body.querySelectorAll(`:scope > div${ignore.map((e) => `:not(${e})`).join('')}`).forEach((element) =>
 				{
@@ -761,7 +780,7 @@ export default class galleryClass
 				{
 					this.data.blurred.forEach((element) =>
 					{
-						element.classList.remove('blur', 'ns');
+						element.classList.remove('blur');
 					});
 				}
 			}
@@ -852,7 +871,7 @@ export default class galleryClass
 		},
 		seek : (i) =>
 		{
-			let video = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper video');
+			let video = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper video');
 
 			if(video)
 			{
@@ -885,14 +904,14 @@ export default class galleryClass
 	{
 		this.pipe('showItem', type, element, src, init, index, data);
 
-		let wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper'),
+		let wrapper = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper'),
 			video, source = null,
 			hasEvented = false;
 
 		let applyChange = (onChange) =>
 		{
 			let elements = this.container.querySelectorAll(':scope > \
-				div.gallery-content > div.media > div.wrapper > div:not(.cover)');
+				div.galleryContent > div.media > div.wrapper > div:not(.cover)');
 
 			elements.forEach((element) =>
 			{
@@ -1060,9 +1079,13 @@ export default class galleryClass
 							video.volume = this.options.volume;
 						}
 
-						if(this.options.autoplay)
+						/* Plays the video if the gallery is visible, otherwise pauses it */
+						if(this.isVisible && this.options.autoplay)
 						{
 							video.play();
+						} else if(!this.isVisible)
+						{
+							video.pause();
 						}
 
 						video.style.display = 'inline-block';
@@ -1070,7 +1093,7 @@ export default class galleryClass
 						/* If the gallery was hidden while loading, pause video and hide loader. */
 						if(this.container.display === 'none')
 						{
-							this.container.querySelector('div.gallery-content .media div.spinner').style.opacity = 0;
+							this.container.querySelector('div.galleryContent .media div.spinner').style.opacity = 0;
 							video.pause();
 						}
 
@@ -1129,7 +1152,7 @@ export default class galleryClass
 
 		let init = null,
 			item = null,
-			contentContainer = this.container.querySelector(':scope > div.gallery-content');
+			contentContainer = this.container.querySelector(':scope > div.galleryContent');
 
 		let image = contentContainer.querySelector(':scope > div.media > div.wrapper img'),
 			video = contentContainer.querySelector(':scope > div.media > div.wrapper video');
@@ -1193,7 +1216,7 @@ export default class galleryClass
 					style : 'display: none'
 				});
 
-				let wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
+				let wrapper = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
 
 				image = DOM.new('img');
 
@@ -1231,15 +1254,15 @@ export default class galleryClass
 				this.busy(false);
 				this.data.selected.index = index;
 
-				this.container.querySelectorAll(':scope > div.gallery-content > div.media > div.wrapper img, \
-					:scope > div.gallery-content > div.media > div.wrapper video').forEach((element) =>
+				this.container.querySelectorAll(':scope > div.galleryContent > div.media > div.wrapper img, \
+					:scope > div.galleryContent > div.media > div.wrapper video').forEach((element) =>
 				{
 					element.style.display = 'none';
 				});
 
-				if(this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper > div:not(.cover)'))
+				if(this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper > div:not(.cover)'))
 				{
-					this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper > div:not(.cover)').remove();
+					this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper > div:not(.cover)').remove();
 				}
 
 				let imageError = DOM.new('div', {
@@ -1263,9 +1286,9 @@ export default class galleryClass
 			if(init)
 			{
 				video = this.video.create(this.data.selected.ext)[0];
-				/* video.appendTo(this.container.find('> div.gallery-content > div.media > div.wrapper')); */
+				/* video.appendTo(this.container.find('> div.galleryContent > div.media > div.wrapper')); */
 
-				this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper').append(video);
+				this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper').append(video);
 			}
 
 			this.showItem(1, video, encoded, init, index);
@@ -1349,7 +1372,7 @@ export default class galleryClass
 
 	toggleList = (element = null) =>
 	{
-		let list = this.container.querySelector(':scope > div.gallery-content > div.list'),
+		let list = this.container.querySelector(':scope > div.galleryContent > div.list'),
 			visible = list.style.display !== 'none',
 			client = user.get();
 
@@ -1359,10 +1382,10 @@ export default class galleryClass
 
 		if(!element)
 		{
-			element = document.body.querySelector('div.gallery-root > div.gallery-bar .gallery-bar__right span[data-action="toggle"]');
+			element = document.body.querySelector('div.rootGallery > div.galleryBar .galleryBarRight span[data-action="toggle"]');
 		}
 
-		element.textContent = `List${visible ? '+' : '-'}`;
+		element.innerHTML = `List<span>${visible ? '+' : '-'}</span>`;
 
 		DOM.css.set(list, {
 			'display' : visible ? 'none' : 'table-cell'
@@ -1383,23 +1406,23 @@ export default class galleryClass
 		this.data.bound = [
 			{
 				event : 'click',
-				trigger : 'body > div.gallery-root > div.gallery-content > div.list table tr'
+				trigger : 'body > div.rootGallery > div.galleryContent > div.list table tr'
 			},
 			{
 				event : 'click',
-				trigger : 'body > div.gallery-root > div.gallery-content > div.media'
+				trigger : 'body > div.rootGallery > div.galleryContent > div.media'
 			},
 			{
 				event : 'DOMMouseScroll mousewheel',
-				trigger : 'body > div.gallery-root > div.gallery-content > div.media'
+				trigger : 'body > div.rootGallery > div.galleryContent > div.media'
 			},
 			{
 				event : 'mouseenter',
-				trigger : 'body > div.gallery-root > div.gallery-content > div.media > div.wrapper > div.cover'
+				trigger : 'body > div.rootGallery > div.galleryContent > div.media > div.wrapper > div.cover'
 			},
 			{
 				event : 'mouseup',
-				trigger : 'body > div.gallery-root'
+				trigger : 'body > div.rootGallery'
 			},
 			{
 				event : 'keydown',
@@ -1419,18 +1442,32 @@ export default class galleryClass
 		{
 			this.data.listDragged = true;
 
-			let windowWidth = window.innerWidth;
-			let	wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
+			let windowWidth = window.innerWidth,
+				wrapper = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
 
+			/* Set cursors and pointer events */
 			DOM.css.set(document.body, {
-				'cursor' : 'w-resize'
+				'cursor': 'w-resize'
 			});
 
 			DOM.css.set(wrapper, {
-				'pointer-events' : 'none'
+				'pointer-events': 'none'
 			});
 
-			eventHandler.addListener('body > div.gallery-root', 'mousemove', 'galleryListMouseMove', (e) =>
+			if(this.list)
+			{
+				DOM.css.set(this.list, {
+					'pointer-events': 'none'
+				});
+			}
+
+			/* Remove `dragged` attribute */
+			if(this.data.listDrag)
+			{
+				this.data.listDrag.setAttribute('dragged', true);
+			}
+
+			eventHandler.addListener('body > div.rootGallery', 'mousemove', 'galleryListMouseMove', (e) =>
 			{
 				let x = e.clientX;
 
@@ -1448,21 +1485,35 @@ export default class galleryClass
 			});
 		});
 
-		eventHandler.addListener('body > div.gallery-root', 'mouseup', 'galleryListMouseUp', () =>
+		eventHandler.addListener('body > div.rootGallery', 'mouseup', 'galleryListMouseUp', () =>
 		{
 			if(this.data.listDragged === true)
 			{
-				eventHandler.removeListener('body > div.gallery-root', 'mousemove', 'galleryListMouseMove');
+				eventHandler.removeListener('body > div.rootGallery', 'mousemove', 'galleryListMouseMove');
 
-				let wrapper = this.container.querySelector(':scope > div.gallery-content > div.media > div.wrapper');
+				let wrapper = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
 
+				/* Unset cursors and pointer events */
 				DOM.css.set(document.body, {
-					'cursor' : ''
+					'cursor': ''
 				});
 
 				DOM.css.set(wrapper, {
-					'pointer-events' : 'auto'
+					'pointer-events': 'auto'
 				});
+
+				if(this.list)
+				{
+					DOM.css.set(this.list, {
+						'pointer-events': 'auto'
+					});
+				}
+
+				/* Remove `dragged` attribute */
+				if(this.data.listDrag)
+				{
+					this.data.listDrag.removeAttribute('dragged');
+				}
 
 				let lw = parseInt(this.data.list.style.width.replace(/[^-\d.]/g, ''));
 
@@ -1487,7 +1538,7 @@ export default class galleryClass
 		});
 
 		/* Add action events */
-		eventHandler.addListener('body > div.gallery-root', 'click', 'galleryContainerClick', (e) =>
+		eventHandler.addListener('body > div.rootGallery', 'click', 'galleryContainerClick', (e) =>
 		{
 			if(e.target && e.target.hasAttribute('data-action'))
 			{
@@ -1515,7 +1566,7 @@ export default class galleryClass
 		});
 
 		/* List item click listener */
-		eventHandler.addListener('body > div.gallery-root > div.gallery-content \
+		eventHandler.addListener('body > div.rootGallery > div.galleryContent \
 			> div.list table', 'click', 'listNavigateClick', (e) =>
 		{
 			if(e.target.tagName == 'TD')
@@ -1529,7 +1580,7 @@ export default class galleryClass
 		});
 
 		/* Gallery media click listener */
-		eventHandler.addListener('body > div.gallery-root > div.gallery-content \
+		eventHandler.addListener('body > div.rootGallery > div.galleryContent \
 			> div.media', 'click', 'mediaClick', (e) =>
 		{
 			/* Hide gallery if media background is clicked */
@@ -1558,7 +1609,7 @@ export default class galleryClass
 
 			/* Create swipe events */
 			let swipeInstance = new swipe({
-				element: document.querySelector('body > div.gallery-root'),
+				element: document.querySelector('body > div.rootGallery'),
 				onSwiped: handler,
 				mouseTrackingEnabled: true
 			});
@@ -1566,8 +1617,8 @@ export default class galleryClass
 			swipeInstance.init();
 		}
 
-		eventHandler.addListener('body > div.gallery-root \
-			> div.gallery-content > div.media', ['DOMMouseScroll', 'mousewheel'], 'galleryKeyUp', (e) =>
+		eventHandler.addListener('body > div.rootGallery \
+			> div.galleryContent > div.media', ['DOMMouseScroll', 'mousewheel'], 'galleryKeyUp', (e) =>
 		{
 			if(this.options.scrollInterval > 0 && this.data.scrollbreak === true)
 			{
@@ -1638,10 +1689,17 @@ export default class galleryClass
 			}));
 
 			/* Create `list toggle` button */
-			bar.append(DOM.new('span', {
+			let listToggle = DOM.new('span', {
 				'data-action' : 'toggle',
-				'text' : this.options.list.show ? 'List-' : 'List+'
+				'text' : 'List'
+			});
+
+			listToggle.append(DOM.new('span', {
+				'text' : this.options.list.show ? '-' : '+'
 			}));
+
+			/* Create `list toggle` button */
+			bar.append(listToggle);
 		}
 
 		/* Create `close` button */
@@ -1668,31 +1726,31 @@ export default class galleryClass
 
 		/* Create main container */
 		this.container = DOM.new('div', {
-			class : 'gallery-root'
+			class : 'rootGallery'
 		});
 
 		document.body.prepend(this.container);
 
 		/* Create gallery top bar */
 		let top = DOM.new('div', {
-			class : 'gallery-bar'
+			class : 'galleryBar'
 		});
 
 		this.container.append(top);
 
 		/* Create left area of top bar */
 		top.append(DOM.new('div', {
-			class : 'gallery-bar__left'
+			class : 'galleryBarLeft'
 		}));
 
 		/* Create right area of top bar */
 		top.append(this.barConstruct(DOM.new('div', {
-			class : 'gallery-bar__right'
+			class : 'galleryBarRight'
 		})));
 
 		/* Create content (media) outer container */
 		let content = DOM.new('div', {
-			class : 'gallery-content' + (this.options.list.reverse ? ' reversed' : '')
+			class : 'galleryContent' + (this.options.list.reverse ? ' reversed' : '')
 		});
 
 		this.container.append(content);
@@ -1756,12 +1814,12 @@ export default class galleryClass
 		if(this.options.mobile === true)
 		{
 			let navigateLeft = DOM.new('div', {
-				'class' : 'screen-navigate left',
+				'class' : 'screenNavigate navigateLeft',
 				'data-action' : 'previous'
 			});
 
 			let navigateRight = DOM.new('div', {
-				'class' : 'screen-navigate right',
+				'class' : 'screenNavigate navigateRight',
 				'data-action' : 'next'
 			});
 
@@ -1793,4 +1851,4 @@ export default class galleryClass
 
 		callback(true);
 	}
-};
+}

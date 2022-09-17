@@ -247,7 +247,7 @@ exports.showVolumeIndicator = (volume) =>
 {
 	clearTimeout(timerVolumeIndicator);
 
-	let container = document.body.querySelector(':scope > div#indicator__preview-volume');
+	let container = document.body.querySelector(':scope > div#indicatorPreviewVolume');
 
 	/* Create text */
 	volume = (volume === 0 ? 'Muted' : `Volume: ${volume}%`);
@@ -256,7 +256,7 @@ exports.showVolumeIndicator = (volume) =>
 	{
 		/* Create element if non-existant */
 		container = exports.DOM.new('div', {
-			id : 'indicator__preview-volume',
+			id : 'indicatorPreviewVolume',
 			text : volume
 		});
 

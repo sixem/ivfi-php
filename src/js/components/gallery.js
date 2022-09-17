@@ -181,4 +181,4 @@ export default class componentGallery
 			});
 		}
 	}
-};
+}

@@ -10,8 +10,7 @@ export default class selectorClass
 {
 	constructor()
 	{
-		this.data = new Object();
-
+		this.data = {};
 		this.init();
 
 		return this;
@@ -19,12 +18,12 @@ export default class selectorClass
 
 	init = () =>
 	{
-		let definitions = new Object();
+		let definitions = {};
 
-		definitions['FILTER_INPUT'] = (':scope > div.filter-container > input[type="text"]');
-		definitions['TOP_EXTEND'] = (':scope > div.top-bar > div.extend');
-		definitions['TABLE_CONTAINER'] = (':scope > div.table-container');
-		definitions['TABLE'] = (':scope > div.table-container > table');
+		definitions['FILTER_INPUT'] = (':scope > div.filterContainer > input[type="text"]');
+		definitions['TOP_EXTEND'] = (':scope > div.topBar > div.extend');
+		definitions['TABLE_CONTAINER'] = (':scope > div.tableContainer');
+		definitions['TABLE'] = (':scope > div.tableContainer > table');
 		definitions['PATH'] = (':scope > div.path');
 
 		Object.keys(definitions).forEach((key) =>
