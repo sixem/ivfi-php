@@ -1,7 +1,7 @@
 /* https://github.com/kvz/locutus/blob/master/src/php/datetime/date.js
  * Copyright (c) 2007-2016 Kevin van Zonneveld (https://kvz.io) ) */
 
-export const formatDate = (format, timestamp) =>
+export const formatDate = (format: string, timestamp: number): string =>
 {
 	let jsdate, f, txtWords = [
 		'Sun', 'Mon', 'Tues', 'Wednes', 'Thurs', 'Fri', 'Satur',
@@ -11,7 +11,7 @@ export const formatDate = (format, timestamp) =>
 
 	let formatChrCb = (t, s) => f[t] ? f[t]() : s;
 
-	let _pad = (n, c) =>
+	let _pad = (n: string | number, c: number) =>
 	{
 		n = String(n);
 		while(n.length < c) n = '0' + n;
@@ -29,22 +29,22 @@ export const formatDate = (format, timestamp) =>
 			let j = f.j();
 			let	i = j % 10;
 
-			if(i <= 3 && parseInt((j % 100) / 10, 10) === 1) i = 0;
+			if(i <= 3 && parseInt(((j % 100) / 10).toString(), 10) === 1) i = 0;
 
 			return ['st', 'nd', 'rd'][i - 1] || 'th';
 		},
 		w: () => jsdate.getDay(),
 		z: () =>
 		{
-			let a = new Date(f.Y(), f.n() - 1, f.j());
-			let	b = new Date(f.Y(), 0, 1);
+			let a: any = new Date(f.Y(), f.n() - 1, f.j());
+			let	b: any = new Date(f.Y(), 0, 1);
 
 			return Math.round((a - b) / 864e5);
 		},
 		W: () =>
 		{
-			let a = new Date(f.Y(), f.n() - 1, f.j() - f.N() + 3);
-			let	b = new Date(a.getFullYear(), 0, 4);
+			let a: any = new Date(f.Y(), f.n() - 1, f.j() - f.N() + 3);
+			let	b: any = new Date(a.getFullYear(), 0, 4);
 
 			return _pad(1 + Math.round((a - b) / 864e5 / 7), 2);
 		},
@@ -57,7 +57,7 @@ export const formatDate = (format, timestamp) =>
 		{
 			let j = f.Y();
 
-			return j % 4 === 0 & j % 100 !== 0 | j % 400 === 0;
+			return j % 4 === 0 && j % 100 !== 0 || j % 400 === 0;
 		},
 		o: () =>
 		{
@@ -93,10 +93,10 @@ export const formatDate = (format, timestamp) =>
 		},
 		I: () =>
 		{
-			let a = new Date(f.Y(), 0);
-			let	c = Date.UTC(f.Y(), 0);
-			let	b = new Date(f.Y(), 6);
-			let	d = Date.UTC(f.Y(), 6);
+			let a: any = new Date(f.Y(), 0);
+			let	c: any = Date.UTC(f.Y(), 0);
+			let	b: any = new Date(f.Y(), 6);
+			let	d: any = Date.UTC(f.Y(), 6);
 
 			return ((a - c) !== (b - d)) ? 1 : 0;
 		},
@@ -120,7 +120,7 @@ export const formatDate = (format, timestamp) =>
 		U: () => jsdate / 1000 | 0
 	};
 
-	let _date = (format, timestamp) =>
+	let _date = (format: any, timestamp: any): string =>
 	{
 		jsdate = (timestamp === undefined ? new Date()
 			: (timestamp instanceof Date) ? new Date(timestamp)

@@ -1,47 +1,49 @@
-/** Import `hoverPreview` */
+/** Vendors */
 import hoverPreview from './vendors/hover-preview/hover-preview';
-
-/** Import `config` */
+/** Config */
 import { config } from './config/config';
-
-/** Import `data` */
 import data from './config/data';
-
-/** Import `eventHandler` */
-import eventHandler from './modules/event-handler';
-
-/** Import `eventHooks` */
-import eventHooks from './modules/event-hooks';
-
-/** Import `optimizeClass` */
+/** Modules */
+import { log } from './modules/logger';
+import { eventHooks } from './modules/event-hooks';
+/** Classes */
 import optimizeClass from './classes/optimize';
+/** Components */
+import {
+	componentGallery,
+	componentSettings,
+	componentFilter,
+	componentBind,
+	componentMain
+} from './components';
 
-/** Import `optimizeClass` */
-import componentGallery from './components/gallery';
+/** Helpers */
+import {
+	DOM,
+	debounce,
+	setVideoVolume,
+	identifyExtension,
+	stripUrl
+} from './helpers';
 
-/** Import `componentSettings` */
-import componentSettings from './components/settings';
+/** Types */
+import {
+	ITableRowMI,
+	IPreviewAnchor,
+	TOnPreviewLoad,
+	TPreviewOptions,
+	TExtensionArray,
+	IWindowGlobals,
+	IDocumentGlobals
+} from './types';
 
-/** Import `componentFilter` */
-import componentFilter from './components/filter';
-
-/** Import `componentBind` */
-import componentBind from './components/bind';
-
-/** Import `componentMain` */
-import componentMain from './components/';
-
-/** Import `helpers.*` */
-import * as helpers from './modules/helpers';
-
-/** Import stylesheets */
+/** Stylesheets */
 import '../css/root.scss';
 import '../css/fonts.scss';
 import '../css/main.scss';
 
 /* References */
-const selector = data.instances.selector,
-	pipe = data.instances.pipe;
+const selector = data.instances.selector;
 
 /* Disable media play */
 try
@@ -49,7 +51,7 @@ try
 	navigator.mediaSession.setActionHandler('play', () => {});
 } catch(error)
 {
-	pipe(error);
+	log('error', error);
 }
 
 /* Set main component in data */
@@ -65,7 +67,7 @@ data.layer.main = {
  	*/
 	update : () =>
 	{
-		let table = selector.use('TABLE_CONTAINER');
+		let table = (selector.use('TABLE_CONTAINER') as HTMLElement);
 
 		data.layer.main.windowHeight = window.innerHeight;
 		data.layer.main.windowWidth = window.innerWidth;
@@ -99,15 +101,15 @@ if(config.get('performance'))
 
 	setTimeout(() =>
 	{
-		requestAnimationFrame(() =>
+		requestAnimationFrame((): void =>
 		{
 			/* Create optimize instance */
 			data.instances.optimize.main = new optimizeClass({
-				page : data.layer.main,
-				table : selector.use('TABLE'),
-				scope : [window, 'scrollY'],
-				padding : 10,
-				on : {
+				page: data.layer.main,
+				table: selector.use('TABLE') as HTMLElement,
+				scope: [window, 'scrollY'],
+				padding: 10,
+				on: {
 					rowChange: onRowChange
 				}
 			});
@@ -115,49 +117,55 @@ if(config.get('performance'))
 	}, 1);
 }
 
-/* Menu click event */
-eventHandler.addListener(selector.use('TOP_EXTEND'), 'click', 'sortClick', (e) =>
+/**
+ * Menu click event
+ */
+eventHooks.listen(selector.use('TOP_EXTEND'), 'click', 'sortClick', (e) =>
 {
 	data.components.main.menu.toggle(e.currentTarget);
 });
 
-/* Filter change event */
-eventHandler.addListener(selector.use('FILTER_INPUT'), 'input', 'filterInput', (e) =>
+/**
+ * Filter change event
+ */
+eventHooks.listen(selector.use('FILTER_INPUT'), 'input', 'filterInput', (e) =>
 {
 	data.components.filter.apply(e.currentTarget.value);
 });
 
-/* Item click event (show gallery if enabled and table sort) */
-eventHandler.addListener(selector.use('TABLE'), 'click', 'sortClick', (e) =>
+/**
+ * Item click event (show gallery if enabled and table sort)
+ */
+eventHooks.listen(selector.use('TABLE'), 'click', 'sortClick', (event: MouseEvent) =>
 {
-	if(e.target.tagName == 'SPAN' && e.target.hasAttribute('sortable'))
-	{
-		data.components.main.sortTableColumn(e.target);
+	let eventTarget: HTMLElement = event.target as HTMLElement;
 
-	} else if(config.get('gallery.enabled') === true && e.target.tagName == 'A' && e.target.className == 'preview')
+	if(eventTarget.tagName === 'SPAN'
+		&& eventTarget.hasAttribute('sortable'))
 	{
-		e.preventDefault();
+		data.components.main.sortTableColumn(eventTarget);
 
-		let index = 0;
+	} else if(config.get('gallery.enabled') === true
+		&& eventTarget.tagName === 'A'
+		&& eventTarget.className == 'preview')
+	{
+		event.preventDefault();
+
+		let index: number = 0;
 
 		if(data.instances.optimize.main.enabled)
 		{
 			/* Get `tr` parent */
-			let parent = e.target.closest('tr');
+			let parent: ITableRowMI = (eventTarget.closest('tr') as HTMLElement);
 
 			/* Check for a index property, use as index if found */
-			if(parent._mediaIndex)
-			{
-				index = parent._mediaIndex;
-			}
-
+			if(parent._mediaIndex) index = parent._mediaIndex;
 		} else {
-			selector.use('TABLE').querySelectorAll('tr.file:not(.filtered) a.preview').forEach((element, i) =>
+			(selector.use('TABLE') as HTMLElement).querySelectorAll(
+				'tr.file:not(.filtered) a.preview'
+			).forEach((element: HTMLAnchorElement, i: number) =>
 			{
-				if(e.target === element)
-				{
-					index = i;
-				}
+				if(eventTarget === element) index = i;
 			});
 		}
 
@@ -165,17 +173,19 @@ eventHandler.addListener(selector.use('TABLE'), 'click', 'sortClick', (e) =>
 	}
 });
 
-/* Recheck mobile sizing on resize */
-eventHandler.addListener(window, 'resize', 'windowResize', helpers.debounce(() =>
+/**
+ * Recheck mobile sizing on resize
+ */
+eventHooks.listen(window, 'resize', 'windowResize', debounce((): void =>
 {
-	pipe('windowResize (main)', 'Resized.');
+	log('event', 'windowResize (main)', 'Resized.');
 
 	config.set('mobile', Modernizr.mq('(max-width: 640px)'));
 
 	if(data.instances.gallery)
 	{
-		(data.instances.gallery).options.mobile = config.get('mobile');
-		(data.instances.gallery).update.listWidth();
+		data.instances.gallery.options.mobile = config.get('mobile');
+		data.instances.gallery.update.listWidth();
 	}
 
 	/* Update page values */
@@ -188,30 +198,35 @@ eventHandler.addListener(window, 'resize', 'windowResize', helpers.debounce(() =
 	}
 }));
 
-/* Create preview events if enabled (and not on mobile) */
-if(config.get('mobile') === false && config.get('preview.enabled') === true)
+/**
+ * Create preview events if enabled (and not on mobile)
+ */
+if(config.get('mobile') === false
+	&& config.get('preview.enabled') === true)
 {
 	let previews = {},
 		resume = null,
 		timerReadyState = null;
 
-	let onLoaded = (e) =>
+	let onLoaded = (event: TOnPreviewLoad) =>
 	{
-		pipe('previewLoad', e);
+		log('preview', 'Preview loaded =>', event);
 
-		if(data.preview.data && data.preview.data.element)
+		if(data.preview.data
+			&& data.preview.data.element)
 		{
 			data.preview.data.element.remove();
 		}
 
-		if(!data.preview.isLoadable)
-		{
-			return null;
-		}
+		if(!data.preview.isLoadable) return null;
 
-		let [element, type, src] = [e.element, e.type, e.src];
+		let [element, type, src] = [
+			event.element,
+			event.type,
+			event.src
+		];
 
-		data.preview.data = e;
+		data.preview.data = event;
 
 		/* Clear timer */
 		clearInterval(timerReadyState);
@@ -221,21 +236,21 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 			/* If a resume is set, then set currentTime */
 			if(resume && resume.src === src)
 			{
-				element.currentTime = resume.timestamp;
+				(element as HTMLVideoElement).currentTime = resume.timestamp;
 			} else {
 				resume = null;
 			}
 
 			/* Set stored preview volume */
-			helpers.setVideoVolume(element, data.preview.volume / 100, false);
+			setVideoVolume((element as HTMLVideoElement), data.preview.volume / 100, false);
 
 			/* Check for valid readystate (4, 3, 2) before we show the video */
 			timerReadyState = setInterval(() =>
 			{
-				if(element.readyState > 1)
+				if((element as HTMLVideoElement).readyState > 1)
 				{
 					/* Show video */
-					helpers.DOM.css.set(element, {
+					DOM.style.set(element, {
 						visibility : 'visible'
 					});
 
@@ -249,9 +264,9 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 		}
 
 		/* Store timestamp if exists */
-		if(Object.prototype.hasOwnProperty.call(e, 'timestamp'))
+		if(Object.prototype.hasOwnProperty.call(event, 'timestamp'))
 		{
-			let timestamp = e.timestamp;
+			let timestamp = event.timestamp;
 
 			resume = {
 				src,
@@ -260,7 +275,7 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 		}
 
 		/* If video is audible, enable scrollLock */
-		if(e.loaded && e.audible)
+		if(event.loaded && event.audible)
 		{
 			data.scrollLock = true;
 		} else {
@@ -268,19 +283,21 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 		}
 	};
 
-	let createPreview = (element) =>
+	let createPreview = (element: IPreviewAnchor) =>
 	{
-		let src = element.getAttribute('href'),
-			extensions = config.get('extensions'),
-			identified = helpers.identifyExtension(helpers.stripUrl(src), {
-				image : extensions.image,
-				video : extensions.video
-			});
+		let src: string = element.getAttribute('href');
+		let extensions: TExtensionArray = config.get('extensions');
+
+		let identified = identifyExtension(stripUrl(src), {
+			image: extensions.image,
+			video: extensions.video
+		});
 
 		if(identified)
 		{
-			let [extension, type] = identified,
-				options = {};
+			let [extension, type] = identified;
+
+			let options: TPreviewOptions = {};
 
 			/* Delay prior to showing preview */
 			options.delay = config.get('preview.hoverDelay');
@@ -311,21 +328,18 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 	let previewable = document.querySelectorAll('body > div.tableContainer > table > tbody > tr.file > td > a.preview');
 
 	/* Set preview indexes */
-	previewable.forEach((preview, index) =>
+	previewable.forEach((preview: IPreviewAnchor, index) =>
 	{
 		preview.itemIndex = index;
 
-		if(index === 0)
-		{
-			createPreview(preview);
-		}
+		if(index === 0) createPreview(preview);
 	});
 
 	/* Add preview hover listener */
-	eventHandler.addListener(selector.use('TABLE'), 'mouseover', 'previewMouseEnter', (e) =>
+	eventHooks.listen(selector.use('TABLE'), 'mouseover', 'previewMouseEnter', (e) =>
 	{
 		/* Check if element is `a` element with a preview class */
-		if(e.target.tagName == 'A' && e.target.className == 'preview')
+		if(e.target.tagName === 'A' && e.target.className == 'preview')
 		{
 			let index = (e.target.itemIndex);
 
@@ -339,11 +353,24 @@ if(config.get('mobile') === false && config.get('preview.enabled') === true)
 
 if(config.get('singlePage'))
 {
-	const pageNavigate = (location) =>
+	let isNavigating = false;
+
+	const pageNavigate = (location: string, pushState: boolean = true) =>
 	{
+		if(isNavigating)
+		{
+			return;
+		} else {
+			isNavigating = true;
+		}
+		
 		/* Get location data */
 		let windowProtocol = window.location.protocol,
-			windowHostName = window.location.hostname,
+			windowPort = window.location.port,
+			windowHostName = window.location.hostname + (
+				(windowPort && windowPort !== '80'
+					|| windowPort !== '443') ? ':' + windowPort : ''
+			),
 			windowSubPath = location.replace(/([^:]\/)\/+/g, '$1').replace(/^\/|\/$/g, '');
 
 		/* Construct upcoming title and URL */
@@ -359,10 +386,31 @@ if(config.get('singlePage'))
 		data.preview.isLoadable = false;
 
 		/* Create spinner */
-		let indicator = document.createElement('div');
+		let indicator: HTMLElement = document.createElement('div');
 		indicator.classList.add('navigateLoad');
 		document.body.prepend(indicator);
-		setTimeout(() => indicator.style.opacity = 1 , 10);
+
+		setTimeout(() => indicator.style.opacity = '1', 10);
+
+		/**
+		 * [Resets the loading state]
+		 * 
+		 * Even though every attempt at navigating will
+		 * result in either a successful "redirect" or a forced
+		 * redirect through `window.location` replacing, browsers
+		 * will still save the state of the previous page in the cache.
+		 * 
+		 * This can result in a stalled loading state when navigating
+		 * backwards in the browser after a failed navigation attempt.
+		 * 
+		 * This resets that state specifically for these scenarios.
+		 */
+		let resetNavigate = () =>
+		{
+			isNavigating = false;
+			indicator.remove();
+			data.preview.isLoadable = true;
+		}
 
 		/* Fetch new document */
 		fetch(`/${windowSubPath}/`, {
@@ -376,46 +424,67 @@ if(config.get('singlePage'))
 		{
 			/* Check if the correct response headers are set
 			 * This removes any accidental navigates to unknown sources */
-			if(response.headers.get('navigateType') === 'dynamic')
+			if(response.headers.get('navigate-type') === 'dynamic')
 			{
-				pipe('Valid header. Navigating pages ..');
+				log('main', 'Valid header. Navigating pages ..');
 				
 				response.text().then((content) =>
 				{
+					/**
+					 * Clear any low-level DOM `eventHooks`, as these properties
+					 * will not be reset on `document.write()` call
+					 */
+					(document as IDocumentGlobals).eventHooks = null;
+					(window as IWindowGlobals).eventHooks = null;
+
 					/* Update URL */
-					window.history.pushState({
-						path: '/' + windowSubPath
-					}, nextTitle, nextLocation);
+					if(pushState)
+					{
+						window.history.pushState({
+							path: '/' + windowSubPath
+						}, nextTitle, nextLocation);
+					}
 	
 					/* Write changes to document */
 					document.open();
 					document.write(content);
 					document.close();
 
+					/* Scroll to top */
 					window.scrollTo({
 						top: 0,
-						behavior: 'smooth'
+						behavior: 'auto'
 					});
 				});
 			} else {
+				resetNavigate();
+
 				/* Incorrect document type - fallback to normal redirection */
 				window.location.replace(nextLocation);
 			}
 		}).catch(() =>
 		{
+			resetNavigate();
+
 			/* Fallback to a normal redirection */
 			window.location.replace(nextLocation);
 		});
 	};
 
-	eventHooks.subscribe(selector.use('TABLE'), 'click', 'tableClick', (e) =>
+	eventHooks.listen(window, 'popstate', 'mainPopState', () =>
 	{
-		if(e.target.tagName == 'A')
+		pageNavigate(window.location.pathname, false);
+	})
+
+	eventHooks.listen(selector.use('TABLE'), 'click', 'tableClick', (e) =>
+	{
+		if(e.target.tagName === 'A')
 		{
 			let parent = e.target.closest('tr');
 	
-			if(parent &&
-				(parent.classList.contains('directory') || parent.classList.contains('parent')))
+			if(parent
+				&& (parent.classList.contains('directory')
+				|| parent.classList.contains('parent')))
 			{
 				e.preventDefault();
 
@@ -427,28 +496,28 @@ if(config.get('singlePage'))
 	let quickPath = document.body.querySelector(':scope > div.topBar > div.directoryInfo'),
 		topBar = document.body.querySelector(':scope > div.path');
 
-	eventHooks.subscribe(quickPath, 'click', 'quickPathClick', (e) =>
+	eventHooks.listen(quickPath, 'click', 'quickPathClick', (event: MouseEvent) =>
 	{
-		if(e.target.tagName == 'A')
+		if((event.target as HTMLElement).tagName === 'A')
 		{
-			let parent = e.target.parentNode;
+			let parent = ((event.target as HTMLElement).parentNode as HTMLElement);
 
 			if(parent && parent.classList.contains('quickPath'))
 			{
-				e.preventDefault();
+				event.preventDefault();
 
-				pageNavigate(e.target.getAttribute('href'));
+				pageNavigate((event.target as HTMLElement).getAttribute('href'));
 			}
 		}
 	});
 
-	eventHooks.subscribe(topBar, 'click', 'pathClick', (e) =>
+	eventHooks.listen(topBar, 'click', 'pathClick', (event: MouseEvent) =>
 	{
-		if(e.target.tagName == 'A')
+		if((event.target as HTMLElement).tagName === 'A')
 		{
-			e.preventDefault();
+			event.preventDefault();
 
-			pageNavigate(e.target.getAttribute('href'));
+			pageNavigate((event.target as HTMLElement).getAttribute('href'));
 		}
 	});
 }
@@ -459,7 +528,7 @@ data.components.gallery = new componentGallery();
 data.components.bind = new componentBind();
 data.components.filter = componentFilter;
 
-/* Create references for bind functions*/
+/* Create references for bind functions */
 data.components.main.bind = data.components.bind.load;
 data.components.main.unbind = data.components.bind.unbind;
 
@@ -470,18 +539,22 @@ data.components.main.bind();
 data.components.main.dates.load();
 
 /* Reset filter input */
-document.body.querySelector(':scope > .filterContainer > input[type="text"]').value = '';
+(document.body.querySelector(
+	':scope > .filterContainer > input[type="text"]'
+) as HTMLInputElement).value = '';
 
 /* Create menu */
 let menu = data.components.main.menu.create();
 
 /* Get top bar height */
-let height = document.querySelector('body > div.topBar').offsetHeight;
+let height = (document.querySelector(
+	'body > div.topBar'
+) as HTMLDivElement).offsetHeight;
 
 /* Set menu styling to match top bar */
 if(menu && height)
 {
-	helpers.DOM.css.set(menu, {
+	DOM.style.set(menu, {
 		top : `${height}px`,
 		visibility : 'unset',
 		display : 'none'
@@ -494,4 +567,18 @@ componentMain.sort.load();
 /* Remove loading state */
 document.body.removeAttribute('is-loading');
 
-pipe('Config', config.data);
+/* Listen to gallery `bound` event */
+eventHooks.subscribe('galleryBound', 'mainUnbind', () =>
+{
+	/* Gallery is bound, unbind main event handlers */
+	data.components.main.unbind();
+});
+
+/* Listen to gallery `unbound` event */
+eventHooks.subscribe('galleryUnbound', 'mainBind', () =>
+{
+	/* Gallery is unbound, rebind main event handlers */
+	data.components.main.bind();
+});
+
+log('main', 'Config loaded =>', config.data);

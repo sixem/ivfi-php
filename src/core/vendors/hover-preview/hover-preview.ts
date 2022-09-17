@@ -9,15 +9,23 @@ import {
 } from './events';
 
 const defaults = {
-	delay : 75,
-	encodeAll : false,
-	cursor : true,
-	force : null
+	delay: 75,
+	encodeAll: false,
+	cursor: true,
+	force: null
 };
 
 class hoverPreview
 {
-	constructor(element, options = {})
+	public element: HTMLElement;
+
+	public options: object;
+
+	private events: any;
+
+	private handle: any;
+
+	constructor(element: HTMLElement, options: object = {})
 	{
 		if(!element)
 		{
@@ -62,7 +70,7 @@ function setup()
 		force : null
 	};
 
-	this.data.on = new Object();
+	this.data.on = {};
 
 	if(typeof this.options.on === 'object' && this.options.on !== null)
 	{

@@ -114,7 +114,7 @@ export function createContainer()
 
 function encodeUrl(input)
 {
-	return this.options.encodeAll ? encodeURI(input).replace('#', '%23').replace('?', '%3F') : encodeURI(input);
+	return this.options.encodeAll ? input.replace('#', '%23').replace('?', '%3F') : encodeURI(input);
 }
 
 function isAudible(video)
@@ -247,10 +247,12 @@ export function loadVideo(src, callback)
 				console.error(error);
 			}
 		}
-	}; 
+	};
 
-	video.onloadedmetadata = function()
+	video.onloadedmetadata = function(event)
 	{
+		let eventTarget: HTMLVideoElement = event.target as HTMLVideoElement;
+
 		if(!_this.active)
 		{
 			callback(false);
@@ -258,6 +260,6 @@ export function loadVideo(src, callback)
 			return;
 		}
 
-		callback(video, [this.videoWidth, this.videoHeight]);
+		callback(video, [eventTarget.videoWidth, eventTarget.videoHeight]);
 	}; 
 }

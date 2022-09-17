@@ -1,91 +1,87 @@
-/** Import `cookies` */
+/* Vendors */
 import cookies from 'js-cookie';
-
-/** Import `modernizr-mq` to `window` */
 import '../vendors/modernizr/modernizr-mq';
+/* Modules */
+import { setNestedPath, getNestedPath, checkNestedPath, } from '../helpers';
 
-/** Import `setNestedPath`, `getNestedPath`, `checkNestedPath` */
-import {
-	setNestedPath,
-	getNestedPath,
-	checkNestedPath,
-} from '../modules/helpers';
+/* Constants */
+import { CookieKey, ScriptDataId } from '../constant';
 
-/* Config object */
-const config = {};
+/* Types */
+import { TConfigCapsule, TUserClient, TUserStorage } from '../types';
 
-/* User (client) object */
-const user = {};
+const config: TConfigCapsule = {};
+const user: TUserClient = {};
 
-config.init = () =>
+config.init = (): void =>
 {
-	config.data = JSON.parse(document.getElementById('__INDEXER_DATA__').innerHTML);
+	config.data = JSON.parse(document.getElementById(ScriptDataId).innerHTML);
 	config.data.mobile = Modernizr.mq('(max-width: 640px)');
 };
 
-config.isMobile = () =>
+config.isMobile = (): boolean =>
 {
 	return config.data.mobile;
 };
 
-config.exists = (path) =>
+config.exists = (path: string): boolean =>
 {
 	return checkNestedPath(config.data, path);
 };
 
-config.set = (path, value) =>
+config.set = (path: string, value: any): boolean =>
 {
 	return setNestedPath(config.data, path, value);
 };
 
-config.get = (path) =>
+config.get = (path: string): any =>
 {
 	return getNestedPath(config.data, path, null);
 };
 
-user.set = (client, options = {}) =>
+user.set = (client: TUserStorage, options: TUserStorage = {}): void =>
 {
 	options = Object.assign({
 		sameSite : 'lax',
 		expires : 365
 	}, options);
 
-	cookies.set('ei-client', JSON.stringify(client), options);
+	cookies.set(CookieKey, JSON.stringify(client), options);
 };
 
-user.getDefaults = () =>
+user.getDefaults = (): TUserStorage =>
 {
-	let defaults = {};
+	const defaults: TUserStorage = {};
 
 	defaults.gallery = {
-		'reverseOptions' : (config.data).gallery.reverseOptions,
-		'listAlignment' : (config.data).gallery.listAlignment,
-		'fitContent' : (config.data).gallery.fitContent
+		reverseOptions: (config.data).gallery.reverseOptions,
+		listAlignment: (config.data).gallery.listAlignment,
+		fitContent: (config.data).gallery.fitContent,
+		autoplay: true,
+		volume: 0.25
 	};
 
-	defaults.gallery.autoplay = true;
-	defaults.gallery.volume = 0.25;
-
-	defaults.gallery.style = {
-		compact : (config.data).style.compact,
-		theme : false
+	defaults.style = {
+		compact: (config.data).style.compact,
+		theme: false
 	};
 
 	return defaults;
 };
 
-user.get = () =>
+user.get = (): TUserStorage =>
 {
-	let required = ['gallery', 'sort', 'style'],
-		defaults = user.getDefaults(),
-		client = {},
-		update = false;
+	const required: Array<string> = ['gallery', 'sort', 'style'];
+	const defaults: TUserStorage = user.getDefaults();
+
+	let client: TUserStorage = {};
+	let update = false;
 
 	try
 	{
-		client = JSON.parse(cookies.get('ei-client'));
+		client = JSON.parse(cookies.get(CookieKey));
 
-		(required).forEach((key) =>
+		(required).forEach((key: string) =>
 		{
 			if(!Object.prototype.hasOwnProperty.call(client, key))
 			{
@@ -93,9 +89,9 @@ user.get = () =>
 			}
 		});
 
-		Object.keys(defaults).forEach((key) =>
+		Object.keys(defaults).forEach((key: string) =>
 		{
-			Object.keys(defaults[key]).forEach((option) =>
+			Object.keys(defaults[key]).forEach((option: string) =>
 			{
 				if(!Object.prototype.hasOwnProperty.call(client[key], option))
 				{
@@ -110,7 +106,7 @@ user.get = () =>
 		{
 			user.set(client);
 		}
-	} catch (e)
+	} catch (e: unknown)
 	{
 		/* On error means that the client does not have a valid cookie, so we're creating it */
 		client = {};
@@ -136,12 +132,10 @@ user.get = () =>
 		user.set(Object.assign(client, defaults));
 	}
 
-	/* Return client config */
 	return client;
 };
 
 config.init();
-
 user.get();
 
 export {

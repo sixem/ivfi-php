@@ -1,31 +1,29 @@
-/** Import `config`, `user` */
+/** Config */
+import { config, user } from '../../config/config';
+import data from '../../config/data';
+/** Classes */
+import galleryClass from '../../classes/gallery';
+/** Helpers */
+import { applyNested, checkNested } from '../../helpers';
+/** Modules */
+import { eventHooks } from '../../modules/event-hooks';
+import { log } from '../../modules/logger';
+
+/** Types */
 import {
-	config,
-	user
-} from '../config/config';
+	MComponentGallery
+} from '../../types';
 
-/** Import `data` */
-import data from '../config/data';
-
-/** Import `galleryClass` */
-import galleryClass from '../classes/gallery';
-
-/** Import `applyNested`, `checkNested` */
-import {
-	applyNested,
-	checkNested
-} from '../modules/helpers';
-
-const pipe = data.instances.pipe;
-
-export default class componentGallery
+export class componentGallery
 {
 	constructor()
 	{
 		return this;
 	}
 
-	setOptions = (source, values) =>
+	private setOptions = (
+		source: MComponentGallery.TOptions,
+		values: Array<any>): MComponentGallery.TOptions =>
 	{
 		values.forEach((data) =>
 		{
@@ -37,24 +35,29 @@ export default class componentGallery
 		return source;
 	}
 
-	load = (index = 0) =>
+	public load = (index: number = 0): void | boolean =>
 	{
 		if(!config.get('gallery.enabled'))
 		{
 			return false;
 		} else {
-			pipe('gallery.load =>', index);
+			log('gallery', 'loadIndex', index);
 		}
 
-		let video = {
-			continue : new Object(),
-			preview : document.body.querySelector(':scope > div.preview-container > video'),
+		/* Create video data (from preview) */
+		let video: MComponentGallery.TVideoPreviewData = {
+			continue: {},
+			preview: document.body.querySelector(
+				':scope > div.preview-container > video'
+			),
 		};
 
+		/* Get video source */
 		video.source = video.preview ? video.preview.querySelector('source') : null;
 
 		if(video.source)
 		{
+			/* If source is present, get source and current time */
 			video.continue.src = video.source.getAttribute('src');
 			video.continue.time = video.preview.currentTime;
 		} else {
@@ -64,23 +67,25 @@ export default class componentGallery
 		/* If a gallery instance is already active, then show it */
 		if(data.instances.gallery)
 		{
+			/* Pass continue timestamp from preview to gallery instance */
 			(data.instances.gallery).options.continue.video = video.continue;
 
-			data.sets.preview.video = null;
-
-			let items = data.sets.refresh ? data.components.main.getTableItems() : null;
+			/* Get table items */
+			let items = data.sets.refresh
+				? data.components.main.getTableItems()
+				: null;
 
 			data.sets.refresh = false;
+			data.sets.preview.video = null;
 
 			if(items !== null && items.length === 0)
 			{
 				return false;
-
 			} else {
-				data.components.main.unbind();
-
 				data.instances.gallery.show(
-					true, index === null ? data.instances.gallery.data.selected.index : index, items
+					true, index === null
+						? data.instances.gallery.data.selected.index
+						: index, items
 				);
 			}
 
@@ -90,7 +95,7 @@ export default class componentGallery
 		/* Set gallery options and start a new instance */
 		let client = user.get();
 
-		let options = new Object();
+		let options: MComponentGallery.TOptions = {};
 
 		/* Check if list state is saved */
 		let hasStoredListState = Object.prototype.hasOwnProperty.call(client.gallery, 'listState');
@@ -107,7 +112,6 @@ export default class componentGallery
 			['mobile', 'mobile'],
 			['encodeAll', 'encodeAll'],
 			['performance', 'performance'],
-			['blur', 'gallery.blur'],
 			['sharpen', 'gallery.imageSharpen'],
 			['scrollInterval', 'gallery.scrollInterval']
 		]);
@@ -133,9 +137,10 @@ export default class componentGallery
 		});
 
 		options.list = {
-			show : (listState == null ? true : (listState ? true : false))
+			show: (listState == null ? true : (listState ? true : false))
 		};
 
+		/* Get list alignment */
 		if(checkNested(client, 'gallery', 'listAlignment'))
 		{
 			options.list.reverse = (client.gallery.listAlignment === 0 ? false : true);
@@ -144,19 +149,14 @@ export default class componentGallery
 		}
 
 		options.continue = {
-			video : video.continue
+			video: video.continue
 		};
 
 		/* Get table items marked as media */
 		let items = data.components.main.getTableItems();
 
-		/* Unbind main listeners */
-		data.components.main.unbind();
-
 		/* Initiate new `galleryClass` */
-		let instance = new galleryClass(items, Object.assign(options, {
-			pipe : pipe
-		}));
+		let instance = new galleryClass(items, Object.assign(options));
 
 		/* Store instance to variable */
 		data.instances.gallery = instance;
@@ -164,20 +164,13 @@ export default class componentGallery
 		if(instance)
 		{
 			/* Listen to gallery `volumeChange` event */
-			instance.listen('volumeChange', (volume) =>
+			eventHooks.subscribe('galleryVolumeChange', 'volumeWatcher', (volume: number) =>
 			{
 				client = user.get();
-
 				client.gallery.volume = volume;
 
 				user.set(client);
 
-			});
-
-			/* Listen to gallery `unbound` event */
-			instance.listen('unbound', () =>
-			{
-				data.components.main.bind();
 			});
 		}
 	}

@@ -1,35 +1,49 @@
-/** Import `config` */
+/** Config */
+import selectorClass from '../../classes/selector';
+import { config } from '../../config/config';
+import data from '../../config/data';
+
+/** Helpers */
+import { getReadableSize } from '../../helpers';
+
+/** Types */
 import {
-	config
-} from '../config/config';
+	TComponentFilter,
+	TOptimizeRowItem
+} from '../../types';
 
-/** Import `data` */
-import data from '../config/data';
+const componentFilter: TComponentFilter = {},
+	selector: selectorClass = data.instances.selector;
 
-/** Import `getReadableSize` */
-import {
-	getReadableSize
-} from '../modules/helpers';
+/**
+ * Filter types
+ */
+type TFilterData = {
+	reset?: boolean;
+	size?: number;
+	shown?: {
+		directories: number;
+		files: number;
+	};
+};
 
-const componentFilter = {},
-	selector = data.instances.selector;
-
-componentFilter.apply = (query = '') =>
+componentFilter.apply = (query: string = ''): void =>
 {
-	let filterData = {},
-		errorData = false;
+	let filterData: TFilterData = {};
+	let errorData: any = false;
 
 	data.sets.refresh = true;
 
 	filterData.reset = query === '' || !query;
 
 	filterData.shown = {
-		directories : 0,
-		files : 0
+		directories: 0,
+		files: 0
 	};
 
 	filterData.size = 0;
 
+	/* Reset stored gallery index if active */
 	if(data.instances.gallery)
 	{
 		data.instances.gallery.data.selected.index = 0;
@@ -44,26 +58,29 @@ componentFilter.apply = (query = '') =>
 	);
 
 	/* Check if optimizer is being used */
-	let useOptimizer = Object.prototype.hasOwnProperty.call(data.instances.optimize, 'main') &&
-		data.instances.optimize.main.enabled;
+	let useOptimizer = Object.prototype.hasOwnProperty.call(data.instances.optimize, 'main')
+		&& data.instances.optimize.main.enabled;
 
-	let rows = useOptimizer ? 
-		data.instances.optimize.main.rows :
-		selector.use('TABLE').querySelectorAll('tbody > tr');
+	/* Fetch rows from optimizer class if set */
+	let rows: NodeListOf<TOptimizeRowItem> = useOptimizer ? data.instances.optimize.main.rows : null;
+
+	/* If no stored rows were found, fetch them directly instead */
+	if(rows === null)
+	{
+		rows = (selector.use('TABLE') as HTMLElement).querySelectorAll(
+			'tbody > tr'
+		) as NodeListOf<HTMLElement>;
+	}
 
 	/* Iterate over rows and search for query */
-	for(let i = 1; i < rows.length; i++)
+	for(let i: number = 1; i < rows.length; i++)
 	{
 		let item = rows[i];
 
 		if(filterData.reset === true)
 		{
 			item.classList.remove('filtered');
-
-			if(useOptimizer)
-			{
-				data.instances.optimize.main.setVisibleFlag(item, true);
-			}
+			if(useOptimizer) data.instances.optimize.main.setVisibleFlag(item, true);
 
 			continue;
 		}
@@ -87,27 +104,23 @@ componentFilter.apply = (query = '') =>
 		{
 			item.classList.remove('filtered');
 
+			/* Set visible flag in optimizer */
 			if(useOptimizer)
 			{
 				data.instances.optimize.main.setVisibleFlag(item, true);					
 			}
 
-			if(is.file)
-			{
-				filterData.shown.files++;
-
-			} else if(is.directory)
-			{
-				filterData.shown.directories++;
-			}
+			/** Append++ to file or directory count */
+			if(is.file) filterData.shown.files++;
+			else if(is.directory) filterData.shown.directories++;
 
 		} else if(match && match.valid === false)
 		{
 			errorData = match.reason;
-
 		} else {
 			item.classList.add('filtered');
 
+			/* Set visible flag in optimizer */
 			if(useOptimizer)
 			{
 				data.instances.optimize.main.setVisibleFlag(item, false);
@@ -119,16 +132,23 @@ componentFilter.apply = (query = '') =>
 			(directorySizes && match.valid && match.data && is.directory))
 		{
 			let size = item.children[2].getAttribute('data-raw');
-			filterData.size = !isNaN(size) ? (filterData.size + parseInt(size)) : filterData.size;
+
+			filterData.size = !isNaN(parseInt(size))
+				? (filterData.size + parseInt(size))
+				: filterData.size;
 		}
 	}
 
 	/* Set parent class so that we can hide all - .filtered -> .filtered */
 	if(filterData.reset)
 	{
-		selector.use('TABLE_CONTAINER').removeAttribute('is-active-filter', '');
+		(selector.use('TABLE_CONTAINER') as HTMLElement).removeAttribute(
+			'is-active-filter'
+		);
 	} else {
-		selector.use('TABLE_CONTAINER').setAttribute('is-active-filter', '');
+		(selector.use('TABLE_CONTAINER') as HTMLElement).setAttribute(
+			'is-active-filter', ''
+		);
 
 		/* Scroll to top on search */
 		window.scrollTo(0, 0);
@@ -136,42 +156,63 @@ componentFilter.apply = (query = '') =>
 
 	if(useOptimizer)
 	{
-		/* Call optimization refactoring */
+		/* Call optimization refactoring as we've made changes */
 		data.instances.optimize.main.refactor();
 	}
 
-	let top = {
-		container : document.body.querySelector(':scope > div.topBar')
+	interface ITop {
+		container: HTMLElement;
+		size?: {
+			textContent: string;
+		};
+		files?: {
+			textContent: string;
+		};
+		directories?: {
+			textContent: string;
+		};
+	}
+
+	let top: ITop = {
+		container: document.body.querySelector(':scope > div.topBar')
 	};
 
-	(['size', 'files', 'directories']).forEach((key) =>
+	/* Retrieve values */
+	(['size', 'files', 'directories']).forEach((key: string) =>
 	{
 		top[key] = top.container.querySelector(`[data-count="${key}"]`);
 	});
 
+	/* Defaulting */
 	if(!Object.prototype.hasOwnProperty.call(data.sets.defaults, 'topValues'))
 	{
 		data.sets.defaults.topValues = {
-			size : top.size.textContent,
-			files : top.files.textContent,
-			directories : top.directories.textContent
+			size: top.size.textContent,
+			files: top.files.textContent,
+			directories: top.directories.textContent
 		};
 	}
 
+	/* Set size text content */
 	top.size.textContent =
 		(filterData.reset) ? data.sets.defaults.topValues.size : 
 			getReadableSize(config.get('format.sizes'), filterData.size);
 
+	/* Set files text content */
 	top.files.textContent =
 		(filterData.reset) ? data.sets.defaults.topValues.files : 
 			`${filterData.shown.files} file${filterData.shown.files === 1 ? '' : 's'}`;
 
+	/* Set directories text content */
 	top.directories.textContent =
 		(filterData.reset) ? data.sets.defaults.topValues.directories : 
 			`${filterData.shown.directories} ${filterData.shown.directories === 1 ? 'directory' : 'directories'}`;
 
-	let option = document.body.querySelector(':scope > div.menu > #gallery'),
-		previews = selector.use('TABLE_CONTAINER').querySelectorAll('table tr.file:not(.filtered) a.preview').length;
+	let option: HTMLElement = document.body.querySelector(':scope > div.menu > #gallery');
+
+	let previews = (selector.use('TABLE_CONTAINER') as HTMLElement).querySelectorAll(
+		'table tr.file:not(.filtered) a.preview'
+	).length;
 
 	if(errorData !== false)
 	{
@@ -194,40 +235,45 @@ componentFilter.apply = (query = '') =>
 	}
 };
 
-componentFilter.getMatch = (input, query) =>
+componentFilter.getMatch = (input: string, query: string) =>
 {
-	let match = {};
+	let match: ReturnType<TComponentFilter['getMatch']> = {};
 
 	try
 	{
 		match.valid = true;
 		match.data = (input).match(new RegExp(query, 'i'));
-	} catch(e) {
-
+	} catch(exception: unknown)
+	{
 		match.valid = false;
-		match.reason = e;
+		match.reason = exception;
 	}
 
 	return match;
 };
 
-componentFilter.toggle = () =>
+componentFilter.toggle = (): void =>
 {
-	let container = document.body.querySelector(':scope > div.filterContainer'),
-		input = container.querySelector('input[type="text"]');
+	let container: HTMLElement = document.body.querySelector(
+		':scope > div.filterContainer'
+	);
+
+	let input: HTMLInputElement = container.querySelector(
+		'input[type="text"]'
+	);
 
 	if(container.style.display !== 'none')
 	{
 		container.style.display = 'none';
 	} else {
 		input.value = '';
-
 		componentFilter.apply(null);
-
 		container.style.display = 'block';
 	}
 
 	input.focus();
 };
 
-export default componentFilter;
+export {
+	componentFilter
+};
