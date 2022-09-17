@@ -4,7 +4,7 @@
  * <eyy-indexer> [https://github.com/sixem/eyy-indexer]
  *
  * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
- * @author   emy (sixem) <emy@five.sh>
+ * @author   emy (sixem@github) <emy@five.sh>
  * @version  <%= version %>
  */
 
@@ -20,11 +20,13 @@ $version = '<%= version %>';
 $config = array(
     /* Authentication options. */
     'authentication' => false,
+    /* Enables single-page features. */
+    'single_page' => false,
     /* Formatting options. */
     'format' => array(
         'title' => 'Index of %s', /* Title format where %s is the current path. */
         'date' => array('d/m/y H:i', 'd/m/y'), /* Date formats (desktop, mobile). */
-        'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB') /* Size formats. */
+        'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB') /* Size formats. */
     ),
     /* Favicon options. */
     'icon' => array(
@@ -137,7 +139,7 @@ if(file_exists($configFile))
 }
 
 /* Default configuration values. Used if values from the above config are unset. */
-$defaults = array('authentication' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' kB', ' MB', ' GB', ' TB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'style' => array('themes' => array('path' => false,'default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
+$defaults = array('authentication' => false,'single_page' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i:s', 'd/m/y'),'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false,'blur' => true),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'style' => array('themes' => array('path' => false,'default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
 
 /* Authentication function. */
 function authenticate($users, $realm)
@@ -429,7 +431,7 @@ class Indexer
     {
       $this->format['sizes'] = $options['format']['sizes'];
     } else {
-      $this->format['sizes'] = array(' B', ' kB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB');
+      $this->format['sizes'] = array(' B', ' KiB', ' MiB', ' GiB', ' TiB', ' PB', ' EB', ' ZB', ' YB');
     }
 
     $this->format['date'] = $options['format']['date'];
@@ -847,24 +849,23 @@ class Indexer
   }
 
   /* Converts bytes to a readable file size. */
-  private function readableFilesize($bytes, $decimals = 2)
+  private function readableFilesize($bytes, $decimals = 1)
   {
-    /* If file size is -1, return '-'.
-     * This can happen to very large file size (PHP/Server limitations). */
-    if($bytes === -1) return '-';
+    if($bytes === 0)
+    {
+      return '0' . $this->format['sizes'][0];
+    }
 
-    $factor = floor((strlen($bytes) - 1) / 3);
+    $base = log($bytes, 1024);
+    $floored = floor($base);
+    $value = pow(1024, $base - $floored);
 
-    $x = @$this->format['sizes'][$factor];
-
-    if($bytes > 104857600 || $factor == 0)
+    if($value >= 100)
     {
       $decimals = 0;
     }
 
-    if($x === $this->format['sizes'][1]) $decimals = 0;
-
-    return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . $x;
+    return round($value, $decimals) . $this->format['sizes'][$floored];
   }
 
   /* Checks if a string starts with a string. */
@@ -1085,6 +1086,37 @@ if(is_array($config['style']['css']['additional']))
 {
   $additionalCss .= str_replace('"', '\"', $config['style']['css']['additional']);
 }
+
+/* Default stylesheet output. */
+$baseStylesheet = '<link rel="stylesheet" type="text/css" href="<%= indexerPath %>css/style.css?bust=' . $bust . '">';
+
+/* Alternative stylesheet output for when single-page is enabled. */
+if($config['single_page'])
+{
+  /* Check if `navigateType` is set. */
+  if($_SERVER['REQUEST_METHOD'] === 'POST' && 
+    isset($_POST['navigateType']) && $_POST['navigateType'] === 'dynamic')
+{
+  /* Set a header to identify the response on the client side. */
+  header('navigateType: dynamic');
+
+  $stylePath = $indexer->joinPaths($basePath, '<%= indexerPath %>', '/css/style.css');
+
+  if(file_exists($stylePath))
+  {
+    $styleData = file_get_contents($stylePath);
+
+    /* If any additional CSS is set, merge that with this output. */
+    if(!empty($additionalCss))
+    {
+      $styleData .= (' ' . $additionalCss);
+      $additionalCss = '';
+    }
+
+    $baseStylesheet = sprintf('<style type="text/css">%s</style>' . PHP_EOL, $styleData);
+  }
+}
+}
 ?>
 <!DOCTYPE HTML>
 <html lang="en">
@@ -1096,18 +1128,18 @@ if(is_array($config['style']['css']['additional']))
     
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
-    <link rel="stylesheet" type="text/css" href="<%= indexerPath %>css/style.css?bust=<?=$bust;?>">
+    <?=$baseStylesheet;?>
     <?=($currentTheme && strtolower($currentTheme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $currentTheme . '.css?bust=' . $bust . '">' . PHP_EOL : ''?>
 
-    <script defer type="text/javascript" src="<%= indexerPath %>js/main.js?bust=<?=$bust;?>"></script>
-    <?= !(empty($additionalCss)) ? sprintf('<style>%s</style>' . PHP_EOL, $additionalCss) : NULL?>
+    <script defer type="text/javascript" src="<%= indexerPath %>main.js?bust=<?=$bust;?>"></script>
+    <?= !(empty($additionalCss)) ? sprintf('<style type="text/css">%s</style>' . PHP_EOL, $additionalCss) : NULL?>
   </head>
 
-  <body class="directory-root<?=$compact ? ' compact' : ''?><?=!$footer['enabled'] ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
+  <body class="rootDirectory<?=$compact ? ' compact' : ''?><?=!$footer['enabled'] ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
 
-    <div class="top-bar">
-        <div class="extend ns">&#9881;</div>
-        <div class="directory-info">
+    <div class="topBar">
+        <div class="extend">&#9881;</div>
+        <div class="directoryInfo">
           <div data-count="size"><?=$data['size']['readable'];?></div>
           <div <?=$data['recent']['file'] !== 0 ? 'data-raw="' . $data['recent']['file'] . '" ' : '';?>data-count="files"><?=$counts['files'] . ($counts['files'] === 1 ? ' file' : ' files');?></div>
           <div <?=$data['recent']['directory'] !== 0 ? 'data-raw="' . $data['recent']['directory'] . '" ' : '';?>data-count="directories"><?=$counts['directories'] . ($counts['directories'] === 1 ? ' directory' : ' directories');?></div>
@@ -1119,26 +1151,21 @@ if(is_array($config['style']['css']['additional']))
       buildInject.readmeSupport.DISPLAY_SNIPPET ?
       buildInject.readmeSupport.DISPLAY_SNIPPET : null %>
 
-    <div class="table-container">
-
+    <div class="tableContainer">
       <table>
       <thead>
         <tr>
-          <th><span sortable="true" title="Sort by filename">Filename</span><span class="sort-indicator"></span></th>
-          <th><span sortable="true" title="Sort by modification date">Modified</span><span class="sort-indicator"></span></th>
-          <th><span sortable="true" title="Sort by filesize">Size</span><span class="sort-indicator"></span></th>
-          <th><span sortable="true" title="Sort by filetype">Type</span><span class="sort-indicator"></span></th>
+          <th><span sortable="true" title="Sort by filename">Filename</span><span class="sortingIndicator"></span></th>
+          <th><span sortable="true" title="Sort by modification date">Modified</span><span class="sortingIndicator"></span></th>
+          <th><span sortable="true" title="Sort by filesize">Size</span><span class="sortingIndicator"></span></th>
+          <th><span sortable="true" title="Sort by filetype">Type</span><span class="sortingIndicator"></span></th>
         </tr>
       </thead>
-
-      <script type="text/javascript">function getScrollbarWidth(){const e=document.createElement("div");e.style.visibility="hidden",e.style.overflow="scroll",e.style.msOverflowStyle="scrollbar",document.body.appendChild(e);const t=document.createElement("div");e.appendChild(t);const l=e.offsetWidth-t.offsetWidth;return e.parentNode.removeChild(e),l};document.documentElement.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');document.documentElement.style.setProperty('--table-width', document.querySelector('body > div.table-container').offsetWidth + 'px');</script>
 
       <?=$contents;?>
 
       </table>
-
     </div>
-
 <?php
 if($footer['enabled'])
 {
@@ -1146,15 +1173,15 @@ if($footer['enabled'])
 
   echo sprintf(
     '  <div class="%s">Page generated in <span class="%s">%f</span> seconds</div><div>Browsing <span>%s</span>%s</div>',
-    'current-page-info',
-    'generation-time',
+    'currentPageInfo',
+    'generationTime',
     microtime(true) - $render,
     $indexer->getCurrentDirectory(),
     $footer['show_server_name'] && !empty($_SERVER['SERVER_NAME']) ? sprintf(' @ <a href="/">%s</a>', $_SERVER['SERVER_NAME']) : ''
   );
 
   echo ($config['credits'] !== false) ? sprintf(
-    '<div class="git-reference">
+    '<div class="referenceGit">
     <a target="_blank" href="https://github.com/sixem/eyy-indexer">eyy-indexer</a><span class="version">%s</span>
   </div>', $version
   ) : '';
@@ -1163,7 +1190,7 @@ if($footer['enabled'])
 }
 ?>
 
-<div class="filter-container" style="display: none;">
+<div class="filterContainer" style="display: none;">
     <input type="text" placeholder="Search .." value="">
 </div>
 
@@ -1171,6 +1198,7 @@ if($footer['enabled'])
 
 <script id="__INDEXER_DATA__" type="application/json"><?=(json_encode(array(
   'bust' => $bust,
+  'singlePage' => $config['single_page'],
   'preview' => array(
     'enabled' => $config['preview']['enabled'],
     'hoverDelay' => $config['preview']['hover_delay'],
@@ -1204,7 +1232,7 @@ if($footer['enabled'])
     ),
     'compact' => $config['style']['compact']
   ),
-  'format' => array_intersect_key($config['format'], array_flip(array('sizes', 'date'))),
+  'format' => array_intersect_key($config['format'], array_flip(array('sizes', 'date', 'title'))),
   'encodeAll' => $config['encode_all'],
   'performance' => $config['performance'],
   'timestamp' => $indexer->timestamp,
@@ -1212,6 +1240,8 @@ if($footer['enabled'])
   'mobile' => false
 )));?>
 </script>
+
+<script type="text/javascript">function getScrollbarWidth(){const e=document.createElement("div");e.style.visibility="hidden",e.style.overflow="scroll",e.style.msOverflowStyle="scrollbar",document.body.appendChild(e);const t=document.createElement("div");e.appendChild(t);const l=e.offsetWidth-t.offsetWidth;return e.parentNode.removeChild(e),l};document.documentElement.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');</script>
 
 </body>
 </html>
