@@ -21,11 +21,13 @@ This is designed to be a image and video friendly Indexer, while also being an I
 
 ***Note: The Indexer can be used without JavaScript, but it is needed for the extra functionality.***
 
-### Demo
-
+## Demo
 ***You can visit the [demo](https://five.sh/demo/indexer/) to view the indexer in action.***
 
-### Feedback :bulb:
+## Documentation
+:link: <https://sixem.github.io/eyy-indexer/>
+
+## Feedback :bulb:
 I'm open for any feedback.
 
 You can open an [issue](https://github.com/sixem/eyy-indexer/issues) if you encounter any **specific** problems or bugs of any kind.
@@ -46,7 +48,7 @@ Usage (Desktop): `Shift + F`.
 ### **Single file**
 This script can be set up as a single file script (standalone setup). Only one file needed, nothing more.
 ### **Customizable**
-This script can be customized in a number of ways. (See: [Configuration](docs/CONFIG.md))
+This script can be customized in a number of ways.
 ### **Additonal Features**
 It can be built with additional features, like support for displaying `README.md` files on each directory!
 ### **And much more ..**
@@ -65,6 +67,12 @@ It can be built with additional features, like support for displaying `README.md
 
 Alternatively, you can also build it from source yourself, for that see: [Building](#building).
 
+You can also find every release and specific builds here: [https://five.sh/releases/eyy-indexer/](https://five.sh/releases/eyy-indexer/)
+<br />
+<br />
+#### These instructions are aimed at servers using a regular Nginx or Apache setup.
+#### For instructions on how to use it with Docker, see [this](https://sixem.github.io/eyy-indexer/#/setup?id=docker).
+
 ## 1. Files
 
 You can choose between having a **default** setup and a **standalone** setup.
@@ -73,9 +81,9 @@ The default setup will import assets (`js`, `css` and fonts) as separate files, 
 
 The standalone setup will have all of these files bundled directly into the `.php` file instead, serving everything through HTML.
 
-### a) Default
+### Default:
 Place the files from the `build` directory into your root web directory.
-### b) Standalone (single file)
+### Standalone (single file):
 Place the file from the `standalone` directory into your root web directory.
 
 ## 2. Server Configuration
@@ -113,15 +121,15 @@ This line can be placed in either your server's `.conf` file or your `.htaccess`
 
 # Configuration
 
-#### See [Configuration](docs/CONFIG.md) for a detailed overview over how this script can be customized.
+#### See [Configuration](https://sixem.github.io/eyy-indexer/) for a detailed overview over how this script can be customized.
 
 ## Additional features
 
 When building the Indexer, additional features can be enabled. These features are not bundled with the pre-built releases, and must be flagged as enabled prior to building the Indexer yourself (see below for how the building process is done).
 
-The reason why these features are not included in the default version, is because they may rely on larger libraries and other scripts, which I don't feel should be pushed into the vanilla version unless the user desires to do so themselves! :upside_down_face:
+The reason why these features are not included in the default version, is because they may rely on larger libraries and other scripts, which I don't feel should be pushed into the vanilla version unless the user desires to do so themselves!
 
-See [extras](/extras/) for a list over the features and how these can be implemented.
+See [Extra Features](https://sixem.github.io/eyy-indexer/#/extras) for a list over the features and how these can be implemented.
 
 # Building
 :grey_exclamation: **This has been tested to work with node 18.3**
