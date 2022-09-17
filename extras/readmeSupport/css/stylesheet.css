@@ -1,4 +1,4 @@
-.readme-container
+.readmeContainer
 {
     background-color: #121318;
     margin-bottom: 18px;
@@ -6,30 +6,30 @@
     border-bottom: 1px solid #19191d;
 }
 
-.readme-container pre
+.readmeContainer pre
 {
     white-space: pre-wrap;
 }
 
-.readme-container > div.readme-inner
+.readmeContainer > div.readmeContents
 {
     padding: 5px 8px;
 }
 
-.readme-container a
+.readmeContainer a
 {
     text-decoration: none;
     color: #d6d3ce;
     font-weight: bold;
 }
 
-.readme-container a:hover
+.readmeContainer a:hover
 {
     text-decoration: underline;
     color: #5e74ea;
 }
 
-.readme-container::before
+.readmeContainer::before
 {
     content: "README.md";
     background-color: #15161e;

@@ -7,7 +7,7 @@ if($data['readme'] && file_exists($data['readme']))
     );
 
     echo sprintf(
-        '<div class="readme-container"><div class="readme-inner">%s</div></div>',
+        '<div class="readmeContainer"><div class="readmeContents">%s</div></div>',
         $readmeSupport['parsedown']->text($readmeSupport['contents'])
     );
 }
