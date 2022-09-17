@@ -28,7 +28,7 @@ let minifiedBanner = () =>
 
 let replaceScriptTags = (binary) =>
 {
-	let matches = /(<script defer type="[a-z\/]+" src="\/(indexer\/js\/[a-z]+\.js)(.+)"><\/script>)/g.exec(binary);
+	let matches = /(<script defer type="[a-z\/]+" src="\/(indexer\/[a-z]+\.js)(.+)"><\/script>)/g.exec(binary);
 
 	let output = new String();
 
@@ -59,7 +59,7 @@ let replaceScriptTags = (binary) =>
 
 let replaceStyleTags = (binary) =>
 {
-	let matches = /(<link rel="[a-z\/]+" type="text\/css" href="\/(indexer\/css\/[a-z]+\.css)(.+)">)/g.exec(binary);
+	let matches = /(\'<link rel="[a-z\/]+" type="text\/css" href="\/(indexer\/css\/[a-z]+\.css)(.+)">\')/g.exec(binary);
 
 	if(matches)
 	{
@@ -78,11 +78,8 @@ let replaceStyleTags = (binary) =>
 
 			(fonts).forEach((font) =>
 			{
-				/* resolve font path (../assets/..) */
-				let fontPath = path.resolve('./build/indexer/css', (font.split('url(')[1]).split(')')[0]);
-
-				/* make path relative again */
-				fontPath = `./build${fontPath.split('/build')[1]}`;
+				/* join asset path */
+				const fontPath = path.join('./build', (font.split('url(')[1]).split(')')[0]);
 
 				if(fs.existsSync(fontPath))
 				{
@@ -100,7 +97,7 @@ let replaceStyleTags = (binary) =>
 				}
 			});
 
-			binary = binary.replace(matches[1], `<style type="text/css">${stripComments(sheet)}</style>`);
+			binary = binary.replace(matches[1], `'<style type="text/css">${stripComments(sheet).replace(/[\']/g, `${String.fromCharCode(92)}\'`)}</style>'`);
 		} else {
 			throw new Error(`Unexisting asset file (${filePath}).`);
 		}
