@@ -11,19 +11,29 @@ const webpack = require('webpack');
 const moment = require('moment');
 
 /**
+ * Read build.options.js if it exists
+ */
+ let buildOptions = build.readJson('./build.options.json');
+
+/**
+ * Set asset output directory (containing .js and .css files etc.)
+ * 
+ * (!) Can be set in `build.options.json`
+ */
+let assetDir = buildOptions && buildOptions.assetDir ? buildOptions.assetDir : 'indexer';
+
+/** Trim any leading and trailing slash as well as double slashes */
+assetDir = assetDir.replace(/([^:]\/)\/+/g, '$1').replace(/^\/|\/$/g, '');
+
+/**
  * Parameters passed with `HtmlWebpackPlugin`
  */
 let templateParameters = {
 	buildInject: {},
 	additonalCss: [],
 	version: package.version,
-	indexerPath : '/indexer/'
+	indexerPath : `/${assetDir}/`
 };
-
-/**
- * Read build.options.js if it exists
- */
-let buildOptions = build.readJson('./build.options.json');
 
 if(buildOptions)
 {
@@ -118,11 +128,14 @@ module.exports = (env) => {
 		context: __dirname,
 		mode: env.production ? 'production' : 'development',
 		entry: {
-			index: './src/js/main.js'
+			index: './src/core/main.ts'
+		},
+		resolve: {
+			extensions: ['.js', '.ts', '.json']
 		},
 		output: {
 			filename: 'main.js',
-			path: __dirname + '/build/indexer/js'
+			path: __dirname + `/build/${assetDir}`
 		},
 		optimization: {
 			minimize: env.production ? true : false,
@@ -137,14 +150,14 @@ module.exports = (env) => {
 			new HtmlWebpackPlugin({
 				inject: false,
 				minify: false,
-				template: __dirname + '/src/php/index.php',
+				template: __dirname + '/src/php/template.php',
 				filename: __dirname + '/build/indexer.php',
-				templateParameters: (compilation) => {
+				templateParameters: () => {
 					return templateParameters;
 				}
 			}),
 			new MiniCssExtractPlugin({
-				filename: '../css/style.css'
+				filename: `./css/style.css`
 			}),
 			new webpack.BannerPlugin({
 				banner: banner(),
@@ -153,6 +166,10 @@ module.exports = (env) => {
 		],
 		module: {
 			rules: [
+				{
+					test: /\.tsx?$/,
+					loader: 'ts-loader'
+				},
 				{
 					test: /\.s[ac]ss$/i,
 					use: [
@@ -165,6 +182,9 @@ module.exports = (env) => {
 						},
 						{
 							loader: 'sass-loader'
+						},
+						{
+							loader: 'postcss-loader'
 						}
 					],
 				},
@@ -174,7 +194,8 @@ module.exports = (env) => {
 						{
 							loader: 'file-loader',
 							options: {
-								name: '../assets/fonts/[name].[ext]'
+								name: 'assets/fonts/[name].[ext]',
+								publicPath: `/${assetDir}`
 							}
 						}
 					]
