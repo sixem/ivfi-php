@@ -11,7 +11,7 @@
 
   @return map-get($condition-map, $c);
 }
-  
+
 /* Media query mixin */
 @mixin media-query($arguments...) {
   $query: "";
@@ -19,7 +19,7 @@
   @each $argument in $arguments {
     $output: "";
 
-    @if ($query != "") {
+    @if $query != "" {
       $output: " and ";
     }
 
@@ -27,13 +27,13 @@
   }
 
   @media #{$query} {
-      @content;
+    @content;
   }
 }
 
 /* Removes text selection */
 @mixin no-select {
-    user-select: none;
+  user-select: none;
 }
 
 /* Font sizing mixin */

@@ -76,8 +76,7 @@ html > body {
       padding: 0 10px;
       width: 100%;
 
-      &:not(.hid-row)
-      {
+      &:not(.hid-row) {
         display: flex;
       }
 
@@ -581,9 +580,9 @@ html > body {
   > div.tableContainer {
     position: relative;
     overflow: hidden;
-    background-color: map.get(variables.$root, "color-background-table");
     padding-top: 10px;
     padding-bottom: 10px;
+    background-color: map.get(variables.$root, "color-background-table");
     border-top: 1px solid map.get(variables.$root, "color-border-main");
   }
 
@@ -615,7 +614,9 @@ html > body {
         font-style: normal;
         font-size: 19px;
         letter-spacing: 1px;
-        margin: 20px 0 16px 8px;
+        margin: 24px 0 22px 8px;
+        text-align: center;
+        user-select: none;
       }
 
       &.bottom > div.referenceGit.single {
@@ -629,7 +630,7 @@ html > body {
   /* Top bar */
   > div.topBar {
     border-bottom: 1px solid #10101085;
-    background-color: #121216f0;
+    background-color: rgba(18 18 22 / 65%);
     box-shadow: 0 0 3px #0d0d0d;
     padding: 2px 0;
     z-index: 2;
@@ -642,6 +643,7 @@ html > body {
     left: 0;
     right: 0;
     font-size: 12px;
+    backdrop-filter: blur(3px);
 
     > div {
       &.directoryInfo {
@@ -658,7 +660,7 @@ html > body {
           white-space: nowrap;
 
           &:not(.quickPath) {
-            border-right: 2px solid #10101085;
+            border-right: 2px solid rgba(255 255 255 / 1%);
           }
         }
       }
@@ -708,6 +710,7 @@ html > body {
     border-bottom: 1px solid map.get(variables.$root, "color-border-settings-menu");
     border-left: 1px solid map.get(variables.$root, "color-border-settings-menu");
     background-color: map.get(variables.$root, "color-background-settings-menu");
+    backdrop-filter: blur(map.get(variables.$gallery, "blur-intensity"));
     box-shadow: 0 0 2px #0d0d0d;
 
     > div {
@@ -746,7 +749,8 @@ html > body {
     bottom: 0;
     right: 0;
     overflow: hidden;
-    background-color: rgb(0 0 0 / 44%);
+    background-color: rgb(0 0 0 / 50%);
+    backdrop-filter: blur(1px);
   }
 
   /* Input selection */

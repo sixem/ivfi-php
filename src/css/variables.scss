@@ -12,12 +12,12 @@ $root: (
   "color-body": #d6d3ce,
   "color-border-main": #19191d,
   "color-border-settings-menu": #17171b,
-  "color-background-settings-menu": #121216f0,
+  "color-background-settings-menu": rgba(18 18 22 / 65%),
   "color-background-settings-item-hover": #17171b,
   "color-background-body": #0f0f13,
   "color-background-table": #121318,
   "color-header-table": #fff,
-  "color-background-table-hover": #17181d8c
+  "color-background-table-hover": rgba(23 26 40 / 55%)
 );
 
 /* Gallery */
@@ -35,7 +35,7 @@ $gallery: (
   "color-background-list-selected": #1c2333,
   "color-background-list-selected-hover": #1c2333,
   "color-background-list-item-hover": rgb(44 54 81 / 20%),
-  "color-background-top-bar": #121216d6,
+  "color-background-top-bar": rgba(25 25 32 / 70%),
   "color-list-selected-border": #fbfcff,
   "width-list-selected-border": 5px
 );

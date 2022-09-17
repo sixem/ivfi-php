@@ -7,12 +7,6 @@ html[gallery-is-visible] > div:not(.rootGallery, script, noscript, style) {
   user-select: none;
 }
 
-body {
-  .blur {
-    filter: blur(map.get(variables.$gallery, "blur-intensity"));
-  }
-}
-
 html > body > .rootGallery {
   position: fixed;
   top: 0;
@@ -34,6 +28,7 @@ html > body > .rootGallery {
       width: 100%;
       display: table;
       color: map.get(variables.$gallery, "color-top-bar");
+      backdrop-filter: blur(map.get(variables.$gallery, "blur-intensity"));
 
       > div {
         display: table-cell;
@@ -116,7 +111,7 @@ html > body > .rootGallery {
           &:last-child::before {
             content: "|";
             margin: 0 7px;
-            color: #3c3c49;
+            color: #1c1c1c;
           }
         }
 
@@ -203,6 +198,7 @@ html > body > .rootGallery {
         vertical-align: middle;
         position: relative;
         user-select: none;
+        backdrop-filter: blur(map.get(variables.$gallery, "blur-intensity"));
 
         > div.item-info-static {
           position: absolute;
@@ -371,18 +367,18 @@ html > body > .rootGallery {
 
       > div.list {
         display: table-cell;
-        background-color: #121216f0;
+        background-color: #101013;
         max-width: 50vw;
         min-width: 275px;
         width: 25vw;
-        height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
         float: right;
         overflow-y: scroll;
         overflow-x: hidden;
         border-top: 1px solid #101010b8;
         position: relative;
-        max-height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
         scrollbar-color: #222 #131315;
+        height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
+        max-height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
 
         > table > tbody > tr {
           @include mixins.fonting(
