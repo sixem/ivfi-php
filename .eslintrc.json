@@ -1,13 +1,20 @@
 {
-    "parser": "@babel/eslint-parser",
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
     "env": {
         "browser": true,
         "es2021": true,
         "node": true
     },
-    "extends": "eslint:recommended",
     "parserOptions": {
-        "ecmaVersion": 12,
+        "ecmaVersion": 13,
         "sourceType": "module"
     },
     "globals": {
@@ -16,6 +23,7 @@
     "rules": {
         "no-var": 1,
         "no-dupe-class-members": "error",
+        "@typescript-eslint/no-explicit-any": "off",
         "indent": [
             "error",
             "tab",
