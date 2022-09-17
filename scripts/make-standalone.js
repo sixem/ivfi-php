@@ -70,7 +70,7 @@ let replaceStyleTags = (binary) =>
 			console.log('\nReading stylesheet', '->', filePath);
 
 			/* read .css file */
-			let sheet = fs.readFileSync(filePath, 'binary');
+			let sheet = fs.readFileSync(filePath, 'utf-8');
 
 			let fonts = sheet.match(new RegExp(/(src\:\ ?url\(([A-Za-z0-9\.\/\-]+)\) format\("[A-Za-z0-9]+"\)\;)/g));
 
