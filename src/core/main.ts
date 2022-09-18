@@ -108,7 +108,7 @@ if(config.get('performance'))
 				page: data.layer.main,
 				table: selector.use('TABLE') as HTMLElement,
 				scope: [window, 'scrollY'],
-				padding: 10,
+				padding: 0, /* Top padding offset */
 				on: {
 					rowChange: onRowChange
 				}

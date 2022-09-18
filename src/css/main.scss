@@ -71,9 +71,21 @@ html > body {
   }
 
   > div.tableContainer > table {
+    > thead > tr
+    {
+      padding: 4px 10px 2px 10px;
+
+      background-color: #15161e;
+      border-bottom: 2px solid #151822;
+    }
+
+    > tbody > tr
+    {
+      padding: 0 10px;
+    }
+
     > tbody > tr,
     > thead > tr {
-      padding: 0 10px;
       width: 100%;
 
       &:not(.hid-row) {
@@ -580,7 +592,6 @@ html > body {
   > div.tableContainer {
     position: relative;
     overflow: hidden;
-    padding-top: 10px;
     padding-bottom: 10px;
     background-color: map.get(variables.$root, "color-background-table");
     border-top: 1px solid map.get(variables.$root, "color-border-main");
