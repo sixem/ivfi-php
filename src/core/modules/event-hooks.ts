@@ -100,7 +100,7 @@ const eventCallback = (event: Event): void =>
  * Actives or deactivates the activation of listener callbacks
  */
 eventHooks.listenSetState = (
-	selector: HTMLElementEventHooks | string,
+	selector: HTMLElement | HTMLElementEventHooks | string,
 	events: Array<string> | string,
 	id: any,
 	state = true): void =>
@@ -111,7 +111,7 @@ eventHooks.listenSetState = (
 	{
 		element = document.querySelector(selector);
 	} else {
-		element = selector;
+		element = selector as HTMLElementEventHooks;
 	}
 
 	/* Create an array of the event(s) */
@@ -131,9 +131,9 @@ eventHooks.listenSetState = (
 };
 
 eventHooks.unlisten = (
-	selector: HTMLElementEventHooks,
+	selector: HTMLElement | HTMLElementEventHooks,
 	events: Array<string> | string,
-	id: number): void | boolean =>
+	id: string): void | boolean =>
 {
 	/* Check if the ID isn't present */
 	if(!eventHooks.events[id])
@@ -150,7 +150,7 @@ eventHooks.unlisten = (
 	{
 		element = document.querySelector(selector);
 	} else {
-		element = selector;
+		element = selector as HTMLElementEventHooks;
 	}
 
 	if(eventHooks.events[id] &&
@@ -217,12 +217,7 @@ eventHooks.unlisten = (
 /**
  * Listens to the events of a element
  */
-eventHooks.listen = (
-	selector: HTMLElementEventHooks,
-	events: Array<string> | string,
-	id: string,
-	callback: (...args: any) => void,
-	options: IListenOptions = {}): void =>
+eventHooks.listen = (selector, events, id, callback, options = {}): void =>
 {
 	/* Create an array of the event(s) */
 	events = getEvents(events);
@@ -233,7 +228,7 @@ eventHooks.listen = (
 	{
 		element = document.querySelector(selector);
 	} else {
-		element = selector;
+		element = selector as HTMLElementEventHooks;
 	}
 
 	/* Attach a unique ID to the DOM element */
@@ -377,7 +372,5 @@ eventHooks.trigger = (event: string, ...args: any[]): void =>
 };
 
 export {
-	eventHooks,
-	IListenOptions,
-	HTMLElementEventHooks
+	eventHooks
 };
