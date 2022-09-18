@@ -28,7 +28,7 @@ let minifiedBanner = () =>
 
 let replaceScriptTags = (binary) =>
 {
-	let matches = /(<script defer type="[a-z\/]+" src="\/(indexer\/[a-z]+\.js)(.+)"><\/script>)/g.exec(binary);
+	let matches = /(<script defer type="[a-z\/]+" src="\/([a-z]+\/[a-z]+\.js)(.+)"><\/script>)/g.exec(binary);
 
 	let output = new String();
 
@@ -59,7 +59,7 @@ let replaceScriptTags = (binary) =>
 
 let replaceStyleTags = (binary) =>
 {
-	let matches = /(\'<link rel="[a-z\/]+" type="text\/css" href="\/(indexer\/css\/[a-z]+\.css)(.+)">\')/g.exec(binary);
+	let matches = /(\'<link rel="[a-z\/]+" type="text\/css" href="\/([a-z]+\/css\/[a-z]+\.css)(.+)">\')/g.exec(binary);
 
 	if(matches)
 	{
