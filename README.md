@@ -15,11 +15,11 @@
 
 ## What is this project?
 
-This is a file directory browser script written in PHP and JavaScript.
+This is a file directory browser script written in PHP and TypeScript.
 
 This is designed to be a image and video friendly Indexer, while also being an Indexer that has all of the other features that you can expect from most directory listers out there. It can be heavily customized, and has a design that attempts to be appealing while also being functional and easy to use.
 
-***Note: The Indexer can be used without JavaScript, but it is needed for the extra functionality.***
+***Note: The Indexer can be used without JavaScript enabled, but it is needed for the extra functionality.***
 
 ## Demo
 ***You can visit the [demo](https://five.sh/demo/indexer/) to view the indexer in action.***
