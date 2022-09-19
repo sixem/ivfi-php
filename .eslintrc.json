@@ -24,6 +24,7 @@
         "no-var": 1,
         "no-dupe-class-members": "error",
         "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-namespace": "off",
         "indent": [
             "error",
             "tab",
