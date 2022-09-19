@@ -5,7 +5,7 @@ import { TUserClient } from '../module-config';
 /**
  * Filter component
  */
- export type TComponentFilter = {
+export type TComponentFilter = {
 	apply?: (query: string) => void;
 	toggle?: () => void;
 	getMatch?: (input: string, query: string) => {
@@ -18,7 +18,7 @@ import { TUserClient } from '../module-config';
 /**
  * Gallery component
  */
-export module MComponentGallery
+export namespace MComponentGallery
 {
 	export type TVideoPreviewData = {
 		continue?: Partial<IGalleryOptions['continue']['video']>;
@@ -36,12 +36,12 @@ export module MComponentGallery
 			video?: TVideoPreviewData['continue'];
 		}
 	};
-};
+}
 
 /**
  * Settings component
  */
-export module MComponentSettings
+export namespace MComponentSettings
 {
 	export type TGathered = {
 		[key: string]: {
@@ -51,7 +51,7 @@ export module MComponentSettings
 
 	export interface TIndexElement extends HTMLInputElement {
 		selectedIndex?: number;
-	};
+	}
 
 	export type TCreateCapsule = {
 		option?: (
@@ -74,14 +74,14 @@ export module MComponentSettings
 				text: string;
 			}>,
 			options?: object,
-			selected?: Function | null
+			selected?: (...args: any) => boolean | null
 		) => HTMLInputElement;
 
 		check?: (
 			options?: {
 				[key: string]: any;
 			},
-			selected?: Function | null
+			selected?: (...args: any) => boolean | null
 		) => HTMLInputElement;
 	};
 
@@ -130,12 +130,12 @@ export module MComponentSettings
 			client: TUserClient
 		) => object;
 	};
-};
+}
 
 /**
  * Main component
  */
-export module MComponentMain
+export namespace MComponentMain
 {
 	type TMenu = {
 		create?: () => HTMLElement;
@@ -162,7 +162,7 @@ export module MComponentMain
 
 	type TOverlay = {
 		hide?: (
-			callback: Function
+			callback?: (...args: any) => void
 		) => void;
 	};
 
@@ -174,7 +174,7 @@ export module MComponentMain
 
 	export interface ISortRow extends HTMLTableCellElement {
 		asc?: boolean;
-	};
+	}
 
 	export type TCapsule = {
 		menu: TMenu;
@@ -192,4 +192,4 @@ export module MComponentMain
 			target: HTMLElement
 		) => void;
 	};
-};
+}

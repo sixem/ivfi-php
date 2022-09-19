@@ -1,10 +1,16 @@
-import { THTMLElement } from '../class-gallery';
+import {
+	THTMLElement
+} from '../class-gallery';
+
+import {
+	ITableRowMI
+} from '../common';
 
 /**
  * Optimization page object
  */
- export type TPageObject = {
-	update: Function;
+export type TPageObject = {
+	update: () => boolean;
 	windowHeight?: number;
 	windowWidth?: number;
 	scrolledY?: number;
@@ -26,7 +32,9 @@ export type TOptimizeOptions = {
 	scope: TOptimizeScope;
 	padding?: number;
 	on?: boolean | null | {
-		rowChange?: Function;
+		rowChange?: (
+			rows: Array<ITableRowMI>
+		) => boolean | void;
 	};
 };
 
@@ -47,7 +55,7 @@ export interface TOptimizeRowItem extends HTMLElement {
 	_offsetHeight?: number;
 	_isVisible?: boolean;
 	_isHidden?: boolean;
-};
+}
 
 /**
  * Optimization cached item (sort)
@@ -55,4 +63,4 @@ export interface TOptimizeRowItem extends HTMLElement {
 export interface TOptimizeCachedRowItem {
 	value?: any;
 	index?: number;
-};
+}

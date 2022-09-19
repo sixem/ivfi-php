@@ -29,8 +29,8 @@ type TDataComponents = {
 	gallery?: any;
 	settings?: any;
 	bind?: {
-		load?: Function;
-		unbind?: Function;
+		load?: () => void;
+		unbind?: () => void;
 	};
 };
 

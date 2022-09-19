@@ -5,7 +5,7 @@ import {
 /**
  * Gallery constructor options
  */
- export interface IGalleryOptions extends TGalleryDefaults {
+export interface IGalleryOptions extends TGalleryDefaults {
 	filter?: string;
 	continue?: {
 		video: {
@@ -13,12 +13,12 @@ import {
 			time?: number;
 		}
 	}
-};
+}
 
 /**
  * Default gallery options
  */
- export type TGalleryDefaults = {
+export type TGalleryDefaults = {
 	extensions?: TExtensionArray;
 
 	video?: object;
@@ -82,12 +82,12 @@ export type TGalleryTableItem = {
 /**
  * Extended gallery `HTMLElement`
  */
- export interface HTMLElementExtend extends HTMLElement
- {
-	 _offsetTop?: number
- };
+export interface HTMLElementExtend extends HTMLElement
+{
+	_offsetTop?: number
+}
 
- /**
+/**
  * HTMLElement definition
  */
 export type THTMLElement = null | HTMLElement | undefined;

@@ -78,11 +78,7 @@ export interface IEventHooks {
 }
 
 export interface IListenOptions {
-	onAdd?: (
-		element: HTMLElementEventHooks,
-		events: Array<string>,
-		id: string
-	) => void;
+	onAdd?: (...args: any) => any;
 
 	options?: object;
 	destroy?: boolean;

@@ -1,10 +1,13 @@
 /**
  * Configuration (user) object
  */
- export type TUserClient = {
-    set?: Function;
-    get?: Function;
-    getDefaults?: Function;
+export type TUserClient = {
+    set?: (
+        client: TUserStorage | TUserClient,
+        options?: TUserStorage
+    ) => void;
+    get?: () => TUserStorage;
+    getDefaults?: () => TUserStorage;
     gallery?: {
         listAlignment?: number | boolean;
     };
@@ -49,16 +52,21 @@ export interface IConfigData extends Omit<TUserStorage, 'style'> {
             set?: boolean | string;
         }
     };
-};
+}
 
 /**
  * Outer configuration object
  */
 export type TConfigCapsule = {
-    init?: Function;
-    isMobile?: Function;
-    exists?: Function;
-    set?: Function;
-    get?: Function;
+    init?: () => void;
+    isMobile?: () => boolean;
+    exists?: (
+        path: string
+    ) => boolean;
+    set?: (
+        path: string,
+        value: any
+    ) => boolean;
+    get?: (path: string) => any;
     data?: IConfigData;
 };
