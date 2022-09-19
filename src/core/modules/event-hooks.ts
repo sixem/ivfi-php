@@ -4,7 +4,6 @@ import {
 	HTMLElementEventHooks,
 	EventTargetEventHooks,
 	IEventHooks,
-	IListenOptions,
 	IEventItem
 } from '../types';
 
@@ -99,11 +98,7 @@ const eventCallback = (event: Event): void =>
 /**
  * Actives or deactivates the activation of listener callbacks
  */
-eventHooks.listenSetState = (
-	selector: HTMLElement | HTMLElementEventHooks | string,
-	events: Array<string> | string,
-	id: any,
-	state = true): void =>
+eventHooks.listenSetState = (selector, events, id, state = true): void =>
 {
 	let element: HTMLElementEventHooks;
 
@@ -130,10 +125,7 @@ eventHooks.listenSetState = (
 	}
 };
 
-eventHooks.unlisten = (
-	selector: HTMLElement | HTMLElementEventHooks,
-	events: Array<string> | string,
-	id: string): void | boolean =>
+eventHooks.unlisten = (selector, events, id): void | boolean =>
 {
 	/* Check if the ID isn't present */
 	if(!eventHooks.events[id])
@@ -329,10 +321,7 @@ eventHooks.listen = (selector, events, id, callback, options = {}): void =>
 /**
  * Subscribes to a self-defined event
  */
-eventHooks.subscribe = (
-	event: string,
-	id: string,
-	callback: (...args: any) => void): void =>
+eventHooks.subscribe = (event, id, callback): void =>
 {
 	if(!Object.prototype.hasOwnProperty.call(eventHooks.subs, event))
 	{
@@ -345,7 +334,7 @@ eventHooks.subscribe = (
 /**
  * Unscribes from a self-defined event
  */
-eventHooks.unsubscribe = (event: string, id: string): void =>
+eventHooks.unsubscribe = (event, id): void =>
 {
 	if(Object.prototype.hasOwnProperty.call(eventHooks.subs, event) &&
 		Object.prototype.hasOwnProperty.call(eventHooks.subs[event], id))
@@ -357,7 +346,7 @@ eventHooks.unsubscribe = (event: string, id: string): void =>
 /**
  * Triggers a self-defined event
  */
-eventHooks.trigger = (event: string, ...args: any[]): void =>
+eventHooks.trigger = (event, ...args): void =>
 {
 	if(Object.prototype.hasOwnProperty.call(eventHooks.subs, event))
 	{
