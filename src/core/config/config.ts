@@ -24,22 +24,22 @@ config.isMobile = (): boolean =>
 	return config.data.mobile;
 };
 
-config.exists = (path: string): boolean =>
+config.exists = (path): boolean =>
 {
 	return checkNestedPath(config.data, path);
 };
 
-config.set = (path: string, value: any): boolean =>
+config.set = (path, value): boolean =>
 {
 	return setNestedPath(config.data, path, value);
 };
 
-config.get = (path: string): any =>
+config.get = (path): any =>
 {
 	return getNestedPath(config.data, path, null);
 };
 
-user.set = (client: TUserStorage, options: TUserStorage = {}): void =>
+user.set = (client, options = {}): void =>
 {
 	options = Object.assign({
 		sameSite : 'lax',
