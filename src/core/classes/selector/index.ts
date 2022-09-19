@@ -39,8 +39,8 @@ export default class selectorClass
 
 	public define = (selector: string, id: any = null, scope: any = null): void =>
 	{
-		let element = (scope ? scope : document.body).querySelector(selector),
-			identifier = id ? id : selector;
+		const element = (scope ? scope : document.body).querySelector(selector);
+		let identifier = id ? id : selector;
 
 		if(isString(identifier))
 		{
@@ -59,7 +59,7 @@ export default class selectorClass
 
 		if(!Object.prototype.hasOwnProperty.call(this.data, identifier))
 		{
-			let selected = document.body.querySelector(identifier);
+			const selected = document.body.querySelector(identifier);
 
 			if(selected)
 			{

@@ -55,7 +55,7 @@ export default class galleryClass
 	constructor(items: Array<TGalleryTableItem>, options: object = {})
 	{
 		/* Get default values */
-		let defaults = this.setDefaults();
+		const defaults = this.setDefaults();
 
 		/* Override any default values passed as an option */
 		Object.keys(defaults).forEach((key) =>
@@ -79,7 +79,7 @@ export default class galleryClass
 
 	private setDefaults = (): object =>
 	{
-		let data: TGalleryDefaults = {};
+		const data: TGalleryDefaults = {};
 
 		/* Valid extensions */
 		data.extensions = {
@@ -194,7 +194,7 @@ export default class galleryClass
 			this.show(true);
 		}
 
-		let start = this.options.start > (this.items.length - 1) ? (this.items.length - 1): this.options.start;
+		const start = this.options.start > (this.items.length - 1) ? (this.items.length - 1): this.options.start;
 
 		this.navigate(start);
 
@@ -231,14 +231,14 @@ export default class galleryClass
 		{
 			let img: HTMLImageElement = document.createElement('img');
 
-			let onError = (): void =>
+			const onError = (): void =>
 			{
 				reject(new Error(`failed to load image URL: ${src}`));
 			};
 
-			let onLoad = (): void =>
+			const onLoad = (): void =>
 			{
-				let dimensions = {
+				const dimensions = {
 					width: img.naturalWidth,
 					height: img.naturalHeight
 				};
@@ -279,8 +279,8 @@ export default class galleryClass
 	 */
 	private elementHasScrollbar = (element: HTMLElement): boolean =>
 	{
-		let height = element.getBoundingClientRect().height,
-			style = window.getComputedStyle(element);
+		let height = element.getBoundingClientRect().height;
+		const style = window.getComputedStyle(element);
 
 		height = ['top', 'bottom'].map((side) =>
 		{
@@ -359,7 +359,7 @@ export default class galleryClass
 			return 0;
 		}
 
-		let outer: HTMLDivElement = document.createElement('div');
+		const outer: HTMLDivElement = document.createElement('div');
 
 		DOM.style.set(outer, {
 			visibility: 'hidden',
@@ -369,11 +369,11 @@ export default class galleryClass
 
 		document.body.appendChild(outer);
 
-		let inner = document.createElement('div');
+		const inner = document.createElement('div');
 
 		outer.appendChild(inner);
 
-		let scrollbarWidth = (outer.offsetWidth - inner.offsetWidth);
+		const scrollbarWidth = (outer.offsetWidth - inner.offsetWidth);
 
 		outer.parentNode.removeChild(outer);
 
@@ -385,9 +385,9 @@ export default class galleryClass
 	 * 
 	 * This allows the gallery to operate without a scrollbar in the background
 	 */
-	limitBody = (bool: boolean = true): void =>
+	limitBody = (bool = true): void =>
 	{
-		let body: HTMLElement = document.body,
+		const body: HTMLElement = document.body,
 			root: HTMLElement = document.documentElement,
 			scrollpadding: number = this.getScrollbarWidth();
 
@@ -443,7 +443,7 @@ export default class galleryClass
 	/**
 	 * Shows or hides the gallery
 	 */
-	public show = (bool: boolean = true, index: null | number = null, items: Array<TGalleryTableItem> = null): void =>
+	public show = (bool = true, index: null | number = null, items: Array<TGalleryTableItem> = null): void =>
 	{
 		if(items)
 		{
@@ -460,7 +460,7 @@ export default class galleryClass
 
 			if(index !== this.data.selected.index)
 			{
-				let elements: NodeList = this.container.querySelectorAll(
+				const elements: NodeList = this.container.querySelectorAll(
 					':scope > div.galleryContent > div.media > div.wrapper img, \
 					:scope > div.galleryContent > div.media > div.wrapper video'
 				);
@@ -484,7 +484,7 @@ export default class galleryClass
 
 		this.limitBody(bool);
 
-		let video: HTMLVideoElement = this.container.querySelector(
+		const video: HTMLVideoElement = this.container.querySelector(
 			':scope > div.galleryContent > div.media > div.wrapper video'
 		);
 
@@ -494,7 +494,7 @@ export default class galleryClass
 				video.style.display !== 'none')
 			{
 				let currentTime: number = video.currentTime,
-					sourceMatch: boolean = false;
+					sourceMatch = false;
 
 				if(this.options.continue.video &&
 					Object.prototype.hasOwnProperty.call(this.options.continue.video, 'src'))
@@ -526,7 +526,7 @@ export default class galleryClass
 			this.list &&
 			this.table)
 		{
-			let selectedItem: HTMLElement = this.table.querySelector('tr.selected');
+			const selectedItem: HTMLElement = this.table.querySelector('tr.selected');
 
 			let selectedItemTop: number | boolean = parseInt(
 				selectedItem.style.top.replace(/\D+/g, '')
@@ -559,7 +559,7 @@ export default class galleryClass
 		{
 			this.data.busy = bool;
 
-			let loader: HTMLElement = this.container.querySelector(
+			const loader: HTMLElement = this.container.querySelector(
 				':scope > div.galleryContent > div.media > div.spinner'
 			);
 
@@ -652,7 +652,7 @@ export default class galleryClass
 				this.optimize.enabled)
 			{
 				/* Get scrolled position */
-				let scrolled = this.list.scrollTop;
+				const scrolled = this.list.scrollTop;
 
 				/* Trigger optimization refresh if 175 px has been scrolled */
 				if(Math.abs(scrolled - (this.page).scrolledY) > 175)
@@ -683,7 +683,7 @@ export default class galleryClass
 			'div.galleryContent > div.list > table'
 		);
 
-		let buffer: Array<string> = [];
+		const buffer: Array<string> = [];
 
 		for(let i = 0; i <= items.length - 1; i++)
 		{
@@ -708,11 +708,11 @@ export default class galleryClass
 		{
 			wrapper = wrapper || this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
 
-			let list: HTMLElement = this.data.list ? this.data.list : (
+			const list: HTMLElement = this.data.list ? this.data.list : (
 				this.container.querySelector(':scope > div.galleryContent > div.list')
 			);
 
-			let width = (this.options.mobile || !list || list.style.display === 'none') ? 0: list.offsetWidth;
+			const width = (this.options.mobile || !list || list.style.display === 'none') ? 0: list.offsetWidth;
 
 			wrapper.style.setProperty('--width-list', `${width}px`);
 		}
@@ -725,7 +725,7 @@ export default class galleryClass
 	{
 		url = this.encodeUrl(document.location.origin + url);
 
-		let reverseObj = {};
+		const reverseObj = {};
 
 		Object.keys(data.text.reverseSearch).forEach((key: string) =>
 		{
@@ -751,7 +751,7 @@ export default class galleryClass
 
 		if(!container)
 		{
-			let reverse: HTMLDivElement = DOM.new('div', {
+			const reverse: HTMLDivElement = DOM.new('div', {
 				class: 'reverse'
 			}) as HTMLDivElement;
 
@@ -759,7 +759,7 @@ export default class galleryClass
 			container = reverse;
 		}
 
-		let options: object = this.getReverseOptions(this.data.selected.src);
+		const options: object = this.getReverseOptions(this.data.selected.src);
 
 		container.innerHTML = Object.keys(options).map((site: string) =>
 		{
@@ -784,7 +784,7 @@ export default class galleryClass
 		/* Sets an item dimension notification on navigate change */
 		itemDimensions: (index: number) =>
 		{
-			let item: TGalleryTableItem = this.items[index];
+			const item: TGalleryTableItem = this.items[index];
 			let media: HTMLElement = this.container.querySelector('div.media > div.item-info-static');
 
 			if(Object.prototype.hasOwnProperty.call(item, 'dimensions') &&
@@ -841,16 +841,16 @@ export default class galleryClass
 				return false;
 			}
 
-			let download: HTMLElement = this.container.querySelector(
+			const download: HTMLElement = this.container.querySelector(
 				'.galleryBar > .galleryBarRight > a.download'
 			);
 
-			let left: HTMLElement = this.container.querySelector(
+			const left: HTMLElement = this.container.querySelector(
 				':scope > div.galleryBar > div.galleryBarLeft'
 			);
 
-			let name: string = this.options.mobile ? shortenString(item.name, 30): item.name;
-			let url: string = this.encodeUrl(item.url);
+			const name: string = this.options.mobile ? shortenString(item.name, 30): item.name;
+			const url: string = this.encodeUrl(item.url);
 
 			DOM.attributes.set(download, {
 				filename: item.name,
@@ -858,7 +858,7 @@ export default class galleryClass
 				title: `Download: ${item.name}`
 			});
 
-			let buffer: Array<string> = [
+			const buffer: Array<string> = [
 				`<span>${index + 1} of ${max}</span>`,
 				`<a target="_blank" href="${url}">${name}</a>`
 			];
@@ -877,12 +877,12 @@ export default class galleryClass
 	/* Checks if a list item is scrolled into view */
 	private isScrolledIntoView = (container: HTMLElement, element: HTMLElement): boolean =>
 	{
-		let parent = {
+		const parent = {
 			scrolled: container.scrollTop,
 			height: container.offsetHeight
 		};
 
-		let child = {
+		const child = {
 			offset: element.offsetTop,
 			height: (element.children[0] as HTMLElement).offsetHeight
 		};
@@ -925,13 +925,13 @@ export default class galleryClass
 		/* Creates a video element */
 		create: (extension: string): [HTMLVideoElement, HTMLSourceElement] =>
 		{
-			let video: HTMLVideoElement = DOM.new('video', {
+			const video: HTMLVideoElement = DOM.new('video', {
 				controls: '',
 				preload: 'auto',
 				loop: ''
 			}) as HTMLVideoElement;
 
-			let source: HTMLSourceElement = DOM.new('source', {
+			const source: HTMLSourceElement = DOM.new('source', {
 				type: `video/${extension === 'mov' ? 'mp4': (
 					extension === 'ogv' ? 'ogg': extension
 				)}`,
@@ -968,13 +968,13 @@ export default class galleryClass
 		/* Video seeker */
 		seek: (i: number): void | boolean =>
 		{
-			let video: HTMLVideoElement = this.container.querySelector(
+			const video: HTMLVideoElement = this.container.querySelector(
 				':scope > div.galleryContent > div.media > div.wrapper video'
 			);
 
 			if(video)
 			{
-				let current = Math.round(video.currentTime), duration = Math.round(video.duration);
+				const current = Math.round(video.currentTime), duration = Math.round(video.duration);
 
 				if(i > 0)
 				{
@@ -1018,18 +1018,18 @@ export default class galleryClass
 	{
 		log('gallery', 'showItem', { type, element, src, init, index, data });
 
-		let wrapper: HTMLElement = this.container.querySelector(
+		const wrapper: HTMLElement = this.container.querySelector(
 			':scope > div.galleryContent > div.media > div.wrapper'
 		);
 
 		let video: any;
 		let source: HTMLSourceElement = null;
-		let hasEvented: boolean = false;
+		let hasEvented = false;
 
 		/* Hides the opposite media element */
-		let hideOther = (): void =>
+		const hideOther = (): void =>
 		{
-			let opposite: HTMLElement = wrapper.querySelector(type === 0 ? 'video': 'img');
+			const opposite: HTMLElement = wrapper.querySelector(type === 0 ? 'video': 'img');
 
 			if(opposite && type === 1)
 			{
@@ -1042,9 +1042,9 @@ export default class galleryClass
 			}
 		};
 
-		let applyChange = (onChange?: Function) =>
+		const applyChange = (onChange?: () => void) =>
 		{
-			let elements: NodeList = this.container.querySelectorAll(':scope > \
+			const elements: NodeList = this.container.querySelectorAll(':scope > \
 				div.galleryContent > div.media > div.wrapper > div:not(.cover)');
 
 			elements.forEach((element: HTMLElement) => element.remove());
@@ -1062,7 +1062,7 @@ export default class galleryClass
 			this.busy(false);
 		};
 
-		let display = (): void =>
+		const display = (): void =>
 		{
 			/* Image type */
 			if(type === 0)
@@ -1095,7 +1095,7 @@ export default class galleryClass
 						/* Fit content */
 						if(this.options.fitContent)
 						{
-							let height = `calc(calc(100vw - var(--width-list)) / ${
+							const height = `calc(calc(100vw - var(--width-list)) / ${
 								(data.img.width / data.img.height).toFixed(4)
 							})`;
 							
@@ -1121,13 +1121,13 @@ export default class galleryClass
 					if(video)
 					{
 						/* Get source */
-						let videoSource = video.querySelector('source');
+						const videoSource = video.querySelector('source');
 
 						/* Pause and reset source */
 						video.pause();
 						videoSource.setAttribute('src', '');
 
-						let videoListeners: Array<any> = [
+						const videoListeners: Array<any> = [
 							[video, 'videoError'],
 							[videoSource, 'sourceError']
 						];
@@ -1135,10 +1135,7 @@ export default class galleryClass
 						/* Unlisten to video events */
 						(videoListeners).forEach(([element, id]: Array<any>): void =>
 						{
-							eventHooks.unlisten(element, 'error', id, (event: Event): void =>
-							{
-								console.error(event);
-							});
+							eventHooks.unlisten(element, 'error', id);
 						});
 					}
 				});
@@ -1162,7 +1159,7 @@ export default class galleryClass
 				video.srcId = src;
 
 				/** Triggered on video error */
-				let error = (event: Event) =>
+				const error = (event: Event) =>
 				{
 					console.error('Failed to load video source.', event);
 					
@@ -1171,7 +1168,7 @@ export default class galleryClass
 					video.remove();
 				};
 
-				let videoListeners: Array<[HTMLVideoElement | HTMLSourceElement, string]> = [
+				const videoListeners: Array<[HTMLVideoElement | HTMLSourceElement, string]> = [
 					[video, 'videoError'],
 					[source, 'sourceError']
 				];
@@ -1197,7 +1194,7 @@ export default class galleryClass
 				});
 
 				/* Events that indiciate that the video is "ready" */
-				let videoReadyEvents: Array<string> = [
+				const videoReadyEvents: Array<string> = [
 					'canplay',
 					'canplaythrough',
 					'playing'
@@ -1239,7 +1236,7 @@ export default class galleryClass
 					}
 
 					/* Video dimensions */
-					let height: number = video.videoHeight,
+					const height: number = video.videoHeight,
 						width: number = video.videoWidth;
 
 					this.items[index].dimensions = {
@@ -1328,7 +1325,7 @@ export default class galleryClass
 		log('gallery', 'busyState', this.busy());
 
 		/* Set maximum navigation index */
-		let max = this.items.length - 1;
+		const max = this.items.length - 1;
 
 		/* Index defaulting */
 		if(index === null)
@@ -1347,21 +1344,22 @@ export default class galleryClass
 			return false;
 		}
 
-		let init = null, item = null,
-			contentContainer: HTMLElement = this.container.querySelector(':scope > div.galleryContent');
+		let init = null, item = null;
+
+		const contentContainer: HTMLElement = this.container.querySelector(':scope > div.galleryContent');
 
 		/* Select video and image elements */
 		let image: HTMLImageElement = contentContainer.querySelector(':scope > div.media > div.wrapper img'),
 			video: HTMLVideoElement = contentContainer.querySelector(':scope > div.media > div.wrapper video');
 
 		/* Select list, table and table items */
-		let list: HTMLElement = contentContainer.querySelector(':scope > div.list'),
+		const list: HTMLElement = contentContainer.querySelector(':scope > div.list'),
 			table: HTMLElement = list.querySelector('table'),
 			element: HTMLElementExtend = table.querySelector(`tr:nth-child(${index + 1})`);
 
 		item = this.items[index];
 
-		let encodedItemSource = this.encodeUrl(item.url);
+		const encodedItemSource = this.encodeUrl(item.url);
 
 		this.data.selected.src = encodedItemSource;
 		this.data.selected.ext = this.getExtension(item.name);
@@ -1378,14 +1376,15 @@ export default class galleryClass
 		/* Set item information */
 		this.apply.itemInfo((!image && !video) ? true: false, item, index, max + 1);
 
-		let hasScrolled = false,
-			useScrollOptimize: boolean = this.options.performance
+		let hasScrolled = false;
+
+		const useScrollOptimize: boolean = this.options.performance
 				&& this.optimize
 				&& this.optimize.enabled;
 
 		if(useScrollOptimize && element.classList.contains('hid-row') && element._offsetTop >= 0)
 		{
-			let scrollPosition = element._offsetTop - (list.offsetHeight / 2);
+			const scrollPosition = element._offsetTop - (list.offsetHeight / 2);
 			/* Scroll to a hidden row as a result of optimization */
 			list.scrollTo(0, scrollPosition >= 0 ? scrollPosition: 0);
 
@@ -1422,12 +1421,12 @@ export default class galleryClass
 			/* If initial navigate, create image element */
 			if(init === true)
 			{
-				let cover: HTMLElement = DOM.new('div', {
+				const cover: HTMLElement = DOM.new('div', {
 					class: 'cover',
 					style: 'display: none'
 				});
 
-				let wrapper = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
+				const wrapper = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
 
 				image = DOM.new('img') as HTMLImageElement;
 
@@ -1450,7 +1449,7 @@ export default class galleryClass
 			{
 				if(dimensions && !cancelled)
 				{
-					let [w, h] = [dimensions.width, dimensions.height];
+					const [w, h] = [dimensions.width, dimensions.height];
 
 					if(this.data.selected.src === src)
 					{
@@ -1485,7 +1484,7 @@ export default class galleryClass
 					).remove();
 				}
 
-				let imageError: HTMLElement = DOM.new('div', {
+				const imageError: HTMLElement = DOM.new('div', {
 					class: 'error'
 				});
 
@@ -1522,7 +1521,7 @@ export default class galleryClass
 	/**
 	 * Handles keypresses
 	 */
-	private handleKey = (key: string, callback: Function) =>
+	private handleKey = (key: string, callback: (prevent: boolean) => void) =>
 	{
 		log('gallery', 'handleKey', key);
 
@@ -1583,7 +1582,7 @@ export default class galleryClass
 	{
 		Object.keys(this.data.boundEvents).forEach((eventId: string) =>
 		{
-			let { selector, events }: {
+			const { selector, events }: {
 				selector: HTMLElement,
 				events: Array<string> | string
 			} = this.data.boundEvents[eventId];
@@ -1609,9 +1608,9 @@ export default class galleryClass
 	 */
 	private toggleList = (element: HTMLElement = null): boolean =>
 	{
-		let list: HTMLElement = this.container.querySelector(':scope > div.galleryContent > div.list');
-		let visible: boolean = list.style.display !== 'none';
-		let client: TUserStorage = user.get();
+		const list: HTMLElement = this.container.querySelector(':scope > div.galleryContent > div.list');
+		const visible: boolean = list.style.display !== 'none';
+		const client: TUserStorage = user.get();
 
 		client.gallery.listState = (!visible ? 1: 0);
 
@@ -1624,7 +1623,7 @@ export default class galleryClass
 			);
 		}
 
-		element.innerHTML = `List<span>${visible ? '+': '-'}</span>`;
+		element.innerHTML = `List<span class="inheritParentAction">${visible ? '+': '-'}</span>`;
 
 		DOM.style.set(list, {
 			'display': visible ? 'none': 'table-cell'
@@ -1651,7 +1650,7 @@ export default class galleryClass
 		{
 			this.data.listDragged = true;
 
-			let windowWidth = window.innerWidth,
+			const windowWidth = window.innerWidth,
 				wrapper: HTMLElement = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
 
 			/* Set cursors and pointer events */
@@ -1679,11 +1678,11 @@ export default class galleryClass
 			/* Listens for `mousemove` - this changes the width of the list */
 			eventHooks.listen('body > div.rootGallery', 'mousemove', 'galleryListMouseMove', (event: MouseEvent): void =>
 			{
-				let x = event.clientX;
+				const x = event.clientX;
 
 				if(x < windowWidth)
 				{
-					let width = this.options.list.reverse ? (x + this.getScrollbarWidth()) : (windowWidth - x);
+					const width = this.options.list.reverse ? (x + this.getScrollbarWidth()) : (windowWidth - x);
 
 					requestAnimationFrame((): void =>
 					{
@@ -1705,7 +1704,7 @@ export default class galleryClass
 			{
 				eventHooks.unlisten('body > div.rootGallery', 'mousemove', 'galleryListMouseMove');
 
-				let wrapper: HTMLElement = this.container.querySelector(
+				const wrapper: HTMLElement = this.container.querySelector(
 					':scope > div.galleryContent > div.media > div.wrapper'
 				);
 
@@ -1731,13 +1730,13 @@ export default class galleryClass
 					this.data.listDrag.removeAttribute('dragged');
 				}
 
-				let lw: number = parseInt(this.data.list.style.width.replace(/[^-\d.]/g, ''));
+				const lw: number = parseInt(this.data.list.style.width.replace(/[^-\d.]/g, ''));
 
 				log('gallery', 'Set list width', lw);
 
 				if(lw > 100)
 				{
-					let client = JSON.parse(cookies.get(CookieKey));
+					const client = JSON.parse(cookies.get(CookieKey));
 
 					client.gallery.listWidth = lw;
 
@@ -1758,14 +1757,21 @@ export default class galleryClass
 		/* Add action events */
 		eventHooks.listen('body > div.rootGallery', 'click', 'galleryContainerClick', (event: MouseEvent) =>
 		{
-			if(event.target &&
-				(event.target as HTMLElement).hasAttribute('data-action'))
+			let eventTarget = event.target as HTMLElement;
+
+			if(eventTarget && eventTarget.tagName === 'SPAN'
+				&& eventTarget.classList.contains('inheritParentAction'))
+			{
+				eventTarget = eventTarget.parentNode as HTMLElement;
+			}
+
+			if(eventTarget && eventTarget.hasAttribute('data-action'))
 			{
 				/* Current action */
-				let action = (event.target as HTMLElement).getAttribute('data-action').toLowerCase();
+				const action = eventTarget.getAttribute('data-action').toLowerCase();
 			
 				/* Translate action */
-				let translate = {
+				const translate = {
 					next: ((): void =>
 					{
 						this.navigate(null, 1);
@@ -1776,7 +1782,7 @@ export default class galleryClass
 					}),
 					toggle: ((): void =>
 					{
-						this.toggleList((event.target as HTMLElement));
+						this.toggleList(eventTarget);
 					}),
 					close: ((): void =>
 					{
@@ -1826,7 +1832,7 @@ export default class galleryClass
 		if(this.options.mobile === true)
 		{
 			/* Handle swipe events */
-			let handler = (event: Event, eventData: EventData): void =>
+			const handler = (event: Event, eventData: EventData): void =>
 			{
 				switch(eventData.directionX)
 				{
@@ -1841,7 +1847,7 @@ export default class galleryClass
 			};
 
 			/* Create swipe events */
-			let swipeInstance = new Swipe({
+			const swipeInstance = new Swipe({
 				element: document.querySelector('body > div.rootGallery'),
 				onSwiped: handler,
 				mouseTrackingEnabled: true
@@ -1934,12 +1940,13 @@ export default class galleryClass
 			}));
 
 			/* Create `list toggle` button */
-			let listToggle: HTMLElement = DOM.new('span', {
+			const listToggle: HTMLElement = DOM.new('span', {
 				'data-action': 'toggle',
 				'text': 'List'
 			});
 
 			listToggle.append(DOM.new('span', {
+				'class': 'inheritParentAction',
 				'text': this.options.list.show ? '-': '+'
 			}));
 
@@ -1959,12 +1966,12 @@ export default class galleryClass
 	/**
 	 * Creates the gallery elements, populates the table etc.
 	 */
-	private initiate = (callback: Function): void =>
+	private initiate = (callback: (state?: boolean) => void): void =>
 	{
 		/* Fix body overflow and paddings */
 		this.limitBody(true);
 
-		let preview: HTMLElement = document.body.querySelector(
+		const preview: HTMLElement = document.body.querySelector(
 			':scope > div.preview-container'
 		);
 
@@ -1982,7 +1989,7 @@ export default class galleryClass
 		document.body.prepend(this.container);
 
 		/* Create gallery top bar */
-		let top: HTMLElement = DOM.new('div', {
+		const top: HTMLElement = DOM.new('div', {
 			class: 'galleryBar'
 		});
 
@@ -1999,18 +2006,18 @@ export default class galleryClass
 		})));
 
 		/* Create content (media) outer container */
-		let content: HTMLElement = DOM.new('div', {
+		const content: HTMLElement = DOM.new('div', {
 			class: 'galleryContent' + (this.options.list.reverse ? ' reversed': '')
 		});
 
 		this.container.append(content);
 
-		let media: HTMLElement = DOM.new('div', {
+		const media: HTMLElement = DOM.new('div', {
 			class: 'media'
 		});
 
 		/* Create list */
-		let list: HTMLElement = DOM.new('div', {
+		const list: HTMLElement = DOM.new('div', {
 			class: 'ns list'
 		});
 
@@ -2030,14 +2037,14 @@ export default class galleryClass
 		this.data.listDragged = false;
 
 		/* Get user storage */
-		let client: TUserStorage = JSON.parse(
+		const client: TUserStorage = JSON.parse(
 			cookies.get(CookieKey)
 		);
 
 		try
 		{
 			/* Get gallery list width */
-			let width: number = JSON.parse(
+			const width: number = JSON.parse(
 				client.gallery.listWidth.toString().toLowerCase()
 			);
 
@@ -2070,12 +2077,12 @@ export default class galleryClass
 		/* Create mobile navigation (left & right) */
 		if(this.options.mobile === true)
 		{
-			let navigateLeft: HTMLElement = DOM.new('div', {
+			const navigateLeft: HTMLElement = DOM.new('div', {
 				'class': 'screenNavigate navigateLeft',
 				'data-action': 'previous'
 			});
 
-			let navigateRight: HTMLElement = DOM.new('div', {
+			const navigateRight: HTMLElement = DOM.new('div', {
 				'class': 'screenNavigate navigateRight',
 				'data-action': 'next'
 			});
@@ -2095,7 +2102,7 @@ export default class galleryClass
 		}));
 
 		/* Create list table */
-		let table = DOM.new('table', {
+		const table = DOM.new('table', {
 			cellspacing: '0'
 		});
 

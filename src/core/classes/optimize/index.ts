@@ -6,6 +6,7 @@ import { log } from '../../modules/logger';
 /** Types */
 import {
 	TPageObject,
+	ITableRowMI,
 	TOptimizeOptions,
 	TOptimizeScope,
 	TOptimizeRowItem,
@@ -46,7 +47,9 @@ export default class optimizeClass
 	}];
 
 	private on: boolean | {
-		rowChange?: Function;
+		rowChange?: (
+			rows: Array<ITableRowMI> | NodeListOf<TOptimizeRowItem>
+		) => boolean | void;
 	};
 
 	constructor(options: TOptimizeOptions)
@@ -81,18 +84,18 @@ export default class optimizeClass
 	{
 		log('optimize', '->', 'optimize.setup');
 
-		let table: HTMLElement = this.table;
-		let tableHeight: number = table.offsetHeight;
-		let rows: NodeListOf<TOptimizeRowItem> = table.querySelectorAll('tbody > tr');
-		let rowHeight: number = (rows[0] as HTMLElement).offsetHeight;
-		let structure: TOptimizeStructure = {};
+		const table: HTMLElement = this.table;
+		const rows: NodeListOf<TOptimizeRowItem> = table.querySelectorAll('tbody > tr');
+		const rowHeight: number = (rows[0] as HTMLElement).offsetHeight;
+		const tableHeight: number = table.offsetHeight;
+		const structure: TOptimizeStructure = {};
 
 		this.tableOffsetBegin = (rows[0] as HTMLElement).offsetTop;
 
-		let measureStart = performance.now();
+		const measureStart = performance.now();
 
 		/* Store table structure (offset + height + index) */
-		for(let index: number = 0; index < rows.length; index++)
+		for(let index = 0; index < rows.length; index++)
 		{
 			/* `this.padding` is to adjust for any table container paddings */
 			rows[index]._offsetTop = rows[index].offsetTop + this.padding;
@@ -116,7 +119,7 @@ export default class optimizeClass
 		});
 
 		/* Iterate rows, create structure object */
-		for(let i: number = 0; i < rows.length; i++)
+		for(let i = 0; i < rows.length; i++)
 		{
 			structure[rows[i]._offsetTop] = {
 				index : i
@@ -125,31 +128,31 @@ export default class optimizeClass
 
 		this.structure = structure;
 
-		let index: number = 0;
+		let index = 0;
 
 		/* Get current positioning and decide what rows can be hidden on page load */
-		let tablePosTop: number = table.getBoundingClientRect().top;
+		const tablePosTop = table.getBoundingClientRect().top;
 
-		let origin: number = Math.ceil(
+		const origin: number = Math.ceil(
 			this.page.scrolledY - (
 				tablePosTop + this.page.scrolledY) + (this.page.windowHeight / 2
 			)
 		);
 
-		let margin: number = Math.ceil(Math.ceil(this.page.windowHeight / rowHeight) * 2);
+		const margin: number = Math.ceil(Math.ceil(this.page.windowHeight / rowHeight) * 2);
 
 		this.getActiveData();
 
 		index = this.scanForClosest(origin, 1E3, index);
 
 		/* get visible range relative to origin index */
-		let [start, limit] = this.calculateRange(index, margin);
+		const [start, limit] = this.calculateRange(index, margin);
 
 		/* Use data from above to hide rows that are out of viewport before setting position */
-		for(let i: number = 0; i < rows.length; i++)
+		for(let i = 0; i < rows.length; i++)
 		{
-			let item: TOptimizeRowItem = rows[i];
-			let itemClasses: Array<string> = ['rel-row'];
+			const item: TOptimizeRowItem = rows[i];
+			const itemClasses: Array<string> = ['rel-row'];
 
 			/* Out of viewport? hide it here - speeds up page load */
 			if(!(i >= start && i <= limit))
@@ -181,28 +184,28 @@ export default class optimizeClass
 	public refactor = (): boolean =>
 	{
 		/* Start measuring execution time */
-		let measureStart: number = performance.now();
+		const measureStart: number = performance.now();
 
 		log('optimize', '->', 'optimize.refactor');
 
 		/* Declare variables */
-		let table: HTMLElement = this.table;
+		const table: HTMLElement = this.table;
 
 		/* `this.padding` is to adjust for any table container paddings */
 		let combinedHeight: number = (this.tableOffsetBegin) + this.padding;
 
 		/* Create new structure */
-		let structure: TOptimizeStructure  = {};
+		const structure: TOptimizeStructure  = {};
 
 		/* Store offsets */
-		let rowOffsets: { [key: string]: number; } = {};
+		const rowOffsets: { [key: string]: number; } = {};
 
-		let recentHeight: number = 0;
+		let recentHeight = 0;
 
 		/* Create updated structure */
-		for(let index: number = 0; index < (this.rows).length; index++)
+		for(let index = 0; index < (this.rows).length; index++)
 		{
-			let item: TOptimizeRowItem = (this.rows[index]);
+			const item: TOptimizeRowItem = (this.rows[index]);
 
 			if(item._isVisible)
 			{
@@ -230,16 +233,16 @@ export default class optimizeClass
 		this.activeHasChanged = true;
 		this.page.scrolledY = (this.scope[0])[this.scope[1]];
 
-		let index: number = 0;
+		let index = 0;
 
 		/* Get visible index range and margins */
-		let tablePosTop: number = table.getBoundingClientRect().top;
+		const tablePosTop: number = table.getBoundingClientRect().top;
 
-		let origin: number = Math.ceil(
+		const origin: number = Math.ceil(
 			this.page.scrolledY - (tablePosTop + this.page.scrolledY) + (this.page.windowHeight / 2)
 		);
 
-		let margin: number = Math.ceil(Math.ceil(this.page.windowHeight / this.rowHeight) * 2),
+		const margin: number = Math.ceil(Math.ceil(this.page.windowHeight / this.rowHeight) * 2),
 			[activeRows, activeIndexes] = this.getActiveData();
 
 		/* Detect origin index */
@@ -249,13 +252,13 @@ export default class optimizeClass
 		index = this.getRelativeIndex(activeIndexes, index) || index;
 
 		/* Find visible row range */
-		let [start, limit] = this.calculateRange(index, margin);
+		const [start, limit] = this.calculateRange(index, margin);
 
 		/* 
 		 * Prior to setting positions, show all elements that WILL be visible
 		 * in the viewport. This eliminates some flashing etc.
 		 */
-		for(let i: number = 0; i < activeRows.length; i++)
+		for(let i = 0; i < activeRows.length; i++)
 		{
 			if(i >= start && i <= limit)
 			{
@@ -264,9 +267,9 @@ export default class optimizeClass
 		}
 
 		/* Iterate over stored rows, check status and arrange new table */
-		for(let index: number = 0; index < (this.rows).length; index++)
+		for(let index = 0; index < (this.rows).length; index++)
 		{
-			let item: TOptimizeRowItem = this.rows[index];
+			const item: TOptimizeRowItem = this.rows[index];
 
 			if(item._isVisible)
 			{
@@ -314,19 +317,19 @@ export default class optimizeClass
 		}
 	}
 
-	public sortRows = (column: number = 0, order: string = 'asc'): Array<TOptimizeRowItem> =>
+	public sortRows = (column = 0, order = 'asc'): Array<TOptimizeRowItem> =>
 	{
 		/* Convert sorting direction to an integer */
-		let sort: number = (order.toLowerCase() === 'asc' ? 1 : 0);
+		const sort: 1 | 0 = (order.toLowerCase() === 'asc' ? 1 : 0);
 
 		/* Cache arrays */
-		let rows: Array<TOptimizeRowItem> = [],
+		const rows: Array<TOptimizeRowItem> = [],
 			items: Array<TOptimizeCachedRowItem> = [],
 			keepIntact: Array<TOptimizeCachedRowItem> = [];
 
-		let measureStart = performance.now();
+		const measureStart = performance.now();
 
-		for(let i: number = 0; i < this.rows.length; i++)
+		for(let i = 0; i < this.rows.length; i++)
 		{
 			/* Skip parent directory as we'll unshift that in at the end instead */
 			if(i === 0)
@@ -334,7 +337,7 @@ export default class optimizeClass
 				continue;
 			}
 
-			let item: TOptimizeRowItem = this.rows[i],
+			const item: TOptimizeRowItem = this.rows[i],
 				value: string = item.children[column].getAttribute('data-raw'),
 				separate: boolean = item.classList.contains('directory');
 
@@ -351,7 +354,7 @@ export default class optimizeClass
 
 		items.unshift(...keepIntact);
 
-		for(let i: number = 0; i < items.length; i++)
+		for(let i = 0; i < items.length; i++)
 		{
 			rows.push(this.rows[items[i].index]);
 		}
@@ -371,12 +374,12 @@ export default class optimizeClass
 	 */
 	private calculateRange = (index: number, margin: number): [number, number] =>
 	{
-		let start: number = (index - margin),
-			negative: number = (start < 0 ? start : 0);
+		let start = (index - margin);
+		const negative: number = (start < 0 ? start : 0);
 
 		start = (start < 0 ? 0 : start);
 
-		let limit: number = (start + (margin * 2)) + negative;
+		const limit: number = (start + (margin * 2)) + negative;
 
 		return [start, limit];
 	}
@@ -392,12 +395,12 @@ export default class optimizeClass
 		{
 			log('optimize', 'Updating active data ..');
 
-			let activeRows: Array<TOptimizeRowItem> = [],
+			const activeRows: Array<TOptimizeRowItem> = [],
 				activeIndexes: {
 					[key: string]: number;
 				} = {};
 
-			for(let i: number = 0; i < this.rows.length; i++)
+			for(let i = 0; i < this.rows.length; i++)
 			{
 				if(this.rows[i]._isVisible)
 				{
@@ -420,7 +423,7 @@ export default class optimizeClass
 	{
 		let index: any = fallback;
 
-		for(let i: number = 0; i < (range || 1E3); i++)
+		for(let i = 0; i < (range || 1E3); i++)
 		{
 			if(this.structure[origin + i])
 			{
@@ -438,11 +441,11 @@ export default class optimizeClass
 		[key: string]: number;
 	}, index: number): number | null =>
 	{
-		let indexes: Array<string> = Object.keys(activeIndexes),
-			relative: number | null = null;
+		const indexes: Array<string> = Object.keys(activeIndexes);
+		let relative: number | null = null;
 
 		/* Find index relative to the active rows */
-		for(let i: number = 0; i < indexes.length; i++)
+		for(let i = 0; i < indexes.length; i++)
 		{
 			if(parseInt(indexes[i]) === index)
 			{
@@ -459,13 +462,11 @@ export default class optimizeClass
 		updated: number
 	} =>
 	{
-		let updated: number = 0,
-			visible: number = 0,
-			hidden: number = 0;
+		let updated = 0, visible = 0, hidden = 0;
 
-		let [start, limit] = this.calculateRange(index, margin);
+		const [start, limit] = this.calculateRange(index, margin);
 
-		let items: {
+		const items: {
 			show: Array<TOptimizeRowItem>;
 			hide: Array<TOptimizeRowItem>;
 		} = {
@@ -474,9 +475,9 @@ export default class optimizeClass
 		};
 
 		/* Iterate over active rows, hide and show rows */
-		for(let i: number = 0; i < rows.length; i++)
+		for(let i = 0; i < rows.length; i++)
 		{
-			let item: TOptimizeRowItem = rows[i];
+			const item: TOptimizeRowItem = rows[i];
 
 			if(i >= start && i <= limit)
 			{
@@ -523,7 +524,7 @@ export default class optimizeClass
 	/**
 	 * Hides rows that are out of view - called on scroll, resize and so on
 	 */
-	private refresh = (refreshId: number = 0): Promise<number> =>
+	private refresh = (refreshId = 0): Promise<number> =>
 	{
 		if(!this.initiated)
 		{
@@ -531,7 +532,7 @@ export default class optimizeClass
 		}
 
 		/* Start measuring execution time */
-		let measureStart: number = performance.now();
+		const measureStart: number = performance.now();
 
 		log('optimize', '->', 'optimize.refresh');
 
@@ -539,19 +540,19 @@ export default class optimizeClass
 		this.page.scrolledY = (this.scope[0])[this.scope[1]];
 
 		/* Get origin point */
-		let tablePosTop: number = this.table.getBoundingClientRect().top;
+		const tablePosTop: number = this.table.getBoundingClientRect().top;
 
-		let origin: number = Math.ceil(this.page.scrolledY - (tablePosTop + this.page.scrolledY) + (this.page.windowHeight / 2));
+		const origin: number = Math.ceil(this.page.scrolledY - (tablePosTop + this.page.scrolledY) + (this.page.windowHeight / 2));
 
 		return new Promise((resolve, reject) =>
 		{
-			let index: number = 0;
+			let index = 0;
 
 			/* Calculate how many rows we need to show (-/+ viewport) */
-			let margin: number = Math.ceil(Math.ceil(this.page.windowHeight / this.rowHeight) * 2);
+			const margin: number = Math.ceil(Math.ceil(this.page.windowHeight / this.rowHeight) * 2);
 
 			/* Get active rows and their respective indexes */
-			let [activeRows, activeIndexes] = this.getActiveData();
+			const [activeRows, activeIndexes] = this.getActiveData();
 
 			/* Scan for closest structure row */
 			index = this.scanForClosest(origin, 1E3, index);
