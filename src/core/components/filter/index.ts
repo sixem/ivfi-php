@@ -27,9 +27,9 @@ type TFilterData = {
 	};
 };
 
-componentFilter.apply = (query: string = ''): void =>
+componentFilter.apply = (query = ''): void =>
 {
-	let filterData: TFilterData = {};
+	const filterData: TFilterData = {};
 	let errorData: any = false;
 
 	data.sets.refresh = true;
@@ -50,7 +50,7 @@ componentFilter.apply = (query: string = ''): void =>
 	}
 
 	/* Check if directory sizes are enabled */
-	let directorySizes = (
+	const directorySizes = (
 		Object.prototype.hasOwnProperty.call(
 			config.get('sorting'),
 			'directorySizes'
@@ -58,7 +58,7 @@ componentFilter.apply = (query: string = ''): void =>
 	);
 
 	/* Check if optimizer is being used */
-	let useOptimizer = Object.prototype.hasOwnProperty.call(data.instances.optimize, 'main')
+	const useOptimizer = Object.prototype.hasOwnProperty.call(data.instances.optimize, 'main')
 		&& data.instances.optimize.main.enabled;
 
 	/* Fetch rows from optimizer class if set */
@@ -73,9 +73,9 @@ componentFilter.apply = (query: string = ''): void =>
 	}
 
 	/* Iterate over rows and search for query */
-	for(let i: number = 1; i < rows.length; i++)
+	for(let i = 1; i < rows.length; i++)
 	{
-		let item = rows[i];
+		const item = rows[i];
 
 		if(filterData.reset === true)
 		{
@@ -85,10 +85,7 @@ componentFilter.apply = (query: string = ''): void =>
 			continue;
 		}
 
-		let is = {
-			file : false,
-			directory : false
-		};
+		const is = { file : false, directory : false };
 
 		if(item.classList.contains('file'))
 		{
@@ -98,7 +95,7 @@ componentFilter.apply = (query: string = ''): void =>
 			is.directory = true;
 		}
 
-		let match = componentFilter.getMatch(item.children[0].getAttribute('data-raw'), query);
+		const match = componentFilter.getMatch(item.children[0].getAttribute('data-raw'), query);
 
 		if(match.valid && match.data)
 		{
@@ -131,7 +128,7 @@ componentFilter.apply = (query: string = ''): void =>
 		if((match.valid && match.data && is.file) ||
 			(directorySizes && match.valid && match.data && is.directory))
 		{
-			let size = item.children[2].getAttribute('data-raw');
+			const size = item.children[2].getAttribute('data-raw');
 
 			filterData.size = !isNaN(parseInt(size))
 				? (filterData.size + parseInt(size))
@@ -173,7 +170,7 @@ componentFilter.apply = (query: string = ''): void =>
 		};
 	}
 
-	let top: ITop = {
+	const top: ITop = {
 		container: document.body.querySelector(':scope > div.topBar')
 	};
 
@@ -208,9 +205,9 @@ componentFilter.apply = (query: string = ''): void =>
 		(filterData.reset) ? data.sets.defaults.topValues.directories : 
 			`${filterData.shown.directories} ${filterData.shown.directories === 1 ? 'directory' : 'directories'}`;
 
-	let option: HTMLElement = document.body.querySelector(':scope > div.menu > #gallery');
+	const option: HTMLElement = document.body.querySelector(':scope > div.menu > #gallery');
 
-	let previews = (selector.use('TABLE_CONTAINER') as HTMLElement).querySelectorAll(
+	const previews = (selector.use('TABLE_CONTAINER') as HTMLElement).querySelectorAll(
 		'table tr.file:not(.filtered) a.preview'
 	).length;
 
@@ -237,7 +234,7 @@ componentFilter.apply = (query: string = ''): void =>
 
 componentFilter.getMatch = (input: string, query: string) =>
 {
-	let match: ReturnType<TComponentFilter['getMatch']> = {};
+	const match: ReturnType<TComponentFilter['getMatch']> = {};
 
 	try
 	{
@@ -254,11 +251,11 @@ componentFilter.getMatch = (input: string, query: string) =>
 
 componentFilter.toggle = (): void =>
 {
-	let container: HTMLElement = document.body.querySelector(
+	const container: HTMLElement = document.body.querySelector(
 		':scope > div.filterContainer'
 	);
 
-	let input: HTMLInputElement = container.querySelector(
+	const input: HTMLInputElement = container.querySelector(
 		'input[type="text"]'
 	);
 

@@ -52,11 +52,11 @@ create.option = (
 		options.class = ('option ' + options.class);
 	}
 
-	let wrapperAttributes = Object.assign({
+	const wrapperAttributes = Object.assign({
 		class : 'option'
 	}, options);
 
-	let textAttributes: {
+	const textAttributes: {
 		class: string;
 		text: string;
 		title?: string;
@@ -71,7 +71,7 @@ create.option = (
 	}
 
 	/** Create wrapper */
-	let wrapper = DOM.wrap(
+	const wrapper = DOM.wrap(
 		DOM.wrap(
 			element, 'div'
 		),
@@ -93,7 +93,7 @@ create.section = (
 	id: string,
 	header: string = null) =>
 {
-	let container: HTMLElement = DOM.new('div', {
+	const container: HTMLElement = DOM.new('div', {
 		'class': 'section',
 		'data-key': id
 	});
@@ -119,7 +119,7 @@ create.select = (
 	options: object = {},
 	selected: any = null) =>
 {
-	let element = DOM.new(
+	const element = DOM.new(
 		'select', options
 	) as MComponentSettings.TIndexElement;
 
@@ -129,7 +129,7 @@ create.select = (
 	{
 		value.text = capitalize(value.text);
 
-		let option: HTMLOptionElement = DOM.new('option', value) as HTMLOptionElement;
+		const option: HTMLOptionElement = DOM.new('option', value) as HTMLOptionElement;
 
 		if(selected !== null)
 		{
@@ -152,20 +152,16 @@ create.select = (
 /**
  * Creates a checkbox element
  */
-create.check = (
-	options: {
-		[key: string]: any;
-	} = {},
-	selected: Function | null = null) =>
+create.check = (options, selected = null) =>
 {
-	let checked: boolean = (selected !== null) ? selected() : false;
+	const checked: boolean = (selected !== null) ? selected() : false;
 
 	if(checked)
 	{
 		options.checked = '';
 	}
 
-	let checkbox = DOM.new('input', Object.assign(options, {
+	const checkbox = DOM.new('input', Object.assign(options, {
 		type : 'checkbox'
 	})) as HTMLInputElement;
 
@@ -201,7 +197,7 @@ update.gallery.listAlignment = (alignment: number) =>
 	if(data.instances.gallery)
 	{
 		/** Get any active gallery container */
-		let parent = document.body.querySelector(
+		const parent = document.body.querySelector(
 			':scope > div.rootGallery > div.galleryContent'
 		);
 
@@ -209,8 +205,8 @@ update.gallery.listAlignment = (alignment: number) =>
 		parent.classList[alignment === 0 ? 'remove' : 'add']('reversed');
 
 		/** Get list and media container */
-		let detached: HTMLDivElement = parent.querySelector(':scope > div.list');
-		let media: HTMLDivElement = parent.querySelector(':scope > div.media');
+		const detached: HTMLDivElement = parent.querySelector(':scope > div.list');
+		const media: HTMLDivElement = parent.querySelector(':scope > div.media');
 
 		/** Remove list */
 		parent.querySelector(':scope > div.list').remove();
@@ -237,7 +233,7 @@ update.gallery.reverseOptions = (value: boolean) =>
 		/** Set option directly in active gallery instance */
 		data.instances.gallery.options.reverseOptions = value;
 
-		let element: HTMLDivElement = document.body.querySelector(
+		const element: HTMLDivElement = document.body.querySelector(
 			'div.rootGallery > div.galleryContent > \
 			div.media > div.wrapper > div.cover .reverse'
 		);
@@ -257,7 +253,7 @@ update.gallery.fitContent = (value: boolean) =>
 		data.instances.gallery.options.fitContent = value;
 
 		/* Get gallery wrapper */
-		let wrapper: HTMLDivElement = document.body.querySelector(
+		const wrapper: HTMLDivElement = document.body.querySelector(
 			'div.rootGallery > div.galleryContent > div.media > div.wrapper'
 		);
 
@@ -302,10 +298,10 @@ update.gallery.autoplay = (value: boolean) =>
  */
 options.gather = (container) =>
 {
-	let gathered: MComponentSettings.TGathered = {};
+	const gathered: MComponentSettings.TGathered = {};
 
 	/* Gather settings elements */
-	let elements: NodeListOf<MComponentSettings.TIndexElement> =
+	const elements: NodeListOf<MComponentSettings.TIndexElement> =
 		container.querySelectorAll(
 			'select, input[type="checkbox"]'
 		);
@@ -315,9 +311,9 @@ options.gather = (container) =>
 	{
 		if(element.hasAttribute('name'))
 		{
-			let id: string = element.getAttribute('name');
+			const id: string = element.getAttribute('name');
 
-			let section: string = element.hasAttribute('data-key')
+			const section: string = element.hasAttribute('data-key')
 				? element.getAttribute('data-key')
 				: element.closest('.section').getAttribute('data-key');
 
@@ -350,7 +346,7 @@ options.set = (setData: object, client: TUserClient) =>
 
 	Object.keys(setData).forEach((key) =>
 	{
-		let isMain: boolean = (key === 'main');
+		const isMain: boolean = (key === 'main');
 
 		if(!isMain
 			&& !Object.prototype.hasOwnProperty.call(client, key))
@@ -370,7 +366,7 @@ options.set = (setData: object, client: TUserClient) =>
 					if(setData[key][option]
 						<= (config.get('style.themes.pool').length - 1))
 					{
-						let selected: string | boolean = config.get(
+						const selected: string | boolean = config.get(
 							`style.themes.pool.${setData[key][option]}`
 						);
 
@@ -386,7 +382,7 @@ options.set = (setData: object, client: TUserClient) =>
 					break;
 			}
 
-			let changed: boolean = (isMain
+			const changed: boolean = (isMain
 				? (client[option] !== value)
 				: (client[key][option] !== value)
 			);
@@ -427,12 +423,12 @@ options.set = (setData: object, client: TUserClient) =>
 /**
  * Sets a theme for the client
  */
-theme.set = (theme: any = null, setCookie: boolean = true) =>
+theme.set = (theme: any = null, setCookie = true) =>
 {
-	let themesPath = config.get('style.themes.path');
+	const themesPath = config.get('style.themes.path');
 
 	/* Get current stylesheets */
-	let activeStylesheets: NodeListOf<HTMLElement> = document.querySelectorAll(
+	const activeStylesheets: NodeListOf<HTMLElement> = document.querySelectorAll(
 		'head > link[rel="stylesheet"]'
 	);
 
@@ -472,7 +468,7 @@ theme.set = (theme: any = null, setCookie: boolean = true) =>
 	}
 
 	/* Create stylesheet element */
-	let sheet = DOM.new('link', {
+	const sheet = DOM.new('link', {
 		rel : 'stylesheet',
 		type : 'text/css',
 		href : `${themesPath}/${theme}.css?bust=${
@@ -537,7 +533,7 @@ export class componentSettings
 		/* Remove events */
 		Object.keys(this.boundEvents).forEach((eventId: string) =>
 		{
-			let { selector, events } = this.boundEvents[eventId];
+			const { selector, events } = this.boundEvents[eventId];
 
 			/** Unlisten to events */
 			eventHooks.unlisten(selector, events, eventId);
@@ -551,7 +547,7 @@ export class componentSettings
 		).forEach((element) => element.remove());
 	}
 
-	getSectionGallery = (section = create.section('gallery'), settings: number = 0) =>
+	getSectionGallery = (section = create.section('gallery'), settings = 0) =>
 	{
 		if(!config.get('mobile'))
 		{
@@ -573,7 +569,7 @@ export class componentSettings
 			settings++;
 		}
 
-		let sets = [];
+		const sets = [];
 
 		sets.push([
 			data.text.settingsLabels.galleryReverseSearch.text,
@@ -595,7 +591,7 @@ export class componentSettings
 
 		sets.forEach((e) =>
 		{
-			let [label, key, description] = e;
+			const [label, key, description] = e;
 
 			section.append(create.option(
 				create.check({
@@ -617,7 +613,7 @@ export class componentSettings
 		};
 	}
 
-	getSectionMain = (section: HTMLElement = create.section('main'), settings: number = 0) =>
+	getSectionMain = (section: HTMLElement = create.section('main'), settings = 0) =>
 	{
 		if(config.exists('style.themes.pool')
 			&& config.get('style.themes.pool').length > 0)
@@ -629,9 +625,9 @@ export class componentSettings
 
 			type TPoolCapsule = Array<TPoolItem>;
 
-			let setTheme: string | null = config.get('style.themes.set');
+			const setTheme: string | null = config.get('style.themes.set');
 
-			let themePool: TPoolCapsule = config.get(
+			const themePool: TPoolCapsule = config.get(
 				'style.themes.pool'
 			).map((theme: TPoolItem) =>
 			{
@@ -641,7 +637,7 @@ export class componentSettings
 				};
 			});
 
-			let selectTemplate: [TPoolCapsule, object, any] = [themePool, {
+			const selectTemplate: [TPoolCapsule, object, any] = [themePool, {
 				'name': 'theme',
 				'data-key': 'style'
 			}, (option: { value: string; }, index: number) =>
@@ -659,26 +655,25 @@ export class componentSettings
 
 		if(config.exists('style.compact') && !config.get('mobile'))
 		{
-			let checkTemplate = [];
-
-			checkTemplate.push({
-				'name' : 'compact',
-				'data-key' : 'style'
-			});
-
-			checkTemplate.push(() =>
-			{
-				if(checkNested(this.client, 'style', 'compact'))
+			const checkTemplate = [
 				{
-					return this.client.style.compact;
-				} else {
-					return config.get('style.compact');
-				} 
-			});
+					'name' : 'compact',
+					'data-key' : 'style'
+				},
+				() =>
+				{
+					if(checkNested(this.client, 'style', 'compact'))
+					{
+						return this.client.style.compact;
+					} else {
+						return config.get('style.compact');
+					} 
+				}
+			];
 
-			let checkElement = create.check(...checkTemplate);
+			const checkElement = create.check(...checkTemplate);
 
-			let option = create.option(
+			const option = create.option(
 				checkElement,
 				data.text.settingsLabels.stylingCompact.text, {
 					class : 'interactable'
@@ -716,11 +711,11 @@ export class componentSettings
 		this.client = user.get();
 		this.boundEvents = {};
 
-		let sections = [];
+		const sections = [];
 
 		if(!document.body.querySelector(':scope > div.focusOverlay'))
 		{
-			let overlay = DOM.new('div', {
+			const overlay = DOM.new('div', {
 				class : 'focusOverlay'
 			});
 
@@ -734,7 +729,7 @@ export class componentSettings
 			});
 		}
 
-		let container = DOM.new('div', {
+		const container = DOM.new('div', {
 			class : 'settingsContainer'
 		});
 
@@ -745,7 +740,7 @@ export class componentSettings
 			sections.push(this.getSectionGallery());
 		}
 
-		let wrapper = DOM.new('div', {
+		const wrapper = DOM.new('div', {
 			class : 'wrapper'
 		});
 
@@ -757,16 +752,16 @@ export class componentSettings
 			return item !== null;
 		}));
 
-		let bottom = DOM.new('div', {
+		const bottom = DOM.new('div', {
 			class : 'bottom'
 		});
 
-		let applyButton = DOM.new('div', {
+		const applyButton = DOM.new('div', {
 			class : 'apply ns',
 			text : 'Apply'
 		});
 
-		let cancelButton = DOM.new('div', {
+		const cancelButton = DOM.new('div', {
 			class : 'cancel ns',
 			text : 'Cancel'
 		});
@@ -780,7 +775,7 @@ export class componentSettings
 		{
 			bottom.append(element as Node);
 
-			eventHooks.listen(element, 'click', id, callback, {
+			eventHooks.listen(element as HTMLElement, 'click', id.toString(), callback as (...args: any) => void, {
 				onAdd: this.removeOnUnbind
 			});
 		});
@@ -789,7 +784,7 @@ export class componentSettings
 
 		container.querySelectorAll('div.section > .option.interactable').forEach((option, index) =>
 		{
-			eventHooks.listen(option, 'mouseup', `settingsMouseUp_${index}`, (e) =>
+			eventHooks.listen(option as HTMLElement, 'mouseup', `settingsMouseUp_${index}`, (e) =>
 			{
 				if(window.getSelection().toString())
 				{
@@ -798,7 +793,7 @@ export class componentSettings
 
 				if(e.target.tagName !== 'INPUT')
 				{
-					let checkbox = e.currentTarget.querySelector('input[type="checkbox"]');
+					const checkbox = e.currentTarget.querySelector('input[type="checkbox"]');
 
 					if(checkbox)
 					{

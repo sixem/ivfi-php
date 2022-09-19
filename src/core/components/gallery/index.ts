@@ -25,17 +25,17 @@ export class componentGallery
 		source: MComponentGallery.TOptions,
 		values: Array<any>): MComponentGallery.TOptions =>
 	{
-		values.forEach((data) =>
+		values.forEach((data: [string, string]) =>
 		{
-			let key = data.shift();
+			const key = data.shift();
 
-			source[key] = config.get(...data);
+			source[key] = config.get(data[0]);
 		});
 
 		return source;
 	}
 
-	public load = (index: number = 0): void | boolean =>
+	public load = (index = 0): void | boolean =>
 	{
 		if(!config.get('gallery.enabled'))
 		{
@@ -45,7 +45,7 @@ export class componentGallery
 		}
 
 		/* Create video data (from preview) */
-		let video: MComponentGallery.TVideoPreviewData = {
+		const video: MComponentGallery.TVideoPreviewData = {
 			continue: {},
 			preview: document.body.querySelector(
 				':scope > div.preview-container > video'
@@ -71,7 +71,7 @@ export class componentGallery
 			(data.instances.gallery).options.continue.video = video.continue;
 
 			/* Get table items */
-			let items = data.sets.refresh
+			const items = data.sets.refresh
 				? data.components.main.getTableItems()
 				: null;
 
@@ -98,10 +98,10 @@ export class componentGallery
 		let options: MComponentGallery.TOptions = {};
 
 		/* Check if list state is saved */
-		let hasStoredListState = Object.prototype.hasOwnProperty.call(client.gallery, 'listState');
+		const hasStoredListState = Object.prototype.hasOwnProperty.call(client.gallery, 'listState');
 
 		/* Set list state */
-		let listState = hasStoredListState ? client.gallery.listState : 1;
+		const listState = hasStoredListState ? client.gallery.listState : 1;
 
 		/* Set start index */
 		options.start = index === null ? 0 : index;
@@ -117,7 +117,7 @@ export class componentGallery
 		]);
 
 		/* Set defaults */
-		let defaults = {
+		const defaults = {
 			reverseOptions : ['gallery', 'reverseOptions'],
 			fitContent : ['gallery', 'fitContent'],
 			autoplay : ['gallery', 'autoplay'],
@@ -153,10 +153,10 @@ export class componentGallery
 		};
 
 		/* Get table items marked as media */
-		let items = data.components.main.getTableItems();
+		const items = data.components.main.getTableItems();
 
 		/* Initiate new `galleryClass` */
-		let instance = new galleryClass(items, Object.assign(options));
+		const instance = new galleryClass(items, Object.assign(options));
 
 		/* Store instance to variable */
 		data.instances.gallery = instance;

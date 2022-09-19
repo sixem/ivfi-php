@@ -36,11 +36,11 @@ const main: MComponentMain.TCapsule = {
  */
 main.menu.create = () =>
 {
-	let container: HTMLElement = DOM.new('div', {
+	const container: HTMLElement = DOM.new('div', {
 		class : 'menu'
 	});
 	
-	let items: Array<{
+	const items: Array<{
 		text: string;
 		id: string;
 		class?: string;
@@ -82,7 +82,7 @@ main.menu.create = () =>
 
 	items.forEach((item) =>
 	{
-		let element = DOM.new('div', {
+		const element = DOM.new('div', {
 			text : item.text,
 			class : `${Object.prototype.hasOwnProperty.call(item, 'class') ? `${item.class}` : ''}`
 		});
@@ -98,11 +98,11 @@ main.menu.create = () =>
 	/* Event delegation */
 	eventHooks.listen(container, 'click', 'menuItemClick', (event: Event) =>
 	{
-		let eventTarget: HTMLElement = (event.target as HTMLElement);
+		const eventTarget: HTMLElement = (event.target as HTMLElement);
 
 		if(eventTarget.tagName === 'DIV')
 		{
-			let toggle = (state: boolean, f: Function): void =>
+			const toggle = (state: boolean, f: () => void): void =>
 			{
 				if(!state)
 				{
@@ -144,11 +144,11 @@ main.menu.create = () =>
  */
 main.menu.toggle = (state: null | boolean = null) =>
 {
-	let menu = document.querySelector('body > div.menu') as HTMLElement;
+	const menu = document.querySelector('body > div.menu') as HTMLElement;
 
-	let isHidden: boolean = (menu.style.display === 'none');
+	const isHidden: boolean = (menu.style.display === 'none');
 
-	let display: string = typeof state === 'boolean'
+	const display: string = typeof state === 'boolean'
 		? (state ? 'inline-block' : 'none')
 		: (isHidden ? 'inline-block' : 'none');
 
@@ -184,7 +184,7 @@ main.dates.formatSince = (seconds: number) =>
 		return seconds === 0 ? 'Now' : false;
 	}
 
-	let t: {
+	const t: {
 		[key: string]: number;
 	} = {
 		year: 31556926,
@@ -196,19 +196,19 @@ main.dates.formatSince = (seconds: number) =>
 		second: 1
 	};
 
-	let keys: Array<string> = Object.keys(t);
-	let count: number = (keys.length - 1);
+	const keys: Array<string> = Object.keys(t);
+	const count: number = (keys.length - 1);
 	let value: string | boolean = false;
 
-	for(let index: number = 0; index < keys.length; index++)
+	for(let index = 0; index < keys.length; index++)
 	{
-		let key: string = keys[index];
+		const key: string = keys[index];
 		
 		if(seconds <= t[key]) continue;
 
-		let n: string | null = count >= (index + 1) ? keys[(index + 1)] : null;
-		let f: number = Math.floor(seconds / t[key]);
-		let s: number = n ? Math.floor((seconds - (f * t[key])) / t[n]) : 0;
+		const n: string | null = count >= (index + 1) ? keys[(index + 1)] : null;
+		const f: number = Math.floor(seconds / t[key]);
+		const s: number = n ? Math.floor((seconds - (f * t[key])) / t[n]) : 0;
 
 		value = `${f} ${key}${
 			f == 1 ? '' : 's'
@@ -223,21 +223,21 @@ main.dates.formatSince = (seconds: number) =>
 	return value;
 };
 
-main.dates.apply = (offset: MComponentMain.TDateOffset, format: boolean = true) =>
+main.dates.apply = (offset: MComponentMain.TDateOffset, format = true) =>
 {
-	let onLoadTimestamp: number = config.get('timestamp');
-	let dateFormat: Array<string> = config.get('format.date');
-	let dateSelector: string = 'tr.directory > td:nth-child(2), tr.file > td[data-raw]:nth-child(2)';
+	const onLoadTimestamp: number = config.get('timestamp');
+	const dateFormat: Array<string> = config.get('format.date');
+	const dateSelector = 'tr.directory > td:nth-child(2), tr.file > td[data-raw]:nth-child(2)';
 
 	(selector.use('TABLE') as HTMLElement).querySelectorAll(
 		dateSelector
 	).forEach((item: HTMLTableCellElement) =>
 	{
-		let timestamp: number = parseInt(item.getAttribute('data-raw'));
+		const timestamp: number = parseInt(item.getAttribute('data-raw'));
 
-		let since: string | boolean = main.dates.formatSince(onLoadTimestamp - timestamp);
+		const since: string | boolean = main.dates.formatSince(onLoadTimestamp - timestamp);
 
-		let span: HTMLSpanElement = (
+		const span: HTMLSpanElement = (
 			format === true
 				? DOM.new('span')
 				: item.querySelector(':scope > span')
@@ -250,7 +250,7 @@ main.dates.apply = (offset: MComponentMain.TDateOffset, format: boolean = true) 
 			{
 				if(index <= 1)
 				{
-					let element: HTMLElement = DOM.new('span', {
+					const element: HTMLElement = DOM.new('span', {
 						text: formatDate(f, timestamp)
 					});
 
@@ -274,7 +274,7 @@ main.dates.apply = (offset: MComponentMain.TDateOffset, format: boolean = true) 
 		}
 	});
 
-	let infoSelector = `div.topBar > .directoryInfo div[data-count="files"], div.topBar > .directoryInfo div[data-count="directories"]`;
+	const infoSelector = 'div.topBar > .directoryInfo div[data-count="files"], div.topBar > .directoryInfo div[data-count="directories"]';
 
 	document.body.querySelectorAll(infoSelector).forEach((item) =>
 	{
@@ -290,9 +290,9 @@ main.dates.apply = (offset: MComponentMain.TDateOffset, format: boolean = true) 
  */
 main.dates.load = () =>
 {
-	let offset: number = main.dates.offsetGet();
-	let	client: TUserClient = user.get();
-	let update: boolean = client.timezone_offset !== offset;
+	const offset: number = main.dates.offsetGet();
+	const client: TUserClient = user.get();
+	const update: boolean = client.timezone_offset !== offset;
 
 	/* Only update if offset is changed or unset */
 	if(update)
@@ -304,7 +304,7 @@ main.dates.load = () =>
 		user.set(client);
 	}
 
-	let offsetData: MComponentMain.TDateOffset = {
+	const offsetData: MComponentMain.TDateOffset = {
 		minutes : (offset > 0 ? -Math.abs(offset) : Math.abs(offset))
 	};
 
@@ -321,11 +321,11 @@ main.sort.load = () =>
 {
 	if(config.exists('sorting') && config.get('sorting.enabled'))
 	{
-		let sortingTypes = config.get('sorting.types');
+		const sortingTypes = config.get('sorting.types');
 
 		if(sortingTypes === 0 || sortingTypes === 1)
 		{
-			let asc = (config.get('sorting.order') === 'asc' ? true : false);
+			const asc = (config.get('sorting.order') === 'asc' ? true : false);
 			let index = null;
 
 			switch(config.get('sorting.sortBy'))
@@ -344,7 +344,7 @@ main.sort.load = () =>
 
 			if(index !== null)
 			{
-				let tableCell: MComponentMain.ISortRow = document.querySelectorAll(
+				const tableCell: MComponentMain.ISortRow = document.querySelectorAll(
 					'table th span[sortable]'
 				)[index].closest('th');
 
@@ -352,7 +352,7 @@ main.sort.load = () =>
 				{
 					tableCell.asc = asc;
 
-					let indicator: HTMLElement = tableCell.querySelector(
+					const indicator: HTMLElement = tableCell.querySelector(
 						':scope > span.sortingIndicator'
 					);
 
@@ -369,15 +369,16 @@ main.sort.load = () =>
 /**
  * Hides the overlay
  */
-main.overlay.hide = (callback: Function = () => {}) =>
+main.overlay.hide = (callback = null): void =>
 {
 	type collectionItem = {
 		element: HTMLElement;
-		f: Function;
+		f: () => void;
 	};
 
-	let i: number = 0;
-	let collection: Array<collectionItem> = [];
+	let i = 0;
+
+	const collection: Array<collectionItem> = [];
 
 	collection.push({
 		element: document.body.querySelector(':scope > div.filterContainer'),
@@ -399,7 +400,10 @@ main.overlay.hide = (callback: Function = () => {}) =>
 		}
 	});
 
-	callback(i > 0);
+	if(callback)
+	{
+		callback(i > 0);
+	}
 };
 
 /**
@@ -407,17 +411,17 @@ main.overlay.hide = (callback: Function = () => {}) =>
  */
 main.getTableItems = () =>
 {
-	let items: ReturnType<MComponentMain.TCapsule['getTableItems']> = [];
+	const items: ReturnType<MComponentMain.TCapsule['getTableItems']> = [];
 
 	if(data.instances.optimize.main.enabled)
 	{
-		let [activeRows]: [Array<TOptimizeRowItem>] = data.instances.optimize.main.getActiveData();
+		const [activeRows]: [Array<TOptimizeRowItem>] = data.instances.optimize.main.getActiveData();
 
-		for(let i: number = 0; i < activeRows.length; i++)
+		for(let i = 0; i < activeRows.length; i++)
 		{
 			if(i === 0) continue;
 
-			let row: TOptimizeRowItem = activeRows[i],
+			const row: TOptimizeRowItem = activeRows[i],
 				anchor: HTMLElement = (row.children[0].children[0] as HTMLElement);
 
 			if(anchor.classList.contains('preview'))
@@ -430,13 +434,13 @@ main.getTableItems = () =>
 			}
 		}
 	} else {
-		let previews: NodeListOf<HTMLAnchorElement> = (selector.use('TABLE') as HTMLElement).querySelectorAll(
+		const previews: NodeListOf<HTMLAnchorElement> = (selector.use('TABLE') as HTMLElement).querySelectorAll(
 			':scope > tbody > tr.file:not(.filtered) > td:first-child > a.preview'
 		);
 
 		(previews).forEach((element: HTMLAnchorElement) =>
 		{
-			let parent = (element.parentNode as HTMLElement),
+			const parent = (element.parentNode as HTMLElement),
 				container = (parent.parentNode as HTMLElement),
 				url = element.getAttribute('href');
 
@@ -459,11 +463,11 @@ main.getTableItems = () =>
  */
 main.sortTableColumn = (target: HTMLTableCellElement) =>
 {
-	let parent: HTMLTableCellElement = target.closest('th');
-	let column: MComponentMain.ISortRow = !(target.tagName === 'TH') ? parent : target;
-	let columnIndex: number = DOM.getIndex(column);
+	const parent: HTMLTableCellElement = target.closest('th');
+	const column: MComponentMain.ISortRow = !(target.tagName === 'TH') ? parent : target;
+	const columnIndex: number = DOM.getIndex(column);
 
-	let rows: {
+	const rows: {
 		directories: Array<HTMLElement>;
 		files: Array<HTMLElement>;
 	} = {
@@ -480,7 +484,7 @@ main.sortTableColumn = (target: HTMLTableCellElement) =>
 	 * 
 	 * They should be unaffected by these unless directory sizes are enabled
 	 */
-	let skipDirectories = !(Object.prototype.hasOwnProperty.call(config.get('sorting'), 'directorySizes')
+	const skipDirectories = !(Object.prototype.hasOwnProperty.call(config.get('sorting'), 'directorySizes')
 		&& config.get('sorting.directorySizes'))
 		&& (config.exists('sorting.sortBy')
 		&& (columnIndex === 2 || columnIndex === 3));
@@ -489,7 +493,7 @@ main.sortTableColumn = (target: HTMLTableCellElement) =>
 	{
 		data.instances.optimize.main.sortRows(columnIndex, !column.asc ? 'asc' : 'desc');
 	} else {
-		let sortingTypes: number = config.get('sorting.types');
+		const sortingTypes: number = config.get('sorting.types');
 
 		if(sortingTypes === 0 || sortingTypes === 2)
 		{
@@ -514,7 +518,7 @@ main.sortTableColumn = (target: HTMLTableCellElement) =>
 		column.asc ? 'down' : 'up', 'visible'
 	);
 
-	let client: TUserClient = user.get();
+	const client: TUserClient = user.get();
 
 	/* Set client sorting settings */
 	client.sort.ascending = (column.asc ? 1 : 0);
@@ -527,7 +531,7 @@ main.sortTableColumn = (target: HTMLTableCellElement) =>
 	{
 		if(!column.asc)
 		{
-			let sortingTypes: number = config.get('sorting.types');
+			const sortingTypes: number = config.get('sorting.types');
 
 			if(sortingTypes === 0 || sortingTypes === 2)
 			{
@@ -540,7 +544,7 @@ main.sortTableColumn = (target: HTMLTableCellElement) =>
 			}
 		}
 
-		let tableBody = (selector.use('TABLE') as HTMLElement).querySelector('tbody');
+		const tableBody = (selector.use('TABLE') as HTMLElement).querySelector('tbody');
 
 		Object.keys(rows).forEach((key: string) =>
 		{

@@ -28,22 +28,22 @@ const scrollData: {
 let debounceTimer = null;
 
 /* Scroll events to listen to */
-let scrollEvents: Array<string> = ['DOMMouseScroll', 'mousewheel', 'wheel'];
+const scrollEvents: Array<string> = ['DOMMouseScroll', 'mousewheel', 'wheel'];
 
 /* Called `onScroll` — Shows or hides the current path in the top bar */
 events.handleTopBarVisibility = (): void =>
 {
 	interface IQuickPath extends HTMLElement {
 		_isVisible?: boolean;
-	};
+	}
 
-	let path = selector.use('PATH') as HTMLElement;
+	const path = selector.use('PATH') as HTMLElement;
 
 	let top: IQuickPath = document.body.querySelector(
 		':scope > div.topBar > div.directoryInfo > div.quickPath'
 	);
 
-	let visible: boolean = getScrollTop() < (path.offsetTop + path.offsetHeight);
+	const visible: boolean = getScrollTop() < (path.offsetTop + path.offsetHeight);
 
 	if(!visible)
 	{
@@ -85,7 +85,7 @@ events.handlePreviewScroll = (event: WheelEvent): void =>
 	{
 		if(event.deltaY && Math.abs(event.deltaY) !== 0)
 		{
-			let step: number = data.preview.volume >= 50 ? 5 : (data.preview.volume > 5 ? 2 : 1);
+			const step: 5 | 2 | 1 = data.preview.volume >= 50 ? 5 : (data.preview.volume > 5 ? 2 : 1);
 			
 			if(event.deltaY < 0)
 			{
@@ -136,7 +136,7 @@ events.handlePreviewScroll = (event: WheelEvent): void =>
 	}
 };
 
-let onDebounce = (): void =>
+const onDebounce = (): void =>
 {
 	events.handleTopBarVisibility();
 
@@ -158,7 +158,7 @@ events.handleBaseScroll = (): void =>
 	if(data.instances.optimize.main.enabled)
 	{
 		/* Get scrolled position */
-		let scrolled = window.scrollY;
+		const scrolled = window.scrollY;
 
 		/* Trigger optimization refresh if `175px` has been scrolled */
 		if(Math.abs(scrolled - data.layer.main.scrolledY) > 175)
@@ -208,7 +208,7 @@ export class componentBind
 			{
 				if(config.get('gallery.enabled') === true)
 				{
-					let container: HTMLElement = document.body.querySelector(':scope > div.filterContainer');
+					const container: HTMLElement = document.body.querySelector(':scope > div.filterContainer');
 
 					if(container.style.display === 'none'
 						|| !(document.activeElement === container.querySelector('input')))
