@@ -48,7 +48,7 @@ const selector = data.instances.selector;
 /* Disable media play */
 try
 {
-	navigator.mediaSession.setActionHandler('play', () => {});
+	navigator.mediaSession.setActionHandler('play', null);
 } catch(error)
 {
 	log('error', error);
@@ -67,7 +67,7 @@ data.layer.main = {
  	*/
 	update : () =>
 	{
-		let table = (selector.use('TABLE_CONTAINER') as HTMLElement);
+		const table = (selector.use('TABLE_CONTAINER') as HTMLElement);
 
 		data.layer.main.windowHeight = window.innerHeight;
 		data.layer.main.windowWidth = window.innerWidth;
@@ -85,7 +85,7 @@ data.layer.main.update();
 if(config.get('performance'))
 {
 	/* Called on row change, updates index properties (for media indexing) */
-	let onRowChange = (rows) =>
+	const onRowChange = (rows: Array<ITableRowMI>): void | boolean =>
 	{
 		let mediaIndex = 0;
 
@@ -120,7 +120,7 @@ if(config.get('performance'))
 /**
  * Menu click event
  */
-eventHooks.listen(selector.use('TOP_EXTEND'), 'click', 'sortClick', (e) =>
+eventHooks.listen(selector.use('TOP_EXTEND') as HTMLElement, 'click', 'sortClick', (e) =>
 {
 	data.components.main.menu.toggle(e.currentTarget);
 });
@@ -128,7 +128,7 @@ eventHooks.listen(selector.use('TOP_EXTEND'), 'click', 'sortClick', (e) =>
 /**
  * Filter change event
  */
-eventHooks.listen(selector.use('FILTER_INPUT'), 'input', 'filterInput', (e) =>
+eventHooks.listen(selector.use('FILTER_INPUT') as HTMLElement, 'input', 'filterInput', (e) =>
 {
 	data.components.filter.apply(e.currentTarget.value);
 });
@@ -136,9 +136,9 @@ eventHooks.listen(selector.use('FILTER_INPUT'), 'input', 'filterInput', (e) =>
 /**
  * Item click event (show gallery if enabled and table sort)
  */
-eventHooks.listen(selector.use('TABLE'), 'click', 'sortClick', (event: MouseEvent) =>
+eventHooks.listen(selector.use('TABLE') as HTMLElement, 'click', 'sortClick', (event: MouseEvent) =>
 {
-	let eventTarget: HTMLElement = event.target as HTMLElement;
+	const eventTarget: HTMLElement = event.target as HTMLElement;
 
 	if(eventTarget.tagName === 'SPAN'
 		&& eventTarget.hasAttribute('sortable'))
@@ -151,12 +151,12 @@ eventHooks.listen(selector.use('TABLE'), 'click', 'sortClick', (event: MouseEven
 	{
 		event.preventDefault();
 
-		let index: number = 0;
+		let index = 0;
 
 		if(data.instances.optimize.main.enabled)
 		{
 			/* Get `tr` parent */
-			let parent: ITableRowMI = (eventTarget.closest('tr') as HTMLElement);
+			const parent: ITableRowMI = (eventTarget.closest('tr') as HTMLElement);
 
 			/* Check for a index property, use as index if found */
 			if(parent._mediaIndex) index = parent._mediaIndex;
@@ -204,11 +204,12 @@ eventHooks.listen(window, 'resize', 'windowResize', debounce((): void =>
 if(config.get('mobile') === false
 	&& config.get('preview.enabled') === true)
 {
-	let previews = {},
-		resume = null,
-		timerReadyState = null;
+	const previews = {};
 
-	let onLoaded = (event: TOnPreviewLoad) =>
+	let resume = null;
+	let timerReadyState = null;
+
+	const onLoaded = (event: TOnPreviewLoad) =>
 	{
 		log('preview', 'Preview loaded =>', event);
 
@@ -220,7 +221,7 @@ if(config.get('mobile') === false
 
 		if(!data.preview.isLoadable) return null;
 
-		let [element, type, src] = [
+		const [element, type, src] = [
 			event.element,
 			event.type,
 			event.src
@@ -266,7 +267,7 @@ if(config.get('mobile') === false
 		/* Store timestamp if exists */
 		if(Object.prototype.hasOwnProperty.call(event, 'timestamp'))
 		{
-			let timestamp = event.timestamp;
+			const timestamp = event.timestamp;
 
 			resume = {
 				src,
@@ -283,21 +284,21 @@ if(config.get('mobile') === false
 		}
 	};
 
-	let createPreview = (element: IPreviewAnchor) =>
+	const createPreview = (element: IPreviewAnchor) =>
 	{
-		let src: string = element.getAttribute('href');
-		let extensions: TExtensionArray = config.get('extensions');
+		const src: string = element.getAttribute('href');
+		const extensions: TExtensionArray = config.get('extensions');
 
-		let identified = identifyExtension(stripUrl(src), {
+		const identified = identifyExtension(stripUrl(src), {
 			image: extensions.image,
 			video: extensions.video
 		});
 
 		if(identified)
 		{
-			let [extension, type] = identified;
+			const [extension, type] = identified;
 
-			let options: TPreviewOptions = {};
+			const options: TPreviewOptions = {};
 
 			/* Delay prior to showing preview */
 			options.delay = config.get('preview.hoverDelay');
@@ -325,7 +326,7 @@ if(config.get('mobile') === false
 	};
 
 	/* Get previewable elements */
-	let previewable = document.querySelectorAll('body > div.tableContainer > table > tbody > tr.file > td > a.preview');
+	const previewable = document.querySelectorAll('body > div.tableContainer > table > tbody > tr.file > td > a.preview');
 
 	/* Set preview indexes */
 	previewable.forEach((preview: IPreviewAnchor, index) =>
@@ -336,12 +337,12 @@ if(config.get('mobile') === false
 	});
 
 	/* Add preview hover listener */
-	eventHooks.listen(selector.use('TABLE'), 'mouseover', 'previewMouseEnter', (e) =>
+	eventHooks.listen(selector.use('TABLE') as HTMLElement, 'mouseover', 'previewMouseEnter', (e) =>
 	{
 		/* Check if element is `a` element with a preview class */
 		if(e.target.tagName === 'A' && e.target.className == 'preview')
 		{
-			let index = (e.target.itemIndex);
+			const index = (e.target.itemIndex);
 
 			if(!Object.prototype.hasOwnProperty.call(previews, index))
 			{
@@ -355,7 +356,7 @@ if(config.get('singlePage'))
 {
 	let isNavigating = false;
 
-	const pageNavigate = (location: string, pushState: boolean = true) =>
+	const pageNavigate = (location: string, pushState = true) =>
 	{
 		if(isNavigating)
 		{
@@ -365,7 +366,7 @@ if(config.get('singlePage'))
 		}
 		
 		/* Get location data */
-		let windowProtocol = window.location.protocol,
+		const windowProtocol = window.location.protocol,
 			windowPort = window.location.port,
 			windowHostName = window.location.hostname + (
 				(windowPort && windowPort !== '80'
@@ -374,11 +375,11 @@ if(config.get('singlePage'))
 			windowSubPath = location.replace(/([^:]\/)\/+/g, '$1').replace(/^\/|\/$/g, '');
 
 		/* Construct upcoming title and URL */
-		let nextLocation = `${windowProtocol}//${windowHostName}/${windowSubPath ? windowSubPath + '/' : ''}`,
+		const nextLocation = `${windowProtocol}//${windowHostName}/${windowSubPath ? windowSubPath + '/' : ''}`,
 			nextTitle = config.get('format').title.replace('%s', `/${windowSubPath}/`);
 
 		/* Create POST body */
-		let postData = Object.entries({
+		const postData = Object.entries({
 			navigateType: 'dynamic'
 		}).map((([key, value], index) => `${index > 0 ? '&' : ''}${key}=${value}`)).join('');
 
@@ -386,7 +387,7 @@ if(config.get('singlePage'))
 		data.preview.isLoadable = false;
 
 		/* Create spinner */
-		let indicator: HTMLElement = document.createElement('div');
+		const indicator: HTMLElement = document.createElement('div');
 		indicator.classList.add('navigateLoad');
 		document.body.prepend(indicator);
 
@@ -405,12 +406,12 @@ if(config.get('singlePage'))
 		 * 
 		 * This resets that state specifically for these scenarios.
 		 */
-		let resetNavigate = () =>
+		const resetNavigate = () =>
 		{
 			isNavigating = false;
 			indicator.remove();
 			data.preview.isLoadable = true;
-		}
+		};
 
 		/* Fetch new document */
 		fetch(`/${windowSubPath}/`, {
@@ -474,13 +475,13 @@ if(config.get('singlePage'))
 	eventHooks.listen(window, 'popstate', 'mainPopState', () =>
 	{
 		pageNavigate(window.location.pathname, false);
-	})
+	});
 
-	eventHooks.listen(selector.use('TABLE'), 'click', 'tableClick', (e) =>
+	eventHooks.listen(selector.use('TABLE') as HTMLElement, 'click', 'tableClick', (e) =>
 	{
 		if(e.target.tagName === 'A')
 		{
-			let parent = e.target.closest('tr');
+			const parent = e.target.closest('tr');
 	
 			if(parent
 				&& (parent.classList.contains('directory')
@@ -493,14 +494,14 @@ if(config.get('singlePage'))
 		}
 	});
 
-	let quickPath = document.body.querySelector(':scope > div.topBar > div.directoryInfo'),
+	const quickPath = document.body.querySelector(':scope > div.topBar > div.directoryInfo'),
 		topBar = document.body.querySelector(':scope > div.path');
 
-	eventHooks.listen(quickPath, 'click', 'quickPathClick', (event: MouseEvent) =>
+	eventHooks.listen(quickPath as HTMLElement, 'click', 'quickPathClick', (event: MouseEvent) =>
 	{
 		if((event.target as HTMLElement).tagName === 'A')
 		{
-			let parent = ((event.target as HTMLElement).parentNode as HTMLElement);
+			const parent = ((event.target as HTMLElement).parentNode as HTMLElement);
 
 			if(parent && parent.classList.contains('quickPath'))
 			{
@@ -511,7 +512,7 @@ if(config.get('singlePage'))
 		}
 	});
 
-	eventHooks.listen(topBar, 'click', 'pathClick', (event: MouseEvent) =>
+	eventHooks.listen(topBar as HTMLElement, 'click', 'pathClick', (event: MouseEvent) =>
 	{
 		if((event.target as HTMLElement).tagName === 'A')
 		{
@@ -544,10 +545,10 @@ data.components.main.dates.load();
 ) as HTMLInputElement).value = '';
 
 /* Create menu */
-let menu = data.components.main.menu.create();
+const menu = data.components.main.menu.create();
 
 /* Get top bar height */
-let height = (document.querySelector(
+const height = (document.querySelector(
 	'body > div.topBar'
 ) as HTMLDivElement).offsetHeight;
 

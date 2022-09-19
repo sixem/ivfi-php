@@ -71,16 +71,13 @@ html > body {
   }
 
   > div.tableContainer > table {
-    > thead > tr
-    {
-      padding: 4px 10px 2px 10px;
-
+    > thead > tr {
+      padding: 4px 10px 2px;
       background-color: #15161e;
       border-bottom: 2px solid #151822;
     }
 
-    > tbody > tr
-    {
+    > tbody > tr {
       padding: 0 10px;
     }
 

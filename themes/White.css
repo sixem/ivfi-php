@@ -18,6 +18,11 @@ body[optimize] > div.tableContainer > table tbody > tr {
     background-color: #fff!important;
 }
 
+html > body > div.tableContainer > table > thead > tr {
+    background-color: #fff;
+    border-bottom: 2px solid #f4f4f4;
+  }
+
 body.compact > div.path {
     margin: 20px 8px 16px 8px!important;
     padding: 6px 10px 7px 10px!important;
