@@ -121,7 +121,7 @@ This line can be placed in either your server's `.conf` file or your `.htaccess`
 
 # Configuration
 
-#### See [Configuration](https://sixem.github.io/eyy-indexer/) for a detailed overview over how this script can be customized.
+#### See [Configuration](https://sixem.github.io/eyy-indexer/#/config) for a detailed overview over how this script can be customized.
 
 ## Additional features
 
