@@ -1,7 +1,7 @@
 <h1 align="center">Themes</h1>
 
 <p align="center">This folder contains some official optional themes for the Indexer.</p>
-<p align="center">See <a href="https://github.com/sixem/eyy-indexer/blob/master/docs/CONFIG.md#style">CONFIG.md</a> to see how themes can be used.</p>
+<p align="center">Check the <a href="https://sixem.github.io/eyy-indexer/#/config?id=style">documentation</a> to see how themes can be used.</p>
 
 ## White
 
