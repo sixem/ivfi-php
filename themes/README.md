@@ -25,6 +25,12 @@ _A turquoise and greenish theme._
 
 _Inspired by the [ayu-mirage](https://github.com/ayu-theme/ayu-colors) theme._
 
+---
+
+## Gruvbox
+
+_Inspired by the classic vim theme [gruvbox](https://github.com/morhetz/gruvbox)._
+
 <br />
 
 <h1 align="center">Got anything to add?</h1>
