@@ -19,6 +19,11 @@ _A dark, purple theme based on the colors of the amethyst._
 
 _A turquoise and greenish theme._
 
+---
+
+## Ayu-Mirage
+
+_Inspired by the [ayu-mirage](https://github.com/ayu-theme/ayu-colors) theme._
 
 <br />
 
