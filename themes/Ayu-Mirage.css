@@ -1,0 +1,72 @@
+body,
+html {
+  background-color: #1f2430 !important;
+  color: #ffffff !important;
+}
+
+html > body > div.tableContainer > table > thead > tr {
+  background-color: #171b24;
+}
+
+body > div.path a {
+  color: #76b2ff !important;
+  font-weight: normal !important;
+}
+
+.topBar {
+  background-color: #171b24 !important;
+}
+
+body > div.tableContainer {
+  background-color: #171b24 !important;
+}
+
+body > div.tableContainer > table {
+  background-color: #171b24 !important;
+}
+
+.settingsContainer {
+  background-color: #1f2430 !important;
+}
+
+.settingsContainer > .wrapper > div.section > div.header {
+  background-color: #171b24 !important;
+  color: #fff !important;
+}
+
+select:not(.default) {
+  background-color: #1c212b !important;
+  color: #fff !important;
+}
+
+.settingsContainer > div.bottom {
+  background-color: #171b24 !important;
+}
+
+.settingsContainer > div.bottom > div:hover {
+  background-color: rgb(99, 117, 153) !important;
+}
+
+.rootGallery div.galleryContent .list {
+  background-color: #1f2430 !important;
+}
+
+.rootGallery div.galleryContent .list table tr.selected td:hover {
+  background-color: rgb(105, 117, 140) !important;
+}
+
+.rootGallery div.galleryContent .list table tr.selected td {
+  background-color: rgb(99, 117, 153) !important;
+}
+
+.rootGallery div.galleryBar {
+  background-color: #171b24 !important;
+}
+
+.readmeContainer {
+  background-color: #171b24 !important;
+}
+
+.readmeContainer::before {
+  background-color: #1c212b !important;
+}
