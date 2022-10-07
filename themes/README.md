@@ -21,7 +21,7 @@ _A turquoise and greenish theme._
 
 ---
 
-## ayu-mirage
+## Ayu-Mirage
 
 _Inspired by the [ayu-mirage](https://github.com/ayu-theme/ayu-colors) theme._
 
