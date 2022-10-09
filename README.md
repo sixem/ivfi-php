@@ -60,7 +60,7 @@ It can be built with additional features, like support for displaying `README.md
 + :link: Paths can be clicked, allowing for easy navigation between folders.
 + :gear: The client can set their own settings in the menu.
 + :small_red_triangle_down: Direct download links.
-+ :desktop_computer: Works well and both mobile and desktop.
++ :desktop_computer: Works well on both mobile and desktop.
 
 ## Quick setup
 
