@@ -13,19 +13,19 @@
 
 ---
 
-## What is this project?
+## What is this project? :thought_balloon:
 
 This is a file directory browser script written in PHP and TypeScript.
 
 This is designed to be a image and video friendly Indexer, while also being an Indexer that has all of the other features that you can expect from most directory listers out there. It can be heavily customized, and has a design that attempts to be appealing while also being functional and easy to use.
 
+### Demo
+* You can visit the [demo](https://five.sh/demo/indexer/) to view the indexer in action.
+
 ***Note: The Indexer can be used without JavaScript enabled, but it is needed for the extra functionality.***
 
-## Demo
-***You can visit the [demo](https://five.sh/demo/indexer/) to view the indexer in action.***
-
-## Documentation
-:link: <https://sixem.github.io/eyy-indexer/>
+## Documentation :blue_book:
+:link: [https://sixem.github.io/eyy-indexer/](https://sixem.github.io/eyy-indexer/#/README)
 
 ## Feedback :bulb:
 I'm open for any feedback.
@@ -34,7 +34,8 @@ You can open an [issue](https://github.com/sixem/eyy-indexer/issues) if you enco
 
 Or, you can start a [discussion](https://github.com/sixem/eyy-indexer/discussions) if you just have any general questions or minor issues you want to troubleshoot. You can also suggest any features or potential changes there.
 
-# Features
+## Features
+
 ### **Authentication**
 The script supports HTTP authentication, allowing you to add a bit of protection to your directories.
 ### **Gallery Mode**
@@ -52,121 +53,53 @@ This script can be customized in a number of ways.
 ### **Additonal Features**
 It can be built with additional features, like support for displaying `README.md` files on each directory!
 ### **And much more ..**
-+ All dates will match the timezone of the client.
-+ Persistent client-set sorting settings.
-+ Support for custom themes.
-+ Server-side filtering which can help you hide specific files or folders.
-+ Paths can be clicked, allowing for easy navigation between folders.
-+ The client can set their own settings in the menu.
-+ Direct download links.
-+ Mobile friendly.
++ :clock12: All dates will match the timezone of the client.
++ :arrow_up_down: Persistent client-set sorting settings.
++ :art: Support for custom themes.
++ :scissors: Server-side filtering which can help you hide specific files or folders.
++ :link: Paths can be clicked, allowing for easy navigation between folders.
++ :gear: The client can set their own settings in the menu.
++ :small_red_triangle_down: Direct download links.
++ :desktop_computer: Works well and both mobile and desktop.
 
-# Setup
+## Quick setup
 
-### Download the latest release [HERE](https://github.com/sixem/eyy-indexer/releases)!
+#### Download the latest release [here](https://github.com/sixem/eyy-indexer/releases).
 
-Alternatively, you can also build it from source yourself, for that see: [Building](#building).
+* Place the `/build/` files into your web root.
+* Use the `indexer.php` as a index file for any of the directories where the script should be used:
 
-You can also find every release and specific builds here: [https://five.sh/releases/eyy-indexer/](https://five.sh/releases/eyy-indexer/)
-<br />
-<br />
-#### These instructions are aimed at servers using a regular Nginx or Apache setup.
-#### For instructions on how to use it with Docker, see [this](https://sixem.github.io/eyy-indexer/#/setup?id=docker).
-
-## 1. Files
-
-You can choose between having a **default** setup and a **standalone** setup.
-
-The default setup will import assets (`js`, `css` and fonts) as separate files, like most sites. This is the normal setup.
-
-The standalone setup will have all of these files bundled directly into the `.php` file instead, serving everything through HTML.
-
-### Default:
-Place the files from the `build` directory into your root web directory.
-### Standalone (single file):
-Place the file from the `standalone` directory into your root web directory.
-
-## 2. Server Configuration
-
-The Indexer does require you to use it as an `index` file, that way it can be automatically applied to directories that do not have a defualt `index` file present. This makes it behave just like any other default and built-in directory indexes. This can all be done easily by following the steps below, **depending** on what web server you are using.
-
-### Nginx
-To use this script for all directories without a default index you need append `/indexer.php` to the end of your `index` line in your server configuration. This will tell Nginx to use the Indexer if none of the default indexes exist.
-
-Example usage:
+#### Example (Nginx)
 ```
 server {
         index index.html index.php /indexer.php;
 }
-
 ```
-Another example, here it is only being applied to a few directories:
-```
-server {
-        location ~ ^/(videos|images)/ {
-                index /indexer.php;
-        }
-}
 
-```
-### Apache
-In order to automatically use this script as a default index, you need to edit your Apache configuration. To do this, you must place `/indexer.php` at the end of your `DirectoryIndex` directive.
-
-Example usage:
+#### Example (Apache)
 ```
 DirectoryIndex index.html index.php /indexer.php
 ```
 
-This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist. This can be set globally or on a per-directory basis depending on your usecase.
+For a more in-depth explanation of how to set up the script, see [setup](https://sixem.github.io/eyy-indexer/#/setup).
 
-# Configuration
+You can also find every release and specific builds here: [https://five.sh/releases/eyy-indexer/](https://five.sh/releases/eyy-indexer/)
 
-#### See [Configuration](https://sixem.github.io/eyy-indexer/#/config) for a detailed overview over how this script can be customized.
+## Configuration
 
-## Additional features
+See [configuration](https://sixem.github.io/eyy-indexer/#/config) for a detailed overview over how this script can be customized.
 
-When building the Indexer, additional features can be enabled. These features are not bundled with the pre-built releases, and must be flagged as enabled prior to building the Indexer yourself (see below for how the building process is done).
+## Building
 
-The reason why these features are not included in the default version, is because they may rely on larger libraries and other scripts, which I don't feel should be pushed into the vanilla version unless the user desires to do so themselves!
+You can build the script from source yourself, for that see [building](https://sixem.github.io/eyy-indexer/#/building).
 
-See [Extra Features](https://sixem.github.io/eyy-indexer/#/extras) for a list over the features and how these can be implemented.
-
-# Building
-:grey_exclamation: **This has been tested to work with node 18.3**
-
-You can build this script from source using `node` and `npm`.
-
-**Clone repository and install dependencies:**
-```
-git clone https://github.com/sixem/eyy-indexer
-cd eyy-indexer
-npm install
-```
-
-## Production builds
-
-Build from source, creating minified files:
-```
-npm run build
-```
-
-Build a standalone file from source:
-```
-npm run make-standalone
-```
-
-## Development builds
-
-Build source mapped, non-production files:
-```
-npm run build-dev
-```
-
-# Contributing
+## Contributing
 You can contribute by either submitting a pull request, reporting issues or bugs, or voicing good ideas. It's all very much welcome! :relaxed:
 
 ## License
-This project is licensed under GPL-3.0. It also includes external libraries that are available under a variety of licenses. See [LICENSE](LICENSE) for the full license text.
+This project is licensed under GPL-3.0.
+
+It also includes external libraries that are available under a variety of licenses. See [LICENSE](LICENSE) for the full license text.
 
 ## Disclaimer
 **As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.**
