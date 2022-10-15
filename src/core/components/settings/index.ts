@@ -175,10 +175,7 @@ create.check = (options, selected = null) =>
  */
 update.style.theme = (value: any): void =>
 {
-	theme.set(
-		value === false ? null : value,
-		false
-	);
+	theme.set(value === false ? null : value, false);
 };
 
 /**
@@ -324,7 +321,11 @@ options.gather = (container) =>
 
 			if(element.tagName === 'SELECT')
 			{
-				gathered[section][id] = element.selectedIndex;
+				let setValue = (id === 'theme'
+					? element[element.selectedIndex].value
+					: element.selectedIndex)
+
+				gathered[section][id] = setValue;
 
 			} else if(element.tagName === 'INPUT'
 				&& element.getAttribute('type').toUpperCase() === 'CHECKBOX')
@@ -348,8 +349,7 @@ options.set = (setData: object, client: TUserClient) =>
 	{
 		const isMain: boolean = (key === 'main');
 
-		if(!isMain
-			&& !Object.prototype.hasOwnProperty.call(client, key))
+		if(!isMain && !Object.prototype.hasOwnProperty.call(client, key))
 		{
 			client[key] = {};
 		}
@@ -358,27 +358,20 @@ options.set = (setData: object, client: TUserClient) =>
 		{
 			let value = null;
 
-			config.get(`style.themes.pool.${setData[key][option]}`);
-
 			switch(option)
 			{
 				case 'theme':
-					if(setData[key][option]
-						<= (config.get('style.themes.pool').length - 1))
-					{
-						const selected: string | boolean = config.get(
-							`style.themes.pool.${setData[key][option]}`
-						);
-
-						value = selected === 'default'
-							? false
-							: selected;
+					if(Object.prototype.hasOwnProperty.call(
+						config.get('style.themes.pool'), setData[key][option]
+					)) {
+						const selected = setData[key][option];
+						value = (selected === 'default' ? false : selected);
 					}
-
+					
 					break;
 				default:
 					value = setData[key][option];
-
+					
 					break;
 			}
 
@@ -426,6 +419,7 @@ options.set = (setData: object, client: TUserClient) =>
 theme.set = (theme: any = null, setCookie = true) =>
 {
 	const themesPath = config.get('style.themes.path');
+	const setThemesPath = config.get(`style.themes.pool.${theme}.path`);
 
 	/* Get current stylesheets */
 	const activeStylesheets: NodeListOf<HTMLElement> = document.querySelectorAll(
@@ -451,7 +445,7 @@ theme.set = (theme: any = null, setCookie = true) =>
 	config.set('style.themes.set', theme);
 
 	/* If null theme, then remove active sheets */
-	if(theme === null || !theme)
+	if(!theme)
 	{
 		if(stylesheets.length > 0)
 		{
@@ -467,22 +461,25 @@ theme.set = (theme: any = null, setCookie = true) =>
 		}
 	}
 
-	/* Create stylesheet element */
-	const sheet = DOM.new('link', {
-		rel : 'stylesheet',
-		type : 'text/css',
-		href : `${themesPath}/${theme}.css?bust=${
-			config.data.bust
-		}`.replace(/\/\//g, '/')
-	});
-
-	/* Apply to document */
-	document.querySelector('head').append(sheet);
-
-	/* Remove stylesheets that were active prior to change */
-	if(stylesheets.length > 0)
+	if(setThemesPath)
 	{
-		stylesheets.forEach((sheet): void => sheet.remove());
+		/* Create stylesheet element */
+		const sheet = DOM.new('link', {
+			rel : 'stylesheet',
+			type : 'text/css',
+			href : `${setThemesPath}?bust=${
+				config.data.bust
+			}`.replace(/\/\//g, '/')
+		});
+
+		/* Apply to document */
+		document.querySelector('head').append(sheet);
+
+		/* Remove stylesheets that were active prior to change */
+		if(stylesheets.length > 0)
+		{
+			stylesheets.forEach((sheet): void => sheet.remove());
+		}
 	}
 };
 
@@ -503,7 +500,7 @@ export class componentSettings
 	available = (): boolean =>
 	{
 		if(config.exists('style.themes.pool')
-			&& config.get('style.themes.pool').length > 0
+			&& Object.keys(config.get('style.themes.pool')).length > 0
 			|| config.get('gallery.enabled') === true)
 		{
 			return true;
@@ -598,7 +595,9 @@ export class componentSettings
 					name : key
 				}, () =>
 				{
-					return checkNested(this.client, 'gallery', key) ? (this.client.gallery[key]) : config.get(`gallery.${key}`);
+					return checkNested(this.client, 'gallery', key)
+						? (this.client.gallery[key])
+						: config.get(`gallery.${key}`);
 				}), label, {
 					class : 'interactable'
 				}, description)
@@ -616,8 +615,11 @@ export class componentSettings
 	getSectionMain = (section: HTMLElement = create.section('main'), settings = 0) =>
 	{
 		if(config.exists('style.themes.pool')
-			&& config.get('style.themes.pool').length > 0)
+			&& typeof config.get('style.themes.pool') === 'object')
 		{
+			const configThemesPool = config.get('style.themes.pool');
+			const configThemesKeys = Object.keys(configThemesPool);
+
 			type TPoolItem = {
 				value: string;
 				text: string;
@@ -627,13 +629,12 @@ export class componentSettings
 
 			const setTheme: string | null = config.get('style.themes.set');
 
-			const themePool: TPoolCapsule = config.get(
-				'style.themes.pool'
-			).map((theme: TPoolItem) =>
+			const themePool: TPoolCapsule = configThemesKeys.map(
+				(key: string) =>
 			{
 				return {
-					value: theme,
-					text: theme
+					value: key,
+					text: key
 				};
 			});
 
