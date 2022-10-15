@@ -16,7 +16,15 @@ html {
 }
 
 html > body > div.tableContainer > table > thead > tr {
-  background-color: #1d2021;
+  background-color: #1d2021 !important;
+}
+
+html > body > div.menu {
+  background-color: rgb(24, 27, 28) !important;
+}
+
+html > body > div.menu > div:hover {
+  background-color: #23292b !important;
 }
 
 body > div.path a {
@@ -40,7 +48,7 @@ body > div.tableContainer > table {
 }
 
 html > body:not([is-loading]) > div.tableContainer > table > tbody > tr:not(.parent):hover {
-  background-color: rgb(37, 43, 45);
+  background-color: rgb(37, 43, 45) !important;
 }
 
 body > div.tableContainer > table thead tr {
@@ -128,4 +136,11 @@ body > div.bottom {
 
 body > div.bottom a {
   color: #83a598 !important;
+}
+
+@media only screen and (min-width: 768px)
+{
+  html > body.compact {
+    border: 1px solid #1d2021 !important;
+  }
 }
