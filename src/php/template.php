@@ -1,9 +1,4 @@
 <?php
-  ini_set('display_errors', 1);
-  ini_set('display_startup_errors', 1);
-
-  error_reporting(E_ALL);
-
 /**
  * <eyy-indexer> [https://github.com/sixem/eyy-indexer]
  *
@@ -1391,12 +1386,14 @@ $themes = array(
 
 if($config['style']['themes']['path'])
 {
-  $themes = getThemes(BASE_PATH, $config['style']['themes']['path']);
+  $themesPool = getThemes(BASE_PATH, $config['style']['themes']['path']);
 
-  if(count($themes) === 1)
+  if($themesPool
+    && is_array($themesPool)
+    && count($themesPool) > 0)
   {
-    $themes = array();
-  };
+    $themes = array_merge($themes, $themesPool);
+  }
 }
 
 /**
