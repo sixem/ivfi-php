@@ -1,5 +1,16 @@
+@font-face {
+  font-family: 'Fantasque Sans Mono';
+  src: url('./FantasqueSansMono-Regular.woff2') format('woff2'),
+       url('./FantasqueSansMono-Regular.woff') format('woff'), /* Firefox >= 3.6, any other modern browser */
+       url('./FantasqueSansMono-Regular.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('./FantasqueSansMono-Regular.svg#FantasqueSansMono-Regular') format('svg'); /* Chrome < 4, Legacy iOS */
+  font-weight: 700;
+  font-style: normal;
+}
+
 body,
 html {
+  font-family: 'Fantasque Sans Mono';
   background-color: #282828 !important;
   color: #fbf1c7 !important;
 }
@@ -15,7 +26,8 @@ body > div.path a {
 
 .topBar {
   color: #a89984 !important;
-  background-color: #1d2021 !important;
+  background-color: #1d2021e6 !important;
+  box-shadow: 0 0 3px #0d0d0d69 !important;
 }
 
 body > div.tableContainer {
@@ -25,6 +37,10 @@ body > div.tableContainer {
 
 body > div.tableContainer > table {
   background-color: #1d2021 !important;
+}
+
+html > body:not([is-loading]) > div.tableContainer > table > tbody > tr:not(.parent):hover {
+  background-color: rgb(37, 43, 45);
 }
 
 body > div.tableContainer > table thead tr {
@@ -87,6 +103,11 @@ select:not(.default) {
 
 .rootGallery div.galleryBar {
   background-color: #1d2021 !important;
+  border-bottom: 2px solid hsl(197.1, 8%, 17.1%) !important;
+}
+
+html > body > .rootGallery > div.galleryContent > div.list > table > tbody > tr:not(.selected) > td:hover {
+  background-color: rgb(57, 55, 55) !important;
 }
 
 .readmeContainer {
