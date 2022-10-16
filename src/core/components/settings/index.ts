@@ -2,7 +2,7 @@
 import data from '../../config/data';
 import { config, user } from '../../config/config';
 /** Helpers */
-import { DOM, capitalize, checkNested } from '../../helpers';
+import { DOM, capitalize, checkNested, getNestedPath } from '../../helpers';
 /** Modules */
 import { eventHooks } from '../../modules/event-hooks';
 import { log } from '../../modules/logger';
@@ -280,6 +280,8 @@ update.gallery.fitContent = (value: boolean) =>
 
 /**
  * Update gallery autoplay option
+ * 
+ * @param value new autoplay state
  */
 update.gallery.autoplay = (value: boolean) =>
 {
@@ -292,8 +294,11 @@ update.gallery.autoplay = (value: boolean) =>
 
 /**
  * Gathers set options
+ * 
+ * @param container settings container
+ * @returns {object} object containing set options
  */
-options.gather = (container) =>
+options.gather = (container: HTMLElement) =>
 {
 	const gathered: MComponentSettings.TGathered = {};
 
@@ -310,6 +315,7 @@ options.gather = (container) =>
 		{
 			const id: string = element.getAttribute('name');
 
+			/** Get section identifier */
 			const section: string = element.hasAttribute('data-key')
 				? element.getAttribute('data-key')
 				: element.closest('.section').getAttribute('data-key');
@@ -339,11 +345,18 @@ options.gather = (container) =>
 };
 
 /**
- * Apply options
+ * Applies the settings passed to the function
+ * 
+ * @param setData settings to apply
+ * @param client user client instance
+ * @returns {object} an object containing the changed settings
  */
 options.set = (setData: object, client: TUserClient) =>
 {
 	client = client || user.get();
+
+	/** Perform reload flag */
+	let performReload = false;
 
 	Object.keys(setData).forEach((key) =>
 	{
@@ -375,11 +388,13 @@ options.set = (setData: object, client: TUserClient) =>
 					break;
 			}
 
+			/** Check if the option has changed, and if so, flag it for updating */
 			const changed: boolean = (isMain
 				? (client[option] !== value)
 				: (client[key][option] !== value)
 			);
 
+			/** Recreate object - set changed state and value */
 			setData[key][option] = {
 				value, changed
 			};
@@ -393,7 +408,7 @@ options.set = (setData: object, client: TUserClient) =>
 
 			if(changed)
 			{
-				/* Call the live update function (if any) for the changed settings */
+				/* Call any live updating functions for the changed setting */
 				if(isMain
 					&& Object.prototype.hasOwnProperty.call(update, option))
 				{
@@ -402,23 +417,50 @@ options.set = (setData: object, client: TUserClient) =>
 				{
 					update[key][option](value);
 				}
+
+				/**
+				 * Themes can alter the way the page is being displayed, and
+				 * it may therefor create different offsets that may mess with
+				 * certain functions, like the optimizer etc.
+				 * 
+				 * Attempting to force a reload between changing themes will ensure
+				 * that the page is being properly displayed with the newly set theme.
+				 */
+				if(option === 'theme')
+				{
+					performReload = true;
+				}
 			}
 		});
 	});
 
 	log('settings', 'Set settings:', setData);
 
+	/** Save settings to client */
 	user.set(client);
+
+	/** Reload page if needed */
+	if(performReload)
+	{
+		location.reload();
+	}
 
 	return setData;
 };
 
 /**
  * Sets a theme for the client
+ * 
+ * @param theme the theme to set as active
+ * @param setCookie whether or not to set a cookie for the theme
+ * @returns {void | boolean}
  */
-theme.set = (theme: any = null, setCookie = true) =>
+theme.set = (theme: any = null, setCookie = true): void | boolean =>
 {
+	/** Get the current themes path (relative to the indexer) */
 	const themesPath = config.get('style.themes.path');
+
+	/** Get the set path of the theme that is to be applied */
 	const setThemesPath = config.get(`style.themes.pool.${theme}.path`);
 
 	/* Get current stylesheets */
@@ -518,6 +560,7 @@ export class componentSettings
 
 		options.set(options.gather(element), client);
 
+		/** Call functions on settings applied */
 		data.components.settings.close();
 		data.layer.main.update();
 	}
@@ -527,7 +570,7 @@ export class componentSettings
 	 */
 	close = (): void =>
 	{
-		/* Remove events */
+		/** Remove events */
 		Object.keys(this.boundEvents).forEach((eventId: string) =>
 		{
 			const { selector, events } = this.boundEvents[eventId];
