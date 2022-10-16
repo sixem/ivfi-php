@@ -1,9 +1,31 @@
+body
+{
+    background-color: #131213!important;
+}
+
+body > div.path
+{
+    color: #8e8e8e!important;
+}
+
+html > body > div.topBar
+{
+    background-color: rgba(27, 26, 32, 0.65)!important;
+    color: #b7acc8!important;
+    box-shadow: 0 0 3px #0d0d0d29!important;
+}
+
+html > body > div.tableContainer
+{
+    background-color: #151415!important;
+}
+
 body > div.tableContainer > table tr.file a.preview, body > div.tableContainer > table tr.file a.preview:hover {
     color: #8d6ec8!important;
 }
 
 body > div.tableContainer > table tr.file a.preview:visited {
-    color: #443660!important;
+    color: #5e5179!important;
 }
 
 body > div.tableContainer > table tr.directory a {
@@ -19,7 +41,20 @@ body > div.tableContainer > table tr.file td.download a {
 }
 
 body > div.tableContainer > table tr.file td.download a:visited {
-    color: #3e2b38!important;
+    color: #5e5179!important;
+}
+
+body > div.tableContainer > table > tbody > tr:not(.parent):hover {
+    background-color: rgb(27, 26, 28)!important;
+}
+
+body > div.tableContainer > table {
+    background-color: #151415!important;
+}
+
+body > div.tableContainer > table > thead > tr {
+    background-color: #151415!important;
+    border-bottom: 2px solid transparent!important;
 }
 
 body.compact > div.path {
@@ -27,8 +62,12 @@ body.compact > div.path {
 }
 
 body > div.path a {
-    color: #ab8fdf!important;
+    color: #beaadb!important;
     font-weight: normal!important;
+}
+
+.rootGallery {
+    background-color: rgba(9, 6, 13, 0.8)!important;
 }
 
 .rootGallery div.galleryContent .list table tr.selected td {
@@ -41,4 +80,12 @@ body > div.path a {
 
 .rootGallery div.galleryContent .list table tr:not(.selected) td:hover {
     background-color: #342d422e!important;
+}
+
+.rootGallery > div.galleryBar > .galleryBarRight > a.download {
+    color: #8d6ec8!important;
+}
+
+.rootGallery > div.galleryBar > .galleryBarRight > a.download:hover {
+    color: #9872e1!important;
 }
