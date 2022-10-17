@@ -13,7 +13,7 @@
 
 ---
 
-## What is this project? :thought_balloon:
+## What is this project? :speech_balloon:
 
 This is a file directory browser script written in PHP and TypeScript.
 
@@ -34,7 +34,7 @@ You can open an [issue](https://github.com/sixem/eyy-indexer/issues) if you enco
 
 Or, you can start a [discussion](https://github.com/sixem/eyy-indexer/discussions) if you just have any general questions or minor issues you want to troubleshoot. You can also suggest any features or potential changes there.
 
-## Features
+## Features :sparkles:
 
 ### **Authentication**
 The script supports HTTP authentication, allowing you to add a bit of protection to your directories.
@@ -62,7 +62,7 @@ It can be built with additional features, like support for displaying `README.md
 + :small_red_triangle_down: Direct download links.
 + :desktop_computer: Works well on both mobile and desktop.
 
-## Quick setup
+## Quick setup :zap:
 
 #### Download the latest release [here](https://github.com/sixem/eyy-indexer/releases).
 
@@ -94,12 +94,16 @@ See [configuration](https://sixem.github.io/eyy-indexer/#/config) for a detailed
 You can build the script from source yourself, for that see [building](https://sixem.github.io/eyy-indexer/#/building).
 
 ## Contributing
-You can contribute by either submitting a pull request, reporting issues or bugs, or voicing good ideas. It's all very much welcome! :relaxed:
+You can contribute by either submitting a pull request, reporting issues or bugs, or voicing good ideas.
+
+It's all very much welcome! :relaxed:
 
 ## License
 This project is licensed under GPL-3.0.
 
-It also includes external libraries that are available under a variety of licenses. See [LICENSE](LICENSE) for the full license text.
+It also includes external libraries that are available under a variety of licenses.
+
+See [LICENSE](LICENSE) for the full license text.
 
 ## Disclaimer
 **As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.**

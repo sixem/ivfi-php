@@ -1,9 +1,13 @@
 <h1 align="center">Themes</h1>
 
-<p align="center">This folder contains some official optional themes for the Indexer.</p>
-<p align="center">Check the <a href="https://sixem.github.io/eyy-indexer/#/config?id=style">documentation</a> to see how themes can be used.</p>
+<p align="center">Overview and theme usage.</p>
 
-## White
+
+## Overview 
+This is an overview over the official themes found in <a href="https://github.com/sixem/eyy-indexer/tree/master/themes">/themes/</a>.
+
+
+### White
 
 _A simple white theme._
 
@@ -15,7 +19,7 @@ _A simple white theme._
 
 ---
 
-## Amethyst
+### Amethyst
 
 _A dark, purple theme based on the colors of the amethyst._
 
@@ -27,7 +31,7 @@ _A dark, purple theme based on the colors of the amethyst._
 
 ---
 
-## Coral
+### Coral
 
 _A turquoise and greenish theme._
 
@@ -40,7 +44,7 @@ _A turquoise and greenish theme._
 
 ---
 
-## Ayu-Mirage
+### Ayu-Mirage
 
 _Inspired by the [ayu-mirage](https://github.com/ayu-theme/ayu-colors) theme._
 
@@ -52,7 +56,7 @@ _Inspired by the [ayu-mirage](https://github.com/ayu-theme/ayu-colors) theme._
 
 ---
 
-## Gruvbox
+### Gruvbox
 
 _Inspired by the classic vim theme [gruvbox](https://github.com/morhetz/gruvbox)._
 
@@ -65,7 +69,29 @@ _Inspired by the classic vim theme [gruvbox](https://github.com/morhetz/gruvbox)
 
 <br />
 
-<h1 align="center">Got anything to add?</h1>
+## Usage
+* 1) Download the themes from the <a href="https://github.com/sixem/eyy-indexer/tree/master/themes">folder</a> that you wish to use.
+* 2) Place them in a publicly available directory.
+    * Example: `/indexer/css/themes/`
+* 3) Edit the configuration:
+    * Set the `path` to the relative directory of the themes.
+    * If you want a theme to be the default, then set `default` to the theme's name.
+```php
+<?php
+return array(
+    'style' => array(
+        'themes' => array(
+            'path' => 'indexer/css/themes',
+            'default' => false
+        )
+    )
+);
+?>
+```
+* 4) You should now be able to enable different themes in the settings menu (⚙️ in the top right corner).
 
-<p align="center">If you've created a nice theme, feel free to contact me and I'll add it to the list if it's suitable!</p>
-<p align="center"><i>PS: Themes can be created by simply modifying any existing CSS values.</i></p>
+## Got anything to add? <!-- {docsify-ignore} -->
+
+If you've created a nice theme, feel free to submit it via a pull request!
+
+<i>PS: Themes can be created by simply modifying any existing CSS values.</i>

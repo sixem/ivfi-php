@@ -2,9 +2,9 @@
 
 # eyy-indexer <small>docs</small>
 
-> An image and video friendly Indexer
+> Documentation
 
-* Customizable and easy to use
+* An image and video friendly Indexer
 
 [GitHub](https://github.com/sixem/eyy-indexer)
 [Get Started](README)
