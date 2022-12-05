@@ -35,7 +35,7 @@
 		}
 	},
 	"reverseSearch" : {
-		"Google" : "https://www.google.com/searchbyimage?image_url={URL}&safe=off",
+		"Google" : "https://lens.google.com/uploadbyurl?url={URL}",
 		"Yandex" : "https://yandex.com/images/search?rpt=imageview&url={URL}",
 		"Bing" : "https://bing.com/images/search?q=imgurl:{URL}&view=detailv2&iss=sbi#enterInsights",
 		"SauceNAO" : "https://saucenao.com/search.php?url={URL}"
