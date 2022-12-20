@@ -1,8 +1,8 @@
 <?php
 /**
- * <eyy-indexer> [https://github.com/sixem/eyy-indexer]
+ * <ivfi-php> [https://github.com/sixem/ivfi-php]
  *
- * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
+ * @license  https://github.com/sixem/ivfi-php/blob/master/LICENSE GPL-3.0
  * @author   emy (sixem@github) <emy@five.sh>
  * @version  <%= version %>
  */
@@ -10,7 +10,7 @@
 /**
  * [Configuration]
  * A more in-depth overview can be found here:
- * https://sixem.github.io/eyy-indexer/#/config
+ * https://sixem.github.io/ivfi-php/#/config
  */
 
 /* Used to bust the cache and to display footer version number */
@@ -1575,7 +1575,7 @@ if($footer['enabled'])
 
   echo ($config['credits'] !== false) ? sprintf(
     '<div class="referenceGit">
-    <a target="_blank" href="https://github.com/sixem/eyy-indexer">eyy-indexer</a><span class="version">%s</span>
+    <a target="_blank" href="https://ivfi.io/">IVFi</a>
   </div>', $version
   ) : '';
 
@@ -1587,7 +1587,7 @@ if($footer['enabled'])
     <input type="text" placeholder="Search .." value="">
 </div>
 
-<!-- [https://github.com/sixem/eyy-indexer] -->  
+<!-- [https://github.com/sixem/ivfi-php] -->  
 
 <script id="__INDEXER_DATA__" type="application/json"><?=(json_encode(array(
   'bust' => $bust,

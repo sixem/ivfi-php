@@ -16,9 +16,9 @@ let minifiedBanner = () =>
 {
 	return `
 /*!
- * eyy-indexer - ${package.description} (${package.version})
+ * IVFi-PHP - ${package.description} (${package.version})
  *
- * [https://github.com/sixem/eyy-indexer]
+ * [https://github.com/sixem/ivfi-php]
  *
  * Copyright (c) 2022 emy | five.sh | github.com/sixem
  * Licensed under GPL-3.0
