@@ -1576,6 +1576,7 @@ if($footer['enabled'])
   echo ($config['credits'] !== false) ? sprintf(
     '<div class="referenceGit">
     <a target="_blank" href="https://ivfi.io/">IVFi</a>
+    <span>%s</span>
   </div>', $version
   ) : '';
 
