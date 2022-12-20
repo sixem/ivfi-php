@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 /**
  * Strips the opening/closing tags from code.
@@ -39,7 +39,7 @@ const stripOuterTags = (data, tags) =>
     return data;
 };
 
-exports.exit = (...message) =>
+const exit = (...message) =>
 {
 	console.log(`\nExiting -`, ...message);
 	process.exit(1);
@@ -50,7 +50,7 @@ exports.exit = (...message) =>
  * 
  * @param {string} path 
  */
-exports.readJson = (path) =>
+const readJson = (path) =>
 {
 	let data = false;
 
@@ -73,7 +73,7 @@ exports.readJson = (path) =>
 /**
  * Extractors for fetching/reading extra build files
  */
- exports.extractors = {
+const extractors = {
 	filePhp: (path, options = {}) =>
 	{
 		let data = null;
@@ -130,7 +130,7 @@ exports.readJson = (path) =>
     }
 };
 
-exports.trimPartPath = (path) =>
+const trimPartPath = (path) =>
 {
     if(path[0] === '/' || path[0] === '\\')
     {
@@ -141,4 +141,11 @@ exports.trimPartPath = (path) =>
     }
 
     return path;
+};
+
+export default {
+    exit,
+    readJson,
+    extractors,
+    trimPartPath
 };
