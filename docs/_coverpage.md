@@ -1,10 +1,12 @@
 <!-- _coverpage.md -->
 
-# eyy-indexer <small>docs</small>
+![logo](./greeterLogo.svg)
+
+# IVFi-PHP <small>docs</small>
 
 > Documentation
 
-* An image and video friendly Indexer
+* The image and video friendly indexer
 
-[GitHub](https://github.com/sixem/eyy-indexer)
-[Get Started](README)
+[GitHub](https://github.com/sixem/ivfi-php)
+[Get Started](setup.md)

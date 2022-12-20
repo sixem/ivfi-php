@@ -8,8 +8,8 @@ You can build this script from source using `node` and `npm`.
 
 **Clone repository and install dependencies:**
 ```bash
-git clone https://github.com/sixem/eyy-indexer
-cd eyy-indexer
+git clone https://github.com/sixem/ivfi-php
+cd ivfi-php
 npm install
 ```
 

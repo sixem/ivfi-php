@@ -6,7 +6,7 @@ The `extras` directory contains extra features for the Indexer.
 
 These features must be compiled independently, as they are not available in any official releases.
 
-To build the Indexer with these features, find and edit [build.options.json](https://github.com/sixem/eyy-indexer/blob/master/build.options.json) in the base directory of the repository.
+To build the Indexer with these features, find and edit [build.options.json](https://github.com/sixem/ivfi-php/blob/master/build.options.json) in the base directory of the repository.
 
 Simply set the value of any corresponding key under `extraFeatures` to `true` or `false` to enable and disable the feature respectively during compilation.
 

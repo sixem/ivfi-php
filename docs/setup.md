@@ -5,9 +5,9 @@
 
 ## Download
 
-<p>Download the latest release <a href="https://github.com/sixem/eyy-indexer/releases">HERE</a>!</p>
+<p>Download the latest release <a href="https://github.com/sixem/ivfi-php/releases">HERE</a>!</p>
 <p>Alternatively, you can also build it from source yourself, for that see: <a href="#building">building</a></p>
-<p>You can also find every release and specific builds here: <a href="https://five.sh/releases/eyy-indexer/">https://five.sh/releases/eyy-indexer/</a></p>
+<p>You can also find every release and specific builds here: <a href="https://five.sh/releases/ivfi/php/">https://five.sh/releases/ivfi/php/</a></p>
 
 ## Files
 
@@ -61,8 +61,8 @@ The script can also be run through a simple docker container using `docker compo
 #### Clone the repository and install dependencies:
 `npm install` can be skipped if you are manually creating `docker/public` without building from source.
 ```bash
-git clone https://github.com/sixem/eyy-indexer
-cd eyy-indexer
+git clone https://github.com/sixem/ivfi-php
+cd ivfi-php
 npm install
 ```
 
