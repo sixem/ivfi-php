@@ -38,6 +38,63 @@ html > body {
   scrollbar-color: #222 #131315;
   background-color: map.get(variables.$root, "color-background-body");
 
+  /* Readme container */
+  .readmeContainer {
+    background-color: #121318;
+    margin-bottom: 18px;
+    border-top: 1px solid #19191d;
+    border-bottom: 1px solid #19191d;
+    text-align: center;
+
+    > .readmeContents {
+      padding: 5px 8px;
+      position: relative;
+    }
+
+    a {
+      text-decoration: none;
+      color: #d6d3ce;
+      font-weight: bold;
+
+      &:hover {
+        text-decoration: underline;
+        color: #5e74ea;
+      }
+    }
+
+    &:not([open]) {
+      summary {
+        &::before {
+          transform: rotate(180deg);
+        }
+      }
+    }
+
+    summary {
+      text-align: right;
+      background-color: #15161e;
+      display: block;
+      padding: 3px 8px 5px 6px;
+      color: #939498;
+      border-bottom: 1px solid #151822;
+      user-select: none;
+      cursor: pointer;
+
+      &::before {
+        content: "\25BE";
+        transform: rotate(0deg);
+        display: inline-block;
+        margin-right: 5px;
+        transition: transform 0.25s;
+      }
+    }
+
+    pre {
+      white-space: pre-wrap;
+      line-height: 145%;
+    }
+  }
+
   > div.navigateLoad {
     $spinner-size: 26px;
     $spinner-fade-duration: 0.1s;
@@ -472,87 +529,85 @@ html > body {
     letter-spacing: 1px;
     background-color: #121216f0;
 
-    > {
-      .wrapper {
-        max-height: 75vh;
-        overflow-y: auto;
+    > .wrapper {
+      max-height: 75vh;
+      overflow-y: auto;
 
-        > div.section {
-          padding: 10px 0;
+      > div.section {
+        padding: 10px 0;
 
-          > div.header {
-            padding: 4px 17px;
-            margin-bottom: 14px;
-            font-size: 13px;
-            color: #797979;
-            box-shadow: 0 0 1px #0d0d0d;
-            background-color: #17171d;
-            border-top: 1px solid #1d1d25;
-            border-bottom: 1px solid #1d1d25;
-          }
+        > div.header {
+          padding: 4px 17px;
+          margin-bottom: 14px;
+          font-size: 13px;
+          color: #797979;
+          box-shadow: 0 0 1px #0d0d0d;
+          background-color: #17171d;
+          border-top: 1px solid #1d1d25;
+          border-bottom: 1px solid #1d1d25;
+        }
 
-          &:first-child {
-            padding-top: 0;
-          }
+        &:first-child {
+          padding-top: 0;
+        }
 
-          .option {
-            padding: 0 10px;
-            display: table;
-            width: calc(100% - 20px);
-            height: 25px;
+        .option {
+          padding: 0 10px;
+          display: table;
+          width: calc(100% - 20px);
+          height: 25px;
 
-            &.interactable {
+          &.interactable {
+            cursor: pointer;
+
+            input {
               cursor: pointer;
-
-              input {
-                cursor: pointer;
-              }
             }
+          }
 
-            &:not(:first-child) {
-              margin-top: 10px;
-            }
+          &:not(:first-child) {
+            margin-top: 10px;
+          }
 
-            > div {
-              display: table-cell;
-              width: 50%;
+          > div {
+            display: table-cell;
+            width: 50%;
 
-              &:last-child {
-                width: auto;
-                text-align: right;
-              }
+            &:last-child {
+              width: auto;
+              text-align: right;
             }
           }
         }
       }
+    }
 
-      /* Settings apply and cancel buttons */
-      div.bottom {
-        display: table;
-        width: 100%;
-        margin-top: 4px;
-        background-color: #17171d;
-        border-top: 1px solid #1d1d25;
+    /* Settings apply and cancel buttons */
+    > div.bottom {
+      display: table;
+      width: 100%;
+      margin-top: 4px;
+      background-color: #17171d;
+      border-top: 1px solid #1d1d25;
 
-        > div {
-          text-align: center;
-          padding: 6px 7px 8px;
-          display: table-cell;
-          font-size: 12px;
+      > div {
+        text-align: center;
+        padding: 6px 7px 8px;
+        display: table-cell;
+        font-size: 12px;
 
-          &:first-child {
-            border-right: 1px solid #1c1c1d;
-          }
+        &:first-child {
+          border-right: 1px solid #1c1c1d;
+        }
 
-          &:not(:last-child) {
-            border-right: 1px solid #292929;
-            width: 50%;
-          }
+        &:not(:last-child) {
+          border-right: 1px solid #292929;
+          width: 50%;
+        }
 
-          &:hover {
-            cursor: pointer;
-            background-color: #1c1c25;
-          }
+        &:hover {
+          cursor: pointer;
+          background-color: #1c1c25;
         }
       }
     }
@@ -598,6 +653,10 @@ html > body {
     position: absolute;
     right: 10px;
     font-style: italic;
+
+    > span {
+      margin-left: 6px;
+    }
   }
 
   &:not(.compact) > div.bottom {
