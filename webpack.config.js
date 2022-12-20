@@ -105,12 +105,12 @@ const banner = () =>
 	@preserved
 
 
-	## eyy-indexer - ${package.description} ##
+	## IVFi-PHP - ${package.description} ##
 
 
 	[Version: ${package.version}]
 
-	[Git: https://github.com/sixem/eyy-indexer]
+	[Git: https://github.com/sixem/ivfi-php]
 
 	[Build: [fullhash] @ ${moment().format('dddd, MMMM Do YYYY')}]
 
