@@ -1412,10 +1412,14 @@ if(count($themes) > 0)
   {
     $currentTheme = $client['style']['theme'] ? $client['style']['theme'] : NULL;
   /* Check for a default theme */
-  } else if(isset($config['style']['themes']['default'])
-    && isset($themes[$config['style']['themes']['default']]))
+  } else if(isset($config['style']['themes']['default']))
   {
-    $currentTheme = $config['style']['themes']['default'];
+    $currentTheme = strtolower($config['style']['themes']['default']);
+
+    if($defaultTheme && isset($themes[$defaultTheme]))
+    {
+      $currentTheme = $defaultTheme;
+    }
   }
 }
 
@@ -1528,14 +1532,11 @@ $getInjectable = function($key) use ($config, $injectPassableData)
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title><?=sprintf($config['format']['title'], $indexer->getCurrentDirectory());?></title>
-    
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
-
     <?=$baseStylesheet;?>
-    <?=($currentTheme && strtolower($currentTheme) !== 'default')
+    <?=($currentTheme && strtolower($currentTheme) !== 'default' && $themes[$currentTheme])
       ? PHP_EOL . '    <link rel="stylesheet" type="text/css" href="' . $themes[$currentTheme]['path'] . '?bust=' . $bust . '">' . PHP_EOL
       : ''?>
-
     <script defer type="text/javascript" src="<%= indexerPath %>main.js?bust=<?=$bust;?>"></script>
     <?=!(empty($additionalCss)) ? sprintf('<style type="text/css">%s</style>' . PHP_EOL, $additionalCss) : PHP_EOL?>
     <?=$getInjectable('head');?>
