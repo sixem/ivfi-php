@@ -11,6 +11,7 @@ export default class selectorClass
 		FILTER_INPUT: ':scope > div.filterContainer > input[type="text"]',
 		TOP_EXTEND: ':scope > div.topBar > div.extend',
 		TABLE_CONTAINER: ':scope > div.tableContainer',
+		README_CONTAINER: ':scope > .readmeContainer',
 		TABLE: ':scope > div.tableContainer > table',
 		PATH: ':scope > div.path'
 	};

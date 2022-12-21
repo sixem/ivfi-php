@@ -1,7 +1,7 @@
 /** Vendors */
 import hoverPreview from './vendors/hover-preview/hover-preview';
 /** Config */
-import { config } from './config/config';
+import { config, user } from './config/config';
 import data from './config/data';
 /** Modules */
 import { log } from './modules/logger';
@@ -132,6 +132,38 @@ eventHooks.listen(selector.use('FILTER_INPUT') as HTMLElement, 'input', 'filterI
 {
 	data.components.filter.apply(e.currentTarget.value);
 });
+
+/**
+ * Readme toggle event
+ */
+if(selector.use('README_CONTAINER'))
+{
+	eventHooks.listen(selector.use('README_CONTAINER') as HTMLElement, 'toggle', 'toggledReadme', (e) =>
+	{
+		const client = user.get();
+
+		if(!client.readme)
+		{
+			client.readme = {};
+		}
+	
+		client.readme.toggled = e.target.hasAttribute('open');
+	
+		user.set(client);
+	
+		/**
+		 * Refresh performance rows
+		 * 
+		 * This is done because long readme content can lead to a deep set of
+		 * rows previously being out of view, becoming "visible" without the
+		 * optimizer rendering them as visible.
+		 */
+		if(data.instances.optimize.main.enabled)
+		{
+			data.instances.optimize.main.attemptRefresh();
+		}
+	});
+}
 
 /**
  * Item click event (show gallery if enabled and table sort)
