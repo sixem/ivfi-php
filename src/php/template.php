@@ -405,7 +405,7 @@ function getThemes($basePath, $themesPath)
           {
             if($theme[0] !== '.')
             {
-              $themesPool[$item] = array(
+              $themesPool[strtolower($item)] = array(
                 'path' => Helpers::joinPaths($themesPath, $item, $theme)
               ); break;
             }
@@ -413,7 +413,7 @@ function getThemes($basePath, $themesPath)
         } else if(preg_match('~\.css$~', $item))
         {
           /* The current item is a single .CSS file */
-          $themesPool[basename($item, '.css')] = array(
+          $themesPool[strtolower(basename($item, '.css'))] = array(
             'path' => Helpers::joinPaths($themesPath, $item)
           );
         }
@@ -1241,7 +1241,7 @@ class Indexer extends Helpers
 }
 
 /* Is cookie set? */
-$client = isset($_COOKIE['ei-client']) ? $_COOKIE['ei-client'] : NULL;
+$client = isset($_COOKIE['IVFi']) ? $_COOKIE['IVFi'] : NULL;
 
 /* If client cookie is set, parse it */
 if($client)
@@ -1253,6 +1253,9 @@ if($client)
 $validate = is_array($client);
 
 $cookies = array(
+  'readme' => array(
+    'toggled' => isset($client['readme']['toggled']) ? $client['readme']['toggled'] : true
+  ),
   'sorting' => array(
     'row' => $validate
       ? (isset($client['sort']['row']) ? $client['sort']['row'] : NULL)
@@ -1399,13 +1402,22 @@ if($config['style']['themes']['path'])
 /**
  * Set current theme if available
  */
-$currentTheme = count($themes) > 0 ? (
-  (is_array($client) && isset($client['style']['theme'])
-    ? (isset($themes[$client['style']['theme']])
-      ? $client['style']['theme']
-      : NULL)
-    : 'default')
-) : NULL;
+$currentTheme = NULL;
+
+if(count($themes) > 0)
+{
+  /* Check if client has a custom theme already set */
+  if(is_array($client)
+    && isset($client['style']['theme']))
+  {
+    $currentTheme = $client['style']['theme'] ? $client['style']['theme'] : NULL;
+  /* Check for a default theme */
+  } else if(isset($config['style']['themes']['default'])
+    && isset($themes[$config['style']['themes']['default']]))
+  {
+    $currentTheme = $config['style']['themes']['default'];
+  }
+}
 
 $compact = NULL;
 
@@ -1520,7 +1532,9 @@ $getInjectable = function($key) use ($config, $injectPassableData)
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
 
     <?=$baseStylesheet;?>
-    <?=($currentTheme && strtolower($currentTheme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $themes[$currentTheme]['path'] . '?bust=' . $bust . '">' . PHP_EOL : ''?>
+    <?=($currentTheme && strtolower($currentTheme) !== 'default')
+      ? PHP_EOL . '    <link rel="stylesheet" type="text/css" href="' . $themes[$currentTheme]['path'] . '?bust=' . $bust . '">' . PHP_EOL
+      : ''?>
 
     <script defer type="text/javascript" src="<%= indexerPath %>main.js?bust=<?=$bust;?>"></script>
     <?=!(empty($additionalCss)) ? sprintf('<style type="text/css">%s</style>' . PHP_EOL, $additionalCss) : PHP_EOL?>
