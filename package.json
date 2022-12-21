@@ -7,6 +7,7 @@
   "version": "1.2.11",
   "description": "An image and video friendly directory indexer",
   "main": "./core/js/main.ts",
+  "type": "module",
   "dependencies": {
     "js-cookie": "^2.2.1",
     "vanilla-swipe": "^2.4.0"
