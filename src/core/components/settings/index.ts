@@ -2,7 +2,7 @@
 import data from '../../config/data';
 import { config, user } from '../../config/config';
 /** Helpers */
-import { DOM, capitalize, checkNested, getNestedPath } from '../../helpers';
+import { DOM, capitalize, checkNested } from '../../helpers';
 /** Modules */
 import { eventHooks } from '../../modules/event-hooks';
 import { log } from '../../modules/logger';
@@ -327,9 +327,9 @@ options.gather = (container: HTMLElement) =>
 
 			if(element.tagName === 'SELECT')
 			{
-				let setValue = (id === 'theme'
+				const setValue = (id === 'theme'
 					? element[element.selectedIndex].value
-					: element.selectedIndex)
+					: element.selectedIndex);
 
 				gathered[section][id] = setValue;
 
@@ -674,12 +674,13 @@ export class componentSettings
 
 			const themePool: TPoolCapsule = configThemesKeys.map(
 				(key: string) =>
-			{
-				return {
-					value: key,
-					text: key
-				};
-			});
+				{
+					return {
+						value: key,
+						text: key
+					};
+				}
+			);
 
 			const selectTemplate: [TPoolCapsule, object, any] = [themePool, {
 				'name': 'theme',
