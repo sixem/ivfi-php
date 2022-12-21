@@ -1590,7 +1590,7 @@ if($footer['enabled'])
 
 <!-- [https://github.com/sixem/ivfi-php] -->  
 
-<script id="__INDEXER_DATA__" type="application/json"><?=(json_encode(array(
+<script id="__IFVI_DATA__" type="application/json"><?=(json_encode(array(
   'bust' => $bust,
   'singlePage' => $config['single_page'],
   'preview' => array(
