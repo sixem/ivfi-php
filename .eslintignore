@@ -1,2 +1,2 @@
-**/vendors/**
+/src/core/vendors/
 **/src/php/**
