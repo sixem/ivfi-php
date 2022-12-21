@@ -7,8 +7,12 @@ if($data['readme'] && file_exists($data['readme']))
     );
 
     echo sprintf(
-        '<div class="readmeContainer"><div class="readmeContents">%s</div></div>',
-        $readmeSupport['parsedown']->text($readmeSupport['contents'])
+        '<details class="readmeContainer"%s>                        
+    <summary>README.md</summary>
+    <div class="contents">%s</div>    
+  </details>',
+(isset($cookies['readme']['toggled']) && $cookies['readme']['toggled'] === true) ? ' open=""' : '',
+$readmeSupport['parsedown']->text($readmeSupport['contents'])
     );
 }
 ?>
