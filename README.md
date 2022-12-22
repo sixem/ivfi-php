@@ -85,7 +85,7 @@ DirectoryIndex index.html index.php /indexer.php
 
 For a more in-depth explanation of how to set up the script, see [setup](https://ivfi.io/docs/php/#/setup).
 
-You can also find every release and specific builds here: [https://five.sh/releases/ivfi/php/](https://five.sh/releases/ivfi/php/)
+You can also find every release and specific builds here: [https://ivfi.io/releases/php/](https://ivfi.io/releases/php/)
 
 ## Configuration
 
