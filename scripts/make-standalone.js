@@ -1,7 +1,10 @@
-const package = require('../package.json');
+/** Package information */
+import pck from '../package.json' assert {
+	type: 'json'
+};
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 const data = {
 	outFile : './build/standalone.php'
@@ -16,7 +19,7 @@ let minifiedBanner = () =>
 {
 	return `
 /*!
- * IVFi-PHP - ${package.description} (${package.version})
+ * IVFi-PHP - ${pck.description} (${pck.version})
  *
  * [https://github.com/sixem/ivfi-php]
  *
