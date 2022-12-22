@@ -200,8 +200,6 @@ export default class optimizeClass
 		/* Store offsets */
 		const rowOffsets: { [key: string]: number; } = {};
 
-		let recentHeight = 0;
-
 		/* Create updated structure */
 		for(let index = 0; index < (this.rows).length; index++)
 		{
@@ -216,13 +214,7 @@ export default class optimizeClass
 
 				rowOffsets[index] = combinedHeight;
 				combinedHeight += item._offsetHeight;
-				recentHeight = item._offsetHeight;
 			}
-		}
-
-		if(recentHeight > 0)
-		{
-			combinedHeight = (combinedHeight - recentHeight);
 		}
 
 		combinedHeight += this.padding;

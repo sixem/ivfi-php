@@ -15,9 +15,9 @@ const Keys: TKeyReferences = {
 	l: 'KeyL'
 };
 
-const StorageKey = 'indexer';
-const CookieKey = 'ei-client';
-const ScriptDataId = '__INDEXER_DATA__';
+const StorageKey = 'IVFi';
+const CookieKey = 'IVFi';
+const ScriptDataId = '__IFVI_DATA__';
 
 export {
 	Keys,

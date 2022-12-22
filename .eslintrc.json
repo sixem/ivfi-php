@@ -25,6 +25,8 @@
         "no-dupe-class-members": "error",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-namespace": "off",
+        "@typescript-eslint/no-this-alias": "off",
+        "@typescript-eslint/no-empty-function": "off",
         "indent": [
             "error",
             "tab",

@@ -3,10 +3,11 @@
     "name": "emy",
     "mail": "emy@five.sh"
   },
-  "name": "eyy-indexer",
-  "version": "1.2.1",
-  "description": "A directory explorer",
+  "name": "ivfi",
+  "version": "1.2.11",
+  "description": "An image and video friendly directory indexer",
   "main": "./core/js/main.ts",
+  "type": "module",
   "dependencies": {
     "js-cookie": "^2.2.1",
     "vanilla-swipe": "^2.4.0"
@@ -47,13 +48,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sixem/eyy-indexer.git",
-    "reference": "https://github.com/sixem/eyy-indexer"
+    "url": "git+https://github.com/sixem/ivfi-php.git",
+    "reference": "https://github.com/sixem/ivfi-php"
   },
   "author": "emy",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/sixem/eyy-indexer/issues"
+    "url": "https://github.com/sixem/ivfi-php/issues"
   },
-  "homepage": "https://github.com/sixem/eyy-indexer#readme"
+  "homepage": "https://github.com/sixem/ivfi-php#readme"
 }

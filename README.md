@@ -1,19 +1,21 @@
-<h1 align="center">
-  <img src="https://raw.githubusercontent.com/sixem/eyy-indexer/master/logo.svg">
-</h1>
+<br/>
+<div align="center">
+	<img height="100" src="./logo.svg">
+	<br/><br/>
+	<h3 align="center"><i>IVFi-PHP</i></h3>
+	<p align="center"><i>The image and video friendly indexer</i></p>
+</div>
 
-<h3 align="center">
-  <span>An image and video friendly Indexer</span><br>
-</h3>
+<br/><br/>
 
 <p align="center">
-<a href="https://github.com/sixem/eyy-indexer/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/eyy-indexer?color=2f394f&style=flat"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/eyy-indexer?color=5a8f4e&style=flat"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/eyy-indexer?color=4b8b72&style=flat"> 
-<img alt="Travis (.com)" src="https://img.shields.io/travis/com/sixem/eyy-indexer?style=flat">
+<a href="https://github.com/sixem/ivfi-php/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/ivfi-php?color=2f394f&style=flat"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/ivfi-php?color=5a8f4e&style=flat"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/ivfi-php?color=4b8b72&style=flat"> 
+<img alt="Travis (.com)" src="https://img.shields.io/travis/com/sixem/ivfi-php?style=flat">
 </p>
 
 ---
 
-## What is this project? :thought_balloon:
+## What is this project? :speech_balloon:
 
 This is a file directory browser script written in PHP and TypeScript.
 
@@ -25,16 +27,16 @@ This is designed to be a image and video friendly Indexer, while also being an I
 ***Note: The Indexer can be used without JavaScript enabled, but it is needed for the extra functionality.***
 
 ## Documentation :blue_book:
-:link: [https://sixem.github.io/eyy-indexer/](https://sixem.github.io/eyy-indexer/#/README)
+:link: [https://ivfi.io/docs/php/](https://ivfi.io/docs/php/)
 
 ## Feedback :bulb:
 I'm open for any feedback.
 
-You can open an [issue](https://github.com/sixem/eyy-indexer/issues) if you encounter any **specific** problems or bugs of any kind.
+You can open an [issue](https://github.com/sixem/ivfi-php/issues) if you encounter any **specific** problems or bugs of any kind.
 
-Or, you can start a [discussion](https://github.com/sixem/eyy-indexer/discussions) if you just have any general questions or minor issues you want to troubleshoot. You can also suggest any features or potential changes there.
+Or, you can start a [discussion](https://github.com/sixem/ivfi-php/discussions) if you just have any general questions or minor issues you want to troubleshoot. You can also suggest any features or potential changes there.
 
-## Features
+## Features :sparkles:
 
 ### **Authentication**
 The script supports HTTP authentication, allowing you to add a bit of protection to your directories.
@@ -62,9 +64,9 @@ It can be built with additional features, like support for displaying `README.md
 + :small_red_triangle_down: Direct download links.
 + :desktop_computer: Works well on both mobile and desktop.
 
-## Quick setup
+## Quick setup :zap:
 
-#### Download the latest release [here](https://github.com/sixem/eyy-indexer/releases).
+#### Download the latest release [here](https://github.com/sixem/ivfi-php/releases).
 
 * Place the `/build/` files into your web root.
 * Use the `indexer.php` as a index file for any of the directories where the script should be used:
@@ -81,25 +83,29 @@ server {
 DirectoryIndex index.html index.php /indexer.php
 ```
 
-For a more in-depth explanation of how to set up the script, see [setup](https://sixem.github.io/eyy-indexer/#/setup).
+For a more in-depth explanation of how to set up the script, see [setup](https://ivfi.io/docs/php/#/setup).
 
-You can also find every release and specific builds here: [https://five.sh/releases/eyy-indexer/](https://five.sh/releases/eyy-indexer/)
+You can also find every release and specific builds here: [https://five.sh/releases/ifvi/php/](https://five.sh/releases/ifvi/php/)
 
 ## Configuration
 
-See [configuration](https://sixem.github.io/eyy-indexer/#/config) for a detailed overview over how this script can be customized.
+See [configuration](https://ivfi.io/docs/php/#/config) for a detailed overview over how this script can be customized.
 
 ## Building
 
-You can build the script from source yourself, for that see [building](https://sixem.github.io/eyy-indexer/#/building).
+You can build the script from source yourself, for that see [building](https://ivfi.io/docs/php/#/building).
 
 ## Contributing
-You can contribute by either submitting a pull request, reporting issues or bugs, or voicing good ideas. It's all very much welcome! :relaxed:
+You can contribute by either submitting a pull request, reporting issues or bugs, or voicing good ideas.
+
+It's all very much welcome! :relaxed:
 
 ## License
 This project is licensed under GPL-3.0.
 
-It also includes external libraries that are available under a variety of licenses. See [LICENSE](LICENSE) for the full license text.
+It also includes external libraries that are available under a variety of licenses.
+
+See [LICENSE](LICENSE) for the full license text.
 
 ## Disclaimer
 **As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.**

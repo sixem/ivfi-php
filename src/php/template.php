@@ -1,9 +1,8 @@
 <?php
-
 /**
- * <eyy-indexer> [https://github.com/sixem/eyy-indexer]
+ * <ivfi-php> [https://github.com/sixem/ivfi-php]
  *
- * @license  https://github.com/sixem/eyy-indexer/blob/master/LICENSE GPL-3.0
+ * @license  https://github.com/sixem/ivfi-php/blob/master/LICENSE GPL-3.0
  * @author   emy (sixem@github) <emy@five.sh>
  * @version  <%= version %>
  */
@@ -11,29 +10,41 @@
 /**
  * [Configuration]
  * A more in-depth overview can be found here:
- * https://github.com/sixem/eyy-indexer/blob/master/CONFIG.md
+ * https://sixem.github.io/ivfi-php/#/config
  */
 
 /* Used to bust the cache and to display footer version number */
 $version = '<%= version %>';
 
 $config = array(
-    /* Authentication options */
+    /**
+     * Authentication options
+     */
     'authentication' => false,
-    /* Enables single-page features */
+    /**
+     * Enables single-page features
+     */
     'single_page' => false,
-    /* Formatting options */
+    /**
+     * Formatting options
+     */
     'format' => array(
         'title' => 'Index of %s', /* Title format where %s is the current path */
         'date' => array('d/m/y H:i', 'd/m/y'), /* Date formats (desktop, mobile) */
         'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB') /* Size formats */
     ),
-    /* Favicon options */
+    /**
+     * Favicon options
+     */
     'icon' => array(
         'path' => '/favicon.ico', /* What favicon to use */
         'mime' => 'image/x-icon' /* Favicon mime type */
     ),
-    /* Sorting options. Used as default until the client sets their own sorting settings */
+    /**
+     * Sorting options.
+     * 
+     * Used as default until the client sets their own sorting settings
+     */
     'sorting' => array(
         'enabled' => false, /* Whether the server should sort the items */
         'order' => SORT_ASC, /* Sorting order. asc or desc */
@@ -41,7 +52,9 @@ $config = array(
         'sort_by' => 'name', /* What to sort by. available options are name, modified, type and size */
         'use_mbstring' => false /* Enabled mbstring when sorting */
     ),
-    /* Gallery options */
+    /**
+     * Gallery options
+     */
     'gallery' => array(
         'enabled' => true, /* Whether the gallery plugin should be enabled */
         'reverse_options' => false, /* Reverse search options for images (when hovering over them) */
@@ -50,21 +63,29 @@ $config = array(
         'fit_content' => true, /* Whether the media should be forced to fill the screen space */
         'image_sharpen' => false, /* Attempts to disable browser blurriness on images */
     ),
-    /* Preview options */
+    /**
+     * Preview options
+     */
     'preview' => array(
         'enabled' => true, /* Whether the preview plugin should be enabled */
         'hover_delay' => 75, /* Delay in milliseconds before the preview is shown */
         'cursor_indicator' => true /* Displays a loading cursor while the preview is loading */
     ),
-    /* Extension that should be marked as media.
-     * These extensions will have potential previews and will be included in the gallery */
+    /**
+     * Extension that should be marked as media.
+     * These extensions will have potential previews and will be included in the gallery
+     */
     'extensions' => array(
         'image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),
         'video' => array('webm', 'mp4', 'ogg', 'ogv', 'mov')
     ),
-    /* Injection options */
+    /**
+     * Injection options
+     */
     'inject' => false,
-    /* Styling options */
+    /**
+     * Styling options
+     */
     'style' => array(
         /* Set to a path relative to the root directory (location of this file) containg .css files.
          * Each .css file will be treated as a separate theme. Set to false to disable themes */
@@ -79,15 +100,22 @@ $config = array(
         /* Enables a more compact styling of the page */
         'compact' => false
     ),
-    /* Filter what files or directories to show.
-     * Uses regular expressions. All names !matching! the regex will be shown.
-     * Setting the value to false will disable the respective filter */
+    /**
+     * Filter what files or directories to show.
+
+     * Uses regular expressions. All names *matching* the regex will be shown.
+     * Setting the value to false will disable the respective filter
+     */
     'filter' => array(
         'file' => false,
         'directory' => false
     ),
-    /* Calculates the size of directories.
-     * This can be intensive, especially with the recursive option, so be aware of that */
+    /**
+     * Calculates the size of directories.
+
+     * This can be intensive, especially with the recursive
+     * option, so be aware of that
+     */
     'directory_sizes' => array(
       /* Whether directory sizes should be calculated or not */
       'enabled' => false,
@@ -101,48 +129,182 @@ $config = array(
     /* Whether this .php file should be directly accessible */
     'allow_direct_access' => false,
     /* Set to 'strict' or 'weak'.
-     * 'strict' uses realpath() to avoid backwards directory traversal whereas 'weak' uses a similar string-based approach */
+     * 'strict' uses realpath() to avoid backwards directory traversal
+     * whereas 'weak' uses a similar string-based approach */
     'path_checking' => 'strict',
     /* Enabled the performance mode */
     'performance' => false,
-    /* Whether extra information in the footer should be generated (page load time, path etc.) */
+    /* Whether extra information in the footer should be generated */
     'footer' => array(
       'enabled' => true,
       'show_server_name' => true
     ),
-    /* Displays a simple link to the git repository in the footer along with the current version.
-     * I would really appreciate it if you would keep this enabled */
+    /**
+     * Displays a simple link to the git repository in the
+     * footer along with the current version.
+     * 
+     * I would really appreciate it if you would keep this enabled
+     */
     'credits' => true,
-    /* Enables console output in JS and PHP debugging.
-     * Also enables random query-strings for js/css files to bust the cache */
+    /**
+     * Enables console output in JS and PHP debugging.
+     * Also enables random query-strings for js/css files to bust the cache
+     */
     'debug' => true
 );
-
-/* Get current request URI */
-$currentUri = rawurldecode($_SERVER['REQUEST_URI']);
-
-/* Look for a config file in the current directory */
-$configFile = (basename(__FILE__, '.php') . '.config.php');
 
 /* Any potential libraries and so on for extra features will appear here */
 <%= buildInject.readmeSupport &&
   buildInject.readmeSupport.PARSEDOWN_LIBRARY ?
   buildInject.readmeSupport.PARSEDOWN_LIBRARY : null %>
 
-/* If found, it'll override the above configuration values.
- * Any unset values in the file will take the default values */
-if(file_exists($configFile))
+/* Define current request URI */
+define('CURRENT_URI', rawurldecode($_SERVER['REQUEST_URI']));
+/* Define default configuration file */
+define('CONFIG_FILE', basename(__FILE__, '.php') . '.config.php');
+/* Define the base path of the Indexer */
+define('BASE_PATH', isset($_SERVER['INDEXER_BASE_PATH'])
+  ? $_SERVER['INDEXER_BASE_PATH']
+  : dirname(__FILE__));
+
+/**
+ * Helper functions for the Indexer
+ */ 
+class Helpers
 {
-  $config = include($configFile);
-} else if(file_exists('.' . $configFile)) /* Also check for hidden (.) file */
-{
-  $config = include('.' . $configFile);
+  /**
+   * Checks if a string starts with a string
+   *
+   * @param string  $haystack  The string to match against
+   * @param string  $needle    The string needle
+   * 
+   * @return Boolean
+   */ 
+  public static function startsWith($haystack, $needle)
+  {
+    return $needle === '' || strrpos($haystack, $needle, - strlen($haystack)) !== false;
+  }
+
+  /**
+   * A realpath alternative that solves links by using
+   * a string-based approach instead
+   *
+   * @param string  $input  A path
+   * 
+   * @return String
+   */ 
+  private static function removeDotSegments($input)
+  {
+    $output = '';
+
+    while($input !== '')
+    {
+      if(($prefix = substr($input, 0, 3)) == '../'
+        || ($prefix = substr($input, 0, 2)) == './')
+      {
+        $input = substr($input, strlen($prefix));
+      } else if(($prefix = substr($input, 0, 3)) == '/./'
+        || ($prefix = $input) == '/.')
+      {
+        $input = '/' . substr($input, strlen($prefix));
+      } else if (($prefix = substr($input, 0, 4)) == '/../'
+        || ($prefix = $input) == '/..')
+      {
+        $input = '/' . substr($input, strlen($prefix));
+        $output = substr($output, 0, strrpos($output, '/'));
+      } else if($input == '.' || $input == '..')
+      {
+        $input = '';
+      } else {
+        $pos = strpos($input, '/');
+        if($pos === 0) $pos = strpos($input, '/', $pos+1);
+        if($pos === false) $pos = strlen($input);
+        $output .= substr($input, 0, $pos);
+        $input = (string) substr($input, $pos);
+      }
+    }
+
+    return $output;
+  }
+
+  /**
+   * Concentrates path components into a merged path
+   *
+   * @param string  ...$params   Path components
+   * 
+   * @return String
+   */ 
+  public static function joinPaths(...$params)
+  {
+    $paths = array();
+
+    foreach($params as $param)
+    {
+      if($param !== '')
+      {
+        $paths[] = $param;
+      }
+    }
+
+    return preg_replace('#/+#','/', join('/', $paths));
+  }
+
+  /**
+   * Checks if the passed path is above a base directory
+   * 
+   * $useRealpath resolves the paths using a string-based method
+   * as opposed to calling `realpath()` directly.
+   *
+   * @param string   $path          The path to check
+   * @param string   $base          The base path
+   * @param boolean  $useRealpath   Whether to use realpath
+   * 
+   * @return String
+   */ 
+  public static function isAboveCurrent($path, $base, $useRealpath = true)
+  {
+    return self::startsWith($useRealpath
+      ? realpath($path)
+      : self::removeDotSegments($path), $useRealpath
+        ? realpath($base)
+        : self::removeDotSegments($base));
+  }
+
+  /**
+   * Adds a character to both sides of a string
+   * 
+   * If the string already ends or starts with the given
+   * string, it will be ignored.
+   *
+   * @param string  $string   String to wrap around
+   * @param string  $char     Character to prepend and append
+   * 
+   * @return String
+   */ 
+  public static function stringWrap($string, $char)
+  {
+    if($string[0] !== $char)
+    {
+      $string = ($char . $string);
+    }
+  
+    if(substr($string, -1) !== $char)
+    {
+      $string = ($string . $char);
+    }
+
+    return $string;
+  }
 }
 
-/* Default configuration values. Used if values from the above config are unset */
-$defaults = array('authentication' => false,'single_page' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i', 'd/m/y'),'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'inject' => false,'style' => array('themes' => array('path' => false,'default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
-
-/* Authentication function */
+  /**
+   * Authenticaticates a user
+   *
+   * @param string   $users   An array of users and their password
+   * @param string   $realm   Authenication realm
+   * 
+   * @return Void
+   */ 
 function authenticate($users, $realm)
 {
   function http_digest_parse($text)
@@ -209,7 +371,81 @@ function authenticate($users, $realm)
   }
 }
 
-/* Call authentication function if authentication is enabled */
+/**
+ * Extracts themes from a given path
+ *
+ * @param string   $basePath     The given base path of the script
+ * @param string   $themesPath   A themes path relative to the base path
+ * 
+ * @return Array
+ */ 
+function getThemes($basePath, $themesPath)
+{
+  /* Returnable array */
+  $themesPool = array();
+  /* Create the absolute path of the directory to scan */
+  $absDir = rtrim(Helpers::joinPaths($basePath, $themesPath), '/');
+
+  if(is_dir($absDir))
+  {
+    /** Iterates over the given path */
+    foreach(scandir($absDir, SCANDIR_SORT_NONE) as $item)
+    {
+      /** Current iterated item (folder / file) */
+      $itemPath = Helpers::joinPaths($absDir, $item);
+
+      if($item[0] !== '.')
+      {
+        if(is_dir($itemPath))
+        {
+          /* The current item is assumed to be a theme directory */
+          foreach(preg_grep('/^('.$item.'|index)\.css$/', scandir(
+            $itemPath, SCANDIR_SORT_NONE)
+          ) as $theme)
+          {
+            if($theme[0] !== '.')
+            {
+              $themesPool[strtolower($item)] = array(
+                'path' => Helpers::joinPaths($themesPath, $item, $theme)
+              ); break;
+            }
+          }
+        } else if(preg_match('~\.css$~', $item))
+        {
+          /* The current item is a single .CSS file */
+          $themesPool[strtolower(basename($item, '.css'))] = array(
+            'path' => Helpers::joinPaths($themesPath, $item)
+          );
+        }
+      }
+    }
+
+    return $themesPool;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Attempts to search for a configuration file.
+ * 
+ * If it exists, the default values will be overwritten.
+ * Any unset values in the file will take the default values.
+ */
+if(file_exists(CONFIG_FILE))
+{
+  $config = include(CONFIG_FILE);
+} else if(file_exists('.' . CONFIG_FILE)) /* Also check for hidden (.) file */
+{
+  $config = include('.' . CONFIG_FILE);
+}
+
+/* Default configuration values. Used if values from the above config are unset */
+$defaults = array('authentication' => false,'single_page' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i', 'd/m/y'),'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'inject' => false,'style' => array('themes' => array('path' => false,'default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
+
+/**
+ * Call authentication function
+ */
 if(isset($config['authentication']) &&
   $config['authentication'] &&
   is_array($config['authentication']))
@@ -225,7 +461,7 @@ if(isset($config['authentication']) &&
       is_string($config['authentication']['restrict']))
     {
       /* Check if `restrict` filter matches the current requested URI */
-      $isRestricted = preg_match($config['authentication']['restrict'], $currentUri);
+      $isRestricted = preg_match($config['authentication']['restrict'], CURRENT_URI);
     }
 
     /* Restrict content if `restrict` filter matches successfully or it is unset */
@@ -239,8 +475,10 @@ if(isset($config['authentication']) &&
   }
 }
 
-/* Set default configuration values if the config is missing any keys.
- * This does not traverse too deep at all */
+/**
+ * Set default configuration values if the config is missing any keys.
+ * This does not traverse too deep at all
+ */
 foreach($defaults as $key => $value)
 {
   if(!isset($config[$key]))
@@ -259,37 +497,43 @@ foreach($defaults as $key => $value)
   }
 }
 
+/**
+ * Set debugging
+ */
+if($config['debug'] === true)
+{
+  ini_set('display_errors', 1);
+  ini_set('display_startup_errors', 1);
+  error_reporting(E_ALL);
+}
+
+/**
+ * Set footer data
+ */
 $footer = array(
-  'enabled' => is_array($config['footer']) ? ($config['footer']['enabled'] ? true : false) : ($config['footer'] ? true : false),
-  'show_server_name' => is_array($config['footer']) ? $config['footer']['show_server_name'] : true
+  'enabled' => is_array(
+    $config['footer'])
+      ? ($config['footer']['enabled'] ? true : false)
+      : ($config['footer'] ? true : false),
+  'show_server_name' => is_array(
+    $config['footer'])
+      ? $config['footer']['show_server_name']
+      : true
 );
 
-/* Set start time for page render calculations */
+/**
+ * Set start time for page render calculations
+ */
 if($footer['enabled'])
 {
   $render = microtime(true);
 }
 
-/* Enable debugging if enabled */
-if($config['debug'] === true)
-{
-  ini_set('display_errors', 1);
-  ini_set('display_startup_errors', 1);
-
-  error_reporting(E_ALL);
-}
-
 if($config['style']['themes']['path'])
 {
-  if($config['style']['themes']['path'][0] !== '/')
-  {
-    $config['style']['themes']['path'] = ('/' . $config['style']['themes']['path']);
-  }
-
-  if(substr($config['style']['themes']['path'], -1) !== '/')
-  {
-    $config['style']['themes']['path'] = ($config['style']['themes']['path'] . '/');
-  }
+  $config['style']['themes']['path'] = Helpers::stringWrap(
+    $config['style']['themes']['path'], '/'
+  );
 }
 
 if(!is_array($config['format']['date']))
@@ -302,7 +546,10 @@ if(!is_array($config['format']['date']))
   }
 }
 
-class Indexer
+/**
+ * Indexer Class
+ */ 
+class Indexer extends Helpers
 {
   public $path;
 
@@ -361,7 +608,7 @@ class Indexer
     /* Set remaining options/variables */
     $this->client = isset($options['client']) ? $options['client'] : NULL;
     $this->allow_direct = isset($options['allow_direct_access']) ? $options['allow_direct_access'] : true;
-    $this->path = rtrim(self::joinPaths($this->relative, $requested), '/');
+    $this->path = rtrim($this->joinPaths($this->relative, $requested), '/');
     $this->timestamp = time();
     $this->directory_sizes = $options['directory_sizes'];
 
@@ -462,7 +709,14 @@ class Indexer
     $this->format['date'] = $options['format']['date'];
   }
 
-  /* Handles pathing by taking any potential prepending into mind */
+  /**
+   * andles pathing by taking any potential prepending into mind
+   *
+   * @param string    $path    A path
+   * @param boolean   $isDir   Whether the path should be treated as a directory
+   * 
+   * @return String
+   */ 
   private function handlePathing($path, $isDir = true)
   {
     $path = ltrim(rtrim($path, '/'), '/');
@@ -625,7 +879,7 @@ class Indexer
       $item['modified'] = self::getModified($dir[0], $timezone['offset']);
       $item['type'] = 'directory';
       $item['size'] = $this->directory_sizes['enabled'] ? ($this->directory_sizes['recursive'] ? self::getDirectorySizeRecursively($dir[0]) : self::getDirectorySize($dir[0])) : 0;
-      $item['url'] = rtrim(self::joinPaths($this->requested, $dir[1]), '/');
+      $item['url'] = rtrim($this->joinPaths($this->requested, $dir[1]), '/');
     }
 
     foreach($data['files'] as $index => $file)
@@ -642,7 +896,7 @@ class Indexer
       $item['type'] = self::getFileType($file[1]);
       $item['size'] = self::getSize($file[0]);
       $item['modified'] = self::getModified($file[0], $timezone['offset']);
-      $item['url'] = rtrim(self::joinPaths($this->requested, $file[1]), '/');
+      $item['url'] = rtrim($this->joinPaths($this->requested, $file[1]), '/');
 
       if($this->encode_all)
       {
@@ -765,46 +1019,6 @@ class Indexer
     return scandir($this->path, SCANDIR_SORT_NONE);
   }
 
-  /* A 'realpath' alternative, doesn't resolve links, relies purely on strings instead.
-   * Used with 'weak' path checking */
-  private function removeDotSegments($input)
-  {
-    $output = '';
-
-    while($input !== '')
-    {
-      if(($prefix = substr($input, 0, 3)) == '../' || ($prefix = substr($input, 0, 2)) == './')
-      {
-        $input = substr($input, strlen($prefix));
-      } else if(($prefix = substr($input, 0, 3)) == '/./' || ($prefix = $input) == '/.')
-      {
-        $input = '/' . substr($input, strlen($prefix));
-      } else if (($prefix = substr($input, 0, 4)) == '/../' || ($prefix = $input) == '/..')
-      {
-        $input = '/' . substr($input, strlen($prefix));
-        $output = substr($output, 0, strrpos($output, '/'));
-      } else if($input == '.' || $input == '..')
-      {
-        $input = '';
-      } else
-      {
-        $pos = strpos($input, '/');
-        if($pos === 0) $pos = strpos($input, '/', $pos+1);
-        if($pos === false) $pos = strlen($input);
-        $output .= substr($input, 0, $pos);
-        $input = (string) substr($input, $pos);
-      }
-    }
-
-    return $output;
-  }
-
-  /* Checks if $path is above $base. Reverse path traversal is bad? */
-  private function isAboveCurrent($path, $base, $use_realpath = true)
-  {
-    return self::startsWith($use_realpath ? realpath($path) : self::removeDotSegments($path), $use_realpath ? realpath($base) : self::removeDotSegments($base));
-  }
-
   /* Some data is stored in $this->data, this retrieves that */
   public function getLastData()
   {
@@ -836,9 +1050,7 @@ class Indexer
   public function makePathClickable($path)
   {
 	  $path = $this->handlePathing($path, true);
-
     $paths = explode('/', ltrim($path, '/'));
-
     $output = ('<a href="/">/</a>');
 
     foreach($paths as $i => $p)
@@ -859,13 +1071,28 @@ class Indexer
     return $output;
   }
 
-  /* Formats a unix timestamp */
+  /**
+   * Formats a unix timestamp
+   *
+   * @param string    $format     String formatting
+   * @param integer   $stamp      Timestamp
+   * @param integer   $modifier   An integer that gets added to the timestamp
+   * 
+   * @return String
+   */ 
   private function formatDate($format, $stamp, $modifier = 0)
   {
     return gmdate($format, $stamp + $modifier);
   }
 
-  /* Gets the last modified date of a file */
+  /**
+   * Gets the last modified date of a file
+   *
+   * @param string    $path       File path
+   * @param integer   $modifier   An integer that gets added to the timestamp
+   * 
+   * @return Array
+   */ 
   private function getModified($path, $modifier = 0)
   {
     $stamp = filemtime($path);
@@ -891,13 +1118,26 @@ class Indexer
     return array($stamp, $formatted);
   }
 
-  /* Gets a client cookie key (if it exists) */
+  /**
+   * Gets a client cookie key
+   *
+   * @param string    $path       File path
+   * @param integer   $modifier   An integer that gets added to the timestamp
+   * 
+   * @return Array
+   */ 
   private function getCookie($key, $default = NULL)
   {
     return isset($_COOKIE[$key]) ? $_COOKIE[$key] : $default;
   }
 
-  /* Gets the size of a file */
+  /**
+   * Gets the size of a file
+   *
+   * @param string   $path   File path
+   * 
+   * @return Array
+   */ 
   private function getSize($path)
   {
     $fs = filesize($path);
@@ -906,7 +1146,13 @@ class Indexer
     return array($size, self::readableFilesize($size));
   }
 
-  /* Gets the size of a directory */
+  /**
+   * Gets the size of a directory
+   *
+   * @param string   $path   File path
+   * 
+   * @return Integer
+   */ 
   private function getDirectorySize($path)
   {
     $size = 0;
@@ -919,7 +1165,7 @@ class Indexer
         {
           continue;
         } else {
-          $filesize = filesize(self::joinPaths($path, $file));
+          $filesize = filesize($this->joinPaths($path, $file));
 
           if($filesize && $filesize > 0)
           {
@@ -935,7 +1181,13 @@ class Indexer
     return $size;
   }
 
-  /* Gets the full size of a director using */
+  /**
+   * Gets the full size of a director using recursive scanning
+   *
+   * @param string   $path   File path
+   * 
+   * @return Integer
+   */ 
   private function getDirectorySizeRecursively($path)
   {
     $size = 0;
@@ -960,7 +1212,14 @@ class Indexer
     return $size;
   }
 
-  /* Converts bytes to a readable file size */
+  /**
+   * Converts bytes to a readable file size
+   *
+   * @param integer   $bytes      File size in bytes
+   * @param integer   $decimals   # of decimals in the readable output
+   * 
+   * @return String
+   */ 
   private function readableFilesize($bytes, $decimals = 1)
   {
     if($bytes === 0)
@@ -979,32 +1238,10 @@ class Indexer
 
     return round($value, $decimals) . $this->format['sizes'][$floored];
   }
-
-  /* Checks if a string starts with a string */
-  private function startsWith($haystack, $needle)
-  {
-    return $needle === '' || strrpos($haystack, $needle, - strlen($haystack)) !== false;
-  }
-
-  /* Concentrates path components into a merged path */
-  public function joinPaths(...$params)
-  {
-    $paths = array();
-
-    foreach($params as $param)
-    {
-      if($param !== '')
-      {
-        $paths[] = $param;
-      }
-    }
-
-    return preg_replace('#/+#','/', join('/', $paths));
-  }
 }
 
 /* Is cookie set? */
-$client = isset($_COOKIE['ei-client']) ? $_COOKIE['ei-client'] : NULL;
+$client = isset($_COOKIE['IVFi']) ? $_COOKIE['IVFi'] : NULL;
 
 /* If client cookie is set, parse it */
 if($client)
@@ -1016,9 +1253,16 @@ if($client)
 $validate = is_array($client);
 
 $cookies = array(
+  'readme' => array(
+    'toggled' => isset($client['readme']['toggled']) ? $client['readme']['toggled'] : true
+  ),
   'sorting' => array(
-    'row' => $validate ? (isset($client['sort']['row']) ? $client['sort']['row'] : NULL) : NULL,
-    'ascending' => $validate ? (isset($client['sort']['ascending']) ? $client['sort']['ascending'] : NULL) : NULL
+    'row' => $validate
+      ? (isset($client['sort']['row']) ? $client['sort']['row'] : NULL)
+      : NULL,
+    'ascending' => $validate
+      ? (isset($client['sort']['ascending']) ? $client['sort']['ascending'] : NULL)
+      : NULL
   )
 );
 
@@ -1057,14 +1301,6 @@ if($cookies['sorting']['ascending'] !== NULL || $cookies['sorting']['row'] !== N
   $sorting['enabled'] = true;
 }
 
-/* Get `INDEXER_BASE_PATH` if set */
-if(isset($_SERVER['INDEXER_BASE_PATH']))
-{
-  $basePath = $_SERVER['INDEXER_BASE_PATH'];
-} else {
-  $basePath = dirname(__FILE__);
-}
-
 /* Get `INDEXER_PREPEND_PATH` if set */
 if(isset($_SERVER['INDEXER_PREPEND_PATH']))
 {
@@ -1076,15 +1312,14 @@ if(isset($_SERVER['INDEXER_PREPEND_PATH']))
   $prependPath = '';
 }
 
-
 try
 {
   /* Call class with options set */
   $indexer = new Indexer(
-      $currentUri,
+      CURRENT_URI,
       array(
           'path' => array(
-            'relative' => $basePath,
+            'relative' => BASE_PATH,
             'prepend' => $prependPath
           ),
           'format' => array(
@@ -1146,38 +1381,45 @@ $counts = array(
     'directories' => count($data['directories'])
 );
 
-$themes = array();
+$themes = array(
+  'default' => array(
+    'path' => NULL
+  )
+);
 
-/* Are themes enabled? */
 if($config['style']['themes']['path'])
 {
-  /* Trim the string of set directory path */
-  $directory = rtrim($indexer->joinPaths($basePath, $config['style']['themes']['path']), '/');
+  $themesPool = getThemes(BASE_PATH, $config['style']['themes']['path']);
 
-  /* If set theme path is valid directory, scan it for .css files and add them to the theme pool */
-  if(is_dir($directory))
+  if($themesPool
+    && is_array($themesPool)
+    && count($themesPool) > 0)
   {
-    foreach(preg_grep('~\.css$~', scandir($directory, SCANDIR_SORT_NONE)) as $theme)
-    {
-      if($theme[0] !== '.') array_push($themes, substr($theme, 0, strrpos($theme, '.')));
-    }
+    $themes = array_merge($themes, $themesPool);
   }
-
-  /* Prepend default theme to the beginning of the array */
-  if(count($themes) > 0) array_unshift($themes, 'default');
 }
 
+/**
+ * Set current theme if available
+ */
 $currentTheme = NULL;
 
 if(count($themes) > 0)
 {
-  /* Check if a theme is already set */
-  if(is_array($client) && isset($client['style']['theme']))
+  /* Check if client has a custom theme already set */
+  if(is_array($client)
+    && isset($client['style']['theme']))
   {
-    $currentTheme = in_array($client['style']['theme'], $themes) ? $client['style']['theme'] : NULL;
-  } elseif(isset($config['style']['themes']['default']) && in_array($config['style']['themes']['default'], $themes))
+    $currentTheme = $client['style']['theme'] ? $client['style']['theme'] : NULL;
+  /* Check for a default theme */
+  } else if(isset($config['style']['themes']['default']))
   {
-    $currentTheme = $config['style']['themes']['default'];
+    $currentTheme = strtolower($config['style']['themes']['default']);
+
+    if($defaultTheme && isset($themes[$defaultTheme]))
+    {
+      $currentTheme = $defaultTheme;
+    }
   }
 }
 
@@ -1229,7 +1471,7 @@ if($config['single_page'])
     /* Set a header to identify the response on the client side */
     header('navigate-type: dynamic');
 
-    $stylePath = $indexer->joinPaths($basePath, '<%= indexerPath %>', '/css/style.css');
+    $stylePath = $indexer->joinPaths(BASE_PATH, '<%= indexerPath %>', '/css/style.css');
 
     if(file_exists($stylePath))
     {
@@ -1290,12 +1532,11 @@ $getInjectable = function($key) use ($config, $injectPassableData)
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title><?=sprintf($config['format']['title'], $indexer->getCurrentDirectory());?></title>
-    
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
-
     <?=$baseStylesheet;?>
-    <?=($currentTheme && strtolower($currentTheme) !== 'default')  ? '<link rel="stylesheet" type="text/css" href="' . $config['style']['themes']['path'] . $currentTheme . '.css?bust=' . $bust . '">' . PHP_EOL : ''?>
-
+    <?=($currentTheme && strtolower($currentTheme) !== 'default' && $themes[$currentTheme])
+      ? PHP_EOL . '    <link rel="stylesheet" type="text/css" href="' . $themes[$currentTheme]['path'] . '?bust=' . $bust . '">' . PHP_EOL
+      : ''?>
     <script defer type="text/javascript" src="<%= indexerPath %>main.js?bust=<?=$bust;?>"></script>
     <?=!(empty($additionalCss)) ? sprintf('<style type="text/css">%s</style>' . PHP_EOL, $additionalCss) : PHP_EOL?>
     <?=$getInjectable('head');?>
@@ -1349,7 +1590,8 @@ if($footer['enabled'])
 
   echo ($config['credits'] !== false) ? sprintf(
     '<div class="referenceGit">
-    <a target="_blank" href="https://github.com/sixem/eyy-indexer">eyy-indexer</a><span class="version">%s</span>
+    <a target="_blank" href="https://ivfi.io/">IVFi</a>
+    <span>%s</span>
   </div>', $version
   ) : '';
 
@@ -1361,9 +1603,9 @@ if($footer['enabled'])
     <input type="text" placeholder="Search .." value="">
 </div>
 
-<!-- [https://github.com/sixem/eyy-indexer] -->  
+<!-- [https://github.com/sixem/ivfi-php] -->  
 
-<script id="__INDEXER_DATA__" type="application/json"><?=(json_encode(array(
+<script id="__IFVI_DATA__" type="application/json"><?=(json_encode(array(
   'bust' => $bust,
   'singlePage' => $config['single_page'],
   'preview' => array(

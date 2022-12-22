@@ -3,12 +3,12 @@
 </h1>
 
 <h3 align="center">
-  <span>An image and video friendly Indexer</span><br>
+  <span>The image and video friendly Indexer</span><br>
 </h3>
 
 <p align="center">
-<a href="https://github.com/sixem/eyy-indexer/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/eyy-indexer?color=2f394f&style=flat"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/eyy-indexer?color=5a8f4e&style=flat"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/eyy-indexer?color=4b8b72&style=flat"> 
-<img alt="Travis (.com)" src="https://img.shields.io/travis/com/sixem/eyy-indexer?style=flat">
+<a href="https://github.com/sixem/ivfi-php/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/ivfi-php?color=2f394f&style=flat"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/ivfi-php?color=5a8f4e&style=flat"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/ivfi-php?color=4b8b72&style=flat"> 
+<img alt="Travis (.com)" src="https://img.shields.io/travis/com/sixem/ivfi-php?style=flat">
 </p>
 
 ---
@@ -24,9 +24,9 @@ This is designed to be a image and video friendly Indexer, while also being an I
 ## Feedback <!-- {docsify-ignore} -->
 I'm open for any feedback.
 
-You can open an [issue](https://github.com/sixem/eyy-indexer/issues) if you encounter any **specific** problems or bugs of any kind.
+You can open an [issue](https://github.com/sixem/ivfi-php/issues) if you encounter any **specific** problems or bugs of any kind.
 
-Or, you can start a [discussion](https://github.com/sixem/eyy-indexer/discussions) if you just have any general questions or minor issues you want to troubleshoot. You can also suggest any features or potential changes there.
+Or, you can start a [discussion](https://github.com/sixem/ivfi-php/discussions) if you just have any general questions or minor issues you want to troubleshoot. You can also suggest any features or potential changes there.
 
 ## Demo
 
@@ -75,7 +75,7 @@ This project is licensed under GPL-3.0.
 
 It also includes external libraries that are available under a variety of licenses.
 
-See [LICENSE](https://github.com/sixem/eyy-indexer/blob/master/LICENSE) for the full license text.
+See [LICENSE](https://github.com/sixem/ivfi-php/blob/master/LICENSE) for the full license text.
 
 ## Disclaimer
 **As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.**

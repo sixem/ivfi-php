@@ -1,14 +1,26 @@
-const package = require('./package.json');
-const build = require('./build.helpers.js');
+/** Package information */
+import pck from './package.json' assert {
+	type: 'json'
+};
 
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
+/** Build helpers */
+import build from './build.helpers.js';
 
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+/** Webpack plugins */
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 
-const webpack = require('webpack');
-const moment = require('moment');
+/** Developer imports */
+import webpack from 'webpack';
+import moment from 'moment';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+/** Directory name and file name constants */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Read build.options.js if it exists
@@ -31,7 +43,7 @@ assetDir = assetDir.replace(/([^:]\/)\/+/g, '$1').replace(/^\/|\/$/g, '');
 let templateParameters = {
 	buildInject: {},
 	additonalCss: [],
-	version: package.version,
+	version: pck.version,
 	indexerPath : `/${assetDir}/`
 };
 
@@ -105,12 +117,12 @@ const banner = () =>
 	@preserved
 
 
-	## eyy-indexer - ${package.description} ##
+	## IVFi-PHP - ${pck.description} ##
 
 
-	[Version: ${package.version}]
+	[Version: ${pck.version}]
 
-	[Git: https://github.com/sixem/eyy-indexer]
+	[Git: https://github.com/sixem/ivfi-php]
 
 	[Build: [fullhash] @ ${moment().format('dddd, MMMM Do YYYY')}]
 
@@ -123,7 +135,7 @@ const banner = () =>
 	\n`;
 };
 
-module.exports = (env, argv) => {
+const config = (env, argv) => {
 	const isProduction = argv.mode === 'production';
 
 	return {
@@ -206,3 +218,5 @@ module.exports = (env, argv) => {
 		}
 	}
 };
+
+export default config;

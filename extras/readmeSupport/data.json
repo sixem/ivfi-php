@@ -15,14 +15,6 @@
             "options": {
                 "stripTags": false
             }
-        },
-        "STYLESHEET": {
-            "path": "css/stylesheet.css",
-            "extractor": "fileCss",
-            "type": "additonalCss",
-            "options": {
-                "minimize": true
-            }
         }
     }
 }

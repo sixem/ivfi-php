@@ -38,6 +38,9 @@ export type TUserStorage = {
         compact?: boolean;
         theme?: boolean | string;
     };
+    readme?: {
+		toggled?: boolean;
+	};
 };
 
 /**

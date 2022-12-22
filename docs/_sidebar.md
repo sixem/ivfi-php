@@ -1,12 +1,17 @@
 <!-- docs/_sidebar.md -->
 
-* [Overview](README.md "eyy-indexer (Documentation)")
-* [Setup](setup.md "eyy-indexer (Setup)")
-* [Configuration](config.md "eyy-indexer (Configuration)")
-* [Advanced](advanced.md "eyy-indexer (Advanced)")
-    * [Performance Mode](performance.md "eyy-indexer (Performance Mode)")
-    * [Processor](processor.md "eyy-indexer (Processor)")
-    * [Extra Features](extras.md "eyy-indexer (Extras)")
-* [Building](building.md "eyy-indexer (Building)")
+* [Overview](README.md "IVFi-PHP (Documentation)")
+* [Setup](setup.md "IVFi-PHP (Setup)")
+* [Configuration](config.md "IVFi-PHP (Configuration)")
+* [Themes](themes.md "IVFi-PHP (Themes)")
+* [Advanced](advanced.md "IVFi-PHP (Advanced)")
+    * [Performance Mode](performance.md "IVFi-PHP (Performance Mode)")
+    * [Processor](processor.md "IVFi-PHP (Processor)")
+    * [Extra Features](extras.md "IVFi-PHP (Extras)")
+* [Building](building.md "IVFi-PHP (Building)")
 
 ---
+
+<p align="center">
+    <small>IVFi-PHP</small>
+</p>
