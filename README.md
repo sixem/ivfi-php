@@ -2,7 +2,7 @@
 <div align="center">
 	<img height="100" src="./logo.svg">
 	<br/><br/>
-	<h3 align="center"><i>IVFi-PHP</i></h3>
+	<h3 align="center">IVFi-PHP</h3>
 	<p align="center"><i>The image and video friendly indexer</i></p>
 </div>
 
