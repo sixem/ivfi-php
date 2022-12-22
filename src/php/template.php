@@ -1414,7 +1414,7 @@ if(count($themes) > 0)
   /* Check for a default theme */
   } else if(isset($config['style']['themes']['default']))
   {
-    $currentTheme = strtolower($config['style']['themes']['default']);
+    $defaultTheme = strtolower($config['style']['themes']['default']);
 
     if($defaultTheme && isset($themes[$defaultTheme]))
     {
