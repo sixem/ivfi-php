@@ -6,16 +6,16 @@
 	<p align="center"><i>The image and video friendly indexer</i></p>
 </div>
 
-<br/><br/>
+<br/>
 
 <p align="center">
-<a href="https://github.com/sixem/ivfi-php/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/ivfi-php?color=2f394f&style=flat"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/ivfi-php?color=5a8f4e&style=flat"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/ivfi-php?color=4b8b72&style=flat"> 
-<img alt="Travis (.com)" src="https://img.shields.io/travis/com/sixem/ivfi-php?style=flat">
+<a href="https://github.com/sixem/ivfi-php/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/ivfi-php?color=2f394f&style=flat-square"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/ivfi-php?color=5a8f4e&style=flat-square"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/ivfi-php?color=4b8b72&style=flat-square"> 
+<img alt="Travis (.com)" src="https://img.shields.io/travis/com/sixem/ivfi-php?style=flat-square">
 </p>
 
----
+<br/><br/>
 
-## What is this project? :speech_balloon:
+## About
 
 This is a file directory browser script written in PHP and TypeScript.
 
@@ -24,36 +24,37 @@ This is designed to be a image and video friendly Indexer, while also being an I
 ### Demo
 * You can visit the [demo](https://five.sh/demo/indexer/) to view the indexer in action.
 
+<br/>
+
 ***Note: The Indexer can be used without JavaScript enabled, but it is needed for the extra functionality.***
 
-## Documentation :blue_book:
-:link: [https://ivfi.io/docs/php/](https://ivfi.io/docs/php/)
+## Documentation
+* [https://ivfi.io/docs/php/](https://ivfi.io/docs/php/)
 
 ## Feedback :bulb:
-I'm open for any feedback.
+I'm open for any feedback!
 
-You can open an [issue](https://github.com/sixem/ivfi-php/issues) if you encounter any **specific** problems or bugs of any kind.
+You can open an [issue](https://github.com/sixem/ivfi-php/issues) if you encounter any *specific* problems or bugs of any kind.
 
 Or, you can start a [discussion](https://github.com/sixem/ivfi-php/discussions) if you just have any general questions or minor issues you want to troubleshoot. You can also suggest any features or potential changes there.
 
 ## Features :sparkles:
 
 ### **Authentication**
-The script supports HTTP authentication, allowing you to add a bit of protection to your directories.
+* The script supports HTTP authentication, allowing you to add a bit of protection to your directories.
 ### **Gallery Mode**
-A gallery mode where you can view images and videos of the current directory without needing to visit each URL separately. It has support for downloading files and reverse searching images.
+* A gallery mode where you can view images and videos of the current directory without needing to visit each URL separately. It has support for downloading files and reverse searching images.
 ### **Hover Previews**
-Displays a preview of the image or video when hovering over the name.
+* Displays a preview of the image or video when hovering over the name.
 ### **Search Filter**
-The search filter can be used to search for filenames or filetypes in the current directory.
-
-Usage (Desktop): `Shift + F`.
+* The search filter can be used to search for filenames or filetypes in the current directory.
+* Usage (Desktop): `Shift + F`.
 ### **Single file**
-This script can be set up as a single file script (standalone setup). Only one file needed, nothing more.
+* This script can be set up as a single file script (standalone setup). Only one file needed, nothing more.
 ### **Customizable**
-This script can be customized in a number of ways.
+* This script can be customized in a number of ways.
 ### **Additonal Features**
-It can be built with additional features, like support for displaying `README.md` files on each directory!
+* It can be built with additional features, like support for displaying `README.md` files on each directory!
 ### **And much more ..**
 + :clock12: All dates will match the timezone of the client.
 + :arrow_up_down: Persistent client-set sorting settings.
