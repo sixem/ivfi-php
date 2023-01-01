@@ -1534,7 +1534,7 @@ $getInjectable = function($key) use ($config, $injectPassableData)
     <title><?=sprintf($config['format']['title'], $indexer->getCurrentDirectory());?></title>
     <link rel="shortcut icon" href="<?=$config['icon']['path'];?>" type="<?=$config['icon']['mime'];?>">
     <?=$baseStylesheet;?>
-    <?=($currentTheme && strtolower($currentTheme) !== 'default' && $themes[$currentTheme])
+    <?=($currentTheme && strtolower($currentTheme) !== 'default' && isset($themes[$currentTheme]))
       ? PHP_EOL . '    <link rel="stylesheet" type="text/css" href="' . $themes[$currentTheme]['path'] . '?bust=' . $bust . '">' . PHP_EOL
       : ''?>
     <script defer type="text/javascript" src="<%= indexerPath %>main.js?bust=<?=$bust;?>"></script>
@@ -1604,7 +1604,7 @@ if($footer['enabled'])
 
 <!-- [https://github.com/sixem/ivfi-php] -->  
 
-<script id="__IFVI_DATA__" type="application/json"><?=(json_encode(array(
+<script id="__IVFI_DATA__" type="application/json"><?=(json_encode(array(
   'bust' => $bust,
   'singlePage' => $config['single_page'],
   'preview' => array(

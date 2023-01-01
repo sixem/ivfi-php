@@ -17,7 +17,7 @@ const Keys: TKeyReferences = {
 
 const StorageKey = 'IVFi';
 const CookieKey = 'IVFi';
-const ScriptDataId = '__IFVI_DATA__';
+const ScriptDataId = '__IVFI_DATA__';
 
 export {
 	Keys,
