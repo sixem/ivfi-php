@@ -1834,15 +1834,33 @@ export default class galleryClass
 			/* Handle swipe events */
 			const handler = (event: Event, eventData: EventData): void =>
 			{
-				switch(eventData.directionX)
+				/* Check if X-pull is bigger than Y-pull, if so, use `directionX` */
+				if(eventData.absX >= eventData.absY)
 				{
-					case 'RIGHT':
-						this.navigate(null, -1);
-						break;
-
-					case 'LEFT':
-						this.navigate(null, 1);
-						break;
+					/* Handle X-direction */
+					switch(eventData.directionX)
+					{
+						case 'RIGHT':
+							this.navigate(null, -1);
+							break;
+	
+						case 'LEFT':
+							this.navigate(null, 1);
+							break;
+					}
+				/* Y-pull is bigger than X-pull, use `directionY` */
+				} else {
+					/* Handle Y-direction */
+					switch(eventData.directionY)
+					{
+						case 'TOP':
+							this.navigate(null, -1);
+							break;
+	
+						case 'BOTTOM':
+							this.navigate(null, 1);
+							break;
+					}
 				}
 			};
 
