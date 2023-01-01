@@ -10,7 +10,7 @@
 /**
  * [Configuration]
  * A more in-depth overview can be found here:
- * https://sixem.github.io/ivfi-php/#/config
+ * https://ivfi.io/docs/php/#/config
  */
 
 /* Used to bust the cache and to display footer version number */
@@ -1602,7 +1602,7 @@ if($footer['enabled'])
     <input type="text" placeholder="Search .." value="">
 </div>
 
-<!-- [https://github.com/sixem/ivfi-php] -->  
+<!-- [https://ivfi.io/ — The image and video friendly indexer]  -->  
 
 <script id="__IVFI_DATA__" type="application/json"><?=(json_encode(array(
   'bust' => $bust,
