@@ -747,11 +747,11 @@ class Indexer extends Helpers
     /* Get client timezone offset */
 
     $cookies = array(
-      'timezone_offset' => intval(is_array($this->client) ? (isset($this->client['timezone_offset']) ? $this->client['timezone_offset'] : 0) : 0)
+      'timezoneOffset' => intval(is_array($this->client) ? (isset($this->client['timezoneOffset']) ? $this->client['timezoneOffset'] : 0) : 0)
     );
 
     $timezone = array(
-      'offset' => $cookies['timezone_offset'] > 0 ? -$cookies['timezone_offset'] * 60 : abs($cookies['timezone_offset']) * 60
+      'offset' => $cookies['timezoneOffset'] > 0 ? -$cookies['timezoneOffset'] * 60 : abs($cookies['timezoneOffset']) * 60
     );
 
     /* Gets the filename of this .php file. Used to hide it from the folder */

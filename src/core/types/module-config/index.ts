@@ -14,7 +14,7 @@ export type TUserClient = {
     style?: {
         compact?: boolean;
     };
-    timezone_offset?: number | boolean;
+    timezoneOffset?: number | boolean;
     sort?: {
         ascending?: boolean | number;
         row?: number;

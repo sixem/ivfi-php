@@ -292,13 +292,13 @@ main.dates.load = () =>
 {
 	const offset: number = main.dates.offsetGet();
 	const client: TUserClient = user.get();
-	const update: boolean = client.timezone_offset !== offset;
+	const update: boolean = client.timezoneOffset !== offset;
 
 	/* Only update if offset is changed or unset */
 	if(update)
 	{
 		/* Update client's offset */
-		client.timezone_offset = offset;
+		client.timezoneOffset = offset;
 
 		/* Save client */
 		user.set(client);
