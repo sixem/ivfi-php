@@ -4,13 +4,12 @@
     "mail": "emy@five.sh"
   },
   "name": "ivfi",
-  "version": "1.2.11",
+  "version": "1.2.2",
   "description": "An image and video friendly directory indexer",
   "main": "./core/js/main.ts",
   "type": "module",
   "dependencies": {
-    "js-cookie": "^2.2.1",
-    "vanilla-swipe": "^2.4.0"
+    "js-cookie": "^2.2.1"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.14.7",
