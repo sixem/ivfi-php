@@ -1,5 +1,6 @@
 /** Vendors */
 import hoverPreview from './vendors/hover-preview/hover-preview';
+import { SwipeInit } from './vendors/swiped-events';
 /** Config */
 import { config, user } from './config/config';
 import data from './config/data';
@@ -613,5 +614,8 @@ eventHooks.subscribe('galleryUnbound', 'mainBind', () =>
 	/* Gallery is unbound, rebind main event handlers */
 	data.components.main.bind();
 });
+
+/* Initiate the swipe events */
+SwipeInit();
 
 log('main', 'Config loaded =>', config.data);

@@ -1,6 +1,9 @@
 /** Vendors */
 import cookies from 'js-cookie';
-import Swipe, { EventData } from 'vanilla-swipe';
+//import Swipe, { EventData } from 'vanilla-swipe';
+
+import { SwipeEvent } from '../../vendors/swiped-events';
+
 /** Config */
 import data from '../../config/data';
 import { user } from '../../config/config';
@@ -1228,6 +1231,7 @@ export default class galleryClass
 				eventHooks.listen(video, videoReadyEvents, 'awaitGalleryVideo', (): boolean | void =>
 				{
 					/** Clear listener */
+
 					//eventHooks.unlisten(video, videoReadyEvents, 'awaitGalleryVideo');
 
 					if(hasEvented || video.srcId !== this.data.selected.src)
@@ -1829,50 +1833,44 @@ export default class galleryClass
 			onAdd: this.removeOnUnbind
 		});
 
+		/* Used to create a scroll break to avoid accidental multi-swipes */
+		let swipeTimeout: null | number = null;
+		let swipeBreak = false;
+
 		if(this.options.mobile === true)
 		{
+			const swipeTarget = document.querySelector('body > div.rootGallery div.wrapper');
+
 			/* Handle swipe events */
-			const handler = (event: Event, eventData: EventData): void =>
+			swipeTarget.addEventListener('swiped', (e: SwipeEvent) =>
 			{
-				/* Check if X-pull is bigger than Y-pull, if so, use `directionX` */
-				if(eventData.absX >= eventData.absY)
+				console.log('swipeBreak', swipeBreak);
+				
+				clearTimeout(swipeTimeout);
+
+				if(!swipeBreak)
 				{
-					/* Handle X-direction */
-					switch(eventData.directionX)
+					if(e.detail.dir === 'down' || e.detail.dir === 'right')
 					{
-						case 'RIGHT':
-							this.navigate(null, -1);
-							break;
-	
-						case 'LEFT':
-							this.navigate(null, 1);
-							break;
-					}
-				/* Y-pull is bigger than X-pull, use `directionY` */
-				} else {
-					/* Handle Y-direction */
-					switch(eventData.directionY)
+						/** Navigate forwards */
+						this.navigate(null, -1);
+
+						swipeBreak = true;
+					} else if(e.detail.dir === 'up' || e.detail.dir === 'left')
 					{
-						case 'TOP':
-							this.navigate(null, -1);
-							break;
-	
-						case 'BOTTOM':
-							this.navigate(null, 1);
-							break;
+						/** Navigate backwards */
+						this.navigate(null, 1);
+
+						swipeBreak = true;
 					}
 				}
-			};
-
-			/* Create swipe events */
-			const swipeInstance = new Swipe({
-				element: document.querySelector('body > div.rootGallery'),
-				onSwiped: handler,
-				mouseTrackingEnabled: true
+				
+				/** Effectively locks swiping for 200 ms */
+				swipeTimeout = window.setTimeout(() =>
+				{
+					swipeBreak = false;
+				}, 200);
 			});
-
-			/* Initialize */
-			swipeInstance.init();
 		}
 
 		/* Scroll navigation listener */
