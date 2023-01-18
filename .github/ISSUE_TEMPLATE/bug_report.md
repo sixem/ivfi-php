@@ -27,8 +27,13 @@ Please fill out the features that are enabled:
  - Performance mode: [e.g. yes/no] 
  - Single page: [e.g. yes/no] 
 
+**Information**
+If possible, fill out the data:
+ - PHP version: [e.g. 7.4] 
+ - Browser used: [e.g. FireFox/Chrome] 
+
 **Errors**
-If possible, copy any console errors that may occur with debugging enabled. If the page fails to load, you can also check your web server logs for any errors.
+If possible, copy any console errors that may occur with debugging enabled. If the page fails to load, you can check your web server logs for any errors.
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
