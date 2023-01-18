@@ -1,9 +1,6 @@
 /** Vendors */
 import cookies from 'js-cookie';
-//import Swipe, { EventData } from 'vanilla-swipe';
-
 import { SwipeEvent } from '../../vendors/swiped-events';
-
 /** Config */
 import data from '../../config/data';
 import { user } from '../../config/config';
@@ -1844,8 +1841,6 @@ export default class galleryClass
 			/* Handle swipe events */
 			swipeTarget.addEventListener('swiped', (e: SwipeEvent) =>
 			{
-				console.log('swipeBreak', swipeBreak);
-				
 				clearTimeout(swipeTimeout);
 
 				if(!swipeBreak)
@@ -1874,8 +1869,9 @@ export default class galleryClass
 		}
 
 		/* Scroll navigation listener */
-		eventHooks.listen('body > div.rootGallery  > div.galleryContent > \
-			div.media', ['scroll', 'DOMMouseScroll', 'mousewheel'], 'galleryScrollNavigate', 
+		eventHooks.listen(
+			'body > div.rootGallery  > div.galleryContent > div.media',
+			['scroll', 'DOMMouseScroll', 'mousewheel'], 'galleryScrollNavigate', 
 		(event: WheelEvent): void | boolean =>
 		{
 			if(this.options.scrollInterval > 0 && this.data.scrollbreak === true)
