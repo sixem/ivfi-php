@@ -1536,7 +1536,7 @@ $getInjectable = function($key) use ($config, $injectPassableData)
     <?=$baseStylesheet;?>
     <?=($currentTheme && strtolower($currentTheme) !== 'default' && isset($themes[$currentTheme]))
       ? PHP_EOL . '    <link rel="stylesheet" type="text/css" href="' . $themes[$currentTheme]['path'] . '?bust=' . $bust . '">' . PHP_EOL
-      : ''?>
+      : PHP_EOL?>
     <script defer type="text/javascript" src="<%= indexerPath %>main.js?bust=<?=$bust;?>"></script>
     <?=!(empty($additionalCss)) ? sprintf('<style type="text/css">%s</style>' . PHP_EOL, $additionalCss) : PHP_EOL?>
     <?=$getInjectable('head');?>
