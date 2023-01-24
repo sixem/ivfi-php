@@ -16,7 +16,7 @@ const user: TUserClient = {};
 config.init = (): void =>
 {
 	config.data = JSON.parse(document.getElementById(ScriptDataId).innerHTML);
-	config.data.mobile = Modernizr.mq('(max-width: 640px)');
+	config.data.mobile = Modernizr.mq('(max-width: 768px)');
 };
 
 config.isMobile = (): boolean =>

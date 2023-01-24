@@ -213,7 +213,8 @@ eventHooks.listen(window, 'resize', 'windowResize', debounce((): void =>
 {
 	log('event', 'windowResize (main)', 'Resized.');
 
-	config.set('mobile', Modernizr.mq('(max-width: 640px)'));
+	/** Update mobile status */
+	config.set('mobile', Modernizr.mq('(max-width: 768px)'));
 
 	if(data.instances.gallery)
 	{
