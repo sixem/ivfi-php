@@ -207,18 +207,26 @@ eventHooks.listen(selector.use('TABLE') as HTMLElement, 'click', 'sortClick', (e
 });
 
 /**
- * Recheck mobile sizing on resize
+ * Re-check mobile sizing on resize
  */
 eventHooks.listen(window, 'resize', 'windowResize', debounce((): void =>
 {
-	log('event', 'windowResize (main)', 'Resized.');
+	log('event', 'windowResize (main)', 'Resized');
 
-	/** Update mobile status */
-	config.set('mobile', Modernizr.mq('(max-width: 768px)'));
+	/** Get mobile status */
+	const isMobile = Modernizr.mq('(max-width: 768px)');
+
+	if(config.get('mobile') !== isMobile)
+	{
+		/** Update mobile status */
+		config.set('mobile', Modernizr.mq('(max-width: 768px)'));
+
+		log('view', `Switched to ${isMobile ? 'mobile' : 'desktop'} view`);
+	}
 
 	if(data.instances.gallery)
 	{
-		data.instances.gallery.options.mobile = config.get('mobile');
+		data.instances.gallery.options.mobile = isMobile;
 		data.instances.gallery.update.listWidth();
 	}
 
