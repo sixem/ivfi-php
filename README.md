@@ -29,7 +29,7 @@ This is designed to be a image and video friendly Indexer, while also being an I
 ***Note: The Indexer can be used without JavaScript enabled, but it is needed for the extra functionality.***
 
 ## Documentation
-* [https://ivfi.io/docs/php/](https://ivfi.io/docs/php/)
+[https://ivfi.io/docs/php/](https://ivfi.io/docs/php/#/setup)
 
 ## Feedback :bulb:
 I'm open for any feedback!
