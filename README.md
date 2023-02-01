@@ -13,100 +13,96 @@
 <img alt="Travis (.com)" src="https://img.shields.io/travis/com/sixem/ivfi-php?style=flat-square">
 </p>
 
-<br/><br/>
+<br/>
 
-## About
-
-This is a file directory browser script written in PHP and TypeScript.
-
-This is designed to be a image and video friendly Indexer, while also being an Indexer that has all of the other features that you can expect from most directory listers out there. It can be heavily customized, and has a design that attempts to be appealing while also being functional and easy to use.
-
-### Demo
-* You can visit the [demo](https://five.sh/demo/indexer/) to view the indexer in action.
+<p align="center">
+	<a href="https://five.sh/demo/indexer/">Demo</a>&nbsp;&nbsp;
+	<a href="https://ivfi.io/docs/php/#/README">Documentation</a>&nbsp;&nbsp;
+	<a href="https://ivfi.io/docs/php/#/config">Configuration</a>&nbsp;&nbsp;
+	<a href="https://ivfi.io/docs/php/#/building">Building</a>
+</p>
 
 <br/>
 
-***Note: The Indexer can be used without JavaScript enabled, but it is needed for the extra functionality.***
+# About
 
-## Documentation
-[https://ivfi.io/docs/php/](https://ivfi.io/docs/php/#/setup)
+IVFi-PHP is a file directory browser script made in PHP and TypeScript.
 
-## Feedback :bulb:
-I'm open for any feedback!
+It is designed to be a comprehensive indexer, with a focus on efficiently handling image and video files. IVFi has a modern and user-friendly interface, offering features such as a gallery view, hoverable previews, and many customization options.
 
-You can open an [issue](https://github.com/sixem/ivfi-php/issues) if you encounter any *specific* problems or bugs of any kind.
+This project can be easily set up on most web servers.
 
-Or, you can start a [discussion](https://github.com/sixem/ivfi-php/discussions) if you just have any general questions or minor issues you want to troubleshoot. You can also suggest any features or potential changes there.
+<br/>
 
-## Features :sparkles:
+# Quick setup :zap:
 
-### **Authentication**
-* The script supports HTTP authentication, allowing you to add a bit of protection to your directories.
-### **Gallery Mode**
-* A gallery mode where you can view images and videos of the current directory without needing to visit each URL separately. It has support for downloading files and reverse searching images.
-### **Hover Previews**
-* Displays a preview of the image or video when hovering over the name.
-### **Search Filter**
-* The search filter can be used to search for filenames or filetypes in the current directory.
-* Usage (Desktop): `Shift + F`.
-### **Single file**
-* This script can be set up as a single file script (standalone setup). Only one file needed, nothing more.
-### **Customizable**
-* This script can be customized in a number of ways.
-### **Additonal Features**
-* It can be built with additional features, like support for displaying `README.md` files on each directory!
-### **And much more ..**
-+ :clock12: All dates will match the timezone of the client.
-+ :arrow_up_down: Persistent client-set sorting settings.
-+ :art: Support for custom themes.
-+ :scissors: Server-side filtering which can help you hide specific files or folders.
-+ :link: Paths can be clicked, allowing for easy navigation between folders.
-+ :gear: The client can set their own settings in the menu.
-+ :small_red_triangle_down: Direct download links.
-+ :desktop_computer: Works well on both mobile and desktop.
+* Download the latest release [here](https://github.com/sixem/ivfi-php/releases).
+* Place the `/build/` files into your web root. For example `/var/www/html/`.
+* Then, use the `indexer.php` as an index file for any of the directories where the script should be used:
 
-## Quick setup :zap:
-
-#### Download the latest release [here](https://github.com/sixem/ivfi-php/releases).
-
-* Place the `/build/` files into your web root.
-* Use the `indexer.php` as a index file for any of the directories where the script should be used:
-
-#### Example (Nginx)
+#### Nginx - Example using the [index](https://nginx.org/en/docs/http/ngx_http_index_module.html#index) directive:
 ```
 server {
         index index.html index.php /indexer.php;
 }
 ```
 
-#### Example (Apache)
+#### Apache - Example using the [DirectoryIndex](https://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex) directive:
 ```
 DirectoryIndex index.html index.php /indexer.php
 ```
 
-For a more in-depth explanation of how to set up the script, see [setup](https://ivfi.io/docs/php/#/setup).
+<br/>
 
-You can also find every release and specific builds here: [https://ivfi.io/releases/php/](https://ivfi.io/releases/php/)
+For detailed instructions on how to configure the script, refer to [setup](https://ivfi.io/docs/php/#/setup).
 
-## Configuration
+The releases and individual builds are available [here](https://ivfi.io/releases/php/).
 
-See [configuration](https://ivfi.io/docs/php/#/config) for a detailed overview over how this script can be customized.
+<br/>
 
-## Building
+# Features
 
-You can build the script from source yourself, for that see [building](https://ivfi.io/docs/php/#/building).
+### **Authentication**
+> It includes support for HTTP authentication, providing some added security for your directories.
+### **Gallery Mode**
+> A gallery mode that allows you to view images and videos from the current directory in one place, as well as the ability to download files and perform reverse image searches.
+### **Hover Previews**
+> An image or video preview is displayed when hovering over the file name.
+### **Search Filter**
+> The filter function allows you to search for specific filenames or file types within the directory.<br/><br/>Usage (Desktop): `Shift + F`.
+### **Single file**
+> The script can be configured as a standalone solution, where all required assets are combined into a single file, making it easy to use with just one file needed.
+### **Customizable**
+> This script offers multiple customization options.
+### **Additonal Features**
+> It can be built with added functionality, such as the ability to display `README.md` files in each directory!
 
-## Contributing
-You can contribute by either submitting a pull request, reporting issues or bugs, or voicing good ideas.
+<br/>
 
-It's all very much welcome! :relaxed:
+### **And much more ...**
++ :clock12: The dates will be adjusted to match the time zone of the client.
++ :arrow_up_down: Client-defined sorting preferences are stored persistently.
++ :art: Support for custom themes.
++ :mag: Server-side filtering which can help you hide specific files or folders.
++ :link: Navigating between folders is made easy with the clickable paths.
++ :gear: The client has the option to personalize their settings through the menu.
++ :inbox_tray: Direct download links for all files.
++ :desktop_computer: Compatible with both mobile and desktop devices.
+
+<br/>
+
+# Feedback
+
+If you have come across any specific problems or bugs that you would like to report, you have the option to open an [issue](https://github.com/sixem/ivfi-php/issues). This will allow us to better understand the issue at hand and take the necessary steps to resolve it.
+
+Alternatively, if you have any general questions, minor issues, or ideas for improvements that you would like to discuss, you can start a [discussion](https://github.com/sixem/ivfi-php/discussions). This is a good way for you to share your thoughts and ideas with us, and we would be more than happy to listen and consider them.
+
+<br/>
 
 ## License
-This project is licensed under GPL-3.0.
-
-It also includes external libraries that are available under a variety of licenses.
+This project is licensed under GPL-3.0. It also includes external libraries that are available under a variety of licenses.
 
 See [LICENSE](LICENSE) for the full license text.
 
 ## Disclaimer
-**As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.**
+As you with anything else, use this script at your own risk. There may exist bugs that i do not know of :v:
