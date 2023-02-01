@@ -1402,7 +1402,7 @@ export default class galleryClass
 		/* Trigger gallery item change event */
 		eventHooks.trigger('galleryItemChanged', {
 			source: encodedItemSource,
-			index: index
+			index, image, video
 		});
 
 		/* If selected item is an image */
@@ -1433,16 +1433,6 @@ export default class galleryClass
 
 				wrapper.prepend(cover);
 				cover.append(image);
-
-				/* Listener for mouse enter on image cover */
-				cover.addEventListener('mouseenter', (e: Event) =>
-				{
-					if(this.options.reverseOptions)
-					{
-						/* Show reverse options if enabled */
-						this.reverse(e.currentTarget as HTMLElement);
-					}
-				});
 			}
 
 			/* Await image loading */
@@ -1460,12 +1450,17 @@ export default class galleryClass
 								height: h
 							}
 						});
+
+						if(this.options.reverseOptions)
+						{
+							/* Show reverse options if enabled */
+							this.reverse(image as HTMLElement);
+						}
 					}
 				}
 			}).catch((error: unknown) =>
 			{
 				/* Image could not be loaded */
-
 				console.error(error);
 
 				this.busy(false);
