@@ -409,7 +409,6 @@ export default class galleryClass
 			}
 
 			DOM.style.set(body, {
-				'max-height': 'calc(100vh - var(--height-gallery-top-bar))',
 				'overflow': 'hidden'
 			});
 		} else {
@@ -419,7 +418,6 @@ export default class galleryClass
 			if(Object.prototype.hasOwnProperty.call(this.data, 'body'))
 			{
 				DOM.style.set(body, {
-					'max-height': this.data.body['max-height'],
 					'overflow': this.data.body['overflow']
 				});
 			}
