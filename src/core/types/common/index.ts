@@ -55,6 +55,8 @@ export type TExtensionArray = {
 export type TPayloadgalleryItemChanged = {
 	source: string;
 	index: number;
+	image: HTMLElement | undefined;
+	video: HTMLElement | undefined;
 };
 
 /**
