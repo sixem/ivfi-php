@@ -8,6 +8,7 @@
     * [Performance Mode](performance.md "IVFi-PHP (Performance Mode)")
     * [Processor](processor.md "IVFi-PHP (Processor)")
     * [Extra Features](extras.md "IVFi-PHP (Extras)")
+    * [Dotfile](dotfile.md "IVFi-PHP (Dotfile)")
 * [Building](building.md "IVFi-PHP (Building)")
 
 ---

@@ -6,7 +6,7 @@
 ## Overview
 IVFi-PHP supports custom themes.
 
-The [ivfi-themes](https://github.com/sixem/ivfi-themes) repository contains a collection of official themes that can be used with any supported IVFi version.
+You can find a list of official themes here: [IVFi-themes](https://github.com/sixem/ivfi-themes), or you can create your own!
 
 ## Usage
 * 1) Download or create the themes that you wish to use.
@@ -17,14 +17,14 @@ The [ivfi-themes](https://github.com/sixem/ivfi-themes) repository contains a co
 	* If you want a theme to be the default, then set `default` to the theme's name.
 ```php
 <?php
-return array(
-	'style' => array(
-		'themes' => array(
-			'path' => 'indexer/css/themes',
-			'default' => false
-		)
-	)
-);
+return [
+		'style' => [
+			'themes' => [
+				'path' => 'indexer/css/themes',
+				'default' => false
+			]
+		]
+];
 ?>
 ```
 * 4) You should now be able to enable different themes in the settings menu (⚙️ in the top right corner).

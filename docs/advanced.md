@@ -12,3 +12,6 @@
 
 [Extra Features](extras.md)
  * Compile the Indexer with extrea features.
+
+[Dotfile](dotfile.md)
+ * Directory-specific configuration using dotfiles.

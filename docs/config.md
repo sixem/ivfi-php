@@ -164,6 +164,25 @@ If the value is a function, then the returned string of that function will be us
 
 * `$param['config']` contains the parsed and active configuration.
 
+## Metadata
+Key: **`metadata`**
+
+This option will add metadata to the header. This can be set globally using this option, or you can also set it on a per-directory basis using [dotfiles](dotfile.md).
+
+Example:
+```php
+<?php
+    return array(
+        'metadata' => [
+            [
+                'property' => 'og:title',
+                'content' => 'This is a title!'
+            ]
+	    ],
+    );
+?>
+```
+
 ## Style
 Key: **`style`**
 
@@ -183,13 +202,13 @@ Key: **`filter`**
 
 This option can be used if you want to filter the files or directories using `regular expressions`.
 
-All filenames and directory names **matching** the `regex` will be shown.
+All filenames and directory names **matching** the `regex` will be shown. Please note that directory names will always end in a slash (`/`), this is done to make them easier to differentiate from files.
 
 For example, setting `file` to `/^.{1,10}\.(jpg|png)$/` will only include `.jpg` and `.png` files with a filename between `1 - 10` characters in length when reading the directory files.
 
 #### Another is example is when you want to hide files with invalid characters or specific filenames:
 
- `'/^(?:(?!\b(README.md|secret.pwd)\b).)*$/'`<br/>
+ `'/^(?!README\.md$|secret\.pwd$).*$/'`<br/>
 This example will hide any `README.md` and `secret.pwd` files from the directory.
 
  `'/^[^\#\?]*$/'`<br/>
@@ -199,7 +218,7 @@ If you want to apply multiple filters easily, then you can also pass them as an 
 ```php
 'filter' => array(
     'file' => array(
-        '/^(?:(?!\b(README.md|secret.pwd)\b).)*$/',
+        '/^(?!README\.md$|secret\.pwd$).*$/',
         '/^[^\#\?]*$/'
     ),
     'directory' => false
@@ -213,6 +232,20 @@ Setting the value to `false` will disable the filter.
 |-----|------|---------|-------------|
 | `file` | Bool/String/Array | `false` | A `regexp` filter for what files should be included.
 | `directory` | Bool/String/Array | `false` | A `regexp` filter for what directories should be included.
+
+## Exclude
+Key: **`exclude`**
+
+This option will exclude certain extensions from showing up in any directory.
+
+An example that'll exclude any `jpg` or `jpeg` files:
+```php
+<?php
+    return array(
+        'exclude' => ["jpg", "jpeg"]
+    );
+?>
+```
 
 ## Directory Sizes
 Key: **`directory_sizes`**
