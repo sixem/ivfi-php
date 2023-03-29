@@ -234,7 +234,7 @@ class Helpers
   }
 
   /**
-   * Checks if a string starts with a string
+   * Creates a stringed HTML element
    *
    * @param String  $tag          Element type
    * @param Array   $attributes   Element attributes
@@ -481,19 +481,6 @@ class Helpers
     }
 
     return $result;
-  }
-
-  /**
-   * Merges two sets of metadata arrays
-   *
-   * @param Array  $source   Source array
-   * @param Array  $data     Priority array
-   * 
-   * @return String
-   */ 
-  public static function wildcardToRegex(array $source, array $data)
-  {
-    //
   }
 }
 
@@ -768,7 +755,7 @@ class Indexer extends Helpers
 
   private $allowDirectAccess;
 
-  private $encode_all;
+  private $encodeAll;
 
   function __construct($path, $options = [])
   {
@@ -785,7 +772,7 @@ class Indexer extends Helpers
     }
 
     /* Set encode all options */
-    $this->encode_all = $options['encode_all'] ? true : false;
+    $this->encodeAll = $options['encode_all'] ? true : false;
 
     if(isset($options['path']['prepend'])
       && $options['path']['prepend'] !== NULL
@@ -1109,7 +1096,7 @@ class Indexer extends Helpers
 
       /** Directory size */
       $size = $this->directorySizes['enabled']
-        ? self::readableFilesize($dir['size'])
+        ? self::getReadableFileSize($dir['size'])
         : '-';
 
       if($this->directorySizes['enabled'])
@@ -1320,7 +1307,7 @@ class Indexer extends Helpers
       $item['url'] = rtrim($this->joinPaths($this->requested, $fileName), '/');
 
       /** Encode URL if `encode_all` is enabled */
-      if($this->encode_all)
+      if($this->encodeAll)
       {
         $item['url'] = str_replace('?', '%3F', str_replace('#', '%23', $item['url']));
       }
@@ -1369,7 +1356,7 @@ class Indexer extends Helpers
     $data['recent']['file'] = $fileRows['mostRecentTimestamp'];
 
     /** Get readable size */
-    $data['size']['readable'] = self::readableFilesize($data['size']['total']);
+    $data['size']['readable'] = self::getReadableFileSize($data['size']['total']);
 
     return [
       'contents' => $HTML,
@@ -1574,7 +1561,9 @@ class Indexer extends Helpers
          * the process is easier since we are already doing the same thing
          * with the `ignore` feature.
          * 
-         * In the future, this can be changed to use a simple `endsWith` check.
+         * In the future, this can be changed to use a simple `endsWith` check or
+         * incorporated into the actual extension matching used when doing exclusion
+         * through the config.
          */
         array_push(
           $expFiles, '/^(?!' . ('.*\.' . $extension) . '$).*$/'
@@ -1787,7 +1776,7 @@ class Indexer extends Helpers
     $fs = filesize($path);
     $size = ($fs < 0 ? -1 : $fs);
 
-    return array($size, self::readableFilesize($size));
+    return array($size, self::getReadableFileSize($size));
   }
 
   /**
@@ -1865,7 +1854,7 @@ class Indexer extends Helpers
    * 
    * @return String
    */ 
-  private function readableFilesize($bytes, $decimals = 1)
+  private function getReadableFileSize($bytes, $decimals = 1)
   {
     if($bytes === 0)
     {
