@@ -175,9 +175,6 @@ define('BASE_PATH', isset($_SERVER['INDEXER_BASE_PATH'])
   ? $_SERVER['INDEXER_BASE_PATH']
   : dirname(__FILE__));
 
-/* Used to bust the cache (query-strings for js and css files) */
-$bust = md5($config['debug'] ? time() : $version);
-
 /* Check if cookie is set */
 $client = isset($_COOKIE['IVFi']) ? $_COOKIE['IVFi'] : NULL;
 
@@ -201,12 +198,6 @@ $injectPassableData = [];
 
 /* Set any additional CSS */
 $additionalCss = "<%= additonalCss ? additonalCss.join('') : null %>";
-
-/* Default stylesheet output */
-$baseStylesheet = sprintf(
-  '<link rel="stylesheet" type="text/css" href="<%= indexerPath %>css/style.css?bust=%s">',
-  $bust
-);
 
 /** Define themes array */
 $themes = [
@@ -691,6 +682,15 @@ foreach($defaults as $key => $value)
   }
 }
 
+/* Used to bust the cache (query-strings for js and css files) */
+$bust = md5($config['debug'] ? time() : $version);
+
+/* Default stylesheet output */
+$baseStylesheet = sprintf(
+  '<link rel="stylesheet" type="text/css" href="<%= indexerPath %>css/style.css?bust=%s">',
+  $bust
+);
+
 /**
  * Set debugging
  */
@@ -982,7 +982,7 @@ class Indexer extends Helpers
     foreach($files as $file)
     {
       /** Deconstruction of array */
-      [$fileName, $fileSize, $fileUrl, $fileType, $fileModified] = [
+      list($fileName, $fileSize, $fileUrl, $fileType, $fileModified) = [
         $file[1],
         $file['size'],
         $file['url'],
@@ -1259,7 +1259,7 @@ class Indexer extends Helpers
     foreach($data['directories'] as $index => $dir)
     {
       /** Deconstruct array */
-      [$dirPath, $dirName] = $dir;
+      list($dirPath, $dirName) = $dir;
 
       $item = &$data['directories'][$index];
 
@@ -1288,7 +1288,7 @@ class Indexer extends Helpers
     foreach($data['files'] as $index => $file)
     {
       /** Deconstruct array */
-      [$filePath, $fileName, $fileType] = $file;
+      list($filePath, $fileName, $fileType) = $file;
 
       $item = &$data['files'][$index];
 
@@ -2154,9 +2154,9 @@ $getInjectable = function($key) use ($config, $injectPassableData)
     {
       return is_string($config['inject'][$key])
         ? $config['inject'][$key]
-        : (is_callable($config['inject'][$key]))
+        : (is_callable($config['inject'][$key])
           ? $config['inject'][$key]($injectPassableData)
-          : '';
+          : '');
     }
   }
 
@@ -2344,18 +2344,25 @@ function generateCountDiv($modified, $count, $sString, $pString)
  */ 
 function constructJsConfig($config, $sorting, $timestamp, $bust, $theme)
 {
-  /** Deconstruct configuration */
-  list(
-    'preview' => $preview,
-    'gallery' => $gallery,
-    'extensions' => $extensions
-  ) = $config;
+  /**
+   * [Extract themes and options values]
+   * 
+   * Using list deconstruction here would be better, but
+   * it's not supported in PHP 7.0, and dropping support
+   * for a single feature isn't really worth it.
+   * 
+   * If for some reason we drop support for it in the
+   * future, this should then be changed to use list deconstruction:
+   * 
+   * @see https://www.php.net/manual/en/function.list.php#refsect1-function.list-changelog
+   */
 
-  /** Deconstruct theme values */
-  list(
-    'pool' => $themePool,
-    'current' => $themeCurrent
-  ) = $theme;
+  $preview = $config['preview'];
+  $gallery = $config['gallery'];
+  $extensions = $config['extensions'];
+
+  $themePool = $theme['pool'];
+  $themeCurrent = $theme['current'];
 
   /** Construct JS configuration */
   $jsConfig = [
