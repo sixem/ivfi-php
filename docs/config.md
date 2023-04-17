@@ -192,7 +192,7 @@ The `compact` setting can be changed by the client in the settings menu, as can 
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `themes => path` | Bool/String | `false` | Set to a path relative to the root directory containing `.css` files (example: `/indexer/css/themes/`). Every `.css` file in the set folder will be treated as a separate theme.
+| `themes => path` | Bool/String | `/indexer/themes/` | Set to a path relative to the root directory containing `.css` files. Every `.css` file in the set folder will be treated as a separate theme.
 | `themes => default` | Bool/String | `false` | Default theme for new clients to use. Takes a filename **without** the `.css` extension.
 | `css => additional` | Array/String | `false` | Adds any additional CSS to the page. Can either be a pure CSS `string` or an `array` where the key is the selector and where the child keys and values are properties and values respectively.
 | `compact` | Bool | `false` | Makes the page use a more compact and centered style.
