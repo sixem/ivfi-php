@@ -90,7 +90,7 @@ $config = [
         /* Set to a path relative to the root directory (location of this file) containg .css files.
          * Each .css file will be treated as a separate theme. Set to false to disable themes */
         'themes' => [
-          'path' => false,
+          'path' => '/<%= indexerPath %>/themes/',
           'default' => false
         ],
          /* Cascading style sheets options */
@@ -625,7 +625,7 @@ if(file_exists(CONFIG_FILE))
 }
 
 /* Default configuration values. Used if values from the above config are unset */
-$defaults = array('authentication' => false,'single_page' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i', 'd/m/y'),'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'inject' => false,'style' => array('themes' => array('path' => false,'default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'exclude' => false,'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
+$defaults = array('authentication' => false,'single_page' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i', 'd/m/y'),'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'inject' => false,'style' => array('themes' => array('path' => '/<%= indexerPath %>/themes/','default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'exclude' => false,'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
 
 /**
  * Call authentication function
@@ -1606,9 +1606,9 @@ class Indexer extends Helpers
      * convenient to check for its existence before filtering.
      * 
      * array_flip+isset is used because it's the most consistent when
-     * it comes to performance over a wide range of directory lenghts:
+     * it comes to performance over a wide range of directory lenghts.
      * 
-     * [https://gist.github.com/ksimka/21a6ff74b41451c430e8]
+     * @see https://gist.github.com/ksimka/21a6ff74b41451c430e8
      */
     if(isset(array_flip($files)[DOTFILE_NAME]))
     {
@@ -1637,10 +1637,11 @@ class Indexer extends Helpers
         if(!$usedFilters[$filterType])
         {
           $usedFilters[$filterType] = [];
-        } else if(is_string($usedFilters[$filterType])
-          || !is_array($usedFilters[$filterType]))
+        } else if(!is_array($usedFilters[$filterType]))
         {
-          $usedFilters[$filterType] = [];
+          $usedFilters[$filterType] = is_string($usedFilters[$filterType])
+          ? [$usedFilters[$filterType]]
+          : [];
         }
       }
 
@@ -2215,7 +2216,7 @@ function buildHeader(
   $header[] = $baseStylesheet;
 
   /** Add current theme stylesheet */
-  if ($currentTheme && strtolower($currentTheme) !== 'default'
+  if($currentTheme && strtolower($currentTheme) !== 'default'
     && isset($themes[$currentTheme]))
   {
     $header[] = Helpers::createElement('link', [
