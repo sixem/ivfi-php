@@ -43,7 +43,8 @@
     "make-standalone": "webpack --config webpack.config.js --mode=production && node ./scripts/make-standalone.js",
     "docker-populate": "rm -rf ./docker/public ./build && webpack --config webpack.config.js --mode=production && mv ./build ./docker/public",
     "lint": "eslint ./src/core/**/*.ts && stylelint ./src/css/**/*.scss",
-    "test": "npm run lint && npm run build && node ./scripts/make-standalone.js"
+    "test": "npm run lint && npm run build && node ./scripts/make-standalone.js",
+    "pack-release": "bash ./scripts/pack-release.sh"
   },
   "repository": {
     "type": "git",
