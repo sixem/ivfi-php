@@ -105,4 +105,4 @@ This project is licensed under GPL-3.0. It also includes external libraries that
 See [LICENSE](LICENSE) for the full license text.
 
 ## Disclaimer
-As you with anything else, use this script at your own risk. There may exist bugs that i do not know of :v:
+As with anything else, use this script at your own risk. There could exist bugs that I do not know of :v:
