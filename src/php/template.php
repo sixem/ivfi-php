@@ -745,6 +745,18 @@ class Indexer extends Helpers
 {
   public $path;
 
+  public $timestamp;
+
+  private $exclude;
+
+  private $client;
+
+  private $format;
+
+  private $filter;
+
+  private $directorySizes;
+
   private $relative;
 
   private $pathPrepend;
@@ -756,6 +768,10 @@ class Indexer extends Helpers
   private $allowDirectAccess;
 
   private $encodeAll;
+
+  private $processor;
+
+  private $debug;
 
   function __construct($path, $options = [])
   {
