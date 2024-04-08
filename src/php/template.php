@@ -10,7 +10,7 @@
 /**
  * [Configuration]
  * A more in-depth overview can be found here:
- * https://ivfi.io/docs/php/#/config
+ * https://git.five.sh/ivfi/docs/php/#/config
  */
 
 /* Used to bust the cache and to display footer version number */
@@ -2313,7 +2313,7 @@ function constructFooter($renderTime, $currentDirectory, $config, $version)
     ], implode('',  [
       Helpers::createElement('a', [
         'target' => '_blank',
-        'href' => 'https://ivfi.io/'
+        'href' => 'https://git.five.sh/ivfi/'
       ], 'IVFi'),
       Helpers::createElement('span', [], $version)
     ]));
@@ -2563,7 +2563,7 @@ $jsConfig = constructJsConfig(
         <input type="text" placeholder="Search .." value="">
     </div>
 
-    <!-- [https://ivfi.io/ — The image and video friendly indexer]  -->  
+    <!-- [https://git.five.sh/ivfi/ — The image and video friendly indexer]  -->  
 
     <script id="<?=SCRIPT_ID;?>" type="application/json"><?=$jsConfig;?></script>
 

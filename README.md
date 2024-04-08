@@ -16,10 +16,10 @@
 <br/>
 
 <p align="center">
-	<a href="https://five.sh/demo/indexer/">Demo</a>&nbsp;&nbsp;
-	<a href="https://ivfi.io/docs/php/#/README">Documentation</a>&nbsp;&nbsp;
-	<a href="https://ivfi.io/docs/php/#/config">Configuration</a>&nbsp;&nbsp;
-	<a href="https://ivfi.io/docs/php/#/building">Building</a>
+	<a href="https://git.five.sh/ivfi/demo/">Demo</a>&nbsp;&nbsp;
+	<a href="https://git.five.sh/ivfi/docs/php/#/README">Documentation</a>&nbsp;&nbsp;
+	<a href="https://git.five.sh/ivfi/docs/php/#/config">Configuration</a>&nbsp;&nbsp;
+	<a href="https://git.five.sh/ivfi/docs/php/#/building">Building</a>
 </p>
 
 <br/>
@@ -54,9 +54,9 @@ DirectoryIndex index.html index.php /indexer.php
 
 <br/>
 
-For detailed instructions on how to configure the script, refer to [setup](https://ivfi.io/docs/php/#/setup).
+For detailed instructions on how to configure the script, refer to [setup](https://git.five.sh/ivfi/docs/php/#/setup).
 
-The releases and individual builds are available [here](https://ivfi.io/releases/php/).
+The releases and individual builds are available [here](https://git.five.sh/ivfi/releases/php/).
 
 <br/>
 

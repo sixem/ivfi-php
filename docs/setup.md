@@ -7,7 +7,7 @@
 
 <p>Download the latest release <a href="https://github.com/sixem/ivfi-php/releases">HERE</a>!</p>
 <p>Alternatively, you can also build it from source yourself, for that see: <a href="#building">building</a></p>
-<p>You can also find every release and specific builds here: <a href="https://ivfi.io/releases/php/">https://ivfi.io/releases/php/</a></p>
+<p>You can also find every release and specific builds here: <a href="https://git.five.sh/ivfi/releases/php/">https://git.five.sh/ivfi/releases/php/</a></p>
 
 ## Files
 
