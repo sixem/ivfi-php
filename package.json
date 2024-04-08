@@ -4,8 +4,8 @@
     "mail": "emy@five.sh"
   },
   "name": "ivfi",
-  "version": "1.2.2",
-  "description": "An image and video friendly directory indexer",
+  "version": "1.2.3",
+  "description": "The image and video friendly indexer",
   "main": "./core/js/main.ts",
   "type": "module",
   "dependencies": {
