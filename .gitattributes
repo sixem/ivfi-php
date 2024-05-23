@@ -3,3 +3,4 @@
 # Mark vendored and documentation
 extras/* linguist-vendored=true
 docs/* linguist-documentation=true
+build/* linguist-generated=true
