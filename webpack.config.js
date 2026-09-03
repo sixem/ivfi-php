@@ -1,10 +1,8 @@
-/** Package information */
-import pck from './package.json' assert {
-	type: 'json'
-};
-
 /** Build helpers */
 import build from './build.helpers.js';
+
+/** Package information */
+const pck = build.readJson('./package.json');
 
 /** Webpack plugins */
 import HtmlWebpackPlugin from 'html-webpack-plugin';
