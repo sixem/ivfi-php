@@ -4,29 +4,29 @@
 
 <br/>
 
-You can build this script from source using Node.js 20 or newer and `npm`. Node.js 24 is the recommended version and is recorded in `.nvmrc` for users of Node Version Manager.
+You can build this script from source using Node.js 20 or newer and `pnpm`. Node.js 24 is the recommended version and is recorded in `.nvmrc` for users of Node Version Manager.
 
 **Clone repository and install dependencies:**
 ```bash
 git clone https://github.com/sixem/ivfi-php
 cd ivfi-php
-npm ci
+pnpm install
 ```
 
-`npm ci` installs the dependency versions recorded in `package-lock.json`. Use `npm install` when intentionally adding or updating dependencies.
+If pnpm is not already installed, Corepack can provide the version declared in `package.json` by running `corepack enable pnpm` before installing dependencies.
 
 ## Production builds
 
 Build from source, creating minified files:
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 Build a standalone file from source:
 
 ```bash
-npm run make-standalone
+pnpm run make-standalone
 ```
 
 This will place the compiled files in a new `build` directory.
@@ -36,7 +36,7 @@ This will place the compiled files in a new `build` directory.
 Build source mapped, non-production files:
 
 ```bash
-npm run build-dev
+pnpm run build-dev
 ```
 
 ## Build Options

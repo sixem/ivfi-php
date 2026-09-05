@@ -8,6 +8,7 @@
   "description": "The image and video friendly indexer",
   "main": "./core/js/main.ts",
   "type": "module",
+  "packageManager": "pnpm@10.34.5",
   "dependencies": {
     "js-cookie": "^2.2.1"
   },
@@ -43,7 +44,7 @@
     "make-standalone": "webpack --config webpack.config.js --mode=production && node ./scripts/make-standalone.js",
     "docker-populate": "rm -rf ./docker/public ./build && webpack --config webpack.config.js --mode=production && mv ./build ./docker/public",
     "lint": "eslint \"./src/core/**/*.ts\" && stylelint \"./src/css/**/*.scss\"",
-    "test": "npm run lint && npm run build && node ./scripts/make-standalone.js",
+    "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js",
     "pack-release": "bash ./scripts/pack-release.sh"
   },
   "repository": {

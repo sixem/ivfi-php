@@ -3,7 +3,7 @@
 #
 #  This script will package the script into a release zip file.
 #
-#  It requires the following dependencies: 7z, jq and npm
+#  It requires the following dependencies: 7z, jq and pnpm
 #
 
 
@@ -24,7 +24,7 @@ e() {
 }
 
 jq_cmd="$(where jq)"
-npm_cmd="$(where npm)"
+pnpm_cmd="$(where pnpm)"
 sz_cmd="$(where 7z)"
 
 if ! [ -x "${jq_cmd}" ]; then
@@ -32,8 +32,8 @@ if ! [ -x "${jq_cmd}" ]; then
   exit ${no_dep_exit_code}
 fi
 
-if ! [ -x "${npm_cmd}" ]; then
-  e "required dependency not found: npm not found in the path or not executable"
+if ! [ -x "${pnpm_cmd}" ]; then
+  e "required dependency not found: pnpm not found in the path or not executable"
   exit ${no_dep_exit_code}
 fi
 
@@ -56,10 +56,10 @@ NAME=$("$jq_cmd" -r .name "package.json")
 PACKAGED="$NAME-$VERSION.zip"
 
 e "Installing dependencies ..."
-"$npm_cmd" install
+"$pnpm_cmd" install --frozen-lockfile
 
 e "Building standalone ..."
-"$npm_cmd" run make-standalone
+"$pnpm_cmd" run make-standalone
 
 mkdir "standalone"
 mv "build/standalone.php" "standalone/indexer.php"
