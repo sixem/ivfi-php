@@ -35,6 +35,12 @@ let assetDir = buildOptions && buildOptions.assetDir ? buildOptions.assetDir : '
 /** Trim any leading and trailing slash as well as double slashes */
 assetDir = assetDir.replace(/([^:]\/)\/+/g, '$1').replace(/^\/|\/$/g, '');
 
+if(assetDir.includes('\\') || assetDir.includes(':') ||
+	assetDir.split('/').some((part) => !part || part === '.' || part === '..'))
+{
+	build.exit('assetDir must be a relative directory inside build/.');
+}
+
 /**
  * Parameters passed with `HtmlWebpackPlugin`
  */
@@ -147,8 +153,10 @@ const config = (env, argv) => {
 			extensions: ['.js', '.ts', '.json']
 		},
 		output: {
-			filename: 'main.js',
-			path: __dirname + `/build/${assetDir}`
+			filename: `${assetDir}/main.js`,
+			path: __dirname + '/build',
+			publicPath: '/',
+			clean: isProduction
 		},
 		optimization: {
 			minimize: isProduction ? true : false,
@@ -164,13 +172,13 @@ const config = (env, argv) => {
 				inject: false,
 				minify: false,
 				template: __dirname + '/src/php/template.php',
-				filename: __dirname + '/build/indexer.php',
+				filename: 'indexer.php',
 				templateParameters: () => {
 					return templateParameters;
 				}
 			}),
 			new MiniCssExtractPlugin({
-				filename: './css/style.css'
+				filename: `${assetDir}/css/style.css`
 			}),
 			new webpack.BannerPlugin({
 				banner: banner(),
@@ -194,24 +202,19 @@ const config = (env, argv) => {
 							}
 						},
 						{
-							loader: 'sass-loader'
+							loader: 'postcss-loader'
 						},
 						{
-							loader: 'postcss-loader'
+							loader: 'sass-loader'
 						}
 					],
 				},
 				{
 					test: /\.(woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-					use: [
-						{
-							loader: 'file-loader',
-							options: {
-								name: 'assets/fonts/[name].[ext]',
-								publicPath: `/${assetDir}`
-							}
-						}
-					]
+					type: 'asset/resource',
+					generator: {
+						filename: `${assetDir}/assets/fonts/[name][ext]`
+					}
 				}
 			]
 		}
