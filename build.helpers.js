@@ -8,42 +8,42 @@ import fs from 'fs';
  */
 const stripOuterTags = (data, tags) =>
 {
-    let lines = data.split('\n');
-    let modified = false;
+	let lines = data.split('\n');
+	let modified = false;
 
-    for(let i = 0; i < lines.length; i++)
-    {
-        if(lines[i].startsWith(tags[0]))
-        {
-            lines.splice(i, 1);
-            modified = true;
+	for(let i = 0; i < lines.length; i++)
+	{
+		if(lines[i].startsWith(tags[0]))
+		{
+			lines.splice(i, 1);
+			modified = true;
 
-            break;
-        }
-    }
+			break;
+		}
+	}
 
-    if(modified)
-    {
-        for(let i = lines.length - 1; i >= 0; i--)
-        {
-            if(lines[i].startsWith(tags[1]))
-            {
-                lines.splice(i, 1);
-                break;
-            }
-        }
+	if(modified)
+	{
+		for(let i = lines.length - 1; i >= 0; i--)
+		{
+			if(lines[i].startsWith(tags[1]))
+			{
+				lines.splice(i, 1);
+				break;
+			}
+		}
 
-        data = lines.join('\n');
-    }
+		data = lines.join('\n');
+	}
 
-    return data;
+	return data;
 };
 
 const exit = (...message) =>
 {
-	console.log(`\nExiting -`, ...message);
+	console.log('\nExiting -', ...message);
 	process.exit(1);
-}
+};
 
 /**
  * Reads the JSON data from a path
@@ -60,10 +60,10 @@ const readJson = (path) =>
 		{
 			data = JSON.parse(fs.readFileSync(path));
 		} else {
-			exports.exit(`File not found: ${path}`);
+			exit(`File not found: ${path}`);
 		}
 	} catch(error) {
-		exports.exit(`Error reading: ${path}`, error);
+		exit(`Error reading: ${path}`, error);
 		data = null;
 	}
 
@@ -83,23 +83,23 @@ const extractors = {
 			if(fs.existsSync(path))
 			{
 				let buffer = fs.readFileSync(path);
-                data = buffer.toString();
+				data = buffer.toString();
 
-                if(options.stripTags)
-                {
-                    data = stripOuterTags(data, ['<?php', '?>']);
-                }
+				if(options.stripTags)
+				{
+					data = stripOuterTags(data, ['<?php', '?>']);
+				}
 			} else {
-				exports.exit(`File not found: ${path}`);
+				exit(`File not found: ${path}`);
 			}
 		} catch(error) {
-			exports.exit(`Extraction failed @ ${path}`, error);
+			exit(`Extraction failed @ ${path}`, error);
 		}
 	
 		return data;
 	},
-    fileCss: (path, options = {}) =>
-    {
+	fileCss: (path, options = {}) =>
+	{
 		let data = null;
 
 		try
@@ -107,45 +107,45 @@ const extractors = {
 			if(fs.existsSync(path))
 			{
 				let buffer = fs.readFileSync(path);
-                data = buffer.toString();
+				data = buffer.toString();
 
-                if(options.minimize)
-                {
-                    data = data.
-                        replace(/\n/g, '').
-                        replace(/\s\s+/g, ' ').
-                        replace(/"/g, '\\"').
-                        replace(': ', ':').replace('; ', ';').
-                        replace(' }', '}').replace('} ', '}').
-                        replace('{ ', '{').replace(' {', '{');
-                }
+				if(options.minimize)
+				{
+					data = data.
+						replace(/\n/g, '').
+						replace(/\s\s+/g, ' ').
+						replace(/"/g, '\\"').
+						replace(': ', ':').replace('; ', ';').
+						replace(' }', '}').replace('} ', '}').
+						replace('{ ', '{').replace(' {', '{');
+				}
 			} else {
-				exports.exit(`File not found: ${path}`);
+				exit(`File not found: ${path}`);
 			}
 		} catch(error) {
-			exports.exit(`Extraction failed @ ${path}`, error);
+			exit(`Extraction failed @ ${path}`, error);
 		}
 	
 		return data;
-    }
+	}
 };
 
 const trimPartPath = (path) =>
 {
-    if(path[0] === '/' || path[0] === '\\')
-    {
-        path = path.substring(1);
-    } else if(path.substring(0, 2) === './')
-    {
-        path = path.substring(2);
-    }
+	if(path[0] === '/' || path[0] === '\\')
+	{
+		path = path.substring(1);
+	} else if(path.substring(0, 2) === './')
+	{
+		path = path.substring(2);
+	}
 
-    return path;
+	return path;
 };
 
 export default {
-    exit,
-    readJson,
-    extractors,
-    trimPartPath
+	exit,
+	readJson,
+	extractors,
+	trimPartPath
 };

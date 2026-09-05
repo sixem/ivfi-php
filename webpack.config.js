@@ -23,7 +23,7 @@ const __dirname = dirname(__filename);
 /**
  * Read build.options.js if it exists
  */
- let buildOptions = build.readJson('./build.options.json');
+let buildOptions = build.readJson('./build.options.json');
 
 /**
  * Set asset output directory (containing .js and .css files etc.)
@@ -81,7 +81,7 @@ if(buildOptions.extraFeatures)
 					let options = typeof integrals[part].options === 'object' &&
 						integrals[part].options !== null ? integrals[part].options : {};
 
-					if(build.extractors.hasOwnProperty(extractor))
+					if(Object.hasOwn(build.extractors, extractor))
 					{
 						let integral = build.extractors[extractor](fullPath, options);
 
@@ -92,7 +92,7 @@ if(buildOptions.extraFeatures)
 							{
 								templateParameters[partType].push(integral);
 							} else {
-								if(!templateParameters[partType].hasOwnProperty(key))
+								if(!Object.hasOwn(templateParameters[partType], key))
 								{
 									templateParameters[partType][key] = {};
 								}
@@ -170,7 +170,7 @@ const config = (env, argv) => {
 				}
 			}),
 			new MiniCssExtractPlugin({
-				filename: `./css/style.css`
+				filename: './css/style.css'
 			}),
 			new webpack.BannerPlugin({
 				banner: banner(),
@@ -215,7 +215,7 @@ const config = (env, argv) => {
 				}
 			]
 		}
-	}
+	};
 };
 
 export default config;

@@ -151,8 +151,8 @@ try
 	/** Extract and remove scripts */
 	const splicedScripts = spliceBySearch(
 		lines,
-		"'type' => 'text/javascript'", '$header[]', ');',
-		/\'(\/[^\/\'\"]+\/main\.js)\?bust=%s\'/g
+		'\'type\' => \'text/javascript\'', '$header[]', ');',
+		/'(\/[^/'"]+\/main\.js)\?bust=%s'/g
 	);
 
 	if(splicedScripts)
@@ -195,8 +195,8 @@ try
 	/** Extract and remove stylesheets */
 	const splicedStyles = spliceBySearch(
 		lines,
-		"$baseStylesheet", '$baseStylesheet', ');',
-		/\"(\/[^\/\'\"]+\/css\/style\.css)\?bust=%s\"/g, 1
+		'$baseStylesheet', '$baseStylesheet', ');',
+		/"(\/[^/'"]+\/css\/style\.css)\?bust=%s"/g, 1
 	);
 
 	if(splicedStyles)
@@ -216,7 +216,7 @@ try
 
 			/** Find used fonts in stylesheet */
 			const usedFonts = stylesheetData.match(
-				new RegExp(/(src\:\ ?url\(([A-Za-z0-9\.\/\-]+)\) format\("[A-Za-z0-9]+"\)\;)/g)
+				new RegExp(/(src: ?url\(([A-Za-z0-9./-]+)\) format\("[A-Za-z0-9]+"\);)/g)
 			);
 
 			console.log('Found', usedFonts.length, 'font asset(s)');
@@ -245,7 +245,7 @@ try
 			lines.splice(
 				Math.min(...splicedStyles.indexes), 0,
 				`$baseStylesheet = '<style type="text/css">${
-						stripComments(stylesheetData).replace(/[\']/g, `${String.fromCharCode(92)}\'`)
+					stripComments(stylesheetData).replace(/[']/g, `${String.fromCharCode(92)}'`)
 				}</style>';`
 			);
 		} else {
@@ -259,7 +259,7 @@ try
 	fs.writeFileSync(data.outFile, lines.join('\n'));
 
 	/* get output stats */
-	let stats = fs.statSync(data.outFile)
+	let stats = fs.statSync(data.outFile);
 
 	console.log(`OK .. ${stats.size} (${Math.round(((stats.size / (1024)) + Number.EPSILON) * 100) / 100} kB)`);
 } catch(error)
