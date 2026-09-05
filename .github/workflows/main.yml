@@ -36,9 +36,23 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Install release packaging tools
+        if: matrix.node-version == '24'
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full jq
+
+      - name: Test release packaging
+        if: matrix.node-version == '24'
+        run: bash scripts/test-release.sh
+
+      - name: Package release
+        if: matrix.node-version == '24'
+        run: pnpm run pack-release --from-build
+
       - name: Archive production artifacts
         if: matrix.node-version == '24'
         uses: actions/upload-artifact@v4
         with:
           name: build
-          path: build/
+          path: |
+            build/
+            ivfi-*.zip
