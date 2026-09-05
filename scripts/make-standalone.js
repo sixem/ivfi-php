@@ -152,8 +152,13 @@ try
 	const splicedScripts = spliceBySearch(
 		lines,
 		'\'type\' => \'text/javascript\'', '$header[]', ');',
-		/'(\/[^/'"]+\/main\.js)\?bust=%s'/g
+		/'(\/[^'"\r\n]+\/main\.js)\?bust=%s'/
 	);
+
+	if(!splicedScripts)
+	{
+		onError('Could not locate the main.js reference in build/indexer.php.');
+	}
 
 	if(splicedScripts)
 	{
@@ -166,8 +171,7 @@ try
 		for(const script of splicedScripts.items)
 		{
 			/** Construct script file relative */
-			const scriptPath = script.split('/')[1];
-			const scriptFile = `./build/${scriptPath}/${script.replace(`/${scriptPath}/`, '')}`;
+			const scriptFile = path.join('./build', script);
 
 			console.log('\nReading script', '->', scriptFile);
 
@@ -181,6 +185,11 @@ try
 
 		/** Get <body/> closing tag line */
 		const bodyEnd = scanFromIndex(lines, '</body>', lines.length - 1, true);
+
+		if(bodyEnd === null)
+		{
+			onError('Could not locate </body> for script embedding.');
+		}
 
 		if(bodyEnd !== null)
 		{
@@ -196,8 +205,13 @@ try
 	const splicedStyles = spliceBySearch(
 		lines,
 		'$baseStylesheet', '$baseStylesheet', ');',
-		/"(\/[^/'"]+\/css\/style\.css)\?bust=%s"/g, 1
+		/"(\/[^'"\r\n]+\/css\/style\.css)\?bust=%s"/, true, 1
 	);
+
+	if(!splicedStyles)
+	{
+		onError('Could not locate the style.css reference in build/indexer.php.');
+	}
 
 	if(splicedStyles)
 	{
@@ -218,6 +232,11 @@ try
 			const usedFonts = stylesheetData.match(
 				new RegExp(/(src: ?url\(([A-Za-z0-9./-]+)\) format\("[A-Za-z0-9]+"\);)/g)
 			);
+
+			if(!usedFonts)
+			{
+				onError('Could not locate font assets for embedding in style.css.');
+			}
 
 			console.log('Found', usedFonts.length, 'font asset(s)');
 

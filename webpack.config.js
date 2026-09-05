@@ -145,6 +145,7 @@ const config = (env, argv) => {
 	return {
 		context: __dirname,
 		mode: isProduction ? 'production' : 'development',
+		devtool: isProduction ? false : 'source-map',
 		target: 'browserslist',
 		entry: {
 			index: './src/core/main.ts'
