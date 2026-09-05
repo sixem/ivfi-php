@@ -59,11 +59,11 @@ This line can be placed in either your server's `.conf` file or your `.htaccess`
 ## Docker
 The script can also be run through a simple docker container using `docker compose`.
 #### Clone the repository and install dependencies:
-`npm install` can be skipped if you are manually creating `docker/public` without building from source.
+`npm ci` can be skipped if you are manually creating `docker/public` without building from source.
 ```bash
 git clone https://github.com/sixem/ivfi-php
 cd ivfi-php
-npm install
+npm ci
 ```
 
 #### Build and populate the docker directory:

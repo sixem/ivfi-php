@@ -8,7 +8,7 @@
 
 <p align="center">
 <a href="https://github.com/sixem/ivfi-php/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/ivfi-php?color=2f394f&style=flat"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/ivfi-php?color=5a8f4e&style=flat"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/ivfi-php?color=4b8b72&style=flat"> 
-<img alt="Travis (.com)" src="https://img.shields.io/travis/com/sixem/ivfi-php?style=flat">
+<a href="https://github.com/sixem/ivfi-php/actions/workflows/main.yml"><img alt="Build status" src="https://github.com/sixem/ivfi-php/actions/workflows/main.yml/badge.svg"></a>
 </p>
 
 ---
