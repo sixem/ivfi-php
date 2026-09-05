@@ -56,5 +56,8 @@
   "bugs": {
     "url": "https://github.com/sixem/ivfi-php/issues"
   },
+  "browserslist": [
+    "baseline 2020 with downstream"
+  ],
   "homepage": "https://github.com/sixem/ivfi-php#readme"
 }

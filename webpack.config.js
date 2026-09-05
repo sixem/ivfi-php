@@ -139,6 +139,7 @@ const config = (env, argv) => {
 	return {
 		context: __dirname,
 		mode: isProduction ? 'production' : 'development',
+		target: 'browserslist',
 		entry: {
 			index: './src/core/main.ts'
 		},
