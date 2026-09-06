@@ -4,7 +4,9 @@
 
 <br/>
 
-You can build this script from source using Node.js 20 or newer and `pnpm`. Node.js 24 is the recommended version and is recorded in `.nvmrc` for users of Node Version Manager.
+You can build this script from source using Node 20 or newer and `pnpm`.
+
+Node 24 is the recommended version and is recorded in `.nvmrc` for users of Node Version Manager.
 
 **Clone repository and install dependencies:**
 ```bash
@@ -13,7 +15,7 @@ cd ivfi-php
 pnpm install
 ```
 
-If pnpm is not already installed, Corepack can provide the version declared in `package.json` by running `corepack enable pnpm` before installing dependencies.
+If `pnpm` is not already installed, Corepack can provide the version declared in `package.json` by running `corepack enable pnpm` before installing dependencies.
 
 ## Production builds
 
