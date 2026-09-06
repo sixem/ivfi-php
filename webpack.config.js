@@ -133,7 +133,7 @@ const banner = () =>
 	[Chunkhash: [chunkhash]]
 
 
-	Copyright (c) 2022 emy | five.sh | github.com/sixem
+	Copyright (c) ${moment().format('YYYY')} emy | five.sh | github.com/sixem
 
 	Licensed under GPL-3.0
 	\n`;
