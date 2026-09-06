@@ -6,12 +6,7 @@
 	<p align="center"><i>The image and video friendly indexer</i></p>
 </div>
 
-<br/>
-
-
 <p align="center"><a href="https://github.com/sixem/ivfi-php/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/ivfi-php?color=2f394f"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/ivfi-php?color=2f394f"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/ivfi-php?color=30c352"> <a href="https://github.com/sixem/ivfi-php/actions/workflows/main.yml"><img alt="Build" src="https://github.com/sixem/ivfi-php/actions/workflows/main.yml/badge.svg"></a></p>
-
-<br/>
 
 <p align="center">
 	<a href="https://git.five.sh/ivfi/demo/">Demo</a>&nbsp;&nbsp;
@@ -20,8 +15,6 @@
 	<a href="https://git.five.sh/ivfi/docs/php/#/building">Building</a>
 </p>
 
-<br/>
-
 # About
 
 IVFi-PHP is a file directory browser script made in PHP and TypeScript.
@@ -29,8 +22,6 @@ IVFi-PHP is a file directory browser script made in PHP and TypeScript.
 It is designed to be a comprehensive indexer, with a focus on efficiently handling image and video files. IVFi has a modern and user-friendly interface, offering features such as a gallery view, hoverable previews, and many customization options.
 
 This project can be easily set up on most web servers.
-
-<br/>
 
 # Quick setup :zap:
 
@@ -50,13 +41,9 @@ server {
 DirectoryIndex index.html index.php /indexer.php
 ```
 
-<br/>
-
 For detailed instructions on how to configure the script, refer to [setup](https://git.five.sh/ivfi/docs/php/#/setup).
 
 The releases and individual builds are available [here](https://git.five.sh/ivfi/releases/php/).
-
-<br/>
 
 # Features
 
@@ -75,8 +62,6 @@ The releases and individual builds are available [here](https://git.five.sh/ivfi
 ### **Additonal Features**
 > It can be built with added functionality, such as the ability to display `README.md` files in each directory!
 
-<br/>
-
 ### **And much more ...**
 + :clock12: The dates will be adjusted to match the time zone of the client.
 + :arrow_up_down: Client-defined sorting preferences are stored persistently.
@@ -87,15 +72,11 @@ The releases and individual builds are available [here](https://git.five.sh/ivfi
 + :inbox_tray: Direct download links for all files.
 + :desktop_computer: Compatible with both mobile and desktop devices.
 
-<br/>
-
 # Feedback
 
 If you have come across any specific problems or bugs that you would like to report, you have the option to open an [issue](https://github.com/sixem/ivfi-php/issues). This will allow us to better understand the issue at hand and take the necessary steps to resolve it.
 
 Alternatively, if you have any general questions, minor issues, or ideas for improvements that you would like to discuss, you can start a [discussion](https://github.com/sixem/ivfi-php/discussions). This is a good way for you to share your thoughts and ideas with us, and we would be more than happy to listen and consider them.
-
-<br/>
 
 ## License
 This project is licensed under GPL-3.0. It also includes external libraries that are available under a variety of licenses.

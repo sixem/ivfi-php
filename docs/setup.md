@@ -59,11 +59,11 @@ This line can be placed in either your server's `.conf` file or your `.htaccess`
 ## Docker
 The script can also be run through a simple docker container using `docker compose`.
 #### Clone the repository and install dependencies:
-`npm install` can be skipped if you are manually creating `docker/public` without building from source.
+The dependency installation can be skipped if you are manually creating `docker/public` without building from source.
 ```bash
 git clone https://github.com/sixem/ivfi-php
 cd ivfi-php
-npm install
+pnpm install
 ```
 
 #### Build and populate the docker directory:
@@ -71,7 +71,7 @@ This is not required as it can be done manually by simply placing the Indexer fi
 
 This directory (`docker/public`) will serve as the root path of the webserver from where we serve the script.
 ```bash
-npm run docker-populate
+pnpm run docker-populate
 ```
 
 #### Edit the configuration:

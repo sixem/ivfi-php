@@ -7,39 +7,52 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [ '20', '22', '24' ]
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+      - uses: actions/checkout@v4
 
-    - name: Cache modules
-      uses: actions/cache@v4
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
 
-    - name: Install dependencies
-      run: npm install
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
 
-    - name: Run tests
-      run: npm test
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-    - name: Build
-      run: npm run build
+      - name: Run tests
+        run: pnpm test
 
-    - name: Build standalone
-      run: npm run make-standalone
+      - name: Install release packaging tools
+        if: matrix.node-version == '24'
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full jq
 
-    - name: Archive production artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build
-        path: build/
+      - name: Test release packaging
+        if: matrix.node-version == '24'
+        run: bash scripts/test-release.sh
+
+      - name: Package release
+        if: matrix.node-version == '24'
+        run: pnpm run pack-release --from-build
+
+      - name: Archive production artifacts
+        if: matrix.node-version == '24'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: |
+            build/
+            ivfi-*.zip

@@ -20,6 +20,22 @@
     "globals": {
         "Modernizr": "readonly"
     },
+    "overrides": [
+        {
+            "files": ["webpack.config.js", "build.helpers.js", "scripts/*.js"],
+            "env": {
+                "browser": false
+            },
+            "globals": {
+                "Modernizr": "off",
+                "exports": "off",
+                "module": "off",
+                "require": "off",
+                "__dirname": "off",
+                "__filename": "off"
+            }
+        }
+    ],
     "rules": {
         "no-var": 1,
         "no-dupe-class-members": "error",

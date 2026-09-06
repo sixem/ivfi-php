@@ -1,10 +1,8 @@
-/** Package information */
-import pck from './package.json' assert {
-	type: 'json'
-};
-
 /** Build helpers */
 import build from './build.helpers.js';
+
+/** Package information */
+const pck = build.readJson('./package.json');
 
 /** Webpack plugins */
 import HtmlWebpackPlugin from 'html-webpack-plugin';
@@ -25,7 +23,7 @@ const __dirname = dirname(__filename);
 /**
  * Read build.options.js if it exists
  */
- let buildOptions = build.readJson('./build.options.json');
+let buildOptions = build.readJson('./build.options.json');
 
 /**
  * Set asset output directory (containing .js and .css files etc.)
@@ -36,6 +34,12 @@ let assetDir = buildOptions && buildOptions.assetDir ? buildOptions.assetDir : '
 
 /** Trim any leading and trailing slash as well as double slashes */
 assetDir = assetDir.replace(/([^:]\/)\/+/g, '$1').replace(/^\/|\/$/g, '');
+
+if(assetDir.includes('\\') || assetDir.includes(':') ||
+	assetDir.split('/').some((part) => !part || part === '.' || part === '..'))
+{
+	build.exit('assetDir must be a relative directory inside build/.');
+}
 
 /**
  * Parameters passed with `HtmlWebpackPlugin`
@@ -83,7 +87,7 @@ if(buildOptions.extraFeatures)
 					let options = typeof integrals[part].options === 'object' &&
 						integrals[part].options !== null ? integrals[part].options : {};
 
-					if(build.extractors.hasOwnProperty(extractor))
+					if(Object.hasOwn(build.extractors, extractor))
 					{
 						let integral = build.extractors[extractor](fullPath, options);
 
@@ -94,7 +98,7 @@ if(buildOptions.extraFeatures)
 							{
 								templateParameters[partType].push(integral);
 							} else {
-								if(!templateParameters[partType].hasOwnProperty(key))
+								if(!Object.hasOwn(templateParameters[partType], key))
 								{
 									templateParameters[partType][key] = {};
 								}
@@ -129,7 +133,7 @@ const banner = () =>
 	[Chunkhash: [chunkhash]]
 
 
-	Copyright (c) 2022 emy | five.sh | github.com/sixem
+	Copyright (c) ${moment().format('YYYY')} emy | five.sh | github.com/sixem
 
 	Licensed under GPL-3.0
 	\n`;
@@ -141,6 +145,8 @@ const config = (env, argv) => {
 	return {
 		context: __dirname,
 		mode: isProduction ? 'production' : 'development',
+		devtool: isProduction ? false : 'source-map',
+		target: 'browserslist',
 		entry: {
 			index: './src/core/main.ts'
 		},
@@ -148,8 +154,10 @@ const config = (env, argv) => {
 			extensions: ['.js', '.ts', '.json']
 		},
 		output: {
-			filename: 'main.js',
-			path: __dirname + `/build/${assetDir}`
+			filename: `${assetDir}/main.js`,
+			path: __dirname + '/build',
+			publicPath: '/',
+			clean: isProduction
 		},
 		optimization: {
 			minimize: isProduction ? true : false,
@@ -165,13 +173,13 @@ const config = (env, argv) => {
 				inject: false,
 				minify: false,
 				template: __dirname + '/src/php/template.php',
-				filename: __dirname + '/build/indexer.php',
+				filename: 'indexer.php',
 				templateParameters: () => {
 					return templateParameters;
 				}
 			}),
 			new MiniCssExtractPlugin({
-				filename: `./css/style.css`
+				filename: `${assetDir}/css/style.css`
 			}),
 			new webpack.BannerPlugin({
 				banner: banner(),
@@ -195,28 +203,23 @@ const config = (env, argv) => {
 							}
 						},
 						{
-							loader: 'sass-loader'
+							loader: 'postcss-loader'
 						},
 						{
-							loader: 'postcss-loader'
+							loader: 'sass-loader'
 						}
 					],
 				},
 				{
 					test: /\.(woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-					use: [
-						{
-							loader: 'file-loader',
-							options: {
-								name: 'assets/fonts/[name].[ext]',
-								publicPath: `/${assetDir}`
-							}
-						}
-					]
+					type: 'asset/resource',
+					generator: {
+						filename: `${assetDir}/assets/fonts/[name][ext]`
+					}
 				}
 			]
 		}
-	}
+	};
 };
 
 export default config;

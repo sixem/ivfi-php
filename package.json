@@ -4,17 +4,15 @@
     "mail": "emy@five.sh"
   },
   "name": "ivfi",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "The image and video friendly indexer",
   "main": "./core/js/main.ts",
   "type": "module",
+  "packageManager": "pnpm@10.34.5",
   "dependencies": {
     "js-cookie": "^2.2.1"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.14.7",
-    "@babel/preset-env": "^7.14.7",
-    "@babel/preset-typescript": "^7.18.6",
     "@types/js-cookie": "^3.0.2",
     "@types/modernizr": "^3.5.3",
     "@typescript-eslint/eslint-plugin": "^5.37.0",
@@ -22,15 +20,17 @@
     "autoprefixer": "^10.4.8",
     "css-loader": "^5.2.5",
     "css-minimizer-webpack-plugin": "^3.0.0",
-    "file-loader": "^6.2.0",
+    "eslint": "^7.32.0",
     "html-webpack-plugin": "^5.3.1",
     "mini-css-extract-plugin": "^1.6.0",
     "moment": "^2.29.1",
+    "postcss": "^8.5.28",
     "postcss-loader": "^7.0.1",
     "sass": "^1.52.3",
     "sass-loader": "^13.0.0",
-    "source-map-loader": "^4.0.0",
+    "stylelint": "^14.16.1",
     "stylelint-config-standard-scss": "^5.0.0",
+    "terser-webpack-plugin": "^5.6.1",
     "ts-loader": "^9.3.1",
     "typescript": "^4.8.2",
     "webpack": "^5.73.0",
@@ -42,8 +42,8 @@
     "build-dev-watch": "webpack --config webpack.config.js --mode=development --watch",
     "make-standalone": "webpack --config webpack.config.js --mode=production && node ./scripts/make-standalone.js",
     "docker-populate": "rm -rf ./docker/public ./build && webpack --config webpack.config.js --mode=production && mv ./build ./docker/public",
-    "lint": "eslint ./src/core/**/*.ts && stylelint ./src/css/**/*.scss",
-    "test": "npm run lint && npm run build && node ./scripts/make-standalone.js",
+    "lint": "eslint \"./src/core/**/*.ts\" webpack.config.js build.helpers.js \"scripts/*.js\" && stylelint \"./src/css/**/*.scss\"",
+    "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js && node --test scripts/test-standalone.js",
     "pack-release": "bash ./scripts/pack-release.sh"
   },
   "repository": {
@@ -53,8 +53,14 @@
   },
   "author": "emy",
   "license": "GPL-3.0",
+  "engines": {
+    "node": ">=20"
+  },
   "bugs": {
     "url": "https://github.com/sixem/ivfi-php/issues"
   },
+  "browserslist": [
+    "baseline 2020 with downstream"
+  ],
   "homepage": "https://github.com/sixem/ivfi-php#readme"
 }

@@ -1865,24 +1865,24 @@ export default class galleryClass
 		eventHooks.listen(
 			'body > div.rootGallery  > div.galleryContent > div.media',
 			['scroll', 'DOMMouseScroll', 'mousewheel'], 'galleryScrollNavigate', 
-		(event: WheelEvent): void | boolean =>
-		{
-			if(this.options.scrollInterval > 0 && this.data.scrollbreak === true)
+			(event: WheelEvent): void | boolean =>
 			{
-				return false;
-			}
+				if(this.options.scrollInterval > 0 && this.data.scrollbreak === true)
+				{
+					return false;
+				}
 
-			this.navigate(null, (event.detail > 0 || event.deltaY > 0) ? 1 : -1);
+				this.navigate(null, (event.detail > 0 || event.deltaY > 0) ? 1 : -1);
 
-			if(this.options.scrollInterval > 0)
-			{
-				this.data.scrollbreak = true;
+				if(this.options.scrollInterval > 0)
+				{
+					this.data.scrollbreak = true;
 
-				setTimeout(() => this.scrollBreak(), this.options.scrollInterval);
-			}
-		}, {
-			onAdd: this.removeOnUnbind
-		});
+					setTimeout(() => this.scrollBreak(), this.options.scrollInterval);
+				}
+			}, {
+				onAdd: this.removeOnUnbind
+			});
 
 		/* Handles `keyup` events in the gallery (well - document, but unbinds on close) */
 		eventHooks.listen(window, 'keyup', 'galleryKeyUp', (event: KeyboardEvent): void =>
