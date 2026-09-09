@@ -154,8 +154,52 @@ $config = [
      * Enables console output in JS and PHP debugging.
      * Also enables random query-strings for js/css files to bust the cache
      */
-    'debug' => true
+    'debug' => false
 ];
+
+/* Keep startup/configuration failures private until debug is explicitly enabled. */
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+
+/* Buffer this response so a rendering failure cannot leave a partial 200 page. */
+$responseBufferLevel = ob_get_level();
+ob_start();
+
+function respondToError($status, $error = NULL)
+{
+  global $config, $responseBufferLevel;
+
+  while(ob_get_level() > $responseBufferLevel)
+  {
+    ob_end_clean();
+  }
+
+  http_response_code($status);
+  header('Content-Type: text/html; charset=UTF-8');
+  $messages = [403 => 'Forbidden', 404 => 'Not Found', 500 => 'Internal Server Error'];
+  echo '<h3>' . $status . ' ' . $messages[$status] . '</h3>';
+
+  if($error !== NULL)
+  {
+    if($status === 500)
+    {
+      /* Avoid logging trace arguments, which can contain configuration secrets. */
+      error_log('IVFi: ' . get_class($error) . ': ' . $error->getMessage()
+        . ' in ' . $error->getFile() . ':' . $error->getLine());
+    }
+    if(isset($config['debug']) && $config['debug'] === true)
+    {
+      echo '<pre>' . htmlspecialchars((string) $error,
+        ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8') . '</pre>';
+    }
+  }
+  exit;
+}
+
+set_exception_handler(function (Throwable $error) {
+  respondToError(500, $error);
+});
 
 /* Any potential libraries and so on for extra features will appear here */
 <%= buildInject.readmeSupport &&
@@ -414,10 +458,7 @@ class Helpers
 
     if(json_last_error() !== JSON_ERROR_NONE)
     {
-      if($this->debug)
-      {
-        echo json_last_error_msg();
-      }
+      error_log('IVFi: Invalid JSON in ' . $filePath . ': ' . json_last_error_msg());
       
       return false;
     }
@@ -539,7 +580,7 @@ function authenticate($users, $realm)
   /* Create header for when unathorized */
   function createHeader($realm)
   {
-    header($_SERVER['SERVER_PROTOCOL'] . '401 Unauthorized');
+    http_response_code(401);
     header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . uniqid() . '",opaque="' . md5($realm) . '"');
   }
 
@@ -645,6 +686,9 @@ if(file_exists(CONFIG_FILE))
 {
   $config = include('.' . CONFIG_FILE);
 }
+
+/* Apply the explicit setting before authentication and other request processing. */
+ini_set('display_errors', isset($config['debug']) && $config['debug'] === true ? '1' : '0');
 
 /* Default configuration values. Used if values from the above config are unset */
 $defaults = array('authentication' => false,'single_page' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i', 'd/m/y'),'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'inject' => false,'style' => array('themes' => array('path' => '/<%= indexerPath %>/themes/','default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'exclude' => false,'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
@@ -886,8 +930,7 @@ class Indexer extends Helpers
         /* If direct access is disabled, deny access */
         if($this->allowDirectAccess === false)
         {
-          http_response_code(403);
-          die('Forbidden');
+          respondToError(403);
         } else {
           /* If direct access is allowed, show current directory of script (if it is above base directory) */
           $this->path = dirname($this->path);
@@ -1282,13 +1325,7 @@ class Indexer extends Helpers
     if($useMb === true
       && !function_exists('mb_strtolower'))
     {
-      http_response_code(500);
-
-      die(
-        'Error (mb_strtolower is not defined): In order to use mbstring, you\'ll need to ' .
-        '<a href="https://www.php.net/manual/en/mbstring.installation.php">install</a> ' .
-        'it first.'
-      );
+      throw new RuntimeException('The mbstring extension is required when use_mbstring is enabled.');
     }
 
     /**
@@ -1407,7 +1444,12 @@ class Indexer extends Helpers
    */
   private function getFiles()
   {
-    return scandir($this->path, SCANDIR_SORT_NONE);
+    $files = scandir($this->path, SCANDIR_SORT_NONE);
+    if($files === false)
+    {
+      throw new RuntimeException('Unable to read directory: ' . $this->path);
+    }
+    return $files;
   }
 
   /**
@@ -2018,34 +2060,9 @@ try
       ]
   );
 } catch (Exception $e) {
-  http_response_code(500);
-
-  /** Get error code */
-  $eCode = $e->getCode();
-
-  echo implode('', [
-    Helpers::createElement('h3', [], 'Error:'),
-    Helpers::createElement('p', [], $e . '({' . $eCode . '})')
-  ]);
-
-  if($eCode === 1 || $eCode === 2)
-  {
-    echo Helpers::createElementHtml(
-      'p', [], sprintf(
-        'This error occurs when the requested directory is below the directory of the PHP file. %s',
-        $eCode === 1
-          ? (
-              '<br/>You can try setting <b>path_checking</b> to <b>weak</b> ' . 
-              'if you are working with symbolic links etc.'
-            )
-          : ''
-      )
-    );
-  }
-
-  exit(Helpers::createElement(
-    'p', [], 'Fatal error - Exiting.')
-  );
+  /* These codes belong to the existing constructor's path checks only. */
+  $statuses = [1 => 403, 2 => 403, 3 => 403, 4 => 404];
+  respondToError(isset($statuses[$e->getCode()]) ? $statuses[$e->getCode()] : 500, $e);
 }
 
 /* Get directory data */
@@ -2593,4 +2610,4 @@ $jsConfig = constructJsConfig(
     <script type="text/javascript">function getScrollbarWidth(){const e=document.createElement("div");e.style.visibility="hidden",e.style.overflow="scroll",e.style.msOverflowStyle="scrollbar",document.body.appendChild(e);const t=document.createElement("div");e.appendChild(t);const l=e.offsetWidth-t.offsetWidth;return e.parentNode.removeChild(e),l};document.documentElement.style.setProperty('--scrollbar-width', getScrollbarWidth() + 'px');</script>
     <?=$getInjectable('footer');?>
   </body>
-</html>
+</html><?php ob_end_flush(); ?>
