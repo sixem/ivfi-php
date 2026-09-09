@@ -685,7 +685,9 @@ export default class galleryClass
 
 		for(let i = 0; i <= items.length - 1; i++)
 		{
-			buffer[i] = `<tr title="${items[i].name}"><td>${items[i].name}</td></tr>`;
+			const row = DOM.new('tr', { title: items[i].name });
+			row.appendChild(DOM.new('td', { text: items[i].name }));
+			buffer[i] = row.outerHTML;
 		}
 
 		/* Set directly all at once instead of appending (faster .. ? probably?) */
@@ -761,7 +763,9 @@ export default class galleryClass
 
 		container.innerHTML = Object.keys(options).map((site: string) =>
 		{
-			return `<a class="reverse-link" target="_blank" href="${options[site]}">${site}</a>`;
+			return DOM.new('a', {
+				class: 'reverse-link', target: '_blank', href: options[site], text: site
+			}).outerHTML;
 		}).join('');
 
 		this.container.querySelector(
@@ -857,13 +861,13 @@ export default class galleryClass
 			});
 
 			const buffer: Array<string> = [
-				`<span>${index + 1} of ${max}</span>`,
-				`<a target="_blank" href="${url}">${name}</a>`
+				DOM.new('span', { text: `${index + 1} of ${max}` }).outerHTML,
+				DOM.new('a', { target: '_blank', href: url, text: name }).outerHTML
 			];
 
 			if(Object.prototype.hasOwnProperty.call(item, 'size') && !this.options.mobile)
 			{
-				buffer.push(`<span>${item.size}</span>`);
+				buffer.push(DOM.new('span', { text: item.size }).outerHTML);
 			}
 
 			left.innerHTML = buffer.join('');

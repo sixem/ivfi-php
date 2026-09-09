@@ -36,6 +36,25 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      - name: Setup PHP
+        if: matrix.node-version == '24'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: dom, mbstring, xml, xmlwriter
+          tools: composer:v2
+          coverage: none
+
+      - name: Install PHP test dependencies
+        if: matrix.node-version == '24'
+        run: |
+          composer validate --strict
+          composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run PHP regression tests
+        if: matrix.node-version == '24'
+        run: composer test -- --testdox
+
       - name: Install release packaging tools
         if: matrix.node-version == '24'
         run: sudo apt-get update && sudo apt-get install -y p7zip-full jq
