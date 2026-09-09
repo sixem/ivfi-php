@@ -1,4 +1,7 @@
 node_modules/
+/vendor/
+/.phpunit.cache/
+/phpunit.xml
 build/
 docker/public
 *.7z
