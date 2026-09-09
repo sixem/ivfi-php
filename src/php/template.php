@@ -224,8 +224,14 @@ class Helpers
     return $needle === '' || strrpos($haystack, $needle, - strlen($haystack)) !== false;
   }
 
+  /** Encodes plain text for HTML text nodes and quoted attribute values. */
+  public static function escape($value)
+  {
+    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+  }
+
   /**
-   * Creates a stringed HTML element
+   * Creates an HTML element with escaped text and attribute values.
    *
    * @param String  $tag          Element type
    * @param Array   $attributes   Element attributes
@@ -234,6 +240,16 @@ class Helpers
    * @return String
    */ 
   public static function createElement($tag, $attributes, $text = NULL)
+  {
+    return self::createElementHtml($tag, $attributes, self::escape($text));
+  }
+
+  /**
+   * Creates an element containing trusted HTML (or trusted inline CSS/JS).
+   * Escape dynamic text before composing this content. Attribute values are
+   * still escaped here; tag and attribute names must be supplied by the caller.
+   */
+  public static function createElementHtml($tag, $attributes, $html = '')
   {
     /** Avoid using closing tags for these element types */
     $useClosing = !in_array($tag, [
@@ -244,14 +260,20 @@ class Helpers
 
     foreach($attributes as $key => $value)
     {
-      $HTML .= $value == NULL
+      /* Attribute names cannot be escaped; reject malformed names instead. */
+      if(!preg_match('/^[A-Za-z_:][A-Za-z0-9_:.-]*$/D', $key))
+      {
+        continue;
+      }
+
+      $HTML .= ($value === NULL || $value === '' || $value === false)
         ? (' ' . $key)
-        : (' ' . $key . '="' . $value . '"');
+        : (' ' . $key . '="' . self::escape($value) . '"');
     }
 
     $HTML .= $useClosing
-      ? ('>' . ($text ? $text : '') . '</' . $tag . '>')
-      : ($text ? $text : '') . '>';
+      ? ('>' . $html . '</' . $tag . '>')
+      : ($html . '>');
 
     return $HTML;
   }
@@ -1028,17 +1050,17 @@ class Indexer extends Helpers
       }
 
       /** Create file name column */
-      $tdFileName = parent::createElement('td', [
+      $tdFileName = parent::createElementHtml('td', [
         'data-raw' => $fileName
       ], parent::createElement(
         'a', $anchorAttributes, $fileName
       ));
 
       /** Create modified column */
-      $tdModified = parent::createElement('td', [
+      $tdModified = parent::createElementHtml('td', [
         'data-raw' => $fileModified[0]
       ], implode('', [
-        parent::createElement(
+        parent::createElementHtml(
           'span', [], $fileModified[1]
         )
       ]));
@@ -1049,7 +1071,7 @@ class Indexer extends Helpers
       ], $fileSize[1]);
 
       /** Create save anchor */
-      $anchorSave = parent::createElement('a', [
+      $anchorSave = parent::createElementHtml('a', [
         'href' => $fileUrl,
         'filename' => $fileName,
         'download' => ''
@@ -1063,13 +1085,13 @@ class Indexer extends Helpers
       ]));
 
       /** Create save column */
-      $tdSave = parent::createElement('td', [
+      $tdSave = parent::createElementHtml('td', [
         'data-raw' => $fileType[0],
         'class' => 'download'
       ], $anchorSave);
 
       /** Create container and add to rows */
-      $rows[] = parent::createElement('tr', [
+      $rows[] = parent::createElementHtml('tr', [
         'class' => 'file'
       ], implode('', [
         $tdFileName,
@@ -1121,7 +1143,7 @@ class Indexer extends Helpers
       }
 
       /** Create directory name column */
-      $tdDirectoryName = parent::createElement('td', [
+      $tdDirectoryName = parent::createElementHtml('td', [
         'data-raw' => $dir[1]
       ], parent::createElement(
         'a', [
@@ -1130,10 +1152,10 @@ class Indexer extends Helpers
       ));
 
       /** Create modified column */
-      $tdModified = parent::createElement('td', [
+      $tdModified = parent::createElementHtml('td', [
         'data-raw' => $dir['modified'][0]
       ], implode('', [
-        parent::createElement(
+        parent::createElementHtml(
           'span', [], $dir['modified'][1]
         )
       ]));
@@ -1144,12 +1166,12 @@ class Indexer extends Helpers
         : [], $size
       );
 
-      $tdType = parent::createElement(
+      $tdType = parent::createElementHtml(
         'td', [], parent::createElement('span', [], '-')
       );
 
       /** Create container and add to rows */
-      $rows[] = parent::createElement('tr', [
+      $rows[] = parent::createElementHtml('tr', [
         'class' => 'directory'
       ], implode('', [
         $tdDirectoryName,
@@ -1229,14 +1251,14 @@ class Indexer extends Helpers
     }
 
     /** Construct HTML */
-    $HTML = parent::createElement('tr', [
+    $HTML = parent::createElementHtml('tr', [
       'class' => 'parent'
     ], implode('', array_merge([
-      parent::createElement('td', [], parent::createElement('a', [
+      parent::createElementHtml('td', [], parent::createElement('a', [
           'href' => $parentHref
         ], '[Parent Directory]'))
       ],
-      array_fill(0, 3, parent::createElement('td', [], parent::createElement(
+      array_fill(0, 3, parent::createElementHtml('td', [], parent::createElement(
         'span', [], '-'
       ))))
     ));
@@ -1507,9 +1529,10 @@ class Indexer extends Helpers
         ], $format);
       }
     } else {
-      $formatted = self::formatDate(
+      /* Both branches return safe HTML for the date-column wrapper. */
+      $formatted = parent::escape(self::formatDate(
         $this->format['date'][0], $stamp, $modifier
-      );
+      ));
     }
 
     return [$stamp, $formatted];
@@ -2007,7 +2030,7 @@ try
 
   if($eCode === 1 || $eCode === 2)
   {
-    echo Helpers::createElement(
+    echo Helpers::createElementHtml(
       'p', [], sprintf(
         'This error occurs when the requested directory is below the directory of the PHP file. %s',
         $eCode === 1
@@ -2137,7 +2160,7 @@ if($config['single_page'])
         $additionalCss = '';
       }
 
-      $baseStylesheet = Helpers::createElement('style', [
+      $baseStylesheet = Helpers::createElementHtml('style', [
         'type' => 'text/css'
       ], $styleData);
     }
@@ -2254,7 +2277,7 @@ function buildHeader(
   /** Additional stylesheets */
   if(!empty($additionalCss))
   {
-    $header[] = Helpers::createElement('style', [
+    $header[] = Helpers::createElementHtml('style', [
       'type' => 'text/css'
     ],  $additionalCss);
   }
@@ -2293,14 +2316,14 @@ function constructServerNameNotice()
 function constructFooter($renderTime, $currentDirectory, $config, $version)
 {
   $footerHtml = [
-    Helpers::createElement('div', [
+    Helpers::createElementHtml('div', [
       'class' => 'currentPageInfo'
     ], sprintf('Page generated in %s', Helpers::createElement('span', [
       'class' => 'generationTime'
     ], sprintf("%.6f", $renderTime) . 's')))
   ];
 
-  $footerHtml[] = Helpers::createElement('div', [], sprintf(
+  $footerHtml[] = Helpers::createElementHtml('div', [], sprintf(
     'Browsing %s%s', Helpers::createElement(
       'span', [], $currentDirectory
     ), constructServerNameNotice()
@@ -2308,7 +2331,7 @@ function constructFooter($renderTime, $currentDirectory, $config, $version)
 
   if($config['credits'] !== false)
   {
-    $footerHtml[] = Helpers::createElement('div', [
+    $footerHtml[] = Helpers::createElementHtml('div', [
       'class' => 'referenceGit'
     ], implode('',  [
       Helpers::createElement('a', [
@@ -2427,8 +2450,8 @@ function constructJsConfig($config, $sorting, $timestamp, $bust, $theme)
     'mobile' => false
   ];
 
-  /** Return JSON-encoded configuration */
-  return json_encode($jsConfig);
+  /* JSON is embedded in a script element, not an HTML text node. */
+  return json_encode($jsConfig, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 }
 
 /** Set metadata behavior */
@@ -2509,7 +2532,7 @@ $jsConfig = constructJsConfig(
     <div class="topBar">
         <div class="extend">&#9881;</div>
         <div class="directoryInfo">
-          <div data-count="size"><?=$data['size']['readable'];?></div>
+          <div data-count="size"><?=Helpers::escape($data['size']['readable']);?></div>
           <?=generateCountDiv(
             $data['recent']['file'], $counts['files'], 'file', 'files'
           ) . PHP_EOL;?>
