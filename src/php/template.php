@@ -387,24 +387,55 @@ class Helpers
   }
 
   /**
-   * Checks if the passed path is above a base directory
+   * Checks if a path is the base directory itself or a descendant.
    * 
-   * $useRealpath resolves the paths using a string-based method
-   * as opposed to calling `realpath()` directly.
+   * Strict checking resolves symlinks; lexical checking only removes dot segments.
    *
    * @param String   $path          The path to check
    * @param String   $base          The base path
    * @param Boolean  $useRealpath   Whether to use realpath
    * 
-   * @return String
+   * @return Boolean
    */ 
   public static function isAboveCurrent($path, $base, $useRealpath = true)
   {
-    return self::startsWith($useRealpath
-      ? realpath($path)
-      : self::removeDotSegments($path), $useRealpath
-        ? realpath($base)
-        : self::removeDotSegments($base));
+    if($path === '' || $base === '')
+    {
+      return false;
+    }
+
+    if($useRealpath)
+    {
+      $path = realpath($path);
+      $base = realpath($base);
+      if($path === false || $base === false)
+      {
+        return false;
+      }
+    }
+
+    /* Windows accepts both separators; on Unix a backslash is a filename character. */
+    if(DIRECTORY_SEPARATOR === '\\')
+    {
+      $path = str_replace('\\', '/', $path);
+      $base = str_replace('\\', '/', $base);
+    }
+
+    if(!$useRealpath)
+    {
+      $path = self::removeDotSegments($path);
+      $base = self::removeDotSegments($base);
+      if($path === '' || $base === '')
+      {
+        return false;
+      }
+    }
+
+    $path = rtrim($path, '/');
+    $base = rtrim($base, '/');
+
+    /* Appending the separator also preserves '/' as a valid base. */
+    return $path === $base || self::startsWith($path, $base . '/');
   }
 
   /**
