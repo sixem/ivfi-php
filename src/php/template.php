@@ -939,11 +939,10 @@ class Indexer extends Helpers
         } else if($options['path_checking'] === 'weak')
         {
           /**
-           * If path checking is 'weak' do another test using a 'realpath' alternative
-           * instead (string-based approach which doesn't solve links)
+           * Weak mode permits external symlink targets only through paths
+           * lexically inside the base directory, without resolving the links.
            */
-          if(self::isAboveCurrent($this->path, $this->relative, false)
-            || is_link($this->path))
+          if(self::isAboveCurrent($this->path, $this->relative, false))
           {
             $this->requested = $requested;
           } else {
