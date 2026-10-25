@@ -1,0 +1,90 @@
+.overlayScrollArea {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+.overlayScrollbar {
+  --scrollbar-thumb-color: rgb(210 210 220 / 30%);
+
+  position: fixed;
+  width: 12px;
+  z-index: 2;
+  touch-action: none;
+  user-select: none;
+  outline: none;
+  transition: opacity 180ms ease;
+
+  &[data-hover-only="true"]:not([data-hovered], :focus-visible, [data-dragging="true"]) {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &[data-scrollable="false"] {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  &:hover,
+  &:focus-visible,
+  &[data-dragging="true"] {
+    --scrollbar-thumb-color: rgb(210 210 220 / 48%);
+  }
+
+  > .overlayScrollbarThumb {
+    position: absolute;
+    top: 0;
+    right: 4px;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--scrollbar-thumb-color);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.scrollShadows {
+  position: fixed;
+  z-index: 1;
+  pointer-events: none;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 12px;
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  &::before {
+    top: 0;
+    background: linear-gradient(to bottom, rgb(0 0 0 / 65%), transparent);
+  }
+
+  &::after {
+    bottom: 0;
+    background: linear-gradient(to top, rgb(0 0 0 / 65%), transparent);
+  }
+
+  &[data-above]::before,
+  &[data-below]::after {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before,
+    &::after {
+      transition: none;
+    }
+  }
+}

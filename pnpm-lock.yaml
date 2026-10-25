@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      client-zip:
+        specifier: 2.5.1
+        version: 2.5.1
       js-cookie:
         specifier: ^3.0.7
         version: 3.0.7
@@ -468,6 +471,9 @@ packages:
   clean-css@4.2.3:
     resolution: {integrity: sha512-VcMWDN54ZN/DS+g58HYL5/n4Zrqe8vHJpGA8KdgUXFU4fuP/aHNw8eld9SyEIyabIMJX/0RaY/fplOo5hYLSFA==}
     engines: {node: '>= 4.0'}
+
+  client-zip@2.5.1:
+    resolution: {integrity: sha512-yOvNSBsQX1B7wtdvIVXJEIIShrlPiX+adhli7sWvQhsx3nX1DjvpSt+AwOxaX+3DCsT/Yx0nRy5hIjRLIYfebw==}
 
   clone-deep@4.0.1:
     resolution: {integrity: sha512-neHB9xuzh/wk0dIHweyAXv2aPGZIVk3pLMe+/RNzINf17fe0OG96QroktYAUm7SM1PBnzTabaLboqqxDyMU+SQ==}
@@ -2457,6 +2463,8 @@ snapshots:
   clean-css@4.2.3:
     dependencies:
       source-map: 0.6.1
+
+  client-zip@2.5.1: {}
 
   clone-deep@4.0.1:
     dependencies:

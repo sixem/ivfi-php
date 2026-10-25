@@ -78,7 +78,7 @@ final class OutputEncodingTest extends TestCase
         self::assertSame('Index of /photos/', $page->evaluate('string(//title)'));
         self::assertSame('café & tea.jpg', $page->evaluate('string(//tr[@class="file"]/td[1]/a)'));
         self::assertSame('/public/photos/café & tea.jpg', rawurldecode($page->evaluate('string(//tr[@class="file"]/td[1]/a/@href)')));
-        self::assertSame(2, $page->query('//tr[@class="file"]/td[4]/a/span')->length);
+        self::assertSame(3, $page->query('//tr[@class="file"]/td')->length);
         self::assertSame(1, $page->query('//tr[@class="parent"]/td/a')->length);
     }
 
@@ -95,7 +95,6 @@ final class OutputEncodingTest extends TestCase
             self::assertSame($expected, $page->evaluate('string(' . $row . '/td[1]/@data-raw)'));
             self::assertSame('/' . $expected . ($type === 'directory' ? '/' : ''), rawurldecode($page->evaluate('string(' . $row . '/td[1]/a/@href)')));
         }
-        self::assertSame($name . '.jpg', $page->evaluate('string(//a[@download]/@filename)'));
     }
 
     public function testTitleBreadcrumbsAndPrependValuesStayEncoded(): void

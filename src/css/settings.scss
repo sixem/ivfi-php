@@ -1,0 +1,132 @@
+@use "variables";
+
+html > body > dialog.dialog .settingsOptions {
+  > .section {
+    padding: 8px 0 4px;
+
+    + .section {
+      margin-top: 4px;
+    }
+
+    > .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 4px 4px;
+      color: variables.$accent-color;
+      font-size: 0.8rem;
+      font-weight: 600;
+      line-height: 1.6;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+
+      &::after {
+        content: "";
+        flex: 1;
+        height: 2px;
+        background: variables.$divider-color;
+      }
+    }
+
+    > .option {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 3px 12px;
+      box-sizing: border-box;
+      min-height: 32px;
+      padding: 6px 4px;
+      border-radius: 2px;
+
+      + .option {
+        border-top: 2px solid variables.$divider-color;
+      }
+
+      > .option-text {
+        min-width: 0;
+        font-weight: 500;
+        user-select: none;
+      }
+
+      > .option-control {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        min-width: 0;
+      }
+
+      &.hasSelect {
+        grid-template-columns: minmax(0, 1fr) min(8rem, 46%);
+
+        > .option-control {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  select[hidden] {
+    display: none;
+  }
+
+  .selectControl {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 1.75rem;
+    padding: 4px 7px;
+    border: 2px solid variables.$divider-color;
+    border-radius: 5px;
+    background: #000;
+    color: inherit;
+    font: 500 0.8rem / 1.4 Inter, sans-serif;
+    text-align: left;
+    cursor: pointer;
+    outline: none;
+
+    > span {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    > svg {
+      flex: none;
+      width: 1rem;
+      height: 1rem;
+      color: variables.$accent-color;
+      transform: rotate(0deg);
+      transform-origin: center;
+      transition: transform 180ms ease;
+    }
+
+    &:hover,
+    &:focus-visible,
+    &[aria-expanded="true"] {
+      border-color: variables.$accent-color;
+    }
+
+    &[aria-expanded="true"] > svg {
+      transform: rotate(180deg);
+    }
+  }
+
+  select:not([hidden]) {
+    padding: 4px 7px;
+    border: 2px solid variables.$divider-color;
+    border-radius: 5px;
+    background: #000;
+    color: inherit;
+    font: inherit;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .selectControl > svg {
+      transition: none;
+    }
+  }
+}

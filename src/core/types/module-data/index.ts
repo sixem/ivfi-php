@@ -13,14 +13,8 @@ type TDataText = {
 	settingsLabels?: {
 		[key: string]: {
 			text?: string;
-			description?: string;
 		}
 	};
-	menuLabels?: {
-		[key: string]: {
-			text?: string;
-		}
-	}
 };
 
 type TDataComponents = {

@@ -1,52 +1,35 @@
 /**
  * Copies a text to the clipboard
  */
-export const clipboardCopy = (text: string): void =>
+export const clipboardCopy = async (text: string): Promise<boolean> =>
 {
-	if(!navigator.clipboard)
+	if(navigator.clipboard)
 	{
-		const textArea: HTMLTextAreaElement = document.createElement('textarea');
-		textArea.value = text;
-		
-		textArea.style.top = '0';
-		textArea.style.left = '0';
-		textArea.style.position = 'fixed';
-
-		document.body.appendChild(textArea);
-		textArea.focus();
-		textArea.select();
-
 		try
 		{
-			const successful = document.execCommand('copy');
-
-			console.log('clipboardCopy', {
-				type: 'Fallback',
-				successful: successful
-			});
-		} catch (err) {
-			console.log('clipboardCopy', {
-				type: 'Fallback',
-				successful: false
-			});
+			await navigator.clipboard.writeText(text);
+			return true;
+		} catch {
+			return false;
 		}
-
-		document.body.removeChild(textArea);
-
-		return;
 	}
 
-	navigator.clipboard.writeText(text).then(() =>
+	/* Clipboard fallback for insecure contexts */
+	const previous = document.activeElement;
+	const textArea = document.createElement('textarea');
+	textArea.value = text;
+	textArea.readOnly = true;
+	textArea.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+	document.body.append(textArea);
+	try
 	{
-		console.log('clipboardCopy', {
-			type: 'async',
-			successful: true
-		});
-	}).catch(() =>
-	{
-		console.log('clipboardCopy', {
-			type: 'async',
-			successful: false
-		});
-	});
+		textArea.focus({ preventScroll: true });
+		textArea.select();
+		return document.execCommand('copy');
+	} catch {
+		return false;
+	} finally {
+		textArea.remove();
+		if(previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true });
+	}
 };

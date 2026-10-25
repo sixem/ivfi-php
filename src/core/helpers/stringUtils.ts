@@ -13,19 +13,17 @@ export const capitalize = (input: string): string =>
 /**
  * Shortens a string
  */
-export const shortenString = (input: string, cutoff: number): string =>
+export const shortenString = (input: string, cutoff = 28, separator = ' .. '): string =>
 {
-	cutoff = cutoff || 28;
+	const characters = Array.from(input);
+	if(characters.length <= cutoff) return input;
+	const edge = Math.max(1, Math.floor((cutoff - separator.length) / 2));
+	return characters.slice(0, edge).join('') + separator + characters.slice(-edge).join('');
+};
 
-	if(input.length > cutoff)
-	{
-		return [
-			input.substring(0, Math.floor((cutoff / 2) - 2)),
-			input.substring(input.length - (Math.floor((cutoff / 2) - 2)), input.length)
-		].join(' .. ');
-	} else {
-		return input;
-	}
+export const hasControlCharacters = (input: string): boolean =>
+{
+	return Array.from(input).some(character => character.charCodeAt(0) < 32);
 };
 
 /**

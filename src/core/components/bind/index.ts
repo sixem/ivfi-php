@@ -3,7 +3,7 @@ import { config } from '../../config/config';
 import data from '../../config/data';
 /** Modules */
 import { eventHooks } from '../../modules/event-hooks';
-import { DOM, getScrollTop, setVideoVolume } from '../../helpers';
+import { DOM, setVideoVolume } from '../../helpers';
 import { log } from '../../modules/logger';
 
 /** Constants */
@@ -33,50 +33,26 @@ const scrollEvents: Array<string> = ['DOMMouseScroll', 'mousewheel', 'wheel'];
 /* Called `onScroll` — Shows or hides the current path in the top bar */
 events.handleTopBarVisibility = (): void =>
 {
-	interface IQuickPath extends HTMLElement {
-		_isVisible?: boolean;
-	}
-
 	const path = selector.use('PATH') as HTMLElement;
+	const topBar = document.body.querySelector(':scope > div.topBar') as HTMLElement;
+	let top = topBar.querySelector<HTMLElement>(':scope > div.directoryInfo > div.quickPath');
 
-	let top: IQuickPath = document.body.querySelector(
-		':scope > div.topBar > div.directoryInfo > div.quickPath'
-	);
-
-	const visible: boolean = getScrollTop() < (path.offsetTop + path.offsetHeight);
-
-	if(!visible)
+	/* Reuse the path element for visibility transitions */
+	if(!top)
 	{
-		if(!top)
-		{
-			top = DOM.new('div', {
-				'class' : 'quickPath',
-				'data-view' : 'desktop'
-			});
-
-			top.innerHTML = path.innerHTML;
-
-			document.body.querySelector(':scope > div.topBar > div.directoryInfo').append(top);
-		}
-
-		if(!top._isVisible)
-		{
-			if(top._isVisible !== false)
-			{
-				requestAnimationFrame((): void => top.classList.add('visible'));
-			} else {
-				top.classList.add('visible');
-			}
-
-			top._isVisible = true;
-		}
-	} else {
-		if(top && top._isVisible)
-		{
-			top.classList.remove('visible');
-			top._isVisible = false;
-		}
+		top = DOM.new('div', {
+			'class': 'quickPath',
+			'data-view': 'desktop'
+		});
+		top.innerHTML = path.innerHTML;
+		top.setAttribute('data-tooltip', path.textContent.trim());
+		topBar.querySelector(':scope > div.directoryInfo').append(top);
 	}
+
+	const visible = path.getBoundingClientRect().bottom <= topBar.getBoundingClientRect().bottom;
+	top.classList.toggle('visible', visible);
+	top.setAttribute('aria-hidden', String(!visible));
+	top.toggleAttribute('inert', !visible);
 };
 
 events.handlePreviewScroll = (event: WheelEvent): void =>
@@ -190,13 +166,29 @@ export class componentBind
 	{
 		eventHooks.listen(window, 'keydown', 'mainKeyDown', (event: KeyboardEvent) =>
 		{
+			if(document.documentElement.hasAttribute('dialog-is-visible')
+				|| document.documentElement.hasAttribute('context-menu-is-visible')
+				|| document.documentElement.hasAttribute('gallery-is-visible')) return;
+
+			if((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey
+				&& event.key.toLowerCase() === 'a')
+			{
+				const target = event.target;
+				if(event.defaultPrevented || event.isComposing || (target instanceof HTMLElement
+					&& (target.isContentEditable || target.closest('input, textarea, select, [role="textbox"]')))) return;
+				event.preventDefault();
+				window.getSelection()?.removeAllRanges();
+				data.components.main.selection.selectAll();
+				return;
+			}
+
 			/* Show filter */
 			if(event.shiftKey && event.code === Keys.f)
 			{
 				event.preventDefault();
 				data.components.filter.toggle();
 
-			/* Hides any overlays */
+			/* Dismiss overlays before clearing selection */
 			} else if(event.code === Keys.escape)
 			{
 				data.components.main.overlay.hide((state: boolean) =>
@@ -214,7 +206,6 @@ export class componentBind
 						|| !(document.activeElement === container.querySelector('input')))
 					{
 						data.components.gallery.load(null);
-						data.components.main.menu.toggle(false);
 					}
 				}
 			}

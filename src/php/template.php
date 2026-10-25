@@ -805,11 +805,7 @@ $footer = [
   'enabled' => is_array(
     $config['footer'])
       ? ($config['footer']['enabled'] ? true : false)
-      : ($config['footer'] ? true : false),
-  'show_server_name' => is_array(
-    $config['footer'])
-      ? $config['footer']['show_server_name']
-      : true
+      : ($config['footer'] ? true : false)
 ];
 
 /**
@@ -1143,34 +1139,13 @@ class Indexer extends Helpers
         'data-raw' => $fileSize[0] === -1 ? 0 : $fileSize[0]
       ], $fileSize[1]);
 
-      /** Create save anchor */
-      $anchorSave = parent::createElementHtml('a', [
-        'href' => $fileUrl,
-        'filename' => $fileName,
-        'download' => ''
-      ], implode('', [
-        parent::createElement(
-          'span', ['data-view' => 'desktop'], '[Download]'
-        ),
-        parent::createElement(
-          'span', ['data-view' => 'mobile'], '[Save]'
-        )
-      ]));
-
-      /** Create save column */
-      $tdSave = parent::createElementHtml('td', [
-        'data-raw' => $fileType[0],
-        'class' => 'download'
-      ], $anchorSave);
-
       /** Create container and add to rows */
       $rows[] = parent::createElementHtml('tr', [
         'class' => 'file'
       ], implode('', [
         $tdFileName,
         $tdModified,
-        $tdSize,
-        $tdSave
+        $tdSize
       ]));
     }
 
@@ -1239,18 +1214,13 @@ class Indexer extends Helpers
         : [], $size
       );
 
-      $tdType = parent::createElementHtml(
-        'td', [], parent::createElement('span', [], '-')
-      );
-
       /** Create container and add to rows */
       $rows[] = parent::createElementHtml('tr', [
         'class' => 'directory'
       ], implode('', [
         $tdDirectoryName,
         $tdModified,
-        $tdSize,
-        $tdType
+        $tdSize
       ]));
 
       if(($mostRecentTimestamp === 0)
@@ -1268,15 +1238,14 @@ class Indexer extends Helpers
   }
 
   /**
-   * Gets file/directory information and constructs the HTML of the table
+   * Gets file/directory information and constructs the HTML of the table.
    *
-   * @param String    $sorting    Server-side sorting to use
-   * @param Integer   $sortItems  What type of items to sort
-   * @param String    $sortType   What to sort by
-   * @param Boolean   $sortType   Whether to use mb_* functions for sorting
-   * 
-   * @return String
-   */ 
+   * @param Boolean $sorting Whether to sort the items
+   * @param Integer $sortItems What item types to sort
+   * @param String $sortType What to sort by
+   * @param Boolean $useMb Whether to use mb_* functions for sorting
+   * @return Array
+   */
   public function buildTable($sorting = false, $sortItems = 0, $sortType = 'modified', $useMb = false)
   {
     /* Get client timezone offset */
@@ -1331,7 +1300,7 @@ class Indexer extends Helpers
           'href' => $parentHref
         ], '[Parent Directory]'))
       ],
-      array_fill(0, 3, parent::createElementHtml('td', [], parent::createElement(
+      array_fill(0, 2, parent::createElementHtml('td', [], parent::createElement(
         'span', [], '-'
       ))))
     ));
@@ -2340,41 +2309,24 @@ function buildHeader(
   return $header;
 }
 
-/** Server name constructor */
-function constructServerNameNotice()
-{
-  return !empty($_SERVER['SERVER_NAME']) ? sprintf(
-    ' @ %s', Helpers::createElement('a', [
-      'href' => '/'
-    ], $_SERVER['SERVER_NAME'])
-  ) : '';
-}
-
 /**
  * Builds the footer for the page
  *
  * @param Float     $renderTime       Render time
- * @param String    $currentDirectory Current directory
  * @param Array     $config           Configuration values
  * @param String    $version          Current version
  * 
  * @return String
  */ 
-function constructFooter($renderTime, $currentDirectory, $config, $version)
+function constructFooter($renderTime, $config, $version)
 {
   $footerHtml = [
     Helpers::createElementHtml('div', [
       'class' => 'currentPageInfo'
-    ], sprintf('Page generated in %s', Helpers::createElement('span', [
+    ], sprintf('Generated in %s', Helpers::createElement('span', [
       'class' => 'generationTime'
-    ], sprintf("%.6f", $renderTime) . 's')))
+    ], sprintf('%.0f', $renderTime * 1000) . ' ms')))
   ];
-
-  $footerHtml[] = Helpers::createElementHtml('div', [], sprintf(
-    'Browsing %s%s', Helpers::createElement(
-      'span', [], $currentDirectory
-    ), constructServerNameNotice()
-  ));
 
   if($config['credits'] !== false)
   {
@@ -2383,7 +2335,7 @@ function constructFooter($renderTime, $currentDirectory, $config, $version)
     ], implode('',  [
       Helpers::createElement('a', [
         'target' => '_blank',
-        'href' => 'https://git.five.sh/ivfi/'
+        'href' => 'https://github.com/sixem/ivfi-php/'
       ], 'IVFi'),
       Helpers::createElement('span', [], $version)
     ]));
@@ -2404,16 +2356,21 @@ function constructFooter($renderTime, $currentDirectory, $config, $version)
  * 
  * @return String
  */ 
-function generateCountDiv($modified, $count, $sString, $pString)
+function generateCountSpan($modified, $count, $sString, $pString)
 {
   $attributes = ['data-count' => $pString];
+
+  if($count === 0)
+  {
+    $attributes['hidden'] = NULL;
+  }
 
   if($modified)
   {
     $attributes['data-raw'] = $modified;
   }
 
-  return Helpers::createElement('div', $attributes, sprintf(
+  return Helpers::createElement('span', $attributes, sprintf(
     '%s %s', $count, ($count === 1 ? $sString : $pString)
   ));
 }
@@ -2577,15 +2534,15 @@ $jsConfig = constructJsConfig(
   <body class="rootDirectory<?=$compact ? ' compact' : ''?><?=!$footer['enabled'] ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
     <?=$getInjectable('body');?>
     <div class="topBar">
-        <div class="extend">&#9881;</div>
+        <div class="topActions" role="group" aria-label="Directory actions"></div>
         <div class="directoryInfo">
-          <div data-count="size"><?=Helpers::escape($data['size']['readable']);?></div>
-          <?=generateCountDiv(
-            $data['recent']['file'], $counts['files'], 'file', 'files'
-          ) . PHP_EOL;?>
-          <?=generateCountDiv(
-            $data['recent']['directory'], $counts['directories'], 'directory', 'directories'
-          );?>
+          <div class="directorySummary">
+            <span data-count="size"><?=Helpers::escape($data['size']['readable']);?></span><span class="itemCounts"<?=$itemsTotal === 0 ? ' hidden' : '';?>> (<?=generateCountSpan(
+              $data['recent']['file'], $counts['files'], 'file', 'files'
+            );?><span class="countSeparator"<?=$counts['files'] === 0 || $counts['directories'] === 0 ? ' hidden' : '';?>>, </span><?=generateCountSpan(
+              $data['recent']['directory'], $counts['directories'], 'directory', 'directories'
+            );?>)</span>
+          </div>
         </div>
     </div>
 
@@ -2599,22 +2556,17 @@ $jsConfig = constructJsConfig(
       <thead>
         <tr>
           <th>
-            <span sortable="true" title="Sort by filename">Filename</span>
+            <span sortable="true" data-tooltip="Sort by filename">Filename</span>
             <span class="sortingIndicator"></span>
           </th>
 
           <th>
-            <span sortable="true" title="Sort by modification date">Modified</span>
+            <span sortable="true" data-tooltip="Sort by modification date">Modified</span>
             <span class="sortingIndicator"></span>
           </th>
 
           <th>
-            <span sortable="true" title="Sort by filesize">Size</span>
-            <span class="sortingIndicator"></span>
-          </th>
-
-          <th>
-            <span sortable="true" title="Sort by filetype">Type</span>
+            <span sortable="true" data-tooltip="Sort by filesize">Size</span>
             <span class="sortingIndicator"></span>
           </th>
         </tr>
@@ -2625,12 +2577,12 @@ $jsConfig = constructJsConfig(
       </table>
     </div>
 
-    <?=$config['footer']['enabled'] ? (constructFooter(
-      (microtime(true) - $render), $indexer->getCurrentDirectory(), $config, $version)
+    <?=$footer['enabled'] ? (constructFooter(
+      (microtime(true) - $render), $config, $version)
     ) : '';?>
 
-    <div class="filterContainer" style="display: none;">
-        <input type="text" placeholder="Search .." value="">
+    <div class="filterContainer" id="directory-filter" style="display: none;">
+      <input type="text" id="directory-filter-input" name="filter" spellcheck="false" placeholder="Search .." value="">
     </div>
 
     <!-- [https://git.five.sh/ivfi/ — The image and video friendly indexer]  -->  

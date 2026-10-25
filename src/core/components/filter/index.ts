@@ -159,15 +159,9 @@ componentFilter.apply = (query = ''): void =>
 
 	interface ITop {
 		container: HTMLElement;
-		size?: {
-			textContent: string;
-		};
-		files?: {
-			textContent: string;
-		};
-		directories?: {
-			textContent: string;
-		};
+		size?: HTMLElement;
+		files?: HTMLElement;
+		directories?: HTMLElement;
 	}
 
 	const top: ITop = {
@@ -205,7 +199,12 @@ componentFilter.apply = (query = ''): void =>
 		(filterData.reset) ? data.sets.defaults.topValues.directories : 
 			`${filterData.shown.directories} ${filterData.shown.directories === 1 ? 'directory' : 'directories'}`;
 
-	const option: HTMLElement = document.body.querySelector(':scope > div.menu > #gallery');
+	top.files.hidden = parseInt(top.files.textContent, 10) === 0;
+	top.directories.hidden = parseInt(top.directories.textContent, 10) === 0;
+	(top.container.querySelector('.itemCounts') as HTMLElement).hidden = top.files.hidden && top.directories.hidden;
+	(top.container.querySelector('.countSeparator') as HTMLElement).hidden = top.files.hidden || top.directories.hidden;
+
+	const option = document.querySelector('.topActions > button[data-action="gallery"]') as HTMLButtonElement;
 
 	const previews = (selector.use('TABLE_CONTAINER') as HTMLElement).querySelectorAll(
 		'table tr.file:not(.filtered) a.preview'
@@ -216,20 +215,9 @@ componentFilter.apply = (query = ''): void =>
 		console.error(`Filter regex error: ${errorData}`);
 	}
 
-	/* Hide or show the gallery menu option */
-	if(!filterData.reset && previews === 0 && option)
-	{
-		if(option.style.display !== 'none')
-		{
-			option.style.display = 'none';
-		}
-	} else if((previews > 0 || filterData.reset) && option)
-	{
-		if(option.style.display === 'none')
-		{
-			option.style.display = 'block';
-		}
-	}
+	if(option) option.disabled = previews === 0;
+	data.components.main.selection.refresh();
+
 };
 
 componentFilter.getMatch = (input: string, query: string) =>
@@ -269,6 +257,8 @@ componentFilter.toggle = (): void =>
 	}
 
 	input.focus();
+	const button = document.querySelector('.topActions > button[data-action="filter"]');
+	if(button) button.setAttribute('aria-expanded', String(container.style.display !== 'none'));
 };
 
 export {

@@ -55,6 +55,8 @@ The releases and individual builds are available [here](https://git.five.sh/ivfi
 > An image or video preview is displayed when hovering over the file name.
 ### **Search Filter**
 > The filter function allows you to search for specific filenames or file types within the directory.<br/><br/>Usage (Desktop): `Shift + F`.
+### **Downloads**
+> Download individual files or bundle a selection into a ZIP archive, with progress shown while the archive is created.
 ### **Single file**
 > The script can be configured as a standalone solution, where all required assets are combined into a single file, making it easy to use with just one file needed.
 ### **Customizable**

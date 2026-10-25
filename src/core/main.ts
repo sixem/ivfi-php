@@ -7,6 +7,13 @@ import data from './config/data';
 /** Modules */
 import { log } from './modules/logger';
 import { eventHooks } from './modules/event-hooks';
+import { disposePage } from './modules/lifecycle';
+import { createOverlayScrollbar } from './modules/scrollbar';
+import { createRowSelection } from './modules/row-selection';
+import { createTooltip } from './modules/tooltip';
+import { createToast } from './modules/toast';
+import { bindTableContextMenu } from './components/main/context-menu';
+import { bindSelectionSummary } from './components/main/selection-summary';
 /** Classes */
 import optimizeClass from './classes/optimize';
 /** Components */
@@ -58,6 +65,12 @@ try
 /* Set main component in data */
 data.components.main = componentMain;
 
+componentMain.selection = createRowSelection(selector.use('TABLE') as HTMLElement, () =>
+{
+	const optimizer = data.instances.optimize.main;
+	return optimizer.enabled ? optimizer.rows : Array.from((selector.use('TABLE') as HTMLElement).querySelectorAll<HTMLElement>('tbody > tr'));
+});
+
 /* Set page dom object */
 data.layer.main = {
 	windowHeight : window.innerHeight,
@@ -69,6 +82,8 @@ data.layer.main = {
 	update : () =>
 	{
 		const table = (selector.use('TABLE_CONTAINER') as HTMLElement);
+		const topBar = document.body.querySelector(':scope > div.topBar') as HTMLElement;
+		document.documentElement.style.setProperty('--topbar-height', `${topBar.offsetHeight}px`);
 
 		data.layer.main.windowHeight = window.innerHeight;
 		data.layer.main.windowWidth = window.innerWidth;
@@ -79,7 +94,12 @@ data.layer.main = {
 	}
 };
 
-/* Update page values */
+createOverlayScrollbar(window, {
+	label: 'Page scroll position',
+	header: document.body.querySelector(':scope > div.topBar')
+});
+
+/* Account for the scrollbar width change */
 data.layer.main.update();
 
 /* Enable performance mode */
@@ -117,14 +137,6 @@ if(config.get('performance'))
 		});
 	}, 1);
 }
-
-/**
- * Menu click event
- */
-eventHooks.listen(selector.use('TOP_EXTEND') as HTMLElement, 'click', 'sortClick', (e) =>
-{
-	data.components.main.menu.toggle(e.currentTarget);
-});
 
 /**
  * Filter change event
@@ -489,6 +501,7 @@ if(config.get('singlePage'))
 					}
 	
 					/* Write changes to document */
+					disposePage();
 					document.open();
 					document.write(content);
 					document.close();
@@ -586,23 +599,13 @@ data.components.main.dates.load();
 	':scope > .filterContainer > input[type="text"]'
 ) as HTMLInputElement).value = '';
 
-/* Create menu */
-const menu = data.components.main.menu.create();
+/* Create toolbar actions */
+data.components.main.toolbar.create();
 
-/* Get top bar height */
-const height = (document.querySelector(
-	'body > div.topBar'
-) as HTMLDivElement).offsetHeight;
-
-/* Set menu styling to match top bar */
-if(menu && height)
-{
-	DOM.style.set(menu, {
-		top : `${height}px`,
-		visibility : 'unset',
-		display : 'none'
-	});
-}
+createTooltip();
+createToast();
+bindTableContextMenu(selector.use('TABLE') as HTMLElement, componentMain.selection);
+bindSelectionSummary(componentMain.selection);
 
 /* Load sorting indicators */
 componentMain.sort.load();

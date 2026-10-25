@@ -7,6 +7,10 @@ import { user } from '../../config/config';
 /** Modules */
 import { log } from '../../modules/logger';
 import { eventHooks } from '../../modules/event-hooks';
+import { createOverlayScrollbar } from '../../modules/scrollbar';
+import { createContextMenu } from '../../modules/context-menu';
+import { showFileContextMenu, notifyDownloadStarted } from '../../modules/file-actions';
+import { createIcon } from '../../icons';
 /** Classes */
 import optimizeClass from './../optimize';
 /** Helpers */
@@ -354,6 +358,8 @@ export default class galleryClass
 	 */
 	private getScrollbarWidth = (): number =>
 	{
+		if(document.documentElement.classList.contains('overlayScrollArea')) return 0;
+
 		if(!this.elementHasScrollbar(document.body))
 		{
 			return 0;
@@ -685,7 +691,7 @@ export default class galleryClass
 
 		for(let i = 0; i <= items.length - 1; i++)
 		{
-			const row = DOM.new('tr', { title: items[i].name });
+			const row = DOM.new('tr', { 'data-tooltip': items[i].name });
 			row.appendChild(DOM.new('td', { text: items[i].name }));
 			buffer[i] = row.outerHTML;
 		}
@@ -703,6 +709,14 @@ export default class galleryClass
 	 * Updating functions
 	 */
 	public update = {
+		listToggle: (visible: boolean, element: HTMLElement = this.container.querySelector('button[data-action="toggle"]')): void =>
+		{
+			if(!element) return;
+			const pointsRight = visible !== this.options.list.reverse;
+			element.replaceChildren(createIcon(pointsRight ? 'list-indent-increase' : 'list-indent-decrease'));
+			element.setAttribute('aria-expanded', String(visible));
+			element.setAttribute('aria-label', visible ? 'Hide gallery list' : 'Show gallery list');
+		},
 		/* Updates the list width */
 		listWidth: (wrapper?: HTMLElement): void =>
 		{
@@ -857,11 +871,11 @@ export default class galleryClass
 			DOM.attributes.set(download, {
 				filename: item.name,
 				href: url,
-				title: `Download: ${item.name}`
+				'aria-label': `Download ${item.name}`
 			});
 
 			const buffer: Array<string> = [
-				DOM.new('span', { text: `${index + 1} of ${max}` }).outerHTML,
+				DOM.new('span', { text: `${index + 1} / ${max}` }).outerHTML,
 				DOM.new('a', { target: '_blank', href: url, text: name }).outerHTML
 			];
 
@@ -1578,6 +1592,7 @@ export default class galleryClass
 	 */
 	private unbind = (): void =>
 	{
+		createContextMenu().hide();
 		Object.keys(this.data.boundEvents).forEach((eventId: string) =>
 		{
 			const { selector, events }: {
@@ -1617,11 +1632,11 @@ export default class galleryClass
 		if(!element)
 		{
 			element = document.body.querySelector(
-				'div.rootGallery > div.galleryBar .galleryBarRight span[data-action="toggle"]'
+				'div.rootGallery > div.galleryBar .galleryBarRight button[data-action="toggle"]'
 			);
 		}
 
-		element.innerHTML = `List<span class="inheritParentAction">${visible ? '+': '-'}</span>`;
+		this.update.listToggle(!visible, element);
 
 		DOM.style.set(list, {
 			'display': visible ? 'none': 'table-cell'
@@ -1644,11 +1659,15 @@ export default class galleryClass
 	{
 		this.unbind();
 
-		eventHooks.listen(this.data.listDrag, 'mousedown', 'galleryListMouseDown', (): void =>
+		eventHooks.listen(this.data.listDrag, 'mousedown', 'galleryListMouseDown', (event: MouseEvent): void =>
 		{
+			if(event.button !== 0) return;
+			event.preventDefault();
 			this.data.listDragged = true;
 
 			const windowWidth = window.innerWidth,
+				startX = event.clientX,
+				startWidth = this.data.list.getBoundingClientRect().width,
 				wrapper: HTMLElement = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
 
 			/* Set cursors and pointer events */
@@ -1680,7 +1699,7 @@ export default class galleryClass
 
 				if(x < windowWidth)
 				{
-					const width = this.options.list.reverse ? (x + this.getScrollbarWidth()) : (windowWidth - x);
+					const width = startWidth + (x - startX) * (this.options.list.reverse ? 1 : -1);
 
 					requestAnimationFrame((): void =>
 					{
@@ -1755,15 +1774,15 @@ export default class galleryClass
 		/* Add action events */
 		eventHooks.listen('body > div.rootGallery', 'click', 'galleryContainerClick', (event: MouseEvent) =>
 		{
-			let eventTarget = event.target as HTMLElement;
-
-			if(eventTarget && eventTarget.tagName === 'SPAN'
-				&& eventTarget.classList.contains('inheritParentAction'))
+			const target = event.target as HTMLElement;
+			const download = target.closest<HTMLAnchorElement>('a.download[download][href]');
+			if(download && event.button === 0 && !event.defaultPrevented)
 			{
-				eventTarget = eventTarget.parentNode as HTMLElement;
+				notifyDownloadStarted(download.getAttribute('filename'));
 			}
 
-			if(eventTarget && eventTarget.hasAttribute('data-action'))
+			const eventTarget = target.closest<HTMLElement>('[data-action]');
+			if(eventTarget)
 			{
 				/* Current action */
 				const action = eventTarget.getAttribute('data-action').toLowerCase();
@@ -1810,6 +1829,20 @@ export default class galleryClass
 			{
 				this.navigate(DOM.getIndex((event.target as HTMLElement)));
 			}
+		}, {
+			onAdd: this.removeOnUnbind
+		});
+
+		eventHooks.listen(this.table, 'contextmenu', 'galleryListContextMenu', (event: MouseEvent): void =>
+		{
+			const row = (event.target as Element).closest<HTMLElement>('tr');
+			if(!row || row.closest('table') !== this.table) return;
+			const item = this.items[DOM.getIndex(row)];
+			if(!item?.url) return;
+			event.preventDefault();
+			const keyboard = event.clientX === 0 && event.clientY === 0;
+			showFileContextMenu({ name: item.name, url: this.encodeUrl(item.url) }, row,
+				keyboard ? null : { x: event.clientX, y: event.clientY }, keyboard);
 		}, {
 			onAdd: this.removeOnUnbind
 		});
@@ -1891,6 +1924,9 @@ export default class galleryClass
 		/* Handles `keyup` events in the gallery (well - document, but unbinds on close) */
 		eventHooks.listen(window, 'keyup', 'galleryKeyUp', (event: KeyboardEvent): void =>
 		{
+			if(document.documentElement.hasAttribute('context-menu-is-visible')
+				|| document.documentElement.hasAttribute('dialog-is-visible')) return;
+
 			this.handleKey(event.code, (prevent: boolean) =>
 			{
 				if(prevent)
@@ -1905,6 +1941,9 @@ export default class galleryClass
 		/* Handles `keydown` events */
 		eventHooks.listen(window, 'keydown', 'galleryKeyDown', (event: KeyboardEvent): void =>
 		{
+			if(document.documentElement.hasAttribute('context-menu-is-visible')
+				|| document.documentElement.hasAttribute('dialog-is-visible')) return;
+
 			if(this.data.keyPrevent.includes(event.code))
 			{
 				event.preventDefault();
@@ -1928,46 +1967,52 @@ export default class galleryClass
 	private barConstruct = (bar: HTMLElement): HTMLElement =>
 	{
 		/* Create `download` button */
-		bar.append(DOM.new('a', {
-			'text': this.options.mobile ? 'Save': 'Download',
+		const download = DOM.new('a', {
 			'class': 'download',
-			'download': ''
-		}));
+			'download': '',
+			'aria-label': 'Download current item'
+		});
+		download.append(createIcon('download'));
+		bar.append(download);
 
 		if(!this.options.mobile)
 		{
 			/* Create `previous` button */
-			bar.append(DOM.new('span', {
+			const previous = DOM.new('button', {
+				type: 'button',
 				'data-action': 'previous',
-				'text': 'Previous'
-			}));
+				'aria-label': 'Previous item'
+			});
+			previous.append(createIcon('arrow-left'));
+			bar.append(previous);
 
 			/* Create `next` button */
-			bar.append(DOM.new('span', {
+			const next = DOM.new('button', {
+				type: 'button',
 				'data-action': 'next',
-				'text': 'Next'
-			}));
-
-			/* Create `list toggle` button */
-			const listToggle: HTMLElement = DOM.new('span', {
-				'data-action': 'toggle',
-				'text': 'List'
+				'aria-label': 'Next item'
 			});
-
-			listToggle.append(DOM.new('span', {
-				'class': 'inheritParentAction',
-				'text': this.options.list.show ? '-': '+'
-			}));
+			next.append(createIcon('arrow-left'));
+			bar.append(next);
 
 			/* Create `list toggle` button */
+			const listToggle: HTMLElement = DOM.new('button', {
+				type: 'button',
+				'data-action': 'toggle',
+			});
+			this.update.listToggle(this.options.list.show, listToggle);
+
 			bar.append(listToggle);
 		}
 
 		/* Create `close` button */
-		bar.append(DOM.new('span', {
+		const close = DOM.new('button', {
+			type: 'button',
 			'data-action': 'close',
-			'text': 'Close'
-		}));
+			'aria-label': 'Close gallery'
+		});
+		close.append(createIcon('close'));
+		bar.append(close);
 
 		return bar;
 	}
@@ -2096,8 +2141,12 @@ export default class galleryClass
 				'data-action': 'next'
 			});
 
-			navigateLeft.append(DOM.new('span'));
-			navigateRight.append(DOM.new('span'));
+			const leftIcon = DOM.new('span');
+			const rightIcon = DOM.new('span');
+			leftIcon.append(createIcon('arrow-left'));
+			rightIcon.append(createIcon('arrow-left'));
+			navigateLeft.append(leftIcon);
+			navigateRight.append(rightIcon);
 
 			content.append(navigateRight, navigateLeft);
 		}
@@ -2121,6 +2170,11 @@ export default class galleryClass
 
 		/* Add items to list */
 		this.populateTable(this.items);
+
+		createOverlayScrollbar(list, {
+			label: 'Gallery list scroll position', parent: this.container,
+			hoverOnly: true, shadows: true
+		});
 
 		callback(true);
 	}

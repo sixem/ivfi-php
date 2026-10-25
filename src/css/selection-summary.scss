@@ -1,0 +1,51 @@
+@use "variables";
+
+html > body > .selectionSummary {
+  appearance: none;
+  position: fixed;
+  right: 20px;
+  bottom: 12px;
+  z-index: 3;
+  box-sizing: border-box;
+  max-width: calc(100vw - 40px);
+  padding: 7px 10px;
+  border: 2px solid variables.$surface-border;
+  border-radius: 3px;
+  background: variables.$surface-background;
+  color: variables.$text-color;
+  font: 500 0.8rem / 1.45 Inter, sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  user-select: none;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 60%);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease, border-color 150ms ease, visibility 0s linear 180ms;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded="true"] {
+    border-color: variables.$accent-color;
+  }
+
+  &.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  > .selectionSize {
+    color: variables.$accent-color-light;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    transform: none;
+  }
+}

@@ -4,7 +4,6 @@ export * from './debounce';
 export * from './clipboard';
 export * from './comparer';
 export * from './dom';
-export * from './getScrollTop';
 export * from './getReadableSize';
 export * from './generateWget';
 export * from './stringUtils';

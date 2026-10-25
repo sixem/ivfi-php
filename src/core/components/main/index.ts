@@ -5,6 +5,11 @@ import { config, user } from '../../config/config';
 import data from '../../config/data';
 /** Modules */
 import { eventHooks } from '../../modules/event-hooks';
+import { createTooltip } from '../../modules/tooltip';
+import { createIcon, IconName } from '../../icons';
+import { downloadRow } from './download';
+import { archiveSelection, archiveState } from './archive';
+import { onPageReplace } from '../../modules/lifecycle';
 /** Helpers */
 import {
 	DOM,
@@ -25,145 +30,135 @@ const selector = data.instances.selector;
 
 /* Create main object */
 const main: MComponentMain.TCapsule = {
-	menu: {},
+	toolbar: {},
 	sort: {},
 	overlay: {},
 	dates: {}
 };
 
 /**
- * Create drop down menu
+ * Create toolbar actions
  */
-main.menu.create = () =>
+main.toolbar.create = () =>
 {
-	const container: HTMLElement = DOM.new('div', {
-		class : 'menu'
-	});
-	
-	const items: Array<{
-		text: string;
-		id: string;
-		class?: string;
-	}> = [];
-
-	(selector.use('BODY') as HTMLElement).append(container);
-
-	items.push({
-		text: data.text.menuLabels.filter.text,
-		id: 'filter'
-	});
-
-	items.push({
-		text: data.text.menuLabels.wget.text,
-		id: 'copy'
-	});
-
-	/* Add menu item if gallery is enabled */
-	if(config.get('gallery.enabled') === true
-		&& (selector.use('TABLE') as HTMLElement).querySelectorAll(
-			':scope > tbody > tr.file > td > a.preview'
-		).length > 0)
+	const container = selector.use('TOP_ACTIONS') as HTMLElement;
+	const selectionAction = DOM.new('button', {
+		type: 'button',
+		class: 'selectionAction'
+	}) as HTMLButtonElement;
+	container.append(selectionAction);
+	const updateSelectionAction = (rows: HTMLElement[]) =>
 	{
-		items.unshift({
-			text: data.text.menuLabels.gallery.text,
-			id: 'gallery'
+		const archiving = archiveState.busy;
+		selectionAction.classList.toggle('is-visible', rows.length > 0);
+		selectionAction.setAttribute('aria-hidden', String(rows.length === 0));
+		selectionAction.disabled = archiving || !rows.length;
+		selectionAction.setAttribute('aria-busy', String(archiving));
+		if(!rows.length) return;
+		const icon: IconName = rows.length > 1 ? 'archive' : 'download';
+		const label = archiving ? 'Creating archive…' : rows.length > 1 ? `Download ${rows.length} selected files as ZIP`
+			: 'Download selected file';
+		if(selectionAction.getAttribute('data-action') !== icon)
+		{
+			selectionAction.setAttribute('data-action', icon);
+			selectionAction.replaceChildren(createIcon(icon));
+		}
+		selectionAction.setAttribute('data-tooltip', label);
+		selectionAction.setAttribute('aria-label', label);
+	};
+	main.selection.subscribe(updateSelectionAction);
+	onPageReplace(archiveState.subscribe(() => updateSelectionAction(main.selection.getSelectedRows())));
+	eventHooks.listen(selectionAction, 'click', 'toolbar-selection', () =>
+	{
+		if(archiveState.busy) return;
+		const rows = main.selection.getSelectedRows();
+		if(rows.length === 1) downloadRow(rows[0]);
+		else if(rows.length > 1) void archiveSelection(rows);
+	});
+	const copy = DOM.new('button', {
+		type: 'button',
+		class: 'copyWget',
+		'data-tooltip': 'Copy wget command',
+		'aria-label': 'Copy wget command'
+	}) as HTMLButtonElement;
+	const copyContent = DOM.new('span', { class: 'copyWgetContent', 'aria-hidden': 'true' });
+	copyContent.append(DOM.new('span', { text: 'wget' }), createIcon('check'));
+	copy.append(copyContent);
+	container.append(copy);
+	let copying = false;
+	let copiedTimer = 0;
+	onPageReplace(() => clearTimeout(copiedTimer));
+	eventHooks.listen(copy, 'click', 'copyWget', async () =>
+	{
+		if(copying) return;
+		copying = true;
+		try
+		{
+			const command = generateWget(selector.use('TABLE') as HTMLElement);
+			const copied = await clipboardCopy(command);
+			if(!copy.isConnected) return;
+			clearTimeout(copiedTimer);
+			copy.classList.toggle('is-copied', copied);
+			copy.setAttribute('aria-label', copied ? 'Wget command copied' : 'Copy wget command');
+			createTooltip().show(copy, `${copied ? 'Command copied' : 'Could not copy the command'}\n${command}`, 3500);
+			if(copied) copiedTimer = window.setTimeout(() =>
+			{
+				copy.classList.remove('is-copied');
+				copy.setAttribute('aria-label', 'Copy wget command');
+			}, 2000);
+		} finally {
+			copying = false;
+		}
+	});
+	const actions: Array<{
+		icon: IconName;
+		label: string;
+		run: () => void;
+		disabled?: boolean;
+	}> = [{
+		icon: 'filter',
+		label: 'Toggle filter',
+		run: () => data.components.filter.toggle()
+	}];
+
+	if(config.get('gallery.enabled') === true)
+	{
+		actions.push({
+			icon: 'gallery',
+			label: 'Open gallery',
+			disabled: !(selector.use('TABLE') as HTMLElement).querySelector('tr.file a.preview'),
+			run: () => data.components.gallery.load(null)
 		});
 	}
-
-	/* Do a light check to see if any settings are available to be changed, if so, add menu item */
 	if(data.components.settings.available())
 	{
-		items.unshift({
-			text: data.text.menuLabels.settings.text,
-			id: 'settings',
-			class: 'settings'
+		actions.push({
+			icon: 'settings',
+			label: 'Open settings',
+			run: () => data.components.settings.show()
 		});
 	}
 
-	items.forEach((item) =>
+	actions.forEach((action) =>
 	{
-		const element = DOM.new('div', {
-			text : item.text,
-			class : `${Object.prototype.hasOwnProperty.call(item, 'class') ? `${item.class}` : ''}`
-		});
-
-		if(Object.prototype.hasOwnProperty.call(item, 'id'))
+		const button = DOM.new('button', {
+			type: 'button',
+			'data-action': action.icon,
+			'data-tooltip': action.label,
+			'aria-label': action.label
+		}) as HTMLButtonElement;
+		button.disabled = Boolean(action.disabled);
+		button.append(createIcon(action.icon));
+		if(action.icon === 'filter')
 		{
-			element.setAttribute('id', item.id);
+			button.setAttribute('aria-controls', 'directory-filter');
+			button.setAttribute('aria-expanded', 'false');
 		}
-
-		container.append(element);
-	});
-
-	/* Event delegation */
-	eventHooks.listen(container, 'click', 'menuItemClick', (event: Event) =>
-	{
-		const eventTarget: HTMLElement = (event.target as HTMLElement);
-
-		if(eventTarget.tagName === 'DIV')
-		{
-			const toggle = (state: boolean, f: () => void): void =>
-			{
-				if(!state)
-				{
-					main.menu.toggle();
-				} else {
-					main.menu.toggle(state);
-				}
-
-				f();
-			};
-
-			if(eventTarget.id == 'gallery'
-				&& config.get('gallery.enabled') === true)
-			{
-				toggle(false, () => data.components.gallery.load(null));
-
-			} else if(eventTarget.id == 'copy')
-			{
-				toggle(false, () => clipboardCopy(
-					generateWget(selector.use('TABLE') as HTMLElement)
-				));
-
-			} else if(eventTarget.id == 'settings')
-			{
-				toggle(false, () => data.components.settings.show());
-
-			} else if(eventTarget.id == 'filter')
-			{
-				toggle(null, () => data.components.filter.toggle());
-			}
-		}
+		eventHooks.listen(button, 'click', `toolbar-${action.icon}`, action.run);
+		container.append(button);
 	});
 
 	return container;
-};
-
-/**
- * Toggle the state of the drop down menu
- */
-main.menu.toggle = (state: null | boolean = null) =>
-{
-	const menu = document.querySelector('body > div.menu') as HTMLElement;
-
-	const isHidden: boolean = (menu.style.display === 'none');
-
-	const display: string = typeof state === 'boolean'
-		? (state ? 'inline-block' : 'none')
-		: (isHidden ? 'inline-block' : 'none');
-
-	DOM.style.set(menu, {
-		display
-	});
-
-	if(isHidden)
-	{
-		(selector.use('TOP_EXTEND') as HTMLElement).setAttribute('extended', 'true');
-	} else {
-		(selector.use('TOP_EXTEND') as HTMLElement).removeAttribute('extended');
-	}
-
-	return isHidden;
 };
 
 /**
@@ -270,17 +265,17 @@ main.dates.apply = (offset: MComponentMain.TDateOffset, format = true) =>
 
 		if(since)
 		{
-			span.setAttribute('title', `${since} (UTC${(offset.hours > 0 ? '+' : '') + offset.hours})`);
+			item.setAttribute('data-tooltip', `${since} (UTC${(offset.hours > 0 ? '+' : '') + offset.hours})`);
 		}
 	});
 
-	const infoSelector = 'div.topBar > .directoryInfo div[data-count="files"], div.topBar > .directoryInfo div[data-count="directories"]';
+	const infoSelector = 'div.topBar > .directoryInfo [data-count="files"], div.topBar > .directoryInfo [data-count="directories"]';
 
 	document.body.querySelectorAll(infoSelector).forEach((item) =>
 	{
 		if(item.hasAttribute('data-raw'))
 		{
-			item.setAttribute('title', `Newest: ${formatDate(dateFormat[0], parseInt(item.getAttribute('data-raw')))}`);
+			item.setAttribute('data-tooltip', `Newest: ${formatDate(dateFormat[0], parseInt(item.getAttribute('data-raw')))}`);
 		}
 	});
 };
@@ -336,8 +331,6 @@ main.sort.load = () =>
 					index = 1; break;
 				case 'size':
 					index = 2; break;
-				case 'type':
-					index = 3; break;
 				default:
 					index = null;
 			}
@@ -371,39 +364,10 @@ main.sort.load = () =>
  */
 main.overlay.hide = (callback = null): void =>
 {
-	type collectionItem = {
-		element: HTMLElement;
-		f: () => void;
-	};
-
-	let i = 0;
-
-	const collection: Array<collectionItem> = [];
-
-	collection.push({
-		element: document.body.querySelector(':scope > div.filterContainer'),
-		f: data.components.filter.toggle
-	});
-
-	collection.push({
-		element: document.body.querySelector(':scope > div.menu'),
-		f: main.menu.toggle
-	});
-
-	collection.forEach((obj: collectionItem) =>
-	{
-		if(obj.element && obj.element.style.display !== 'none')
-		{
-			obj.f();
-			
-			i++;
-		}
-	});
-
-	if(callback)
-	{
-		callback(i > 0);
-	}
+	const filter = document.body.querySelector<HTMLElement>(':scope > div.filterContainer');
+	const visible = Boolean(filter && filter.style.display !== 'none');
+	if(visible) data.components.filter.toggle();
+	callback?.(visible);
 };
 
 /**
@@ -557,6 +521,7 @@ main.sortTableColumn = (target: HTMLTableCellElement) =>
 
 	data.sets.refresh = true;
 	data.sets.selected = null;
+	main.selection.refresh();
 };
 
 const componentMain = main;
