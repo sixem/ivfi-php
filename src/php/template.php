@@ -10,7 +10,7 @@
 /**
  * [Configuration]
  * A more in-depth overview can be found here:
- * https://git.five.sh/ivfi/docs/php/#/config
+ * https://github.com/sixem/ivfi-php/blob/master/docs/config.md
  */
 
 /* Used to bust the cache and to display footer version number */
@@ -2585,7 +2585,7 @@ $jsConfig = constructJsConfig(
       <input type="text" id="directory-filter-input" name="filter" spellcheck="false" placeholder="Search .." value="">
     </div>
 
-    <!-- [https://git.five.sh/ivfi/ — The image and video friendly indexer]  -->  
+    <!-- [https://github.com/sixem/ivfi-php/ — The image and video friendly indexer]  -->  
 
     <script id="<?=SCRIPT_ID;?>" type="application/json"><?=$jsConfig;?></script>
 

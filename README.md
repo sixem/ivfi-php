@@ -9,10 +9,10 @@
 <p align="center"><a href="https://github.com/sixem/ivfi-php/releases"><img alt="GitHub releases" src="https://img.shields.io/github/v/release/sixem/ivfi-php?color=2f394f"></a> <img alt="GitHub issues" src="https://img.shields.io/github/issues/sixem/ivfi-php?color=2f394f"> <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/sixem/ivfi-php?color=30c352"> <a href="https://github.com/sixem/ivfi-php/actions/workflows/main.yml"><img alt="Build" src="https://github.com/sixem/ivfi-php/actions/workflows/main.yml/badge.svg"></a></p>
 
 <p align="center">
-	<a href="https://git.five.sh/ivfi/demo/">Demo</a>&nbsp;&nbsp;
-	<a href="https://git.five.sh/ivfi/docs/php/#/README">Documentation</a>&nbsp;&nbsp;
-	<a href="https://git.five.sh/ivfi/docs/php/#/config">Configuration</a>&nbsp;&nbsp;
-	<a href="https://git.five.sh/ivfi/docs/php/#/building">Building</a>
+	<a href="https://github.com/sixem/ivfi-php/">Repository</a>&nbsp;&nbsp;
+	<a href="https://github.com/sixem/ivfi-php/blob/master/docs/README.md">Documentation</a>&nbsp;&nbsp;
+	<a href="https://github.com/sixem/ivfi-php/blob/master/docs/config.md">Configuration</a>&nbsp;&nbsp;
+	<a href="https://github.com/sixem/ivfi-php/blob/master/docs/building.md">Building</a>
 </p>
 
 # About
@@ -41,9 +41,9 @@ server {
 DirectoryIndex index.html index.php /indexer.php
 ```
 
-For detailed instructions on how to configure the script, refer to [setup](https://git.five.sh/ivfi/docs/php/#/setup).
+For detailed instructions on how to configure the script, refer to [setup](https://github.com/sixem/ivfi-php/blob/master/docs/setup.md).
 
-The releases and individual builds are available [here](https://git.five.sh/ivfi/releases/php/).
+The releases and individual builds are available [here](https://github.com/sixem/ivfi-php/releases).
 
 # Features
 
