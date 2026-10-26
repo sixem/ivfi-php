@@ -608,6 +608,9 @@ function mergeConfigDefaults(array $config, array $defaults, $path = '')
       $setting = $path . $key;
       if(!is_array($config[$key]))
       {
+        /* These settings also support scalar shorthand in existing configs. */
+        if(($setting === 'format.date' && is_string($config[$key]))
+          || ($setting === 'footer' && is_bool($config[$key]))) continue;
         throw new RuntimeException('Configuration setting "' . $setting . '" must be an array.');
       }
       if($value && array_keys($value) !== range(0, count($value) - 1))
@@ -1606,7 +1609,10 @@ class Indexer extends Helpers
     {
       foreach(['directory', 'file'] as $type)
       {
-        array_push($usedFilters[$type], ...$dotFilters['ignore'][$type]);
+        foreach($dotFilters['ignore'][$type] as $filter)
+        {
+          $usedFilters[$type][] = $filter;
+        }
       }
     }
 

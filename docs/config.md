@@ -12,9 +12,9 @@ These options can be found and changed at the top of the `indexer.php` file, or 
 
 You can edit the configuration in the file directly, but if you wish to keep a separate config file that does not reset between updates, then creating your own config file can be a good solution.
 
-The script checks the PHP working directory first (for compatibility), then the directory containing the script. If the file is named `indexer.php` (as it is by default), then it'll look for a file called `indexer.config.php`. If you rename the file to `something.php`, then it'll look for `something.config.php` and so on.
+The script checks the PHP working directory first, then the directory containing the script. If the file is named `indexer.php` (as it is by default), then it'll look for a file called `indexer.config.php`. If you rename the file to `something.php`, then it'll look for `something.config.php` and so on.
 
-Missing or null settings inherit their defaults, including nested settings such as `style.themes.path`. Lists such as file extensions are replaced completely, including when explicitly empty. A config file must return an array; named sections such as `gallery` and `style` must also be arrays. Unknown keys and PHP callbacks are preserved. It is also worth noting that having a `.` in front of the config file (hidden file) **will also work**.
+The file must return an array. Missing or null settings use defaults; lists such as file extensions replace the defaults, even when empty. Named sections such as `gallery` must be arrays. Custom keys and callbacks are preserved. Hidden config files such as `.indexer.config.php` also work.
 
 A basic example of a config file:
 
@@ -80,7 +80,7 @@ Key: **`selection`**
 |-----|------|---------|-------------|
 | `enabled` | Boolean | `true` | Enables file selection and ZIP archive downloads. |
 
-Set `'selection' => ['enabled' => false]` to disable row selection, selection shortcuts, selection controls and ZIP downloads. Individual files remain downloadable from their context menu or the gallery download button. This controls the interface, not access to the files.
+Set `'selection' => ['enabled' => false]` to disable selection and ZIP downloads. Individual downloads remain available through the context menu and gallery. This does not restrict file access.
 
 ## Format
 Key: **`format`**
@@ -88,7 +88,7 @@ Key: **`format`**
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `title` | String | `Index of %s` | Page title where  `%s` represents the current path.
-| `date` | String/Array | `array('d/m/y H:i', 'd/m/y')` | Date format as per [datetime.format.php](https://www.php.net/manual/en/datetime.format.php#refsect1-datetime.format-parameters). Can be a string or an array. If it is an array then the first value will be shown on desktop devices and the second will be shown on mobile devices. It is a good idea to set a shorter mobile format because of the limited screen space.
+| `date` | String/Array | `array('d/m/y H:i', 'd/m/y')` (inline); `array('m/d/y H:i', 'd/m/y')` (external config) | Date format as per [datetime.format.php](https://www.php.net/manual/en/datetime.format.php#refsect1-datetime.format-parameters). Can be a string or an array. If it is an array then the first value will be shown on desktop devices and the second will be shown on mobile devices. It is a good idea to set a shorter mobile format because of the limited screen space.
 | `sizes` | Array | `' B', ' KiB', ' MiB', ' GiB', ' TiB'` | Size formats for when displaying filesizes.
 
 ## Icon
@@ -108,7 +108,7 @@ Once the client sorts the items themselves, then those settings will be active f
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `enabled` | Bool | `false` | Enables a specific sorting order on page-load. If disabled, it'll use the default order used by [scandir](https://www.php.net/manual/en/function.scandir.php).
+| `enabled` | Bool | `false` | Enables a specific sorting order on page-load. If disabled, the server keeps filesystem enumeration order. Enable sorting for a predictable initial order.
 | `order` | Integer | `SORT_ASC` | Sorting order. `SORT_ASC` or `SORT_DESC`.
 | `types` | Integer | `0` | What item types to sort.<br/>`0` = Both. `1` = Files only. `2` = Directories only.
 | `sort_by` | String | `name` | What to sort by. Available options are `name`, `modified`, `type` and `size`.
@@ -169,7 +169,7 @@ If the value is a function, then the returned string of that function will be us
 
 * `$param['counts']` contains two keys — `files` and `directories` — both showing the respective file and directory count of the current directory.
 
-* `$param['path']` contains two keys — `total` and `readable` — both showing the total size of the directory. The `total` value contains the total bytes and the `readable` value contains the readable size.
+* `$param['size']` contains two keys — `total` and `readable` — both showing the total size of the directory. The `total` value contains the total bytes and the `readable` value contains the readable size.
 
 * `$param['config']` contains the parsed and active configuration.
 
@@ -233,7 +233,7 @@ If you want to apply multiple filters easily, then you can also pass them as an 
     'directory' => false
 )
 ```
-This will use both the filters above, and any filename that matches either of those will be hidden.
+A filename must match every expression to remain visible. In this example, the negative expressions hide the named files and filenames containing `#` or `?`.
 
 Setting the value to `false` will disable the filter.
 
@@ -276,18 +276,16 @@ Shows a footer with some general information at the bottom of the page.
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `enabled` | Bool | `true` | Whether the footer should be displayed or not.
-| `show_server_name` | Bool | `true` | Shows the `server_name` of the current server in the footer.
 
 ## Other
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `processor` | Bool | `false` | Allows you to handle and modify data by passing functions to the indexer. See [PROCESSOR](processor.md) for more information.
+| `processor` | Bool/Array | `false` | Allows you to handle and modify data by passing functions to the indexer. See [PROCESSOR](processor.md) for more information.
 | `single_page` | Bool | `false` | Enables navigation between folders without forcing a page reload (experimental).
 | `encode_all` | Bool | `false` | Should `?` and `#` characters be encoded when processing URLs and filenames.
 | `allow_direct_access` | Bool | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
-| `performance` | Bool | `false` | Enables [performance mode](performance.md). `true` will enable it for all folders, while setting it to a number, will enable it on directories above or equal to that respective amount of files.
-| `footer` | Bool | `true` | Setting this to `true` or `false` will enable or disable the path, site and generation time in the footer respectively.
+| `performance` | Bool/Integer | `false` | Enables [performance mode](performance.md). `true` will enable it for all folders, while setting it to a number, will enable it on directories above or equal to that respective amount of files.
 | `credits` | Bool | `true` | When set to true, it will display a simple link to the git repository in the footer along with the version number. I would appreciate it if you keep this enabled, but i also understand that it is not always desirable, so the option to hide it is there.
 | `debug` | Bool | `false` | Enables PHP debugging and `console.log()` info messages.
 

@@ -77,7 +77,7 @@ return [
         /* Set to a path relative to the root directory (location of this file) containg .css files.
          * Each .css file will be treated as a separate theme. Set to false to disable themes */
         'themes' => [
-          'path' => '/__IVFI_ASSET_PATH__/themes/',
+          'path' => '__IVFI_ASSET_PATH__themes/',
           'default' => false
         ],
          /* Cascading style sheets options */
@@ -125,10 +125,9 @@ return [
     'path_checking' => 'strict',
     /* Enabled the performance mode */
     'performance' => false,
-    /* Whether extra information in the footer should be generated */
+    /* Whether the footer should be displayed */
     'footer' => [
-      'enabled' => true,
-      'show_server_name' => true
+      'enabled' => true
     ],
     /**
      * Displays a simple link to the git repository in the

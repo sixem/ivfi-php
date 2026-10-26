@@ -19,6 +19,7 @@ final class ProductionErrorsTest extends TestCase
         if(is_file($this->root . '/.indexer.config.php')) {
             unlink($this->root . '/.indexer.config.php');
         }
+        if (is_file($this->root . '/indexer.php')) unlink($this->root . '/indexer.php');
         rmdir($this->root);
     }
 
@@ -29,6 +30,9 @@ final class ProductionErrorsTest extends TestCase
         if($config !== null) {
             file_put_contents($this->root . '/.indexer.config.php', '<?php return ' . $config . ';');
         }
+        // Isolate adjacent config lookup from any developer config in build/.
+        copy($build, $this->root . '/indexer.php');
+        $build = $this->root . '/indexer.php';
         // Start with display_errors ON to check that production overrides it.
         $process = proc_open(
             [PHP_BINARY, '-d', 'display_errors=1', __DIR__ . '/render.php', $build],

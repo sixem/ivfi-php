@@ -967,7 +967,7 @@ export default class galleryClass
 		/* Volume getter */
 		getVolume: (): number =>
 		{
-			let volume = parseFloat(this.options.volume.toString());
+			let volume = parseFloat(String(this.options.volume));
 
 			volume = (isNaN(volume) || volume < 0 || volume > 1) ? 0: volume;
 

@@ -20,7 +20,8 @@ $_SERVER = [
     'INDEXER_BASE_PATH' => getcwd(),
     'HTTP_X_INDEXER_PREPEND_PATH' => $request['prepend'],
 ];
-$_COOKIE = [];
+$_COOKIE = $request['cookies'] ?? [];
+if (isset($request['digest'])) $_SERVER['PHP_AUTH_DIGEST'] = $request['digest'];
 $_GET = [];
 $_POST = [];
 require $argv[1];
