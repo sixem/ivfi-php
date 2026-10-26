@@ -11,6 +11,7 @@ Run the checks relevant to your change from the repository root:
 | `pnpm test` | Lint, production build and standalone output | Node 20+ and pnpm |
 | `composer install` then `composer test` | PHP regression tests | PHP 8.3+, Composer and built PHP outputs |
 | `bash scripts/test-php-versions.sh` | Both outputs on PHP 8.2–8.5 | Docker and the PHP test dependencies above |
+| `bash scripts/test-readme.sh` | Optional README rendering in both outputs | Node, PHP with mbstring, and installed build/test dependencies |
 | `bash scripts/test-docker.sh` | Docker build and deployment | Docker and curl |
 | `bash scripts/test-release.sh` | Release packaging | Built PHP outputs, 7z and jq |
 

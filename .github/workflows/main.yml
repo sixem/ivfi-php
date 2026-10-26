@@ -55,6 +55,10 @@ jobs:
         if: matrix.node-version == '24'
         run: composer test -- --testdox
 
+      - name: Test README support
+        if: matrix.node-version == '24'
+        run: bash scripts/test-readme.sh
+
       - name: Test PHP compatibility
         if: matrix.node-version == '24'
         run: bash scripts/test-php-versions.sh
