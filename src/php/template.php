@@ -1320,6 +1320,7 @@ class Indexer extends Helpers
      */
     foreach($data['directories'] as &$item)
     {
+      $modified = array_pop($item);
       list($dirPath, $dirName) = $item;
 
       /* We only need to set 'name' key if we're sorting by name */
@@ -1331,7 +1332,7 @@ class Indexer extends Helpers
       }
 
       /* Set directory data values */
-      $item['modified'] = self::getModified($dirPath, $timezone['offset']);
+      $item['modified'] = self::formatModified($modified, $timezone['offset']);
       $item['type'] = 'directory';
       $item['url'] = rtrim($this->joinPaths($this->requested, $dirName), '/');
       $item['size'] = $this->directorySizes['enabled']
@@ -1347,6 +1348,8 @@ class Indexer extends Helpers
      */
     foreach($data['files'] as &$item)
     {
+      $modified = array_pop($item);
+      $size = array_pop($item);
       list($filePath, $fileName, $fileType) = $item;
 
       /* We only need to set 'name' key if we're sorting by name */
@@ -1359,8 +1362,8 @@ class Indexer extends Helpers
 
       /* Set file data values */
       $item['type'] = $fileType;
-      $item['size'] = self::getSize($filePath);
-      $item['modified'] = self::getModified($filePath, $timezone['offset']);
+      $item['size'] = self::formatSize($size);
+      $item['modified'] = self::formatModified($modified, $timezone['offset']);
       $item['url'] = rtrim($this->joinPaths($this->requested, $fileName), '/');
 
       /** Encode URL if `encode_all` is enabled */
@@ -1529,17 +1532,15 @@ class Indexer extends Helpers
   }
 
   /**
-   * Gets the last modified date of a file
+   * Formats a file's last modified timestamp
    *
-   * @param String    $path       File path
+   * @param Integer   $stamp      Modification timestamp
    * @param Integer   $modifier   An integer that gets added to the timestamp
    * 
    * @return Array
    */ 
-  private function getModified($path, $modifier = 0)
+  private function formatModified($stamp, $modifier = 0)
   {
-    $stamp = filemtime($path);
-
     if(count($this->format['date']) === 2)
     {
       $formatted = "";
@@ -1700,8 +1701,10 @@ class Indexer extends Helpers
       if($file[0] === '.') continue;
 
       $filePath = $this->path . '/' . $file;
-      $isDirectory = is_dir($filePath);
-      if(!$isDirectory && !file_exists($filePath)) continue;
+      /* Follow symlink targets once; skip vanished entries and broken links. */
+      $stat = @stat($filePath);
+      if($stat === false) continue;
+      $isDirectory = ($stat['mode'] & 0170000) === 0040000;
 
       if(!$isDirectory && $file === 'README.md')
       {
@@ -1717,13 +1720,14 @@ class Indexer extends Helpers
         if(!preg_match($filter, $filterName)) continue 2;
       }
 
+      /* Temporary metadata is consumed before sorting or invoking processors. */
       if($isDirectory)
       {
-        $data['directories'][] = [$filePath, $file];
+        $data['directories'][] = [$filePath, $file, $stat['mtime']];
       } else {
         $fileType = $this->getFileType($file);
         if($this->exclude && in_array($fileType[1], $this->exclude)) continue;
-        $data['files'][] = [$filePath, $file, $fileType];
+        $data['files'][] = [$filePath, $file, $fileType, $stat['size'], $stat['mtime']];
       }
     }
 
@@ -1731,16 +1735,15 @@ class Indexer extends Helpers
   }
 
   /**
-   * Gets the size of a file
+   * Formats a file size
    *
-   * @param String   $path   File path
+   * @param Integer  $bytes  File size in bytes
    * 
    * @return Array
    */ 
-  private function getSize($path)
+  private function formatSize($bytes)
   {
-    $fs = filesize($path);
-    $size = ($fs < 0 ? -1 : $fs);
+    $size = ($bytes < 0 ? -1 : $bytes);
 
     return array($size, self::getReadableFileSize($size));
   }
