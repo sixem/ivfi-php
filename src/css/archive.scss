@@ -25,7 +25,22 @@ html > body > dialog.dialog .archiveOptions {
     cursor: pointer;
   }
 
+  .archiveCount {
+    display: inline-flex;
+    white-space: pre;
+  }
+
+  .archiveCountNumber {
+    display: inline-block;
+    text-align: right;
+  }
+
   .archiveTotal {
+    display: inline-grid;
+    grid-template-columns: 8ch 3ch;
+    gap: 0.5ch;
+    flex-shrink: 0;
+    text-align: right;
     color: variables.$accent-color;
     white-space: nowrap;
   }

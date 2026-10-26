@@ -78,8 +78,17 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 	selectAllCheckbox.name = 'archive-all';
 	selectAllCheckbox.setAttribute('aria-label', 'Select all files');
 	const count = document.createElement('span');
+	count.className = 'archiveCount';
+	const countNumber = document.createElement('span');
+	countNumber.className = 'archiveCountNumber';
+	countNumber.style.minWidth = `${files.length.toLocaleString().length}ch`;
+	const countLabel = document.createElement('span');
+	count.append(countNumber, countLabel);
 	const total = document.createElement('span');
 	total.className = 'archiveTotal';
+	const totalNumber = document.createElement('span');
+	const totalUnit = document.createElement('span');
+	total.append(totalNumber, totalUnit);
 	selectAllLabel.append(selectAllCheckbox, count);
 	summary.append(selectAllLabel, total);
 	const listContainer = document.createElement('div');
@@ -116,8 +125,17 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 		const zipBytes = Number(predictLength(included));
 		needsDisk = zipBytes > bufferLimit;
 		blocked = !included.length || (needsDisk && !canSaveDirectly);
-		count.textContent = `${included.length.toLocaleString()} ${included.length === 1 ? 'file' : 'files'} included`;
-		total.textContent = formatSize(totalBytes);
+		countNumber.textContent = included.length.toLocaleString();
+		countLabel.textContent = ` ${included.length === 1 ? 'file' : 'files'} included`;
+		let unit = 0;
+		let amount = totalBytes;
+		while(amount >= 1024 && unit < units.length - 1)
+		{
+			amount /= 1024;
+			unit++;
+		}
+		totalNumber.textContent = amount.toLocaleString(undefined, { minimumFractionDigits: unit ? 2 : 0, maximumFractionDigits: 2 });
+		totalUnit.textContent = units[unit];
 		status.toggleAttribute('data-blocked', blocked);
 		status.textContent = !included.length ? 'Select at least one file.'
 			: blocked ? `The ZIP is ${formatSize(zipBytes - bufferLimit)} over the ${formatSize(bufferLimit)} limit. Remove files or ${window.isSecureContext
