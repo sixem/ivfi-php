@@ -9,11 +9,6 @@ import type { RowSelection } from '../../modules/row-selection';
 export type TComponentFilter = {
 	apply?: (query: string) => void;
 	toggle?: () => void;
-	getMatch?: (input: string, query: string) => {
-		valid?: boolean;
-		reason?: unknown;
-		data?: Array<any> | null;
-	};
 };
 
 /**

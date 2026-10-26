@@ -1,4 +1,5 @@
 {
+    "ignorePatterns": ["/src/core/vendors/", "**/src/php/**"],
     "parser": "@typescript-eslint/parser",
     "plugins": [
         "@typescript-eslint"
@@ -22,7 +23,7 @@
     },
     "overrides": [
         {
-            "files": ["webpack.config.js", "build.helpers.js", "scripts/*.js"],
+            "files": ["scripts/**/*.js"],
             "env": {
                 "browser": false
             },

@@ -6,6 +6,7 @@ import { config, user } from './config/config';
 import data from './config/data';
 /** Modules */
 import { log } from './modules/logger';
+import { createIcon } from './icons';
 import { eventHooks } from './modules/event-hooks';
 import { disposePage, onPageReplace } from './modules/lifecycle';
 import { playVideo } from './helpers/media';
@@ -551,10 +552,33 @@ data.components.main.bind();
 /* Load modification dates */
 data.components.main.dates.load();
 
-/* Reset filter input */
-(document.body.querySelector(
-	':scope > .filterContainer > input[type="text"]'
-) as HTMLInputElement).value = '';
+/* Add the filter controls using the shared icons. */
+const filterInput = selector.use('FILTER_INPUT') as HTMLInputElement;
+filterInput.value = '';
+filterInput.setAttribute('aria-label', 'Filter files and folders');
+const filterIcon = createIcon('filter');
+filterIcon.classList.add('filterIcon');
+filterInput.before(filterIcon);
+
+const collapseFilter = document.createElement('button');
+collapseFilter.type = 'button';
+collapseFilter.className = 'filterCollapse';
+collapseFilter.setAttribute('aria-label', 'Collapse filter');
+collapseFilter.append(createIcon('chevron'));
+collapseFilter.addEventListener('click', () => componentFilter.toggle());
+
+const closeFilter = document.createElement('button');
+closeFilter.type = 'button';
+closeFilter.className = 'filterClose';
+closeFilter.setAttribute('aria-label', 'Exit filter');
+closeFilter.append(createIcon('close'));
+closeFilter.addEventListener('click', () =>
+{
+	filterInput.value = '';
+	componentFilter.apply(null);
+	componentFilter.toggle();
+});
+filterInput.after(collapseFilter, closeFilter);
 
 /* Create toolbar actions */
 data.components.main.toolbar.create();

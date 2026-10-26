@@ -30,7 +30,22 @@ type TFilterData = {
 componentFilter.apply = (query = ''): void =>
 {
 	const filterData: TFilterData = {};
-	let errorData: any = false;
+	let pattern: RegExp;
+	const input = selector.use('FILTER_INPUT') as HTMLInputElement;
+	try
+	{
+		/* Leading-star filename patterns are wildcards; other queries retain regex syntax. */
+		const wildcard = query?.startsWith('*') && !/[\\^$+?()[\]{}|]/.test(query);
+		const source = wildcard
+			? '^' + query.split('*').map((part) => part.replace(/\./g, '\\.')).join('.*') + '$'
+			: query || '';
+		pattern = new RegExp(source, 'i');
+		input.removeAttribute('aria-invalid');
+	} catch
+	{
+		input.setAttribute('aria-invalid', 'true');
+		return;
+	}
 
 	data.sets.refresh = true;
 
@@ -95,9 +110,9 @@ componentFilter.apply = (query = ''): void =>
 			is.directory = true;
 		}
 
-		const match = componentFilter.getMatch(item.children[0].getAttribute('data-raw'), query);
+		const matches = pattern.test(item.children[0].getAttribute('data-raw') || '');
 
-		if(match.valid && match.data)
+		if(matches)
 		{
 			item.classList.remove('filtered');
 
@@ -111,9 +126,6 @@ componentFilter.apply = (query = ''): void =>
 			if(is.file) filterData.shown.files++;
 			else if(is.directory) filterData.shown.directories++;
 
-		} else if(match && match.valid === false)
-		{
-			errorData = match.reason;
 		} else {
 			item.classList.add('filtered');
 
@@ -125,8 +137,8 @@ componentFilter.apply = (query = ''): void =>
 		}
 
 		/* Add size to total */
-		if((match.valid && match.data && is.file) ||
-			(directorySizes && match.valid && match.data && is.directory))
+		if((matches && is.file) ||
+			(directorySizes && matches && is.directory))
 		{
 			const size = item.children[2].getAttribute('data-raw');
 
@@ -210,31 +222,9 @@ componentFilter.apply = (query = ''): void =>
 		'table tr.file:not(.filtered) a.preview'
 	).length;
 
-	if(errorData !== false)
-	{
-		console.error(`Filter regex error: ${errorData}`);
-	}
-
 	if(option) option.disabled = previews === 0;
 	data.components.main.selection.refresh();
 
-};
-
-componentFilter.getMatch = (input: string, query: string) =>
-{
-	const match: ReturnType<TComponentFilter['getMatch']> = {};
-
-	try
-	{
-		match.valid = true;
-		match.data = (input).match(new RegExp(query, 'i'));
-	} catch(exception: unknown)
-	{
-		match.valid = false;
-		match.reason = exception;
-	}
-
-	return match;
 };
 
 componentFilter.toggle = (): void =>
@@ -247,18 +237,29 @@ componentFilter.toggle = (): void =>
 		'input[type="text"]'
 	);
 
-	if(container.style.display !== 'none')
+	const visible = container.style.display === 'none' || container.classList.contains('closing');
+	container.onanimationend = null;
+	container.classList.remove('closing');
+	container.inert = !visible;
+	if(visible) container.style.display = 'block';
+	else if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
 	{
 		container.style.display = 'none';
-	} else {
-		input.value = '';
-		componentFilter.apply(null);
-		container.style.display = 'block';
+	} else
+	{
+		container.classList.add('closing');
+		container.onanimationend = (event) =>
+		{
+			if(event.target !== container) return;
+			container.style.display = 'none';
+			container.classList.remove('closing');
+			container.onanimationend = null;
+		};
 	}
-
-	input.focus();
-	const button = document.querySelector('.topActions > button[data-action="filter"]');
-	if(button) button.setAttribute('aria-expanded', String(container.style.display !== 'none'));
+	const button = document.querySelector<HTMLButtonElement>('.topActions > button[data-action="filter"]');
+	if(button) button.setAttribute('aria-expanded', String(visible));
+	if(visible) input.focus();
+	else button?.focus({ preventScroll: true });
 };
 
 export {

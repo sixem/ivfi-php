@@ -452,6 +452,63 @@ html > body {
     box-shadow: 0 0 6px #10151f;
     animation: reveal-filter 160ms ease-out;
 
+    &.closing {
+      animation: hide-filter 160ms ease-in forwards;
+      pointer-events: none;
+    }
+
+    > .filterIcon {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      width: 16px;
+      height: 16px;
+      transform: translateY(-50%);
+      color: variables.$text-color;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    > .filterClose,
+    > .filterCollapse {
+      position: absolute;
+      top: 0;
+      right: 16px;
+      bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: variables.$text-color;
+      cursor: pointer;
+
+      > svg {
+        width: 16px;
+        height: 16px;
+        pointer-events: none;
+      }
+
+      &:hover {
+        color: variables.$accent-color;
+      }
+
+      &:focus-visible {
+        outline: 2px solid variables.$accent-color;
+        outline-offset: -4px;
+      }
+    }
+
+    > .filterCollapse {
+      right: 52px;
+
+      > svg {
+        transform: rotate(180deg);
+      }
+    }
+
     > input[type="text"] {
       @include mixins.fonting(
         $key: "default",
@@ -460,10 +517,11 @@ html > body {
       );
 
       border-radius: 1px;
-      padding: 5px 7px 5px 9px;
+      box-sizing: border-box;
+      padding: 5px 96px 5px 34px;
       background-color: #000000d9;
       backdrop-filter: blur(4px);
-      height: 1.5rem;
+      height: calc(1.5rem + 12px);
       width: 100%;
       border-top: none;
       border-left: none;
@@ -472,6 +530,10 @@ html > body {
 
       @include mixins.media-query("screen", "isMobile") {
         font-size: 0.75rem;
+      }
+
+      &[aria-invalid="true"] {
+        color: #e99a9a;
       }
 
       &:focus {
@@ -849,6 +911,16 @@ html > body {
 
   to {
     transform: translateY(0);
+  }
+}
+
+@keyframes hide-filter {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-100%);
   }
 }
 

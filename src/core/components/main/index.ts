@@ -368,7 +368,7 @@ main.sort.load = () =>
 main.overlay.hide = (callback = null): void =>
 {
 	const filter = document.body.querySelector<HTMLElement>(':scope > div.filterContainer');
-	const visible = Boolean(filter && filter.style.display !== 'none');
+	const visible = Boolean(filter && filter.style.display !== 'none' && !filter.classList.contains('closing'));
 	if(visible) data.components.filter.toggle();
 	callback?.(visible);
 };

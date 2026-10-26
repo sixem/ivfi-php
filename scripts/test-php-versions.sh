@@ -50,7 +50,7 @@ for version in "${versions[@]}"; do
   for variant in indexer.php standalone.php; do
     echo "Testing PHP $version / $variant"
     docker exec "$container" php -l "$project_root/build/$variant"
-    IVFI_PHP_VARIANT="$variant" php vendor/bin/phpunit --do-not-cache-result
+    IVFI_PHP_VARIANT="$variant" php vendor/bin/phpunit --configuration tests/php --do-not-cache-result
   done
   docker rm -f "$container" >/dev/null
   container=""

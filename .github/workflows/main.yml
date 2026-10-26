@@ -82,4 +82,4 @@ jobs:
           name: build
           path: |
             build/
-            ivfi-*.zip
+            releases/ivfi-*.zip

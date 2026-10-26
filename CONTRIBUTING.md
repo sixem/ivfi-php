@@ -17,3 +17,5 @@ Run the checks relevant to your change from the repository root:
 Limit the compatibility run by passing versions, for example `bash scripts/test-php-versions.sh 8.4 8.5`.
 
 PHP defaults live in `src/php/config.php` and are embedded at build time. Edit sources rather than generated files in `build/`.
+
+`pnpm run pack-release` writes release ZIPs to `releases/`.

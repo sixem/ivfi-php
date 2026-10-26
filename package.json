@@ -38,11 +38,11 @@
     "webpack-cli": "^4.10.0"
   },
   "scripts": {
-    "build": "webpack --config webpack.config.js --mode=production",
-    "build-dev": "webpack --config webpack.config.js --mode=development",
-    "build-dev-watch": "webpack --config webpack.config.js --mode=development --watch",
-    "make-standalone": "webpack --config webpack.config.js --mode=production && node ./scripts/make-standalone.js",
-    "lint": "eslint \"./src/core/**/*.ts\" webpack.config.js build.helpers.js \"scripts/*.js\" && stylelint \"./src/css/**/*.scss\"",
+    "build": "webpack --config scripts/build/webpack.config.js --mode=production",
+    "build-dev": "webpack --config scripts/build/webpack.config.js --mode=development",
+    "build-dev-watch": "webpack --config scripts/build/webpack.config.js --mode=development --watch",
+    "make-standalone": "webpack --config scripts/build/webpack.config.js --mode=production && node ./scripts/make-standalone.js",
+    "lint": "eslint \"./src/core/**/*.ts\" \"scripts/build/*.js\" \"scripts/*.js\" && stylelint \"./src/css/**/*.scss\"",
     "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js && node --test scripts/test-standalone.js",
     "pack-release": "bash ./scripts/pack-release.sh"
   },

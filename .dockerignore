@@ -2,8 +2,6 @@
 !package.json
 !pnpm-lock.yaml
 !pnpm-workspace.yaml
-!webpack.config.js
-!build.helpers.js
 !build.options.json
 !tsconfig.json
 !src/
@@ -12,6 +10,8 @@
 !extras/**
 !scripts/
 !scripts/make-standalone.js
+!scripts/build/
+!scripts/build/**
 !docker/
 !docker/Dockerfile
 !docker/nginx/

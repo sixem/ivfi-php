@@ -4,7 +4,8 @@ WORKDIR /src
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
-COPY webpack.config.js build.helpers.js build.options.json tsconfig.json ./
+COPY build.options.json tsconfig.json ./
+COPY scripts/build/ ./scripts/build/
 COPY src/ ./src/
 COPY extras/ ./extras/
 COPY scripts/make-standalone.js ./scripts/make-standalone.js

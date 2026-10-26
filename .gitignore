@@ -1,8 +1,8 @@
 node_modules/
 /vendor/
 /.phpunit.cache/
-/phpunit.xml
-build/
+/tests/php/phpunit.xml
+/build/
 docker/public
 *.7z
 *.zip

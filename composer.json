@@ -7,7 +7,7 @@
     "phpunit/phpunit": "^12.5"
   },
   "scripts": {
-    "test": "phpunit"
+    "test": "phpunit --configuration tests/php"
   },
   "config": {
     "sort-packages": true
