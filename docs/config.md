@@ -51,7 +51,7 @@ Key: **`authentication`**
 
 Enables HTTP authentication through PHP (Digest access authentication).
 
-Don't rely on this for any strong protection.
+Don't rely on this for any strong protection. Digest requests are bound to their request URI, but nonces are not tracked or expired, so a captured authenticated request can still be replayed against the same URI. Use HTTPS. Authentication applies only to requests handled by the script; files served directly by the web server need separate access controls.
 
 | Child key | Type | Value | Description |
 |-----|------|---------|-------------|
@@ -71,7 +71,7 @@ return array(
 );
 ?>
 ```
-This would apply authentication to `/protected/`, `/secret/` and `/directory/protected/`.
+This would apply authentication to `/protected/`, `/secret/` and `/directory/protected/`. Restrictions check the decoded URL, its normalized path, and any resolved target within the media root, so an in-root symlink cannot bypass a target restriction. On case-insensitive filesystems, use a case-insensitive expression (`i` modifier).
 
 ## Format
 Key: **`format`**
@@ -87,7 +87,7 @@ Key: **`icon`**
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `path` | String | `/favicon.ico` | Path to a favicon.
+| `path` | String/Boolean | `false` | Custom favicon URL. Unset, false or empty uses the embedded default, including in standalone builds.
 | `mime` | String | `image/x-icon` | Favicon [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Complete_list_of_MIME_types)
 
 ## Sorting
@@ -312,7 +312,7 @@ Example usage with Nginx:
 
 This option can be used if you for example are serving the script through a reverse proxy to a path that is not the actual web root.
 
-This can also be set as a header (`X-Indexer-Prepend-Path`) in cases where the script is being processed through a proxy.
+This can also be set as a header (`X-Indexer-Prepend-Path`) in cases where the script is being processed through a proxy. When using Digest authentication behind a proxy that strips this prefix, configure `INDEXER_PREPEND_PATH` in the PHP server environment as well. Authentication deliberately does not trust the client-supplied header to rewrite the signed request URI.
 
 #### An example where this can be used:
 

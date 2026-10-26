@@ -189,6 +189,10 @@ const config = (env, argv) => {
 		module: {
 			rules: [
 				{
+					test: /favicon\.webp$/,
+					type: 'asset/inline'
+				},
+				{
 					test: /\.tsx?$/,
 					loader: 'ts-loader'
 				},

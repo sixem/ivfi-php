@@ -37,7 +37,7 @@ $config = [
      * Favicon options
      */
     'icon' => [
-        'path' => '/favicon.ico', /* What favicon to use */
+        'path' => false, /* Custom favicon URL; false uses the embedded default */
         'mime' => 'image/x-icon' /* Favicon mime type */
     ],
     /**
@@ -177,7 +177,7 @@ function respondToError($status, $error = NULL)
 
   http_response_code($status);
   header('Content-Type: text/html; charset=UTF-8');
-  $messages = [403 => 'Forbidden', 404 => 'Not Found', 500 => 'Internal Server Error'];
+  $messages = [400 => 'Bad Request', 403 => 'Forbidden', 404 => 'Not Found', 500 => 'Internal Server Error'];
   echo '<h3>' . $status . ' ' . $messages[$status] . '</h3>';
 
   if($error !== NULL)
@@ -206,8 +206,9 @@ set_exception_handler(function (Throwable $error) {
   buildInject.readmeSupport.PARSEDOWN_LIBRARY ?
   buildInject.readmeSupport.PARSEDOWN_LIBRARY : null %>
 
-/* Define current request URI */
-define('CURRENT_URI', rawurldecode($_SERVER['REQUEST_URI']));
+/* Decode the path once, after separating the raw query string. */
+define('CURRENT_URI', rawurldecode(explode('?', $_SERVER['REQUEST_URI'], 2)[0]));
+if(strpos(CURRENT_URI, "\0") !== false) respondToError(400);
 /* Define default configuration file */
 define('CONFIG_FILE', basename(__FILE__, '.php') . '.config.php');
 /* Define default dotfile name */
@@ -225,14 +226,10 @@ $client = isset($_COOKIE['IVFi']) ? $_COOKIE['IVFi'] : NULL;
 /** Define the current theme */
 $currentTheme = NULL;
 
-/* If client cookie is set, then parse it using `json_decode()` */
-if($client)
-{
-  $client = json_decode($client, true);
-}
-
-/* Validate that the cookie is a valid array type */
+/* Ignore malformed preferences instead of failing the page request. */
+$client = is_string($client) ? json_decode($client, true) : NULL;
 $validate = is_array($client);
+if(!$validate) $client = NULL;
 
 /** Define compact mode */
 $compact = NULL;
@@ -362,6 +359,13 @@ class Helpers
     }
 
     return $output;
+  }
+
+  /** Normalizes URL aliases for authentication without changing filesystem boundary checks. */
+  public static function normalizeRequestPath($path)
+  {
+    if(DIRECTORY_SEPARATOR === '\\') $path = str_replace('\\', '/', $path);
+    return self::removeDotSegments(preg_replace('#/+#', '/', $path));
   }
 
   /**
@@ -593,16 +597,23 @@ function authenticate($users, $realm)
     ];
 
     $data = [];
-    $keys = implode('|', array_keys($neededParts));
+    $offset = 0;
+    $length = strlen($text);
+    $pattern = <<<'DIGEST_PATTERN'
+~\G[ \t]*([a-zA-Z][a-zA-Z0-9_-]*)[ \t]*=[ \t]*("(?:[^"\\\r\n]|\\[^\r\n])*"|[^\s,"=]+)[ \t]*(,|$)~
+DIGEST_PATTERN;
 
-    preg_match_all(
-      '@(' . $keys . ')=(?:([\'"])([^\2]+?)\2|([^\s,]+))@', $text, $matches, PREG_SET_ORDER
-    );
-
-    foreach($matches as $m)
+    while($offset < $length)
     {
-      $data[$m[1]] = $m[3] ? $m[3] : $m[4];
-      unset($neededParts[$m[1]]);
+      if(!preg_match($pattern, $text, $match, 0, $offset)) return false;
+      $offset += strlen($match[0]);
+      $key = strtolower($match[1]);
+      if(isset($data[$key]) || ($match[3] === ',' && $offset === $length)) return false;
+      $value = $match[2];
+      $data[$key] = $value[0] === '"'
+        ? preg_replace('~\\\\(.)~s', '$1', substr($value, 1, -1))
+        : $value;
+      unset($neededParts[$key]);
     }
 
     return $neededParts ? false : $data;
@@ -612,7 +623,7 @@ function authenticate($users, $realm)
   function createHeader($realm)
   {
     http_response_code(401);
-    header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . uniqid() . '",opaque="' . md5($realm) . '"');
+    header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . bin2hex(random_bytes(24)) . '",opaque="' . md5($realm) . '"');
   }
 
   /* Deny access if no digest is set */
@@ -626,10 +637,26 @@ function authenticate($users, $realm)
   $data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST']);
 
   /* Deny access if data is invalid or username is unset */
-  if(!$data || !isset($users[$data['username']]))
+  if(!$data || !isset($users[$data['username']]) || $data['qop'] !== 'auth'
+    || $data['nonce'] === '' || $data['cnonce'] === '' || $data['uri'] === ''
+    || !preg_match('/^[0-9a-f]{8}$/iD', $data['nc']) || $data['nc'] === '00000000'
+    || (isset($data['realm']) && $data['realm'] !== $realm)
+    || (isset($data['algorithm']) && strcasecmp($data['algorithm'], 'MD5') !== 0)
+    || !preg_match('/^[0-9a-f]{32}$/iD', $data['response']))
   {
     createHeader($realm);
     die('Invalid credentials.');
+  }
+
+  /* Only server configuration can authorize a rewritten authentication target. */
+  $requestTarget = $_SERVER['REQUEST_URI'];
+  if(!empty($_SERVER['INDEXER_PREPEND_PATH']))
+  {
+    $requestTarget = rtrim($_SERVER['INDEXER_PREPEND_PATH'], '/') . '/' . ltrim($requestTarget, '/');
+  }
+  if($data['uri'] !== $requestTarget)
+  {
+    respondToError(400);
   }
 
   $a1 = md5($data['username'] . ':' . $realm . ':' . $users[$data['username']]);
@@ -638,7 +665,7 @@ function authenticate($users, $realm)
   $validResponse = md5($a1 . ':' . $data['nonce'] . ':' . $data['nc'] . ':' . $data['cnonce'] . ':' . $data['qop'] . ':' . $a2);
 
   /* Deny access if data can't be verified */
-  if($data['response'] != $validResponse)
+  if(!hash_equals($validResponse, strtolower($data['response'])))
   {
     createHeader($realm);
     die('Invalid credentials.');
@@ -722,7 +749,7 @@ if(file_exists(CONFIG_FILE))
 ini_set('display_errors', isset($config['debug']) && $config['debug'] === true ? '1' : '0');
 
 /* Default configuration values. Used if values from the above config are unset */
-$defaults = array('authentication' => false,'single_page' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i', 'd/m/y'),'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'inject' => false,'style' => array('themes' => array('path' => '/<%= indexerPath %>/themes/','default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'exclude' => false,'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
+$defaults = array('authentication' => false,'single_page' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i', 'd/m/y'),'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB')),'icon' => array('path' => false,'mime' => 'image/x-icon'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'inject' => false,'style' => array('themes' => array('path' => '/<%= indexerPath %>/themes/','default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'exclude' => false,'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
 
 /**
  * Call authentication function
@@ -741,8 +768,29 @@ if(isset($config['authentication'])
     if(isset($config['authentication']['restrict']) &&
       is_string($config['authentication']['restrict']))
     {
-      /* Check if `restrict` filter matches the current requested URI */
-      $isRestricted = preg_match($config['authentication']['restrict'], CURRENT_URI);
+      /* Check both URL spellings so dot segments and duplicate slashes cannot bypass restrictions. */
+      $isRestricted = false;
+      $authPaths = [CURRENT_URI, Helpers::normalizeRequestPath(CURRENT_URI)];
+      /* Include in-root symlink targets and filesystem aliases in restriction checks. */
+      $authBase = realpath(BASE_PATH);
+      $authTarget = realpath(Helpers::joinPaths(BASE_PATH, CURRENT_URI));
+      if($authBase !== false && $authTarget !== false
+        && Helpers::isAboveCurrent($authTarget, $authBase, false))
+      {
+        $resolvedPath = '/' . ltrim(substr($authTarget, strlen(rtrim($authBase, '/\\'))), '/\\');
+        if(DIRECTORY_SEPARATOR === '\\') $resolvedPath = str_replace('\\', '/', $resolvedPath);
+        $authPaths[] = $resolvedPath;
+        if(is_dir($authTarget)) $authPaths[] = rtrim($resolvedPath, '/') . '/';
+      }
+      foreach(array_unique($authPaths) as $authPath)
+      {
+        $match = preg_match($config['authentication']['restrict'], $authPath);
+        if($match === false)
+        {
+          throw new RuntimeException('Invalid authentication restriction expression.');
+        }
+        $isRestricted = $isRestricted || $match === 1;
+      }
     }
 
     /* Restrict content if `restrict` filter matches successfully or it is unset */
@@ -1229,20 +1277,13 @@ class Indexer extends Helpers
    */
   public function buildTable($sorting = false, $sortItems = 0, $sortType = 'modified', $useMb = false)
   {
-    /* Get client timezone offset */
-    $cookies = [
-      'timezoneOffset' => intval(is_array($this->client)
-        ? (isset($this->client['timezoneOffset'])
-          ? $this->client['timezoneOffset']
-          : 0)
-        : 0)
-    ];
-
-    $timezone = [
-      'offset' => $cookies['timezoneOffset'] > 0
-        ? -$cookies['timezoneOffset'] * 60
-        : abs($cookies['timezoneOffset']) * 60
-    ];
+    /* Bound cookie-supplied minutes before converting to seconds. */
+    $timezoneOffset = $this->client['timezoneOffset'] ?? 0;
+    if(!is_numeric($timezoneOffset) || $timezoneOffset < -1440 || $timezoneOffset > 1440)
+    {
+      $timezoneOffset = 0;
+    }
+    $timezone = ['offset' => -(int) $timezoneOffset * 60];
 
     /* Gets the current directory */
     $directory = self::getCurrentDirectory();
@@ -1907,7 +1948,7 @@ try
 {
   /* Call class with options set */
   $indexer = new Indexer(
-      CURRENT_URI,
+      $_SERVER['REQUEST_URI'],
       [
           'path' => [
             'relative' => BASE_PATH,
@@ -1981,7 +2022,8 @@ if(count($themes) > 0)
 {
   /* Check if client has a custom theme already set */
   if(is_array($client)
-    && isset($client['style']['theme']))
+    && isset($client['style']['theme']) && is_string($client['style']['theme'])
+    && isset($themes[$client['style']['theme']]))
   {
     $currentTheme = $client['style']['theme'] ? $client['style']['theme'] : NULL;
   /* Check for a default theme */
@@ -2131,8 +2173,8 @@ function buildHeader(
   /** Construct header icon */
   $header[] = Helpers::createElement('link', [
     'rel' => 'shortcut icon',
-    'href' => $config['icon']['path'],
-    'type' => $config['icon']['mime']
+    'href' => !empty($config['icon']['path']) ? $config['icon']['path'] : '<%= require('../assets/favicon.webp') %>',
+    'type' => !empty($config['icon']['path']) ? $config['icon']['mime'] : 'image/webp'
   ], NULL);
 
   /** Add base stylesheet link */

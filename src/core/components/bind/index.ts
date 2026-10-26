@@ -46,7 +46,6 @@ events.handleTopBarVisibility = (): void =>
 			'data-view': 'desktop'
 		});
 		top.innerHTML = path.innerHTML;
-		top.setAttribute('data-tooltip', path.textContent.trim());
 		topBar.querySelector(':scope > div.directoryInfo').append(top);
 	}
 
