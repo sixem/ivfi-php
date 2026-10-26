@@ -14,12 +14,13 @@ if(!empty($request['captureResponse'])) {
 }
 $_SERVER = [
     'REQUEST_URI' => $request['uri'],
-    'REQUEST_METHOD' => 'GET',
+    'REQUEST_METHOD' => $request['method'] ?? 'GET',
     'SERVER_PROTOCOL' => 'HTTP/1.1',
     'SERVER_NAME' => 'localhost',
     'INDEXER_BASE_PATH' => getcwd(),
     'HTTP_X_INDEXER_PREPEND_PATH' => $request['prepend'],
 ];
+if (isset($request['serverPrepend'])) $_SERVER['INDEXER_PREPEND_PATH'] = $request['serverPrepend'];
 $_COOKIE = $request['cookies'] ?? [];
 if (isset($request['digest'])) $_SERVER['PHP_AUTH_DIGEST'] = $request['digest'];
 $_GET = [];

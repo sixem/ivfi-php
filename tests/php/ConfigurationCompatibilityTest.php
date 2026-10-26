@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 final class ConfigurationCompatibilityTest extends TestCase
 {
     private string $root;
+    private const AUTH_SECRET = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
     protected function setUp(): void
     {
@@ -57,7 +58,7 @@ final class ConfigurationCompatibilityTest extends TestCase
         self::assertSame(0, proc_close($process), $errors);
         $response = json_decode($output, true, 512, JSON_THROW_ON_ERROR);
         if ($response['status'] === 200) self::assertSame('', $errors);
-        return $response;
+        return $response + ['log' => $errors];
     }
 
     private function jsConfig(array $response): array
@@ -221,9 +222,8 @@ CONFIG
     {
         mkdir($this->root . '/media/protected');
         mkdir($this->root . '/media/public');
-        $config = '<?php return ["authentication" => ["users" => ["fixture" => "secret"], "restrict" => "~^/protected(?:/|$)~"]];';
-        $response = md5(md5('fixture:Restricted content.:secret') . ':fixture-nonce:00000001:client:auth:' . md5('GET:/protected/'));
-        $digest = 'username="fixture", nonce="fixture-nonce", nc=00000001, cnonce="client", qop=auth, uri="/protected/", response="' . $response . '"';
+        $config = $this->authConfig(['restrict' => '~^/protected(?:/|$)~']);
+        $digest = $this->digest($this->nonce(), '/protected/');
         foreach ($this->variants() as $variant) {
             foreach (['/protected/', '//protected/', '/public/../protected/'] as $uri) {
                 self::assertSame(401, $this->render($variant, $config, null, ['uri' => $uri])['status']);
@@ -234,6 +234,101 @@ CONFIG
                 self::assertSame(401, $this->render($variant, $config, null, ['uri' => '/protected/', 'digest' => $invalid])['status']);
             }
             self::assertSame(200, $this->render($variant, $config, null, ['uri' => '/public/'])['status']);
+        }
+    }
+
+    private function authConfig(array $options = []): string
+    {
+        return '<?php return ' . var_export(['authentication' => $options + [
+            'users' => ['fixture' => 'secret'], 'secret' => self::AUTH_SECRET,
+        ]], true) . ';';
+    }
+
+    private function nonce(?int $time = null, string $realm = 'Restricted content.', string $secret = self::AUTH_SECRET): string
+    {
+        $payload = ($time ?? time()) . ':' . bin2hex(random_bytes(16));
+        return $payload . ':' . hash_hmac('sha256', "ivfi-digest\n" . $realm . "\n" . $payload, hex2bin($secret));
+    }
+
+    private function digest(string $nonce, string $uri = '/', string $password = 'secret', string $username = 'fixture'): string
+    {
+        $response = md5(md5($username . ':Restricted content.:' . $password) . ':' . $nonce . ':00000001:client:auth:' . md5('GET:' . $uri));
+        return 'username="' . $username . '", nonce="' . $nonce . '", nc=00000001, cnonce="client", qop=auth, uri="' . $uri . '", response="' . $response . '"';
+    }
+
+    public function testDigestRejectsUnissuedExpiredAndAlteredNonces(): void
+    {
+        foreach ($this->variants() as $variant) {
+            $config = $this->authConfig();
+            $nonce = $this->nonce();
+            $valid = $this->digest($nonce);
+            // Reuse inside the lifetime remains valid; this scheme intentionally has no replay store.
+            for ($i = 0; $i < 2; $i++) {
+                $response = $this->render($variant, $config, null, ['digest' => $valid]);
+                self::assertSame(200, $response['status']);
+                self::assertStringNotContainsString(self::AUTH_SECRET, $response['body']);
+            }
+            $parts = explode(':', $nonce);
+            foreach ([
+                'fixture-nonce',
+                $this->nonce(time() - 301),
+                $this->nonce(time() + 60),
+                $this->nonce(null, 'Other realm'),
+                $this->nonce(null, 'Restricted content.', str_repeat('ab', 32)),
+                ($parts[0] - 1) . ':' . $parts[1] . ':' . $parts[2],
+                $parts[0] . ':' . str_repeat('0', 32) . ':' . $parts[2],
+                $parts[0] . ':' . $parts[1] . ':' . str_repeat('0', 64),
+            ] as $invalid) {
+                self::assertSame(401, $this->render($variant, $config, null, ['digest' => $this->digest($invalid)])['status']);
+            }
+            self::assertSame(401, $this->render($variant, $config, null, ['digest' => $this->digest($nonce, '/', 'wrong')])['status']);
+            self::assertSame(401, $this->render($variant, $config, null, ['method' => 'POST', 'digest' => $valid])['status']);
+        }
+    }
+
+    public function testAuthenticationRequiresSecretAndPreservesShorthandUsers(): void
+    {
+        foreach ($this->variants() as $variant) {
+            foreach ([null, '', 'short', str_repeat('g', 64), 42, ['invalid']] as $secret) {
+                $response = $this->render($variant, $this->authConfig(['secret' => $secret]));
+                self::assertSame(500, $response['status']);
+                self::assertSame('<h3>500 Internal Server Error</h3>', $response['body']);
+                self::assertStringContainsString('authentication.secret', $response['log']);
+            }
+            $shorthand = '<?php return ' . var_export(['authentication' => [
+                'fixture' => 'secret', 'secret' => self::AUTH_SECRET,
+            ]], true) . ';';
+            self::assertSame(200, $this->render($variant, $shorthand, null, ['digest' => $this->digest($this->nonce())])['status']);
+            self::assertSame(401, $this->render($variant, $shorthand, null, [
+                'digest' => $this->digest($this->nonce(), '/', self::AUTH_SECRET, 'secret'),
+            ])['status']);
+        }
+    }
+
+    public function testOnlyServerPrependAffectsLinksAndDigestTargets(): void
+    {
+        foreach ($this->variants() as $variant) {
+            $header = '/untrusted-marker" onmouseover="probe';
+            $response = $this->render($variant, null, null, ['prepend' => $header]);
+            self::assertSame(200, $response['status']);
+            self::assertStringContainsString('href="/photo.webp"', $response['body']);
+            self::assertStringNotContainsString('untrusted-marker', $response['body']);
+            $response = $this->render($variant, null, null, ['prepend' => $header, 'serverPrepend' => '/trusted']);
+            self::assertStringContainsString('href="/trusted/photo.webp"', $response['body']);
+            self::assertStringNotContainsString('untrusted-marker', $response['body']);
+
+            $config = $this->authConfig();
+            $nonce = $this->nonce();
+            $response = $this->render($variant, $config, null, [
+                'digest' => $this->digest($nonce, '/trusted/'), 'serverPrepend' => '/trusted', 'prepend' => $header,
+            ]);
+            self::assertSame(200, $response['status']);
+            self::assertSame(400, $this->render($variant, $config, null, [
+                'digest' => $this->digest($nonce, '/trusted/'), 'prepend' => '/trusted',
+            ])['status']);
+            self::assertSame(200, $this->render($variant, $config, null, [
+                'digest' => $this->digest($nonce), 'prepend' => $header,
+            ])['status']);
         }
     }
 

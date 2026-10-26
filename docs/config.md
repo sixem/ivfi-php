@@ -25,11 +25,12 @@ Key: **`authentication`**
 
 Enables HTTP authentication through PHP (Digest access authentication).
 
-Protects listings handled by IVFi, not files served directly by your web server. Use HTTPS and server-level access controls for private files. Captured authenticated requests can still be replayed.
+Protects listings handled by IVFi, not files served directly by your web server. Use HTTPS and server-level access controls for private files. Signed authentication challenges expire after five minutes; captured requests can still be replayed within that window.
 
 | Child key | Type | Value | Description |
 |-----|------|---------|-------------|
 | `users` | Array | `username => password` | Each key in the array represents a valid user where the value is the password.
+| `secret` | String | 64 hexadecimal characters | Required signing key for authentication challenges. |
 | `restrict` | String | `regex` | Applies authentication exclusively to paths matching the regular expression.
 
 Example:
@@ -40,12 +41,21 @@ return array(
         'users' => array(
             'username' => 'password'
         ),
+        'secret' => 'YOUR_GENERATED_64_CHARACTER_HEX_SECRET',
         'restrict' => '~^/(protected|secret|directory/protected)(/|$)~i'
     )
 );
 ?>
 ```
 This protects `/protected/`, `/secret/` and `/directory/protected/`, including their children.
+
+When enabling authentication or upgrading an existing setup, generate a secret once:
+
+```sh
+php -r 'echo bin2hex(random_bytes(32)), PHP_EOL;'
+```
+
+Replace the example placeholder with that value and keep it private. Store the value in your config; do not generate a new secret on each request.
 
 Restrictions also check resolved paths within the media root. Use the `i` modifier on case-insensitive filesystems.
 
@@ -279,19 +289,12 @@ Example usage with Nginx:
 |-----|------|-------------|
 | `INDEXER_PREPEND_PATH` | String | Adds a path to the beginning of every parsed path and file in the script.
 
-Use this when a reverse proxy serves IVFi under a path prefix. The proxy can set `X-Indexer-Prepend-Path` for navigation links.
+Use this when a reverse proxy strips a path prefix before forwarding requests to IVFi. Set the prefix on the PHP server; client-supplied `X-Indexer-Prepend-Path` headers are ignored. Existing setups using that header must migrate to this server setting.
 
-With Digest authentication, also set `INDEXER_PREPEND_PATH` on the PHP server if the proxy strips the prefix.
+For Nginx/PHP-FPM, add this to the backend's existing PHP/FastCGI location:
 
-Example:
-```
-location /file/upstream/ {
-        proxy_pass http://192.168.1.100:8080/;
-
-        proxy_set_header X-Indexer-Prepend-Path "/file/upstream/";
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-}
+```nginx
+fastcgi_param INDEXER_PREPEND_PATH /file/upstream;
 ```
 
 This makes `/image.jpg` link to `/file/upstream/image.jpg`.

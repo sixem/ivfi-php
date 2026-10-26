@@ -46,7 +46,7 @@ final class OutputEncodingTest extends TestCase
             $this->root
         );
         self::assertIsResource($process);
-        fwrite($pipes[0], json_encode(['uri' => $uri, 'prepend' => $prepend], JSON_THROW_ON_ERROR));
+        fwrite($pipes[0], json_encode(['uri' => $uri, 'prepend' => '', 'serverPrepend' => $prepend], JSON_THROW_ON_ERROR));
         fclose($pipes[0]);
         $html = stream_get_contents($pipes[1]);
         $errors = stream_get_contents($pipes[2]);

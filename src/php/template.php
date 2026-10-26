@@ -438,15 +438,8 @@ class Helpers
   }
 }
 
-  /**
-   * Authenticaticates a user
-   *
-   * @param String   $users   An array of users and their password
-   * @param String   $realm   Authenication realm
-   * 
-   * @return Void
-   */ 
-function authenticate($users, $realm)
+/** Authenticates a user with signed, short-lived Digest challenges. */
+function authenticate($users, $realm, $secret)
 {
   function http_digest_parse($text)
   {
@@ -484,19 +477,21 @@ DIGEST_PATTERN;
     return $neededParts ? false : $data;
   }
 
-  /* Create header for when unathorized */
-  function createHeader($realm)
-  {
+  $key = hex2bin($secret);
+  $signNonce = static function ($payload) use ($realm, $key) {
+    return hash_hmac('sha256', "ivfi-digest\n" . $realm . "\n" . $payload, $key);
+  };
+  $challenge = static function ($stale = false) use ($realm, $signNonce) {
+    $payload = time() . ':' . bin2hex(random_bytes(16));
+    $nonce = $payload . ':' . $signNonce($payload);
     http_response_code(401);
-    header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . bin2hex(random_bytes(24)) . '",opaque="' . md5($realm) . '"');
-  }
+    header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . $nonce
+      . '",opaque="' . md5($realm) . '"' . ($stale ? ',stale=true' : ''));
+    header('Cache-Control: no-store');
+    exit('401 Unauthorized');
+  };
 
-  /* Deny access if no digest is set */
-  if(empty($_SERVER['PHP_AUTH_DIGEST']))
-  {
-    createHeader($realm);
-    die('401 Unauthorized');
-  }
+  if(empty($_SERVER['PHP_AUTH_DIGEST'])) $challenge();
 
   /* Get digest data */
   $data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST']);
@@ -509,8 +504,15 @@ DIGEST_PATTERN;
     || (isset($data['algorithm']) && strcasecmp($data['algorithm'], 'MD5') !== 0)
     || !preg_match('/^[0-9a-f]{32}$/iD', $data['response']))
   {
-    createHeader($realm);
-    die('Invalid credentials.');
+    $challenge();
+  }
+
+  /* Authenticate the timestamp before using it to decide whether a nonce expired. */
+  if(!preg_match('/\A([0-9]{1,10}):([a-f0-9]{32}):([a-f0-9]{64})\z/', $data['nonce'], $nonce)
+    || !hash_equals($signNonce($nonce[1] . ':' . $nonce[2]), $nonce[3])
+    || (int) $nonce[1] > time())
+  {
+    $challenge();
   }
 
   /* Only server configuration can authorize a rewritten authentication target. */
@@ -532,9 +534,11 @@ DIGEST_PATTERN;
   /* Deny access if data can't be verified */
   if(!hash_equals($validResponse, strtolower($data['response'])))
   {
-    createHeader($realm);
-    die('Invalid credentials.');
+    $challenge();
   }
+
+  /* A stale challenge lets clients retry without prompting for credentials again. */
+  if(time() - (int) $nonce[1] >= 300) $challenge(true);
 }
 
 /**
@@ -670,6 +674,12 @@ if(isset($config['authentication'])
   && $config['authentication']
   && is_array($config['authentication']))
 {
+  if(!isset($config['authentication']['secret']) || !is_string($config['authentication']['secret'])
+    || !preg_match('/\A[0-9a-f]{64}\z/i', $config['authentication']['secret']))
+  {
+    throw new RuntimeException('Configuration setting "authentication.secret" must be a generated 64-character hexadecimal secret.');
+  }
+
   /* If `users` key is an array, make way for it and check for restrictions */
   if(isset($config['authentication']['users']) &&
     is_array($config['authentication']['users']))
@@ -708,11 +718,13 @@ if(isset($config['authentication'])
     /* Restrict content if `restrict` filter matches successfully or it is unset */
     if($isRestricted)
     {
-      authenticate($config['authentication']['users'], 'Restricted content.');
+      authenticate($config['authentication']['users'], 'Restricted content.', $config['authentication']['secret']);
     }
   } else {
-    /* Don't use any potential `users` array to authenticate, use main array instead */
-    authenticate($config['authentication'], 'Restricted content.');
+    /* Preserve shorthand user maps without treating the signing secret as a login. */
+    $users = $config['authentication'];
+    unset($users['secret']);
+    authenticate($users, 'Restricted content.', $config['authentication']['secret']);
   }
 }
 
@@ -1829,9 +1841,6 @@ if($cookies['sorting']['ascending'] !== NULL
 if(isset($_SERVER['INDEXER_PREPEND_PATH']))
 {
   $prependPath = $_SERVER['INDEXER_PREPEND_PATH'];
-} else if(isset($_SERVER['HTTP_X_INDEXER_PREPEND_PATH']))
-{
-  $prependPath = $_SERVER['HTTP_X_INDEXER_PREPEND_PATH'];
 } else {
   $prependPath = '';
 }
