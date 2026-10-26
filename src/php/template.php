@@ -1088,14 +1088,11 @@ class Indexer extends Helpers
     /* Iterate over the files, get and store data */
     foreach($files as $file)
     {
-      /** Deconstruction of array */
-      list($fileName, $fileSize, $fileUrl, $fileType, $fileModified) = [
-        $file[1],
-        $file['size'],
-        $file['url'],
-        $file['type'],
-        $file['modified']
-      ];
+      $fileName = $file[1];
+      $fileSize = $file['size'];
+      $fileUrl = $file['url'];
+      $fileType = $file['type'];
+      $fileModified = $file['modified'];
 
       /** Append to total size */
       $totalSize = ($totalSize + $fileSize[0]);
@@ -1138,11 +1135,7 @@ class Indexer extends Helpers
       /** Create container and add to rows */
       $rows[] = parent::createElementHtml('tr', [
         'class' => 'file'
-      ], implode('', [
-        $tdFileName,
-        $tdModified,
-        $tdSize
-      ]));
+      ], $tdFileName . $tdModified . $tdSize);
     }
 
     return [
@@ -1209,11 +1202,7 @@ class Indexer extends Helpers
       /** Create container and add to rows */
       $rows[] = parent::createElementHtml('tr', [
         'class' => 'directory'
-      ], implode('', [
-        $tdDirectoryName,
-        $tdModified,
-        $tdSize
-      ]));
+      ], $tdDirectoryName . $tdModified . $tdSize);
 
       if(($mostRecentTimestamp === 0)
         || $dir['modified'][0] > $mostRecentTimestamp)
@@ -1315,6 +1304,11 @@ class Indexer extends Helpers
       throw new RuntimeException('The mbstring extension is required when use_mbstring is enabled.');
     }
 
+    /* Scanned basenames contain no slashes, so normalize their shared prefix once. */
+    $urlPrefix = preg_replace('#/+#', '/',
+      $this->requested . ($this->requested !== '' ? DIRECTORY_SEPARATOR : '')
+    );
+
     /**
      * Iterate over the gathered directories and set their data
      */
@@ -1334,7 +1328,7 @@ class Indexer extends Helpers
       /* Set directory data values */
       $item['modified'] = self::formatModified($modified, $timezone['offset']);
       $item['type'] = 'directory';
-      $item['url'] = rtrim($this->joinPaths($this->requested, $dirName), '/');
+      $item['url'] = $urlPrefix . $dirName;
       $item['size'] = $this->directorySizes['enabled']
         ? ($this->directorySizes['recursive']
           ? self::getDirectorySizeRecursively($dirPath)
@@ -1364,7 +1358,7 @@ class Indexer extends Helpers
       $item['type'] = $fileType;
       $item['size'] = self::formatSize($size);
       $item['modified'] = self::formatModified($modified, $timezone['offset']);
-      $item['url'] = rtrim($this->joinPaths($this->requested, $fileName), '/');
+      $item['url'] = $urlPrefix . $fileName;
 
       /** Encode URL if `encode_all` is enabled */
       if($this->encodeAll)
@@ -1543,18 +1537,11 @@ class Indexer extends Helpers
   {
     if(count($this->format['date']) === 2)
     {
-      $formatted = "";
-
-      for($i = 0; $i < 2; ++$i)
-      {
-        $format = self::formatDate(
-          $this->format['date'][$i], $stamp, $modifier
-        );
-
-        $formatted .= parent::createElement('span', [
-          'data-view' => $i === 0 ? 'desktop' : 'mobile'
-        ], $format);
-      }
+      $formatted = '<span data-view="desktop">' . parent::escape(self::formatDate(
+        $this->format['date'][0], $stamp, $modifier
+      )) . '</span><span data-view="mobile">' . parent::escape(self::formatDate(
+        $this->format['date'][1], $stamp, $modifier
+      )) . '</span>';
     } else {
       /* Both branches return safe HTML for the date-column wrapper. */
       $formatted = parent::escape(self::formatDate(
