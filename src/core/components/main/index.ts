@@ -434,16 +434,13 @@ main.sortTableColumn = (target: HTMLTableCellElement) =>
 	const column: MComponentMain.ISortRow = !(target.tagName === 'TH') ? parent : target;
 	const columnIndex: number = DOM.getIndex(column);
 
-	const rows: {
-		directories: Array<HTMLElement>;
-		files: Array<HTMLElement>;
-	} = {
-		directories : Array.from((selector.use('TABLE') as HTMLElement).querySelectorAll(
-			'tbody > tr.directory'
-		)),
-		files : Array.from((selector.use('TABLE') as HTMLElement).querySelectorAll(
-			'tbody > tr.file'
-		))
+	const optimizer = data.instances.optimize.main;
+	const allRows: HTMLElement[] = optimizer.enabled ? optimizer.rows : Array.from(
+		(selector.use('TABLE') as HTMLElement).querySelectorAll('tbody > tr')
+	);
+	const rows = {
+		directories: allRows.filter(row => row.classList.contains('directory')),
+		files: allRows.filter(row => row.classList.contains('file'))
 	};
 
 	/**
@@ -456,21 +453,16 @@ main.sortTableColumn = (target: HTMLTableCellElement) =>
 		&& (config.exists('sorting.sortBy')
 		&& (columnIndex === 2 || columnIndex === 3));
 
-	if(data.instances.optimize.main.enabled)
+	const sortingTypes: number = config.get('sorting.types');
+	if((sortingTypes === 0 || sortingTypes === 2) && !skipDirectories)
 	{
-		data.instances.optimize.main.sortRows(columnIndex, !column.asc ? 'asc' : 'desc');
-	} else {
-		const sortingTypes: number = config.get('sorting.types');
-
-		if(sortingTypes === 0 || sortingTypes === 2)
-		{
-			if(!skipDirectories) rows.directories.sort(comparer(columnIndex));
-		}
-
-		if(sortingTypes === 0 || sortingTypes === 1)
-		{
-			rows.files.sort(comparer(columnIndex));
-		}
+		rows.directories.sort(comparer(columnIndex));
+		if(column.asc) rows.directories.reverse();
+	}
+	if(sortingTypes === 0 || sortingTypes === 1)
+	{
+		rows.files.sort(comparer(columnIndex));
+		if(column.asc) rows.files.reverse();
 	}
 
 	column.asc = !column.asc;
@@ -494,32 +486,13 @@ main.sortTableColumn = (target: HTMLTableCellElement) =>
 	/* Save client */
 	user.set(client);
 
-	if(!data.instances.optimize.main.enabled)
+	if(optimizer.enabled)
 	{
-		if(!column.asc)
-		{
-			const sortingTypes: number = config.get('sorting.types');
-
-			if(sortingTypes === 0 || sortingTypes === 2)
-			{
-				if(!skipDirectories) rows.directories = rows.directories.reverse();
-			}
-
-			if(sortingTypes === 0 || sortingTypes === 1)
-			{
-				rows.files = rows.files.reverse();
-			}
-		}
-
+		optimizer.rows = allRows.filter(row => row.classList.contains('parent')).concat(rows.directories, rows.files);
+		optimizer.refactor();
+	} else {
 		const tableBody = (selector.use('TABLE') as HTMLElement).querySelector('tbody');
-
-		Object.keys(rows).forEach((key: string) =>
-		{
-			rows[key].forEach((item: HTMLElement) =>
-			{
-				tableBody.append(item);
-			});
-		});
+		for(const row of [...rows.directories, ...rows.files]) tableBody.append(row);
 	}
 
 	data.sets.refresh = true;

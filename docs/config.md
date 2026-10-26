@@ -249,7 +249,7 @@ Shows generation time and optional project credits.
 | `encode_all` | Bool | `false` | Should `?` and `#` characters be encoded when processing URLs and filenames.
 | `allow_direct_access` | Bool | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `strict` to keep resolved directory paths inside the media root. `weak` also allows symlinks to directories outside it.
-| `performance` | Bool/Integer | `false` | Enable [performance mode](performance.md) with `true`, or set a minimum file-and-folder count.
+| `performance` | Bool/Integer | `250` | Enable [performance mode](performance.md) with `true`, or set a minimum file-and-folder count.
 | `credits` | Bool | `true` | Shows the project link and version in the footer.
 | `debug` | Bool | `false` | Enables PHP debugging and `console.log()` info messages.
 

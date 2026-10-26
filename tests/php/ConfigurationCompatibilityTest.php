@@ -67,6 +67,23 @@ final class ConfigurationCompatibilityTest extends TestCase
         return json_decode($matches[1], true, 512, JSON_THROW_ON_ERROR);
     }
 
+    public function testPerformanceDefaultsTo250ItemsAndAllowsOverrides(): void
+    {
+        for ($i = 0; $i < 248; $i++) {
+            file_put_contents($this->root . '/media/file-' . $i . '.txt', '');
+        }
+        foreach ($this->variants() as $variant) {
+            self::assertFalse($this->jsConfig($this->render($variant))['performance']);
+            self::assertTrue($this->jsConfig($this->render($variant, '<?php return ["performance" => true];'))['performance']);
+        }
+        mkdir($this->root . '/media/folder');
+        foreach ($this->variants() as $variant) {
+            self::assertTrue($this->jsConfig($this->render($variant))['performance']);
+            self::assertFalse($this->jsConfig($this->render($variant, '<?php return ["performance" => false];'))['performance']);
+            self::assertFalse($this->jsConfig($this->render($variant, '<?php return ["performance" => 251];'))['performance']);
+        }
+    }
+
     public function testDateAndFooterShorthandsWorkInBothDistributions(): void
     {
         foreach ($this->variants() as $variant) {

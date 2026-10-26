@@ -123,8 +123,8 @@ return [
      * 'strict' uses realpath() to avoid backwards directory traversal
      * whereas 'weak' uses a similar string-based approach */
     'path_checking' => 'strict',
-    /* Enabled the performance mode */
-    'performance' => false,
+    /* Enable performance mode at this file-and-folder count */
+    'performance' => 250,
     /* Whether the footer should be displayed */
     'footer' => [
       'enabled' => true

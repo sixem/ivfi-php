@@ -118,20 +118,23 @@ if(config.get('performance'))
 		}
 	};
 
+	const table = selector.use('TABLE') as HTMLElement;
 	setTimeout(() =>
 	{
 		requestAnimationFrame((): void =>
 		{
-			/* Create optimize instance */
-			data.instances.optimize.main = new optimizeClass({
+			if(!table.isConnected) return;
+			const optimizer = new optimizeClass({
 				page: data.layer.main,
-				table: selector.use('TABLE') as HTMLElement,
+				table,
 				scope: [window, 'scrollY'],
 				padding: 0, /* Top padding offset */
 				on: {
 					rowChange: onRowChange
 				}
 			});
+			data.instances.optimize.main = optimizer;
+			onPageReplace(() => optimizer.destroy());
 		});
 	}, 1);
 }

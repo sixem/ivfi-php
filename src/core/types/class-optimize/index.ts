@@ -39,15 +39,6 @@ export type TOptimizeOptions = {
 };
 
 /**
- * Optimization inner structure
- */
-export type TOptimizeStructure = {
-	[key: string]: {
-		index?: number;
-	}
-};
-
-/**
  * Optimization table row item
  */
 export interface TOptimizeRowItem extends HTMLElement {
@@ -55,12 +46,4 @@ export interface TOptimizeRowItem extends HTMLElement {
 	_offsetHeight?: number;
 	_isVisible?: boolean;
 	_isHidden?: boolean;
-}
-
-/**
- * Optimization cached item (sort)
- */
-export interface TOptimizeCachedRowItem {
-	value?: any;
-	index?: number;
 }

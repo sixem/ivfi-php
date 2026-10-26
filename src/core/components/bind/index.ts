@@ -117,11 +117,6 @@ events.handlePreviewScroll = (event: WheelEvent): void =>
 const onDebounce = (): void =>
 {
 	events.handleTopBarVisibility();
-
-	if(data.instances.optimize.main.enabled)
-	{
-		data.instances.optimize.main.attemptRefresh();
-	}
 };
 
 /**
@@ -135,14 +130,7 @@ events.handleBaseScroll = (): void =>
 
 	if(data.instances.optimize.main.enabled)
 	{
-		/* Get scrolled position */
-		const scrolled = window.scrollY;
-
-		/* Trigger optimization refresh if `175px` has been scrolled */
-		if(Math.abs(scrolled - data.layer.main.scrolledY) > 175)
-		{
-			data.instances.optimize.main.attemptRefresh();
-		}
+		data.instances.optimize.main.attemptRefresh();
 	}
 };
 

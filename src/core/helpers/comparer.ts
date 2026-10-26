@@ -1,15 +1,10 @@
 /**
  * Gets the value of a table cell
  */
-const getCellValue = (row: HTMLElement, index: number): any =>
+const getCellValue = (row: HTMLElement, index: number): string =>
 {
-	const attribute = row.querySelector(
-		`td:nth-child(${index + 1})`
-	).getAttribute('data-raw');
-
-	return attribute !== undefined ? attribute: row.querySelector(
-		`td:nth-child(${index + 1})`
-	).textContent;
+	const cell = row.children.item(index);
+	return cell?.getAttribute('data-raw') ?? cell?.textContent ?? '';
 };
 
 /**
@@ -17,14 +12,22 @@ const getCellValue = (row: HTMLElement, index: number): any =>
  */
 export const comparer = (index: number) =>
 {
-	return (a: HTMLElement, b: HTMLElement): any =>
+	/* Cache values for this sort so comparisons do not repeatedly query the DOM. */
+	const values = new Map<HTMLElement, string>();
+	const value = (row: HTMLElement): string =>
 	{
-		const valA = getCellValue(a, index),
-			valB = getCellValue(b, index);
+		if(!values.has(row)) values.set(row, getCellValue(row, index));
+		return values.get(row);
+	};
 
-		return !isNaN(parseFloat(valA)) && isFinite(valA) &&
-			!isNaN(parseFloat(valB)) && isFinite(valB)
-			? valA - valB
+	return (a: HTMLElement, b: HTMLElement): number =>
+	{
+		const valA = value(a),
+			valB = value(b);
+
+		return !isNaN(parseFloat(valA)) && Number.isFinite(Number(valA)) &&
+			!isNaN(parseFloat(valB)) && Number.isFinite(Number(valB))
+			? Number(valA) - Number(valB)
 			: valA.localeCompare(valB);
 	};
 };

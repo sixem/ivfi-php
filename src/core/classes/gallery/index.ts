@@ -89,6 +89,7 @@ export default class galleryClass
 		onPageReplace(() =>
 		{
 			this.cancelMediaLoad();
+			this.optimize?.destroy();
 			for(const video of this.videoCleanup.keys()) this.disposeVideo(video);
 			this.container?.querySelectorAll('img').forEach(image => releaseMedia(image));
 		});
@@ -535,18 +536,10 @@ export default class galleryClass
 			this.list &&
 			this.table)
 		{
-			const selectedItem: HTMLElement = this.table.querySelector('tr.selected');
+			const selectedItem = this.table.querySelector<HTMLElementExtend>('tr.selected');
+			const selectedItemTop = selectedItem?._offsetTop;
 
-			let selectedItemTop: number | boolean = parseInt(
-				selectedItem.style.top.replace(/\D+/g, '')
-			);
-
-			if(Number.isInteger(selectedItemTop) && !(selectedItemTop >= 0))
-			{
-				selectedItemTop = false;
-			}
-
-			if(selectedItemTop)
+			if(Number.isFinite(selectedItemTop) && selectedItemTop >= 0)
 			{
 				if(!(this.list.scrollTop <= selectedItemTop &&
 					selectedItemTop <= (this.list.scrollTop + this.list.offsetHeight)))
@@ -593,6 +586,7 @@ export default class galleryClass
 		/* Removes any previous optimize instances */
 		if(this.optimize)
 		{
+			this.optimize.destroy();
 			delete this.optimize;
 
 			eventHooks.unlisten(this.list, 'scroll', 'galleryTableScroll');
@@ -649,33 +643,14 @@ export default class galleryClass
 			{
 				log('gallery', 'windowResize (gallery)', 'Resized.');
 				page.update();
+				this.optimize.attemptRefresh();
 			}
 		}));
 
-		let scrollEndTimer: null | number = null;
-
-		/** Listen to list scrolling */
+		/* The optimizer coalesces scroll events into one frame. */
 		eventHooks.listen(this.list, 'scroll', 'galleryTableScroll', (): void =>
 		{
-			if(this.options.performance &&
-				this.optimize.enabled)
-			{
-				/* Get scrolled position */
-				const scrolled = this.list.scrollTop;
-
-				/* Trigger optimization refresh if 175 px has been scrolled */
-				if(Math.abs(scrolled - (this.page).scrolledY) > 175)
-				{
-					this.optimize.attemptRefresh();
-				}
-
-				clearTimeout(scrollEndTimer);
-
-				scrollEndTimer = window.setTimeout(() =>
-				{
-					this.optimize.attemptRefresh();
-				}, 150);
-			}
+			this.optimize.attemptRefresh();
 		});
 
 		return this.optimize;
