@@ -44,7 +44,7 @@ importers:
         version: 1.6.0(webpack@5.110.3)
       moment:
         specifier: ^2.29.1
-        version: 2.29.4
+        version: 2.31.0
       postcss:
         specifier: ^8.5.28
         version: 8.5.28
@@ -1184,8 +1184,8 @@ packages:
       uglify-js:
         optional: true
 
-  moment@2.29.4:
-    resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
+  moment@2.31.0:
+    resolution: {integrity: sha512-0acOTfMiWOheYS4eoWb80yYMb/JLvVv9SHbs2PehaDzfUG0Bw855SKyk0IKTnPGa5+U2bmi3W68l1+sGLX/pvw==}
 
   ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
@@ -3127,7 +3127,7 @@ snapshots:
     optionalDependencies:
       postcss: 8.5.28
 
-  moment@2.29.4: {}
+  moment@2.31.0: {}
 
   ms@2.1.2: {}
 
