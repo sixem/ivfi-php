@@ -73,9 +73,11 @@ for service in indexer php; do
   fi
 done
 "${compose[@]}" exec -T php php -r 'exit(extension_loaded("mbstring") && extension_loaded("Zend OPcache") ? 0 : 1);'
-printf '<?php return ["authentication" => ["users" => ["fixture" => "secret"]]];' > "$scratch/config.php"
+printf '<?php return ["authentication" => ["users" => ["fixture" => "secret"], "secret" => "%s"]];' "$(printf '%064d' 0)" > "$scratch/config.php"
 "${compose[@]}" restart php
 "${compose[@]}" up -d --wait --wait-timeout 120
+# Recreated containers may receive a different ephemeral host port.
+base="http://$("${compose[@]}" port indexer 8080)"
 request 401 /
 status="$(curl --silent --show-error --digest -u fixture:secret -o "$scratch/body" -w '%{http_code}' "$base/")"
 test "$status" = 200
