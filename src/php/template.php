@@ -1128,11 +1128,7 @@ class Indexer extends Helpers
       /** Create modified column */
       $tdModified = parent::createElementHtml('td', [
         'data-raw' => $fileModified[0]
-      ], implode('', [
-        parent::createElementHtml(
-          'span', [], $fileModified[1]
-        )
-      ]));
+      ], parent::createElementHtml('span', [], $fileModified[1]));
 
       /** Create size column */
       $tdSize = parent::createElement('td', [
@@ -1202,11 +1198,7 @@ class Indexer extends Helpers
       /** Create modified column */
       $tdModified = parent::createElementHtml('td', [
         'data-raw' => $dir['modified'][0]
-      ], implode('', [
-        parent::createElementHtml(
-          'span', [], $dir['modified'][1]
-        )
-      ]));
+      ], parent::createElementHtml('span', [], $dir['modified'][1]));
 
       /** Create size column */
       $tdSize = parent::createElement('td', $this->directorySizes['enabled']
@@ -1267,7 +1259,7 @@ class Indexer extends Helpers
     $directory = self::getCurrentDirectory();
 
     /* Gets the files from the current path and filter them */
-    $files = $this->handleFiles(self::getFiles(), ($directory === '/'));
+    $data = $this->handleFiles(self::getFiles(), ($directory === '/'));
 
     /** Parent variables */
     $parentDirectory = dirname($directory);
@@ -1306,11 +1298,7 @@ class Indexer extends Helpers
     ));
 
     /** Request data */
-    $data = [
-      'files' => $files['files'],
-      'directories' => $files['directories'],
-      'readme' => $files['readme'],
-      'dotFile' => $files['dotFile'],
+    $data += [
       'recent' => [
         'file' => 0,
         'directory' => 0
@@ -1330,12 +1318,9 @@ class Indexer extends Helpers
     /**
      * Iterate over the gathered directories and set their data
      */
-    foreach($data['directories'] as $index => $dir)
+    foreach($data['directories'] as &$item)
     {
-      /** Deconstruct array */
-      list($dirPath, $dirName) = $dir;
-
-      $item = &$data['directories'][$index];
+      list($dirPath, $dirName) = $item;
 
       /* We only need to set 'name' key if we're sorting by name */
       if($sortType === 'name')
@@ -1355,16 +1340,14 @@ class Indexer extends Helpers
           : self::getDirectorySize($dirPath))
         : 0;
     }
+    unset($item);
 
     /**
      * Iterate over the gathered files and set their data
      */
-    foreach($data['files'] as $index => $file)
+    foreach($data['files'] as &$item)
     {
-      /** Deconstruct array */
-      list($filePath, $fileName, $fileType) = $file;
-
-      $item = &$data['files'][$index];
+      list($filePath, $fileName, $fileType) = $item;
 
       /* We only need to set 'name' key if we're sorting by name */
       if($sortType === 'name')
@@ -1386,6 +1369,8 @@ class Indexer extends Helpers
         $item['url'] = str_replace('?', '%3F', str_replace('#', '%23', $item['url']));
       }
     }
+
+    unset($item);
 
     /* Pass data to processor if it is set */
     if($this->processor['item'])
@@ -1679,30 +1664,23 @@ class Indexer extends Helpers
       'dotFile' => NULL
     );
 
-    /**
-     * [Check for dotfile presence]
-     * 
-     * It may contain filters for the current directory, so it's
-     * convenient to check for its existence before filtering.
-     * 
-     * array_flip+isset is used because it's the most consistent when
-     * it comes to performance over a wide range of directory lenghts.
-     * 
-     * @see https://gist.github.com/ksimka/21a6ff74b41451c430e8
-     */
-    if(isset(array_flip($files)[DOTFILE_NAME]))
+    /* Read directory filters before processing the entries. */
+    if(in_array(DOTFILE_NAME, $files, true))
     {
-        /** Read file as JSON */
-        $data['dotFile'] = $this->readJson(
-          $this->joinPaths($this->path, DOTFILE_NAME)
-        );
+      $data['dotFile'] = $this->readJson(
+        $this->joinPaths($this->path, DOTFILE_NAME)
+      );
     }
 
-    /** Set used filters */
-    $usedFilters = [
-      'directory' => $this->filter['directory'] ?? [],
-      'file' => $this->filter['file'] ?? []
-    ];
+    /* Normalize filters once so each entry uses the same matching loop. */
+    $usedFilters = [];
+    foreach(['directory', 'file'] as $type)
+    {
+      $filters = $this->filter[$type] ?? false;
+      $usedFilters[$type] = is_array($filters)
+        ? $filters
+        : (is_string($filters) ? [$filters] : []);
+    }
 
     /** Get extra filters */
     $dotFilters = $data['dotFile']
@@ -1711,138 +1689,45 @@ class Indexer extends Helpers
 
     if(isset($dotFilters['ignore']))
     {
-      /** Add any extra filters from dotfile */
-      foreach(['directory', 'file'] as $filterType)
+      foreach(['directory', 'file'] as $type)
       {
-        if(!$usedFilters[$filterType])
-        {
-          $usedFilters[$filterType] = [];
-        } else if(!is_array($usedFilters[$filterType]))
-        {
-          $usedFilters[$filterType] = is_string($usedFilters[$filterType])
-          ? [$usedFilters[$filterType]]
-          : [];
-        }
+        array_push($usedFilters[$type], ...$dotFilters['ignore'][$type]);
       }
-
-      /** Push file filters */
-      array_push(
-        $usedFilters['file'],
-        ...$dotFilters['ignore']['file']
-      );
-
-      /** Push directory filters */
-      array_push(
-        $usedFilters['directory'],
-        ...$dotFilters['ignore']['directory']
-      );
     }
 
     foreach($files as $file)
     {
-      /** Skip hidden files */
-      if($file[0] === '.')
+      if($file[0] === '.') continue;
+
+      $filePath = $this->path . '/' . $file;
+      $isDirectory = is_dir($filePath);
+      if(!$isDirectory && !file_exists($filePath)) continue;
+
+      if(!$isDirectory && $file === 'README.md')
       {
-        continue;
+        $data['readme'] = $filePath;
       }
 
-      $filePath = ($this->path . '/' . $file);
-      $skipItem = false;
+      if($isBase && $file === ($isDirectory ? 'indexer' : $scriptName)) continue;
 
-      if(is_dir($filePath))
+      $type = $isDirectory ? 'directory' : 'file';
+      $filterName = $isDirectory ? $file . '/' : $file;
+      foreach($usedFilters[$type] as $filter)
       {
-        if($isBase && $file === 'indexer')
-        {
-          /** Ignore `indexer` directory */
-          continue;
-        } else if($usedFilters['directory'] !== false)
-        {
-          if(is_array($usedFilters['directory']))
-          {
-            foreach($usedFilters['directory'] as $filter)
-            {
-              if(!preg_match($filter, $file . '/'))
-              {
-                $skipItem = true;
-                break;
-              }
-            }
-          } else if(!preg_match($usedFilters['directory'], $file . '/'))
-          {
-            /** Ignore directories matching any potential filter */
-            continue;
-          }
-        }
+        if(!preg_match($filter, $filterName)) continue 2;
+      }
 
-        if(!$skipItem)
-        {
-          array_push(
-            $data['directories'], array($filePath, $file)
-          );
-        }
-      } else if(file_exists($filePath))
+      if($isDirectory)
       {
-        if($file === 'README.md')
-        {
-          /** Set README data */
-          $data['readme'] = $filePath;
-        }
-        
-        if($isBase && $file === $scriptName)
-        {
-          continue;
-        } else if($usedFilters['file'] !== false)
-        {
-          if(is_array($usedFilters['file']))
-          {
-            foreach($usedFilters['file'] as $filter)
-            {
-              if(!preg_match($filter, $file))
-              {
-                $skipItem = true;
-                break;
-              }
-            }
-          } else if(!$skipItem)
-          {
-            $skipItem = !preg_match($usedFilters['file'], $file);
-          }
-        }
-
+        $data['directories'][] = [$filePath, $file];
+      } else {
         $fileType = $this->getFileType($file);
-
-        if(($this->exclude && is_array($this->exclude))
-          && in_array($fileType[1], $this->exclude))
-        {
-          $skipItem = true;
-        }
-
-        if($skipItem)
-        {
-          continue;
-        }
-
-        array_push(
-          $data['files'],
-          array($filePath, $file, $fileType)
-        );
+        if($this->exclude && in_array($fileType[1], $this->exclude)) continue;
+        $data['files'][] = [$filePath, $file, $fileType];
       }
     }
 
     return $data;
-  }
-
-  /**
-   * Gets a client cookie key
-   *
-   * @param String    $path       File path
-   * @param Integer   $modifier   An integer that gets added to the timestamp
-   * 
-   * @return Array
-   */ 
-  private function getCookie($key, $default = NULL)
-  {
-    return isset($_COOKIE[$key]) ? $_COOKIE[$key] : $default;
   }
 
   /**
@@ -2081,14 +1966,7 @@ $itemsTotal = (count($data['files']) + count($data['directories']));
 /* Check if performance mode depends on item count */
 if(is_int($config['performance']))
 {
-  $itemsTotal = (count($data['files']) + count($data['directories']));
-
-  if($itemsTotal >= $config['performance'])
-  {
-    $config['performance'] = true;
-  } else {
-    $config['performance'] = false;
-  }
+  $config['performance'] = $itemsTotal >= $config['performance'];
 }
 
 /* Set some data like file count etc */
