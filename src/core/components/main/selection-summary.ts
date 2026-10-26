@@ -7,6 +7,7 @@ import '../../../css/selection-summary.scss';
 
 export function bindSelectionSummary(selection: RowSelection): void
 {
+	if(config.get('selection.enabled') === false) return;
 	const element = document.createElement('button');
 	element.type = 'button';
 	element.className = 'selectionSummary';

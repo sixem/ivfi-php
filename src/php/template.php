@@ -1,4 +1,8 @@
-<?php
+<%
+const defaultConfig = require('./config.php')
+  .replace(/^<\?php\s+return\s+/, '').trim().replace(/;$/, '')
+  .replace(/__IVFI_ASSET_PATH__/g, indexerPath);
+%><?php
 /**
  * <ivfi-php> [https://github.com/sixem/ivfi-php]
  *
@@ -16,146 +20,7 @@
 /* Used to bust the cache and to display footer version number */
 $version = '<%= version %>';
 
-$config = [
-    /**
-     * Authentication options
-     */
-    'authentication' => false,
-    /**
-     * Enables single-page features
-     */
-    'single_page' => false,
-    /**
-     * Formatting options
-     */
-    'format' => [
-        'title' => 'Index of %s', /* Title format where %s is the current path */
-        'date' => ['d/m/y H:i', 'd/m/y'], /* Date formats (desktop, mobile) */
-        'sizes' => [' B', ' KiB', ' MiB', ' GiB', ' TiB'] /* Size formats */
-    ],
-    /**
-     * Favicon options
-     */
-    'icon' => [
-        'path' => false, /* Custom favicon URL; false uses the embedded default */
-        'mime' => 'image/x-icon' /* Favicon mime type */
-    ],
-    /**
-     * Sorting options.
-     * 
-     * Used as default until the client sets their own sorting settings
-     */
-    'sorting' => [
-        'enabled' => false, /* Whether the server should sort the items */
-        'order' => SORT_ASC, /* Sorting order. asc or desc */
-        'types' => 0, /* What item types to sort. 0 = both. 1 = files only. 2 = directories only */
-        'sort_by' => 'name', /* What to sort by. available options are name, modified, type and size */
-        'use_mbstring' => false /* Enabled mbstring when sorting */
-    ],
-    /**
-     * Gallery options
-     */
-    'gallery' => [
-        'enabled' => true, /* Whether the gallery plugin should be enabled */
-        'reverse_options' => false, /* Reverse search options for images (when hovering over them) */
-        'scroll_interval' => 50, /* Break in ms between scroll navigation events */
-        'list_alignment' => 0, /* List alignment where 0 is right and 1 is left */
-        'fit_content' => true, /* Whether the media should be forced to fill the screen space */
-        'image_sharpen' => false, /* Attempts to disable browser blurriness on images */
-    ],
-    /**
-     * Preview options
-     */
-    'preview' => [
-        'enabled' => true, /* Whether the preview plugin should be enabled */
-        'hover_delay' => 75, /* Delay in milliseconds before the preview is shown */
-        'cursor_indicator' => true /* Displays a loading cursor while the preview is loading */
-    ],
-    /**
-     * Extension that should be marked as media.
-     * These extensions will have potential previews and will be included in the gallery
-     */
-    'extensions' => [
-        'image' => ['jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'],
-        'video' => ['webm', 'mp4', 'ogg', 'ogv', 'mov']
-    ],
-    /**
-     * Injection options
-     */
-    'inject' => false,
-    /**
-     * Styling options
-     */
-    'style' => [
-        /* Set to a path relative to the root directory (location of this file) containg .css files.
-         * Each .css file will be treated as a separate theme. Set to false to disable themes */
-        'themes' => [
-          'path' => '/<%= indexerPath %>/themes/',
-          'default' => false
-        ],
-         /* Cascading style sheets options */
-        'css' => [
-          'additional' => false
-        ],
-        /* Enables a more compact styling of the page */
-        'compact' => false
-    ],
-    /**
-     * Filter what files or directories to show.
-
-     * Uses regular expressions. All names *matching* the regex will be shown.
-     * Setting the value to false will disable the respective filter
-     */
-    'filter' => [
-        'file' => false,
-        'directory' => false
-    ],
-    /** Extensions to exclude */
-    'exclude' => false,
-    /**
-     * Calculates the size of directories.
-
-     * This can be intensive, especially with the recursive
-     * option, so be aware of that
-     */
-    'directory_sizes' => [
-      /* Whether directory sizes should be calculated or not */
-      'enabled' => false,
-      /* Recursively scans the directories when calculating the size */
-      'recursive' => false
-    ],
-    /* Metadata options */
-    'metadata' => false,
-    /* Processing functions */
-    'processor' => false,
-    /* Should ? and # characters be encoded when processing URLs */
-    'encode_all' => false,
-    /* Whether this .php file should be directly accessible */
-    'allow_direct_access' => false,
-    /* Set to 'strict' or 'weak'.
-     * 'strict' uses realpath() to avoid backwards directory traversal
-     * whereas 'weak' uses a similar string-based approach */
-    'path_checking' => 'strict',
-    /* Enabled the performance mode */
-    'performance' => false,
-    /* Whether extra information in the footer should be generated */
-    'footer' => [
-      'enabled' => true,
-      'show_server_name' => true
-    ],
-    /**
-     * Displays a simple link to the git repository in the
-     * footer along with the current version.
-     * 
-     * I would really appreciate it if you would keep this enabled
-     */
-    'credits' => true,
-    /**
-     * Enables console output in JS and PHP debugging.
-     * Also enables random query-strings for js/css files to bust the cache
-     */
-    'debug' => false
-];
+$config = <%= defaultConfig %>;
 
 /* Keep startup/configuration failures private until debug is explicitly enabled. */
 ini_set('display_errors', '0');
@@ -730,26 +595,70 @@ function getThemes($basePath, $themesPath)
   }
 }
 
-/**
- * Attempts to search for a configuration file.
- * 
- * If it exists, the default values will be overwritten.
- * Any unset values in the file will take the default values.
- */
-if(file_exists(CONFIG_FILE))
+/** Fill named settings recursively; explicit lists replace the defaults in full. */
+function mergeConfigDefaults(array $config, array $defaults, $path = '')
 {
-  $config = include(CONFIG_FILE);
-  /* Also check for hidden (.) file */
-} else if(file_exists('.' . CONFIG_FILE))
-{
-  $config = include('.' . CONFIG_FILE);
+  foreach($defaults as $key => $value)
+  {
+    if(!isset($config[$key]))
+    {
+      $config[$key] = $value;
+    } else if(is_array($value))
+    {
+      $setting = $path . $key;
+      if(!is_array($config[$key]))
+      {
+        throw new RuntimeException('Configuration setting "' . $setting . '" must be an array.');
+      }
+      if($value && array_keys($value) !== range(0, count($value) - 1))
+      {
+        $config[$key] = mergeConfigDefaults($config[$key], $value, $setting . '.');
+      }
+    }
+  }
+  return $config;
 }
 
-/* Apply the explicit setting before authentication and other request processing. */
-ini_set('display_errors', isset($config['debug']) && $config['debug'] === true ? '1' : '0');
+/* Embedded at build time so both PHP distributions remain self-contained. */
+$defaults = <%= defaultConfig %>;
+/* Preserve the external-config defaults for desktop dates and video extension order. */
+$defaults['format']['date'][0] = 'm/d/y H:i';
+$defaults['extensions']['video'] = ['webm', 'mp4', 'ogv', 'ogg', 'mov'];
 
-/* Default configuration values. Used if values from the above config are unset */
-$defaults = array('authentication' => false,'single_page' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i', 'd/m/y'),'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB')),'icon' => array('path' => false,'mime' => 'image/x-icon'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'inject' => false,'style' => array('themes' => array('path' => '/<%= indexerPath %>/themes/','default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'exclude' => false,'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
+/* Keep working-directory precedence, then support configs beside the script. */
+foreach(array_unique([getcwd() ?: __DIR__, __DIR__]) as $configDirectory)
+{
+  foreach([CONFIG_FILE, '.' . CONFIG_FILE] as $configName)
+  {
+    $configPath = $configDirectory . DIRECTORY_SEPARATOR . $configName;
+    if(file_exists($configPath))
+    {
+      if(!is_file($configPath) || !is_readable($configPath))
+      {
+        throw new RuntimeException('The configuration file must be a readable PHP file.');
+      }
+      $config = include($configPath);
+      break 2;
+    }
+  }
+}
+if(!is_array($config))
+{
+  throw new RuntimeException('The configuration file must return an array.');
+}
+
+/* Apply explicit debugging before validating the remaining settings. */
+ini_set('display_errors', isset($config['debug']) && $config['debug'] === true ? '1' : '0');
+$config = mergeConfigDefaults($config, $defaults);
+if($config['authentication'] !== false && !is_array($config['authentication']))
+{
+  throw new RuntimeException('Configuration setting "authentication" must be false or an array.');
+}
+if(isset($config['authentication']['users']) && is_array($config['authentication']['users'])
+  && isset($config['authentication']['restrict']) && !is_string($config['authentication']['restrict']))
+{
+  throw new RuntimeException('Configuration setting "authentication.restrict" must be a regular expression string.');
+}
 
 /**
  * Call authentication function
@@ -801,29 +710,6 @@ if(isset($config['authentication'])
   } else {
     /* Don't use any potential `users` array to authenticate, use main array instead */
     authenticate($config['authentication'], 'Restricted content.');
-  }
-}
-
-/**
- * Set default configuration values if the config is missing any keys
- * 
- * This does not traverse too deep at all
- */
-foreach($defaults as $key => $value)
-{
-  if(!isset($config[$key]))
-  {
-    $config[$key] = $defaults[$key];
-  } else if(is_array($config[$key]) &&
-    is_array($defaults[$key]))
-  {
-    foreach($defaults[$key] as $k => $v)
-    {
-      if(!isset($config[$key][$k]))
-      {
-        $config[$key][$k] = $defaults[$key][$k];
-      }
-    }
   }
 }
 
@@ -2322,6 +2208,7 @@ function constructJsConfig($config, $sorting, $timestamp, $bust, $theme)
   $jsConfig = [
     'bust' => $bust,
     'singlePage' => $config['single_page'],
+    'selection' => ['enabled' => $config['selection']['enabled'] !== false],
     'preview' => [
       'enabled' => $preview['enabled'],
       'hoverDelay' => $preview['hover_delay'],

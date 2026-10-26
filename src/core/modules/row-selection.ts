@@ -11,8 +11,20 @@ export type RowSelection = {
 };
 
 /** Selection by row element */
-export function createRowSelection(table: HTMLElement, getRows: () => HTMLElement[]): RowSelection
+export function createRowSelection(table: HTMLElement, getRows: () => HTMLElement[], enabled = true): RowSelection
 {
+	if(!enabled)
+	{
+		return {
+			clear: () => {},
+			selectAll: () => {},
+			refresh: () => {},
+			getSelectedRows: () => [],
+			selectRow: () => {},
+			subscribe: (listener) => { listener([]); return () => {}; }
+		};
+	}
+
 	let selected = new Set<HTMLElement>();
 	let anchor: HTMLElement = null;
 	let focused: HTMLElement = null;

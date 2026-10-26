@@ -67,7 +67,7 @@ componentMain.selection = createRowSelection(selector.use('TABLE') as HTMLElemen
 {
 	const optimizer = data.instances.optimize.main;
 	return optimizer.enabled ? optimizer.rows : Array.from((selector.use('TABLE') as HTMLElement).querySelectorAll<HTMLElement>('tbody > tr'));
-});
+}, config.get('selection.enabled') !== false);
 
 /* Set page dom object */
 data.layer.main = {

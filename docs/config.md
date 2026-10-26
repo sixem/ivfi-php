@@ -12,9 +12,9 @@ These options can be found and changed at the top of the `indexer.php` file, or 
 
 You can edit the configuration in the file directly, but if you wish to keep a separate config file that does not reset between updates, then creating your own config file can be a good solution.
 
-The script will look for a config file in the same directory as the script. If the file is named `indexer.php` (as it is by default), then it'll look for a file called `indexer.config.php`. If you rename the file to `something.php`, then it'll look for `something.config.php` and so on.
+The script checks the PHP working directory first (for compatibility), then the directory containing the script. If the file is named `indexer.php` (as it is by default), then it'll look for a file called `indexer.config.php`. If you rename the file to `something.php`, then it'll look for `something.config.php` and so on.
 
-Any values that are not present in the config file, will be set to the default value. It is also worth noting that having a `.` in front of the config file (hidden file) **will also work**.
+Missing or null settings inherit their defaults, including nested settings such as `style.themes.path`. Lists such as file extensions are replaced completely, including when explicitly empty. A config file must return an array; named sections such as `gallery` and `style` must also be arrays. Unknown keys and PHP callbacks are preserved. It is also worth noting that having a `.` in front of the config file (hidden file) **will also work**.
 
 A basic example of a config file:
 
@@ -72,6 +72,15 @@ return array(
 ?>
 ```
 This would apply authentication to `/protected/`, `/secret/` and `/directory/protected/`. Restrictions check the decoded URL, its normalized path, and any resolved target within the media root, so an in-root symlink cannot bypass a target restriction. On case-insensitive filesystems, use a case-insensitive expression (`i` modifier).
+
+## File selection and archives
+Key: **`selection`**
+
+| Child key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `enabled` | Boolean | `true` | Enables file selection and ZIP archive downloads. |
+
+Set `'selection' => ['enabled' => false]` to disable row selection, selection shortcuts, selection controls and ZIP downloads. Individual files remain downloadable from their context menu or the gallery download button. This controls the interface, not access to the files.
 
 ## Format
 Key: **`format`**

@@ -19,6 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { config } from '../../config/config';
 import { makeZip } from 'client-zip';
 import { confirmArchive } from './archive-dialog';
 import { createToast } from '../../modules/toast';
@@ -49,7 +50,7 @@ const setBusy = (busy: boolean) =>
 
 export async function archiveSelection(rows: HTMLElement[]): Promise<void>
 {
-	if(archiving) return;
+	if(config.get('selection.enabled') === false || archiving) return;
 	setBusy(true);
 	const toast = createToast();
 	const controller = new AbortController();

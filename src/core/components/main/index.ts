@@ -42,39 +42,42 @@ const main: MComponentMain.TCapsule = {
 main.toolbar.create = () =>
 {
 	const container = selector.use('TOP_ACTIONS') as HTMLElement;
-	const selectionAction = DOM.new('button', {
-		type: 'button',
-		class: 'selectionAction'
-	}) as HTMLButtonElement;
-	container.append(selectionAction);
-	const updateSelectionAction = (rows: HTMLElement[]) =>
+	if(config.get('selection.enabled') !== false)
 	{
-		const archiving = archiveState.busy;
-		selectionAction.classList.toggle('is-visible', rows.length > 0);
-		selectionAction.setAttribute('aria-hidden', String(rows.length === 0));
-		selectionAction.disabled = archiving || !rows.length;
-		selectionAction.setAttribute('aria-busy', String(archiving));
-		if(!rows.length) return;
-		const icon: IconName = rows.length > 1 ? 'archive' : 'download';
-		const label = archiving ? 'Creating archive…' : rows.length > 1 ? `Download ${rows.length} selected files as ZIP`
-			: 'Download selected file';
-		if(selectionAction.getAttribute('data-action') !== icon)
+		const selectionAction = DOM.new('button', {
+			type: 'button',
+			class: 'selectionAction'
+		}) as HTMLButtonElement;
+		container.append(selectionAction);
+		const updateSelectionAction = (rows: HTMLElement[]) =>
 		{
-			selectionAction.setAttribute('data-action', icon);
-			selectionAction.replaceChildren(createIcon(icon));
-		}
-		selectionAction.setAttribute('data-tooltip', label);
-		selectionAction.setAttribute('aria-label', label);
-	};
-	main.selection.subscribe(updateSelectionAction);
-	onPageReplace(archiveState.subscribe(() => updateSelectionAction(main.selection.getSelectedRows())));
-	eventHooks.listen(selectionAction, 'click', 'toolbar-selection', () =>
-	{
-		if(archiveState.busy) return;
-		const rows = main.selection.getSelectedRows();
-		if(rows.length === 1) downloadRow(rows[0]);
-		else if(rows.length > 1) void archiveSelection(rows);
-	});
+			const archiving = archiveState.busy;
+			selectionAction.classList.toggle('is-visible', rows.length > 0);
+			selectionAction.setAttribute('aria-hidden', String(rows.length === 0));
+			selectionAction.disabled = archiving || !rows.length;
+			selectionAction.setAttribute('aria-busy', String(archiving));
+			if(!rows.length) return;
+			const icon: IconName = rows.length > 1 ? 'archive' : 'download';
+			const label = archiving ? 'Creating archive…' : rows.length > 1 ? `Download ${rows.length} selected files as ZIP`
+				: 'Download selected file';
+			if(selectionAction.getAttribute('data-action') !== icon)
+			{
+				selectionAction.setAttribute('data-action', icon);
+				selectionAction.replaceChildren(createIcon(icon));
+			}
+			selectionAction.setAttribute('data-tooltip', label);
+			selectionAction.setAttribute('aria-label', label);
+		};
+		main.selection.subscribe(updateSelectionAction);
+		onPageReplace(archiveState.subscribe(() => updateSelectionAction(main.selection.getSelectedRows())));
+		eventHooks.listen(selectionAction, 'click', 'toolbar-selection', () =>
+		{
+			if(archiveState.busy) return;
+			const rows = main.selection.getSelectedRows();
+			if(rows.length === 1) downloadRow(rows[0]);
+			else if(rows.length > 1) void archiveSelection(rows);
+		});
+	}
 	const copy = DOM.new('button', {
 		type: 'button',
 		class: 'copyWget',

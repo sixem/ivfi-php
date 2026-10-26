@@ -172,7 +172,8 @@ export class componentBind
 				|| document.documentElement.hasAttribute('context-menu-is-visible')
 				|| document.documentElement.hasAttribute('gallery-is-visible')) return;
 
-			if((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey
+			if(config.get('selection.enabled') !== false
+				&& (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey
 				&& event.key.toLowerCase() === 'a')
 			{
 				const target = event.target;

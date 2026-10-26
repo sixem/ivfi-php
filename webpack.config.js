@@ -189,6 +189,10 @@ const config = (env, argv) => {
 		module: {
 			rules: [
 				{
+					test: /config\.php$/,
+					type: 'asset/source'
+				},
+				{
 					test: /favicon\.webp$/,
 					type: 'asset/inline'
 				},

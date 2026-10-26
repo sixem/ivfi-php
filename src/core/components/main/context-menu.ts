@@ -1,3 +1,4 @@
+import { config } from '../../config/config';
 import { createContextMenu } from '../../modules/context-menu';
 import { showFileContextMenu } from '../../modules/file-actions';
 import type { RowSelection } from '../../modules/row-selection';
@@ -11,6 +12,7 @@ export function showSelectionContextMenu(rows: HTMLElement[], trigger: HTMLEleme
 	const menu = createContextMenu();
 	if(rows.length > 1)
 	{
+		if(config.get('selection.enabled') === false) return;
 		menu.show([{
 			label: 'Download as Archive',
 			icon: 'archive',
@@ -34,8 +36,14 @@ export function bindTableContextMenu(table: HTMLElement, selection: RowSelection
 	};
 	const open = (row: HTMLElement, x: number, y: number, keyboard = false) =>
 	{
-		selection.selectRow(row);
-		showSelectionContextMenu(selection.getSelectedRows(), row, { x, y }, keyboard);
+		if(config.get('selection.enabled') === false)
+		{
+			const file = getRowFile(row);
+			if(file) showFileContextMenu(file, row, { x, y }, keyboard);
+		} else {
+			selection.selectRow(row);
+			showSelectionContextMenu(selection.getSelectedRows(), row, { x, y }, keyboard);
+		}
 	};
 	table.addEventListener('contextmenu', (event) =>
 	{
