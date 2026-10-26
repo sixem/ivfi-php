@@ -3,7 +3,7 @@
 #
 # See docker/image/README.md for the environment variables it reads.
 
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 
 WORKDIR /src
 
@@ -13,7 +13,7 @@ RUN npm ci --no-audit --no-fund
 COPY . .
 RUN npm run build
 
-FROM php:8.4-fpm-alpine
+FROM php:8.5-fpm-alpine
 
 RUN apk add --no-cache nginx \
 	&& mkdir -p /data /var/lib/ivfi/sessions /run/nginx \

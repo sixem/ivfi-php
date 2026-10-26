@@ -98,7 +98,7 @@ server, so they use the session cookie and form token the server actually
 issued rather than reconstructing them. That also covers the response status
 codes and headers, which the CLI does not emit. No extra binaries are needed.
 
-The suite itself needs PHP 8.2 or newer, because that is PHPUnit 11's floor.
+The suite itself needs PHP 8.4 or newer, because that is PHPUnit 13's floor.
 That is a constraint on the tooling, not on the script, which still runs on
 older versions.
 

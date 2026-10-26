@@ -1,6 +1,6 @@
 services:
   indexer:
-    image: nginx:1.28
+    image: nginx:1.30
     volumes:
       # Serve point (browsable directory)
       - ${SERVEPOINT}:/servePoint
@@ -13,7 +13,7 @@ services:
     depends_on:
       - php
   php:
-    image: php:8.4-fpm
+    image: php:8.5-fpm
     volumes:
       # Serve point (browsable directory)
       - ${SERVEPOINT}:/servePoint
