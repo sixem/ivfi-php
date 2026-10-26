@@ -82,6 +82,32 @@ final class OutputEncodingTest extends TestCase
         self::assertSame(1, $page->query('//tr[@class="parent"]/td/a')->length);
     }
 
+    public function testNestedListingAndThemeUrlsUseForwardSlashes(): void
+    {
+        foreach (['files', 'files/FDP', 'files/FDP/FDP250', 'files/FDP/FDP250/child',
+            'themes', 'themes/Example'] as $directory) {
+            $this->fixture($directory);
+        }
+        $this->fixture('files/FDP/FDP250/café & tea.jpg', 'image');
+        $this->fixture('themes/Example/Example.css', 'body { color: white; }');
+        $this->fixture('themes/Plain.css', 'body { color: black; }');
+        $page = $this->render('/files/FDP/FDP250/', '/public/', [
+            'style' => ['themes' => ['path' => '/themes/', 'default' => 'Example']],
+        ]);
+        self::assertSame('/public/files/FDP/FDP250/café & tea.jpg', rawurldecode($page->evaluate('string(//tr[@class="file"]/td[1]/a/@href)')));
+        self::assertSame('/public/files/FDP/FDP250/child/', $page->evaluate('string(//tr[@class="directory"]/td[1]/a/@href)'));
+        self::assertSame('/public/files/FDP/', $page->evaluate('string(//tr[@class="parent"]/td[1]/a/@href)'));
+        $config = json_decode($page->evaluate('string(//script[@id="__IVFI_DATA__"])'), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('/themes/Example/Example.css', $config['style']['themes']['pool']['example']['path']);
+        self::assertSame('/themes/Plain.css', $config['style']['themes']['pool']['plain']['path']);
+        foreach ($page->query('//a/@href | //link/@href') as $link) {
+            if (str_starts_with($link->nodeValue, '/')) {
+                self::assertStringNotContainsString('\\', $link->nodeValue);
+                self::assertStringNotContainsString('//', $link->nodeValue);
+            }
+        }
+    }
+
     public function testFileAndDirectoryNamesStayTextAndAttributeValues(): void
     {
         $name = 'café & " onmouseover="probe" \' <x-probe>';

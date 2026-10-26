@@ -233,6 +233,14 @@ class Helpers
     return self::removeDotSegments(preg_replace('#/+#', '/', $path));
   }
 
+  /** Joins public URL paths without introducing filesystem separators. */
+  public static function joinUrlPaths(...$parts)
+  {
+    return preg_replace('#/+#', '/', implode('/', array_filter($parts, static function ($part) {
+      return $part !== '';
+    })));
+  }
+
   /**
    * Concentrates path components into a merged path
    *
@@ -577,7 +585,7 @@ function getThemes($basePath, $themesPath)
             if($theme[0] !== '.')
             {
               $themesPool[strtolower($item)] = [
-                'path' => Helpers::joinPaths($themesPath, $item, $theme)
+                'path' => Helpers::joinUrlPaths($themesPath, $item, $theme)
               ];
               
               break;
@@ -587,7 +595,7 @@ function getThemes($basePath, $themesPath)
         {
           /* The current item is a single .CSS file */
           $themesPool[strtolower(basename($item, '.css'))] = [
-            'path' => Helpers::joinPaths($themesPath, $item)
+            'path' => Helpers::joinUrlPaths($themesPath, $item)
           ];
         }
       }
@@ -1199,7 +1207,7 @@ class Indexer extends Helpers
     if($this->pathPrepend)
     {
       $prependedCurrent = ltrim(
-        rtrim($this->joinPaths($this->pathPrepend, $directory), '/'), '/'
+        rtrim($this->joinUrlPaths($this->pathPrepend, $directory), '/'), '/'
       );
 
       $prependedRoot = ltrim(
@@ -1247,9 +1255,7 @@ class Indexer extends Helpers
     }
 
     /* Scanned basenames contain no slashes, so normalize their shared prefix once. */
-    $urlPrefix = preg_replace('#/+#', '/',
-      $this->requested . ($this->requested !== '' ? DIRECTORY_SEPARATOR : '')
-    );
+    $urlPrefix = self::joinUrlPaths($this->requested, '/');
 
     /**
      * Iterate over the gathered directories and set their data
