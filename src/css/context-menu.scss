@@ -1,0 +1,89 @@
+@use "sass:map";
+@use "variables";
+
+html > body > .contextMenu,
+html > body > dialog.dialog > .contextMenu {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  z-index: 10001;
+  box-sizing: border-box;
+  min-width: min(10rem, calc(100vw - 16px));
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  padding: 4px;
+  border: 2px solid variables.$divider-color;
+  border-radius: 3px;
+  background: variables.$surface-background;
+  color: variables.$text-color;
+  box-shadow: 0 5px 16px rgb(0 0 0 / 70%);
+  outline: none;
+
+  &[hidden] {
+    display: none;
+  }
+
+  > button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 0;
+    padding: 5px 9px;
+    border: none;
+    border-radius: 2px;
+    background: transparent;
+    color: inherit;
+    font: 500 0.8125rem / 1.4 Inter, sans-serif;
+    text-align: left;
+    cursor: pointer;
+    outline: none;
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    > svg {
+      flex: none;
+      width: 18px;
+      height: 18px;
+      color: variables.$accent-color;
+    }
+
+    &[role="menuitemradio"] {
+      > span {
+        flex: 1;
+      }
+
+      &::after {
+        content: "";
+        width: 8px;
+        height: 4px;
+        margin-left: 12px;
+        border-left: 2px solid variables.$accent-color;
+        border-bottom: 2px solid variables.$accent-color;
+        transform: rotate(-45deg);
+        opacity: 0;
+      }
+
+      &[aria-checked="true"] {
+        background: map.get(variables.$root, "color-background-table-hover");
+
+        &::after {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  &[data-keyboard] > button:focus {
+    background: map.get(variables.$root, "color-background-table-hover");
+  }
+
+  &:not([data-keyboard]) > button:hover:not(:disabled) {
+    background: map.get(variables.$root, "color-background-table-hover");
+  }
+}

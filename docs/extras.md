@@ -1,23 +1,11 @@
 <h1 align="center">Extra Features</h1>
 
-<br/>
+Optional features are disabled in standard builds. Enable them under `extraFeatures` in [build.options.json](../build.options.json), then [rebuild](building.md). Both regular and standalone builds support them.
 
-The `extras` directory contains extra features for the Indexer.
+## README support
 
-These features must be compiled independently, as they are not available in any official releases.
+Set `readmeSupport` to `true` to display a directory's `README.md` above its listing. Requires PHP `mbstring`.
 
-To build the Indexer with these features, find and edit [build.options.json](https://github.com/sixem/ivfi-php/blob/master/build.options.json) in the base directory of the repository.
+[Parsedown](https://github.com/erusev/parsedown) renders Markdown in safe mode: raw HTML is displayed as text and unsafe links are blocked.
 
-Simply set the value of any corresponding key under `extraFeatures` to `true` or `false` to enable and disable the feature respectively during compilation.
-
-These features are still experimental, and how they are used and implemented may therefore change in the future.
-
-## Features <!-- {docsify-ignore} -->
-
-### 📄 readmeSupport (_support for `README.md` files_)
-
-This feature will display any `README.md` files on top of the page. 
-
-This can be useful if you want to show any information on what the folder contains and so on.
-
-The file should contain Markdown/HTML data, and it is parsed on load using [Parsedown](https://github.com/erusev/parsedown).
+Unreadable files and files over 1 MiB are skipped. Without `mbstring`, listings still work but README previews are omitted.

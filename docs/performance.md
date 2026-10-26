@@ -1,35 +1,12 @@
 <h1 align="center">Performance Mode</h1>
 
-<br/>
+Performance mode reduces browser rendering work and is enabled by default for directories with at least 250 files and folders. Set `performance` to `true` for all directories, an item-count threshold, or `false` to disable it.
 
-The `performance mode` is an option that can be enabled on all or some directories. It can be useful for larger directories where all the DOM elements present can cause browser lag because of long style recalculations and so on.
+To raise the threshold to 1,000 items:
 
-## Example <!-- {docsify-ignore} -->
-
-Enable it on all directories.
 ```php
 <?php
-return array(
-    'performance' => true
-);
-?>
-```
-
-Enable it on all directories with more than 1000 files.
-```php
-<?php
-return array(
+return [
     'performance' => 1000
-);
-?>
-```
-
-
-Disable it completely.
-```php
-<?php
-return array(
-    'performance' => false
-);
-?>
+];
 ```

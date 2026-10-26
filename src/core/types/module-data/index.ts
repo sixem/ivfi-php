@@ -13,14 +13,8 @@ type TDataText = {
 	settingsLabels?: {
 		[key: string]: {
 			text?: string;
-			description?: string;
 		}
 	};
-	menuLabels?: {
-		[key: string]: {
-			text?: string;
-		}
-	}
 };
 
 type TDataComponents = {
@@ -56,6 +50,7 @@ type TDataSets = {
 };
 
 type TDataPreview = {
+	takeVideo?: (src: string, parent: HTMLElement) => HTMLVideoElement;
 	volume?: number;
 	isLoadable?: boolean;
 	data?: any;

@@ -4,9 +4,7 @@
 
 <br/>
 
-You can build this script from source using Node 20 or newer and `pnpm`.
-
-Node 24 is the recommended version and is recorded in `.nvmrc` for users of Node Version Manager.
+Use Node 20 or newer and `pnpm`. Node 24 is recommended (`.nvmrc`).
 
 **Clone repository and install dependencies:**
 ```bash
@@ -31,7 +29,7 @@ Build a standalone file from source:
 pnpm run make-standalone
 ```
 
-This will place the compiled files in a new `build` directory.
+Output goes in `build`. See [setup](setup.md) for deployment.
 
 ## Development builds
 

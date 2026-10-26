@@ -1,0 +1,157 @@
+@use "sass:map";
+@use "variables";
+
+html > body > dialog.dialog .archiveOptions {
+  .archiveSelection {
+    margin-top: 16px;
+  }
+
+  .archiveSummary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .archiveSelectAll {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding-left: 4px;
+    cursor: pointer;
+  }
+
+  .archiveCount {
+    display: inline-flex;
+    white-space: pre;
+  }
+
+  .archiveCountNumber {
+    display: inline-block;
+    text-align: right;
+  }
+
+  .archiveTotal {
+    display: inline-grid;
+    grid-template-columns: 8ch 3ch;
+    gap: 0.5ch;
+    flex-shrink: 0;
+    text-align: right;
+    color: variables.$accent-color;
+    white-space: nowrap;
+  }
+
+  .archiveFileList {
+    position: relative;
+  }
+
+  .archiveFiles {
+    max-height: min(15rem, 35vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 12px;
+    border-top: 2px solid variables.$divider-color;
+    border-bottom: 2px solid variables.$divider-color;
+  }
+
+  .archiveFile {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 4px;
+    cursor: pointer;
+
+    &[data-range-anchor]::before {
+      content: "";
+      position: absolute;
+      inset: 10px auto 10px 0;
+      width: 2px;
+      border-radius: 1px;
+      background: variables.$accent-color;
+      opacity: 0.65;
+    }
+
+    + .archiveFile {
+      border-top: 2px solid variables.$divider-color;
+    }
+  }
+
+  .archiveFileName {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .archiveFileSize {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .archiveStatus {
+    margin: 12px 0 0;
+
+    &[data-blocked] {
+      padding-left: 10px;
+      border-left: 2px solid #ffe581;
+      color: #ffe581;
+    }
+  }
+
+  .archivePager {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+
+    &[hidden] {
+      display: none;
+    }
+
+    > span {
+      flex: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    > button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      padding: 0;
+      border: 2px solid variables.$divider-color;
+      border-radius: 5px;
+      background: #000;
+      color: inherit;
+      cursor: pointer;
+      outline: none;
+
+      &:hover:not(:disabled),
+      &:focus-visible {
+        border-color: variables.$accent-color;
+        background: map.get(variables.$root, "color-background-table-hover");
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+
+      > svg {
+        width: 1rem;
+        height: 1rem;
+        pointer-events: none;
+      }
+
+      &.archiveNext > svg {
+        transform: rotate(180deg);
+      }
+    }
+  }
+}

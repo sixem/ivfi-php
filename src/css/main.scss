@@ -2,9 +2,9 @@
 @use "sass:map";
 @use "variables";
 @use "mixins";
+@use "readme";
 
-html > body > div.tableContainer > table [sortable],
-html > body > .settingsContainer > .wrapper > div.section .option > div.option-text {
+html > body > div.tableContainer > table [sortable] {
   @include mixins.no-select;
 }
 
@@ -25,11 +25,12 @@ select {
 }
 
 html {
+  font-size: 100%;
   scrollbar-color: #222 #131315;
 }
 
 html > body {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: map.get(variables.$root, "color-body");
   position: relative;
   padding-top: calc(map.get(variables.$gallery, "height-top-bar") - 2px);
@@ -37,63 +38,6 @@ html > body {
   cursor: auto;
   scrollbar-color: #222 #131315;
   background-color: map.get(variables.$root, "color-background-body");
-
-  /* Readme container */
-  .readmeContainer {
-    background-color: #121318;
-    margin-bottom: 18px;
-    border-top: 1px solid #19191d;
-    border-bottom: 1px solid #19191d;
-    text-align: center;
-
-    > .readmeContents {
-      padding: 5px 8px;
-      position: relative;
-    }
-
-    a {
-      text-decoration: none;
-      color: #d6d3ce;
-      font-weight: bold;
-
-      &:hover {
-        text-decoration: underline;
-        color: #5e74ea;
-      }
-    }
-
-    &:not([open]) {
-      summary {
-        &::before {
-          transform: rotate(180deg);
-        }
-      }
-    }
-
-    summary {
-      text-align: right;
-      background-color: #15161e;
-      display: block;
-      padding: 3px 8px 5px 6px;
-      color: #939498;
-      border-bottom: 1px solid #151822;
-      user-select: none;
-      cursor: pointer;
-
-      &::before {
-        content: "\25BE";
-        transform: rotate(0deg);
-        display: inline-block;
-        margin-right: 5px;
-        transition: transform 0.25s;
-      }
-    }
-
-    pre {
-      white-space: pre-wrap;
-      line-height: 145%;
-    }
-  }
 
   > div.navigateLoad {
     $spinner-size: 26px;
@@ -104,13 +48,8 @@ html > body {
     right: 10px;
     z-index: 99;
 
-    /* By Sam Herbert (@sherb), for everyone. More @ http://goo.gl/7AJzbL */
-    background: url('data:image/svg+xml;utf8,<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient x1="8.042%" y1="0%" x2="65.682%" y2="23.865%" id="a"><stop stop-color="%23fff" stop-opacity="0" offset="0%"/><stop stop-color="%23fff" stop-opacity=".631" offset="63.146%"/><stop stop-color="%23fff" offset="100%"/></linearGradient></defs><g fill="none" fill-rule="evenodd"><g transform="translate(1 1)"><path d="M36 18c0-9.94-8.06-18-18-18" id="Oval-2" stroke="url(%23a)" stroke-width="2"><animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="0.9s" repeatCount="indefinite" /></path><circle fill="%23fff" cx="36" cy="18" r="1"><animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="0.9s" repeatCount="indefinite" /></circle></g></g></svg>');
-    background-size: $spinner-size $spinner-size;
-    width: $spinner-size;
-    height: $spinner-size;
-    transition: opacity $spinner-fade-duration;
-    transition: opacity $spinner-fade-duration ease-in-out;
+    @include mixins.loading-spinner($spinner-size);
+
     transition: opacity $spinner-fade-duration ease-in-out;
     opacity: 0;
   }
@@ -129,18 +68,59 @@ html > body {
 
   > div.tableContainer > table {
     > thead > tr {
-      padding: 4px 10px 2px;
-      background-color: #15161e;
-      border-bottom: 2px solid #151822;
+      padding: 4px 22px 2px 10px;
+      background-color: transparent;
+      border-bottom: none;
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 10px;
+        right: 22px;
+        border-bottom: 2px solid variables.$divider-color;
+      }
     }
 
     > tbody > tr {
-      padding: 0 10px;
+      padding: 0 22px 0 10px;
+
+      &.file,
+      &.directory {
+        user-select: none;
+
+        > td > a {
+          cursor: pointer;
+        }
+      }
+
+      &.directory {
+        cursor: default;
+      }
+
+      &.file {
+        cursor: pointer;
+
+        &.is-selected {
+          background-color: map.get(variables.$root, "color-background-table-selected");
+          box-shadow: inset 2px 0 variables.$accent-color;
+
+          &:hover {
+            background-color: map.get(variables.$root, "color-background-table-selected-hover");
+          }
+        }
+
+        &:focus {
+          outline: none;
+        }
+      }
     }
 
     > tbody > tr,
     > thead > tr {
       width: 100%;
+      box-sizing: border-box;
 
       &:not(.hid-row) {
         display: flex;
@@ -190,14 +170,6 @@ html > body {
             }
           }
         }
-
-        > td.download > a {
-          &:visited {
-            color: map.get(variables.$root, "color-a-download-visited");
-          }
-
-          color: map.get(variables.$root, "color-a-download");
-        }
       }
 
       > td {
@@ -206,24 +178,28 @@ html > body {
 
       > th,
       > td {
+        box-sizing: border-box;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         padding: 5px 0;
 
-        &:last-child {
-          text-transform: capitalize;
+        &:first-child {
+          flex: 1;
+          min-width: 0;
         }
       }
 
       @include mixins.media-query("screen", "isMobile") {
-        padding: 0 4px;
+        padding: 0 22px 0 4px;
       }
     }
 
-    @for $i from 1 through 4 {
+    @for $i from 2 through 3 {
       > tbody > tr > td:nth-child(#{$i}),
       > thead > tr > th:nth-child(#{$i}) {
+        flex-shrink: 0;
+
         /* Mobile values < 768px width */
         @include mixins.media-query("screen", "isMobile") {
           padding-left: 4px !important;
@@ -264,7 +240,7 @@ html > body {
 
       /* Mobile styling */
       @include mixins.media-query("screen", "isMobile") {
-        font-size: 10px;
+        font-size: 0.625rem;
       }
 
       > span[sortable] {
@@ -310,7 +286,7 @@ html > body {
       padding: 5px 0;
 
       @include mixins.media-query("screen", "isMobile") {
-        font-size: 11px;
+        font-size: 0.6875rem;
       }
 
       &:nth-child(2),
@@ -320,13 +296,9 @@ html > body {
         @include mixins.fonting(
           $key: "row-num"
         );
-      }
 
-      &:nth-child(4),
-      &:nth-child(3),
-      &:nth-child(2) {
         @include mixins.media-query("screen", "isMobile") {
-          font-size: 11px;
+          font-size: 0.6875rem;
         }
       }
 
@@ -406,12 +378,20 @@ html > body {
 
     /* Bottom container */
     &.bottom {
-      padding: 8px 0 10px 10px;
+      padding: 8px 22px 10px 10px;
       position: relative;
-      border-top: 1px solid map.get(variables.$root, "color-border-main");
-      color: #3d414a;
-      font-size: 13px;
+      color: variables.$text-color;
+      font-size: 0.8125rem;
       letter-spacing: 1px;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 10px;
+        right: 22px;
+        border-top: 2px solid variables.$divider-color;
+      }
 
       > div {
         display: inline-block;
@@ -419,35 +399,18 @@ html > body {
 
       a {
         text-decoration: none;
-        color: #3d414a;
+        color: variables.$text-color;
 
         &:hover {
-          color: #3d414a;
+          color: variables.$text-color;
           text-decoration: underline;
         }
       }
 
       > div.currentPageInfo > span.generationTime {
+        color: #ffe581;
+        font-weight: 500;
         font-feature-settings: "tnum";
-      }
-
-      div {
-        &:nth-child(1):not(.referenceGit)::after {
-          content: "|";
-          margin: 0 10px;
-        }
-
-        &:nth-child(2) {
-          text-overflow: ellipsis;
-
-          > span {
-            display: inline-block;
-            white-space: nowrap;
-            overflow-x: hidden;
-            text-overflow: ellipsis;
-            vertical-align: top;
-          }
-        }
       }
     }
   }
@@ -458,7 +421,7 @@ html > body {
     overflow: hidden;
     text-overflow: ellipsis;
     font-style: normal;
-    font-size: 19px;
+    font-size: 1.1875rem;
     letter-spacing: 1px;
     margin: 20px 0 16px 8px;
     padding-right: 10px;
@@ -466,7 +429,7 @@ html > body {
     > a {
       font-style: normal;
       font-weight: bold;
-      color: #fff;
+      color: variables.$text-color;
       text-decoration: none;
 
       &:hover {
@@ -479,33 +442,98 @@ html > body {
   > div.filterContainer {
     display: none;
     position: fixed;
-    bottom: 0;
+    top: var(--topbar-height);
+    z-index: 1;
     left: 0;
     right: 0;
     width: 100%;
     padding: 0;
     border: none;
     box-shadow: 0 0 6px #10151f;
+    animation: reveal-filter 160ms ease-out;
+
+    &.closing {
+      animation: hide-filter 160ms ease-in forwards;
+      pointer-events: none;
+    }
+
+    > .filterIcon {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      width: 16px;
+      height: 16px;
+      transform: translateY(-50%);
+      color: variables.$text-color;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    > .filterClose,
+    > .filterCollapse {
+      position: absolute;
+      top: 0;
+      right: 16px;
+      bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: variables.$text-color;
+      cursor: pointer;
+
+      > svg {
+        width: 16px;
+        height: 16px;
+        pointer-events: none;
+      }
+
+      &:hover {
+        color: variables.$accent-color;
+      }
+
+      &:focus-visible {
+        outline: 2px solid variables.$accent-color;
+        outline-offset: -4px;
+      }
+    }
+
+    > .filterCollapse {
+      right: 52px;
+
+      > svg {
+        transform: rotate(180deg);
+      }
+    }
 
     > input[type="text"] {
       @include mixins.fonting(
         $key: "default",
         $spacing: 1px,
-        $color: #fff
+        $color: variables.$text-color
       );
 
       border-radius: 1px;
-      padding: 5px 7px 5px 9px;
-      background-color: #121216f0;
-      height: 24px;
+      box-sizing: border-box;
+      padding: 5px 96px 5px 34px;
+      background-color: #000000d9;
+      backdrop-filter: blur(4px);
+      height: calc(1.5rem + 12px);
       width: 100%;
-      border-top: 2px solid #1d1f27;
+      border-top: none;
       border-left: none;
       border-right: none;
-      border-bottom: none;
+      border-bottom: 2px solid variables.$divider-color;
 
       @include mixins.media-query("screen", "isMobile") {
-        font-size: 12px;
+        font-size: 0.75rem;
+      }
+
+      &[aria-invalid="true"] {
+        color: #e99a9a;
       }
 
       &:focus {
@@ -514,125 +542,36 @@ html > body {
     }
   }
 
-  /* Opened settings container */
-  > div.settingsContainer {
-    min-width: 300px;
-    z-index: 4;
-    position: fixed;
-    right: 20px;
-    top: 20px;
-    padding-top: 10px;
-    border: 1px solid map.get(variables.$root, "color-border-main");
-    border-radius: 3px;
-    box-shadow: 0 0 10px #0d0d0d;
-    font-size: 13px;
-    letter-spacing: 1px;
-    background-color: #121216f0;
-
-    > .wrapper {
-      max-height: 75vh;
-      overflow-y: auto;
-
-      > div.section {
-        padding: 10px 0;
-
-        > div.header {
-          padding: 4px 17px;
-          margin-bottom: 14px;
-          font-size: 13px;
-          color: #797979;
-          box-shadow: 0 0 1px #0d0d0d;
-          background-color: #17171d;
-          border-top: 1px solid #1d1d25;
-          border-bottom: 1px solid #1d1d25;
-        }
-
-        &:first-child {
-          padding-top: 0;
-        }
-
-        .option {
-          padding: 0 10px;
-          display: table;
-          width: calc(100% - 20px);
-          height: 25px;
-
-          &.interactable {
-            cursor: pointer;
-
-            input {
-              cursor: pointer;
-            }
-          }
-
-          &:not(:first-child) {
-            margin-top: 10px;
-          }
-
-          > div {
-            display: table-cell;
-            width: 50%;
-
-            &:last-child {
-              width: auto;
-              text-align: right;
-            }
-          }
-        }
-      }
-    }
-
-    /* Settings apply and cancel buttons */
-    > div.bottom {
-      display: table;
-      width: 100%;
-      margin-top: 4px;
-      background-color: #17171d;
-      border-top: 1px solid #1d1d25;
-
-      > div {
-        text-align: center;
-        padding: 6px 7px 8px;
-        display: table-cell;
-        font-size: 12px;
-
-        &:first-child {
-          border-right: 1px solid #1c1c1d;
-        }
-
-        &:not(:last-child) {
-          border-right: 1px solid #292929;
-          width: 50%;
-        }
-
-        &:hover {
-          cursor: pointer;
-          background-color: #1c1c25;
-        }
-      }
-    }
-  }
-
   > div.topBar > div.directoryInfo > div.quickPath {
-    max-width: 50vw;
+    flex: 1;
+    min-width: 0;
     white-space: nowrap;
-    overflow-x: hidden;
+    overflow: hidden;
     text-overflow: ellipsis;
-    vertical-align: middle;
-    position: absolute;
-    transition: opacity 0.175s;
+    padding: 6px 12px;
+    transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
     opacity: 0;
+    visibility: hidden;
+    transform: translateX(-4px);
 
     &.visible {
       opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+      transition-delay: 0s;
     }
 
     &:not(.visible) {
       pointer-events: none;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+      transform: none;
+    }
+
     > a {
-      color: white;
+      color: variables.$text-color;
       text-decoration: none;
 
       &:hover {
@@ -646,12 +585,12 @@ html > body {
     overflow: hidden;
     padding-bottom: 10px;
     background-color: map.get(variables.$root, "color-background-table");
-    border-top: 1px solid map.get(variables.$root, "color-border-main");
+    border-top: none;
   }
 
   > div.bottom > div.referenceGit {
     position: absolute;
-    right: 10px;
+    right: 22px;
     font-style: italic;
 
     > span {
@@ -675,7 +614,7 @@ html > body {
 
       &.path {
         font-style: normal;
-        font-size: 19px;
+        font-size: 1.1875rem;
         letter-spacing: 1px;
         margin: 24px 0 22px 8px;
         text-align: center;
@@ -692,20 +631,21 @@ html > body {
 
   /* Top bar */
   > div.topBar {
-    border-bottom: 1px solid #10101085;
-    background-color: rgba(18 18 22 / 65%);
-    box-shadow: 0 0 3px #0d0d0d;
-    padding: 2px 0;
+    border-bottom: 2px solid variables.$divider-color;
+    background-color: #000;
+    box-shadow: 0 5px 10px rgb(0 0 0 / 70%);
+    padding: 0;
     z-index: 2;
     width: 100%;
-    color: #939498;
+    color: variables.$text-color;
     max-width: 100%;
-    display: table;
+    display: flex;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    font-size: 12px;
+    font-size: 0.75rem;
+    line-height: 1.4;
     backdrop-filter: blur(3px);
 
     > div {
@@ -715,111 +655,162 @@ html > body {
           $spacing: 1px
         );
 
-        display: inline-table;
+        display: flex;
+        align-items: center;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+
+        > div.directorySummary {
+          flex: none;
+        }
 
         > div {
-          display: table-cell;
+          display: block;
           padding: 6px 8px;
           white-space: nowrap;
+        }
+      }
 
-          &:not(.quickPath) {
-            border-right: 2px solid rgba(255 255 255 / 1%);
+      &.topActions {
+        display: flex;
+        flex: none;
+        order: 1;
+        align-items: stretch;
+        margin-left: auto;
+
+        > button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 34px;
+          padding: 0;
+          border: 0;
+          color: inherit;
+          background: transparent;
+          cursor: pointer;
+
+          &[hidden] {
+            display: none;
+          }
+
+          &.copyWget {
+            width: auto;
+            padding: 0 10px;
+            font: inherit;
+            font-weight: 500;
+            letter-spacing: 1px;
+
+            > .copyWgetContent {
+              display: grid;
+              place-items: center;
+              pointer-events: none;
+
+              > span,
+              > svg {
+                grid-area: 1 / 1;
+                transition: opacity 180ms ease, transform 180ms ease;
+              }
+
+              > span {
+                opacity: 1;
+                transform: translateY(0);
+              }
+
+              > svg {
+                width: 18px;
+                height: 18px;
+                color: variables.$accent-color;
+                opacity: 0;
+                transform: translateY(3px);
+              }
+            }
+
+            &.is-copied > .copyWgetContent {
+              > span {
+                opacity: 0;
+                transform: translateY(-3px);
+              }
+
+              > svg {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+              > .copyWgetContent > span,
+              > .copyWgetContent > svg {
+                transition: none;
+              }
+            }
+          }
+
+          &.selectionAction {
+            color: variables.$accent-color;
+            width: 0;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: width 180ms ease, opacity 180ms ease, visibility 0s linear 180ms;
+
+            &.is-visible {
+              width: 34px;
+              opacity: 1;
+              visibility: visible;
+              pointer-events: auto;
+              transition-delay: 0s;
+            }
+
+            > svg {
+              flex: none;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+              transition: none;
+            }
+          }
+
+          &:hover:not(:disabled),
+          &[aria-expanded="true"] {
+            background: variables.$divider-color;
+          }
+
+          &:focus {
+            outline: none;
+          }
+
+          &:focus-visible {
+            background: variables.$divider-color;
+          }
+
+          &:disabled {
+            cursor: default;
+
+            &:not(.selectionAction) {
+              opacity: 0.35;
+            }
+          }
+
+          > svg {
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
           }
         }
       }
-
-      &.extend {
-        @include mixins.no-select;
-
-        font-weight: bold;
-        position: absolute;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        vertical-align: middle;
-        display: flex;
-        white-space: nowrap;
-        align-items: center;
-        justify-content: center;
-        padding: 0 9px;
-        font-size: 1.5em;
-        border-left: 2px solid #10101085;
-        transition: color 0.2s;
-
-        &:hover {
-          cursor: pointer;
-          background-color: #10101085;
-          color: white;
-        }
-
-        &[extended] {
-          color: map.get(variables.$root, "color-body");
-        }
-      }
     }
   }
 
-  /* Settings menu */
-  > div.menu {
-    @include mixins.no-select;
-
-    font-size: 12px;
-    visibility: hidden;
-    text-align: left;
-    position: fixed;
-    top: calc(map.get(variables.$gallery, "height-top-bar") - 2px);
-    right: 0;
-    color: #939498;
-    border-bottom: 1px solid map.get(variables.$root, "color-border-settings-menu");
-    border-left: 1px solid map.get(variables.$root, "color-border-settings-menu");
-    background-color: map.get(variables.$root, "color-background-settings-menu");
-    backdrop-filter: blur(map.get(variables.$gallery, "blur-intensity"));
-    box-shadow: 0 0 2px #0d0d0d;
-
-    > div {
-      padding: 8px 18px 8px 7px;
-      border-left: 3px solid transparent;
-      cursor: pointer;
-      font-size: 13px;
-      letter-spacing: 1px;
-
-      &:hover {
-        border-left: 3px solid #939393;
-        color: #bfbfbf;
-        background-color: map.get(variables.$root, "color-background-settings-item-hover");
-      }
-    }
-  }
-
-  &:not([is-loading]) > div.tableContainer > table > tbody > tr:not(.parent):hover {
+  &:not([is-loading]) > div.tableContainer > table > tbody > tr:not(.parent, .is-selected):hover {
     background-color: map.get(variables.$root, "color-background-table-hover");
-  }
-
-  &:not(.compact) > div.bottom div:nth-child(2) > span {
-    max-width: 20vw;
-  }
-
-  &.compact > div.bottom div:nth-child(2) > span {
-    max-width: 300px;
-  }
-
-  /* Focus overlay */
-  > div.focusOverlay {
-    z-index: 3;
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-    overflow: hidden;
-    background-color: rgb(0 0 0 / 50%);
-    backdrop-filter: blur(1px);
   }
 
   /* Input selection */
   select:not(.default) {
     display: block;
-    color: #fff;
+    color: variables.$text-color;
     line-height: 1.3;
     padding: 2px 4px;
     width: 100%;
@@ -830,7 +821,7 @@ html > body {
     border-radius: 2px;
     appearance: none;
     background-color: #20222d;
-    border: 1px solid #2c2e39;
+    border: 2px solid #2c2e39;
   }
 
   /* Desktop values */
@@ -840,7 +831,7 @@ html > body {
       width: auto;
       max-width: 960px;
       margin: 0 auto;
-      border: 1px solid map.get(variables.$root, "color-border-main");
+      border: 2px solid map.get(variables.$root, "color-border-main");
       margin-bottom: 20px;
     }
   }
@@ -848,10 +839,6 @@ html > body {
   /* Mobile values */
   @include mixins.media-query("screen", "isMobile") {
     > div.rootGallery > div {
-      &.galleryBar {
-        font-size: 0.8em !important;
-      }
-
       &.galleryContent {
         .media .loader {
           font-size: 0.8em !important;
@@ -870,23 +857,19 @@ html > body {
 
           &.navigateLeft {
             left: 0;
-
-            > span::after {
-              content: "\2190";
-            }
           }
 
           &.navigateRight {
             right: 0;
-
-            > span::after {
-              content: "\2192";
-            }
           }
 
           > span {
             display: table-cell;
             vertical-align: middle;
+
+            > svg {
+              display: block;
+            }
           }
         }
 
@@ -896,15 +879,11 @@ html > body {
           }
 
           .wrapper .cover .reverse {
-            font-size: 9px;
+            font-size: 0.5625rem;
             z-index: 2;
           }
         }
       }
-    }
-
-    > div.settingsContainer {
-      left: 20px;
     }
 
     [data-view="mobile"] {
@@ -925,6 +904,32 @@ html > body {
   }
 }
 
+@keyframes reveal-filter {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes hide-filter {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html > body > div.filterContainer {
+    animation: none;
+  }
+}
+
 /* Mobile overrides */
 @include mixins.media-query("screen", "isMobile") {
   body {
@@ -938,29 +943,20 @@ html > body {
         margin-left: 4px !important;
       }
 
-      font-size: 10px !important;
+      font-size: 0.625rem !important;
     }
 
     > {
       div {
-        &.bottom div:nth-child(1)::after {
-          content: "" !important;
-          margin: none !important;
-        }
-
-        &.top {
-          font-size: 11px !important;
-        }
-
         &.path {
-          font-size: 14px !important;
+          font-size: 0.875rem !important;
         }
 
         &.bottom {
           padding-top: 0;
           margin-bottom: 2px;
           text-align: left;
-          font-size: 10px !important;
+          font-size: 0.625rem !important;
 
           div {
             &:nth-child(1),
@@ -975,14 +971,9 @@ html > body {
           }
         }
       }
-
-      div.topBar > div.extend {
-        padding: 0 12px;
-      }
     }
 
-    font-size: 10px !important;
-    font-size: 11px !important;
+    font-size: 0.6875rem !important;
     padding: calc(map.get(variables.$gallery, "height-top-bar")) 2px 2px 2px;
   }
 
@@ -993,13 +984,5 @@ html > body {
       position: unset !important;
       right: unset !important;
     }
-
-    &.topBar > div.directoryInfo > div[data-count="directories"] {
-      width: 100%;
-    }
-  }
-
-  .menu > div {
-    padding: 10px 18px 10px 7px;
   }
 }

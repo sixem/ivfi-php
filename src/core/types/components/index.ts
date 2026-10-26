@@ -1,6 +1,7 @@
 /** Types */
 import { IGalleryOptions } from '../class-gallery';
 import { TUserClient } from '../module-config';
+import type { RowSelection } from '../../modules/row-selection';
 
 /**
  * Filter component
@@ -8,11 +9,6 @@ import { TUserClient } from '../module-config';
 export type TComponentFilter = {
 	apply?: (query: string) => void;
 	toggle?: () => void;
-	getMatch?: (input: string, query: string) => {
-		valid?: boolean;
-		reason?: unknown;
-		data?: Array<any> | null;
-	};
 };
 
 /**
@@ -59,8 +55,7 @@ export namespace MComponentSettings
 			text: string,
 			options?: {
 				[key: string]: any;
-			},
-			title?: string
+			}
 		) => HTMLElement;
 		
 		section?: (
@@ -137,11 +132,8 @@ export namespace MComponentSettings
  */
 export namespace MComponentMain
 {
-	type TMenu = {
+	type TToolbar = {
 		create?: () => HTMLElement;
-		toggle?: (
-			state?: null | boolean
-		) => boolean;
 	};
 
 	type TDates = {
@@ -177,7 +169,8 @@ export namespace MComponentMain
 	}
 
 	export type TCapsule = {
-		menu: TMenu;
+		toolbar: TToolbar;
+		selection?: RowSelection;
 		dates: TDates;
 		sort: TSort;
 		overlay: TOverlay;

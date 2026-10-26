@@ -42,14 +42,15 @@ final class SymlinkPathsTest extends TestCase
                 file_put_contents("$directory/visible-marker.txt", 'fixture');
                 $created[] = "$directory/visible-marker.txt";
             }
-            $config = "$root/base/.indexer.config.php";
+            $variant = getenv('IVFI_PHP_VARIANT') ?: 'indexer.php';
+            $config = "$root/base/." . basename($variant, '.php') . '.config.php';
             file_put_contents($config, '<?php return ' . var_export(['path_checking' => $mode], true) . ';');
             $created[] = $config;
 
-            $build = dirname(__DIR__, 2) . '/build/indexer.php';
+            $build = dirname(__DIR__, 2) . '/build/' . (getenv('IVFI_PHP_VARIANT') ?: 'indexer.php');
             self::assertFileExists($build, 'Run pnpm build before the PHP tests.');
             $process = proc_open(
-                [PHP_BINARY, __DIR__ . '/render.php', $build],
+                [(getenv('IVFI_PHP_BINARY') ?: PHP_BINARY), __DIR__ . '/render.php', $build],
                 [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
                 $pipes, "$root/base"
             );

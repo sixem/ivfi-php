@@ -90,6 +90,7 @@ e "Creating release file ..."
   "$sz_cmd" a -tzip "$PACKAGED" standalone build "${PACKAGE_FILES[@]}"
   "$sz_cmd" t "$PACKAGED"
 )
-mv -f -- "$release_tmp/$PACKAGED" "$release_root/$PACKAGED"
+mkdir -p "$release_root/releases"
+mv -f -- "$release_tmp/$PACKAGED" "$release_root/releases/$PACKAGED"
 
-e "> $PACKAGED"
+e "> releases/$PACKAGED"

@@ -2,12 +2,15 @@
 @use "variables";
 @use "mixins";
 
+$toolbar-height: var(--topbar-height, #{map.get(variables.$gallery, "height-top-bar")});
+
 html[gallery-is-visible] > div:not(.rootGallery, script, noscript, style) {
   pointer-events: none;
   user-select: none;
 }
 
 html > body > .rootGallery {
+  color: variables.$text-color;
   position: fixed;
   top: 0;
   left: 0;
@@ -18,89 +21,103 @@ html > body > .rootGallery {
   z-index: 1000;
   background-color: map.get(variables.$gallery, "color-background-overlay");
 
+  [data-action] svg {
+    width: 1rem;
+    height: 1rem;
+    pointer-events: none;
+  }
+
+  [data-action="next"] svg {
+    transform: rotate(180deg);
+  }
+
   > div {
     &.galleryBar {
-      height: calc(map.get(variables.$gallery, "height-top-bar") - 2px);
-      max-height: calc(map.get(variables.$gallery, "height-top-bar") - 2px);
-      min-height: calc(map.get(variables.$gallery, "height-top-bar") - 2px);
+      @include mixins.fonting($key: "top-bar", $spacing: 1px);
+
+      line-height: 1.4;
       background-color: map.get(variables.$gallery, "color-background-top-bar");
       border-bottom: 2px solid map.get(variables.$gallery, "color-border");
       width: 100%;
-      display: table;
+      display: flex;
+      align-items: stretch;
       color: map.get(variables.$gallery, "color-top-bar");
       backdrop-filter: blur(map.get(variables.$gallery, "blur-intensity"));
 
-      > div {
-        display: table-cell;
-        vertical-align: middle;
-      }
-
       > .galleryBarRight {
-        padding-right: 10px;
-        text-align: right;
+        display: flex;
+        align-items: stretch;
+        flex: none;
         white-space: nowrap;
-        width: 1%;
 
-        > span[data-action],
-        > a {
+        > button,
+        > a.download {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: none;
+          box-sizing: border-box;
+          width: 34px;
+          margin: 0;
+          padding: 0;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          color: inherit;
+          font: inherit;
+          letter-spacing: inherit;
+          text-decoration: none;
+          cursor: pointer;
           user-select: none;
+          outline: none;
+
+          &:hover,
+          &:focus-visible {
+            background: variables.$divider-color;
+          }
+
+          > svg {
+            flex: none;
+            width: 18px;
+            height: 18px;
+          }
         }
 
-        > span[data-action] {
-          margin: 0 2px;
+        > button[data-action="toggle"][aria-expanded="true"] {
+          background: map.get(variables.$root, "color-background-table-selected");
+
+          &:hover,
+          &:focus-visible {
+            background: map.get(variables.$root, "color-background-table-selected-hover");
+          }
         }
 
-        > span[data-action="toggle"] > span {
-          width: 13px;
-          text-align: center;
-          display: inline-block;
+        > button[data-action="close"] {
+          transition: background-color 150ms ease, color 150ms ease;
+
+          &:hover,
+          &:focus-visible {
+            background: variables.$close-hover-background;
+            color: #fff;
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            transition: none;
+          }
         }
 
         > a.download {
           color: map.get(variables.$gallery, "color-a-download");
-          text-decoration: none;
-
-          &:hover {
-            color: map.get(variables.$gallery, "color-a-download-hover");
-            text-decoration: underline;
-          }
-        }
-
-        > *:not(:last-child) {
-          margin-right: 3px;
-        }
-
-        > a.download,
-        > span[data-action] {
-          cursor: pointer;
-        }
-
-        > a.download::before,
-        > span[data-action]::before {
-          content: "[";
-        }
-
-        > a.download::after,
-        > span[data-action]::after {
-          content: "]";
         }
       }
 
       > div.galleryBarLeft {
-        @include mixins.fonting(
-          $key: "gallery",
-          $spacing: 1px
-        );
-
-        padding: 0 10px;
+        padding: 6px 8px;
+        flex: 1;
+        min-width: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: 0;
-
-        @include mixins.media-query("screen", "isMobile") {
-          font-size: 11px;
-        }
 
         > span {
           &:nth-child(1) {
@@ -111,7 +128,7 @@ html > body > .rootGallery {
           &:last-child::before {
             content: "|";
             margin: 0 7px;
-            color: #1c1c1c;
+            color: map.get(variables.$gallery, "color-border");
           }
         }
 
@@ -129,18 +146,23 @@ html > body > .rootGallery {
     &.galleryContent {
       display: table;
       width: 100vw;
-      height: calc(100vh - map.get(variables.$gallery, "height-top-bar"));
+      height: calc(100vh - $toolbar-height);
 
       > div.list > div.drag {
         content: " ";
-        width: 5px;
+        box-sizing: border-box;
+        width: 6px;
         min-height: 100%;
         cursor: w-resize;
         position: sticky;
         top: 0;
         bottom: 0;
-        border-left: 2px solid rgb(28 28 28 / 87%);
+        border-left: 2px solid map.get(variables.$gallery, "color-border");
         z-index: 1;
+      }
+
+      &.reversed > div.list {
+        --scrollbar-inset-right: 6;
       }
 
       &.reversed > div.list > div.drag {
@@ -175,7 +197,6 @@ html > body > .rootGallery {
 
         border-left: none;
         border-right: $width-list-selected-border solid $color-list-selected-border;
-        background-color: map.get(variables.$gallery, "color-background-list-selected");
       }
 
       > div.list > table > tbody > tr:not(.selected) > td:hover {
@@ -210,8 +231,6 @@ html > body > .rootGallery {
           pointer-events: none;
           font-feature-settings: "tnum";
           opacity: 1;
-          transition: opacity 0.5s;
-          transition: opacity 0.5s ease-in-out;
           transition: opacity 0.5s ease-in-out;
         }
 
@@ -221,13 +240,11 @@ html > body > .rootGallery {
             top: 4px;
             left: 4px;
             border-radius: 2px;
-            font-size: 11px;
+            font-size: 0.6875rem;
             pointer-events: none;
             opacity: 0.5;
             overflow: hidden;
             visibility: hidden;
-            transition: opacity 0.1s;
-            transition: opacity 0.1s ease-in-out;
             transition: opacity 0.1s ease-in-out;
 
             &:hover {
@@ -244,19 +261,17 @@ html > body > .rootGallery {
             text-decoration: none;
             pointer-events: auto;
             padding: 3px 6px 4px;
-            color: #e5e5e5;
-            background-color: #151515;
-            transition: background-color 0.2s;
-            transition: background-color 0.2s ease-in-out;
+            color: variables.$text-color;
+            background-color: #000;
             transition: background-color 0.2s ease-in-out;
 
             &:not(:last-child) {
-              border-right: 1px solid #1a1a1a;
+              border-right: 2px solid map.get(variables.$gallery, "color-border");
             }
 
             &:hover {
-              background-color: rgb(0 0 0 / 97.5%);
-              color: #fff;
+              background-color: #000;
+              color: variables.$text-color;
             }
           }
         }
@@ -269,13 +284,8 @@ html > body > .rootGallery {
           z-index: 1;
           right: 10px;
 
-          /* By Sam Herbert (@sherb), for everyone. More @ http://goo.gl/7AJzbL */
-          background: url('data:image/svg+xml;utf8,<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient x1="8.042%" y1="0%" x2="65.682%" y2="23.865%" id="a"><stop stop-color="%23fff" stop-opacity="0" offset="0%"/><stop stop-color="%23fff" stop-opacity=".631" offset="63.146%"/><stop stop-color="%23fff" offset="100%"/></linearGradient></defs><g fill="none" fill-rule="evenodd"><g transform="translate(1 1)"><path d="M36 18c0-9.94-8.06-18-18-18" id="Oval-2" stroke="url(%23a)" stroke-width="2"><animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="0.9s" repeatCount="indefinite" /></path><circle fill="%23fff" cx="36" cy="18" r="1"><animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="0.9s" repeatCount="indefinite" /></circle></g></g></svg>');
-          background-size: $spinner-size $spinner-size;
-          width: $spinner-size;
-          height: $spinner-size;
-          transition: opacity $spinner-fade-duration;
-          transition: opacity $spinner-fade-duration ease-in-out;
+          @include mixins.loading-spinner($spinner-size);
+
           transition: opacity $spinner-fade-duration ease-in-out;
           opacity: 0;
         }
@@ -295,7 +305,7 @@ html > body > .rootGallery {
         left: 10px;
       }
 
-      max-height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
+      max-height: calc(100vh - $toolbar-height);
 
       > .media > .wrapper {
         display: flex;
@@ -313,17 +323,17 @@ html > body > .rootGallery {
         > .cover,
         > .cover > img,
         > .cover > video {
-          max-height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
+          max-height: calc(100vh - $toolbar-height);
         }
 
-        max-height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
+        max-height: calc(100vh - $toolbar-height);
 
         > .cover {
           position: relative;
         }
 
         &.fill {
-          height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
+          height: calc(100vh - $toolbar-height);
 
           > .cover {
             height: 100%;
@@ -366,19 +376,20 @@ html > body > .rootGallery {
       }
 
       > div.list {
+        --scrollbar-inset-right: 0;
+
         display: table-cell;
-        background-color: #101013;
+        background-color: #000;
         max-width: 50vw;
         min-width: 275px;
         width: 25vw;
         float: right;
         overflow-y: scroll;
         overflow-x: hidden;
-        border-top: 1px solid #101010b8;
         position: relative;
-        scrollbar-color: #222 #131315;
-        height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
-        max-height: calc(100vh - map.get(variables.$gallery, "height-top-bar") - 2px);
+        scrollbar-color: #222 #000;
+        height: calc(100vh - $toolbar-height);
+        max-height: calc(100vh - $toolbar-height);
 
         > table > tbody > tr {
           @include mixins.fonting(
@@ -390,7 +401,7 @@ html > body > .rootGallery {
           );
 
           > td {
-            padding: 6px 4px 6px 6px;
+            padding: 6px calc(12px + var(--scrollbar-inset-right) * 1px) 6px 6px;
             cursor: pointer;
             max-width: 0;
             overflow: hidden;
@@ -413,23 +424,17 @@ html > body > .rootGallery {
             }
           }
 
-          @include mixins.media-query("screen", "isMobile") {
-            font-size: 11px;
+          &[data-context-menu-open] > td {
+            background-color: map.get(variables.$gallery, "color-background-list-context");
+
+            &:hover {
+              background-color: map.get(variables.$gallery, "color-background-list-context");
+            }
           }
-        }
-      }
-    }
 
-    &.galleryBar > div.galleryBarRight {
-      > a.download,
-      > span[data-action] {
-        @include mixins.fonting(
-          $key: "gallery",
-          $spacing: 1px,
-        );
-
-        @include mixins.media-query("screen", "isMobile") {
-          font-size: 11px;
+          @include mixins.media-query("screen", "isMobile") {
+            font-size: 0.6875rem;
+          }
         }
       }
     }

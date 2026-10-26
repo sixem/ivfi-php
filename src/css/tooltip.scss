@@ -1,0 +1,24 @@
+@use "variables";
+
+html > body > .tooltip {
+  position: fixed;
+  z-index: 11000;
+  box-sizing: border-box;
+  max-width: min(20rem, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  overflow: hidden;
+  padding: 6px 9px;
+  border: 2px solid variables.$surface-border;
+  border-radius: 3px;
+  background: variables.$surface-background;
+  color: variables.$text-color;
+  font: 400 0.8125rem / 1.45 Inter, sans-serif;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 50%);
+  pointer-events: none;
+
+  &[hidden] {
+    display: none;
+  }
+}

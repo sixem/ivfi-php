@@ -1,0 +1,203 @@
+@use "sass:map";
+@use "variables";
+@use "mixins";
+
+html > body > .toast {
+  position: fixed;
+  top: calc(var(--topbar-height, 31px) + 12px);
+  right: 20px;
+  z-index: 10002;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  box-sizing: border-box;
+  width: min(21.25rem, calc(100vw - 40px));
+  padding: 12px;
+  border: 2px solid variables.$divider-color;
+  border-radius: 3px;
+  background: #000;
+  color: variables.$text-color;
+  font: 400 0.8125rem / 1.45 Inter, sans-serif;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 70%);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
+
+  &.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  > .toastIcon {
+    display: grid;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    color: variables.$accent-color;
+    transition: color 450ms ease;
+
+    > span {
+      grid-area: 1 / 1;
+      width: 18px;
+      height: 18px;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    > .toastSymbol {
+      display: flex;
+      opacity: 1;
+      transform: scale(1);
+
+      > svg {
+        width: 100%;
+        height: 100%;
+      }
+    }
+
+    > .toastSpinner {
+      @include mixins.loading-spinner(18px);
+
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    &.is-loading {
+      > .toastSpinner {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      > .toastSymbol {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+    }
+
+    &.is-complete {
+      color: variables.$success-color;
+    }
+  }
+
+  > .toastMessage {
+    flex: 1;
+    min-width: 0;
+
+    > span {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    > .toastTitle {
+      font-weight: 500;
+      font-feature-settings: "tnum";
+    }
+
+    > .toastDetail {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      margin-top: 3px;
+      font-size: 0.75rem;
+    }
+
+    > .toastFilename {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      overflow-wrap: normal;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    > .toastProgress {
+      height: 4px;
+      margin-top: 8px;
+      overflow: hidden;
+      border-radius: 2px;
+      background: variables.$divider-color;
+
+      > span {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: variables.$accent-color;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 180ms ease, background-color 450ms ease;
+      }
+
+      &.is-complete > span {
+        background-color: variables.$success-color;
+      }
+
+      &.is-indeterminate > span {
+        width: 35%;
+        animation: toast-progress 1.2s ease-in-out infinite;
+      }
+    }
+
+    > .toastProgress:not([hidden]) + .toastDetail {
+      margin-top: 7px;
+    }
+  }
+
+  > .toastClose {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: -3px -3px 0 0;
+    padding: 0;
+    border: none;
+    border-radius: 2px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    outline: none;
+
+    > svg {
+      width: 1.125rem;
+      height: 1.125rem;
+      pointer-events: none;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: map.get(variables.$root, "color-background-table-hover");
+    }
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    transform: none;
+
+    > .toastIcon,
+    > .toastIcon > span {
+      transition: none;
+    }
+
+    > .toastMessage > .toastProgress > span {
+      transition: none;
+      animation: none;
+    }
+  }
+}
+
+@keyframes toast-progress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}

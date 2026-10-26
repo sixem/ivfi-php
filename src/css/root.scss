@@ -1,5 +1,10 @@
 @charset "UTF-8";
 
+::selection {
+  background: #fff;
+  color: #000;
+}
+
 * {
   box-sizing: inherit;
 
@@ -28,12 +33,12 @@ select:not(.default) {
   }
 
   &:hover {
-    border: 1px solid #393c4a;
+    border: 2px solid #393c4a;
     background-color: #262835;
   }
 
   &:focus {
-    border: 1px solid #393c4a;
+    border: 2px solid #393c4a;
     background-color: #262835;
     outline: none;
   }

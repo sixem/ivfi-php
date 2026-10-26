@@ -4,8 +4,10 @@ import { config, user } from '../../config/config';
 /** Helpers */
 import { DOM, capitalize, checkNested } from '../../helpers';
 /** Modules */
-import { eventHooks } from '../../modules/event-hooks';
+import { createDialog } from '../../modules/dialog';
+import { enhanceSelect } from '../../modules/select';
 import { log } from '../../modules/logger';
+import '../../../css/settings.scss';
 
 /** Types */
 import {
@@ -44,13 +46,13 @@ create.option = (
 	text: string,
 	options: {
 		[key: string]: any;
-	} = {},
-	title: string = null) =>
+	} = {}) =>
 {
 	if(Object.prototype.hasOwnProperty.call(options, 'class'))
 	{
 		options.class = ('option ' + options.class);
 	}
+	if(!element.id) element.id = `ivfi-setting-${element.getAttribute('name')}`;
 
 	const wrapperAttributes = Object.assign({
 		class : 'option'
@@ -59,29 +61,26 @@ create.option = (
 	const textAttributes: {
 		class: string;
 		text: string;
-		title?: string;
+		id: string;
 	} = {
 		class: 'option-text',
-		text: text
+		text: text,
+		id: `${element.id}-label`
 	};
-
-	if(title)
-	{
-		textAttributes.title = title;
-	}
 
 	/** Create wrapper */
 	const wrapper = DOM.wrap(
 		DOM.wrap(
-			element, 'div'
+			element, 'div', { class: 'option-control' }
 		),
 		'div', wrapperAttributes
 	);
+	if(element.tagName === 'SELECT') wrapper.classList.add('hasSelect');
 
 	/** Add to wrapper */
-	wrapper.prepend(
-		DOM.new('div', textAttributes) as HTMLElement
-	);
+	const label = DOM.new('span', textAttributes);
+	wrapper.prepend(label);
+	element.setAttribute('aria-labelledby', label.id);
 
 	return wrapper;
 };
@@ -93,12 +92,16 @@ create.section = (
 	id: string,
 	header: string = null) =>
 {
+	const headingId = `ivfi-settings-${id}-heading`;
 	const container: HTMLElement = DOM.new('div', {
 		'class': 'section',
-		'data-key': id
+		'data-key': id,
+		role: 'group',
+		'aria-labelledby': headingId
 	});
 
-	container.appendChild(DOM.new('div', {
+	container.appendChild(DOM.new('h3', {
+		id: headingId,
 		class: 'header',
 		text: header ? header : capitalize(id)
 	}));
@@ -217,6 +220,7 @@ update.gallery.listAlignment = (alignment: number) =>
 		data.instances.gallery.options.list.reverse = (
 			alignment === 0 ? false : true
 		);
+		data.instances.gallery.update.listToggle(detached.style.display !== 'none');
 	}
 };
 
@@ -528,11 +532,7 @@ theme.set = (theme: any = null, setCookie = true): void | boolean =>
 export class componentSettings
 {
 	private client: TUserClient;
-
-	private boundEvents: {
-		selector?: any;
-		events?: Array<string>;
-	}
+	private open = false;
 
 	constructor()
 	{
@@ -552,7 +552,7 @@ export class componentSettings
 	}
 
 	/**
-	 * Apply settings (gather and set settings, then close menu)
+	 * Gather and apply settings
 	 */
 	apply = (element: HTMLElement, client: TUserClient): void =>
 	{
@@ -561,7 +561,6 @@ export class componentSettings
 		options.set(options.gather(element), client);
 
 		/** Call functions on settings applied */
-		data.components.settings.close();
 		data.layer.main.update();
 	}
 
@@ -570,21 +569,7 @@ export class componentSettings
 	 */
 	close = (): void =>
 	{
-		/** Remove events */
-		Object.keys(this.boundEvents).forEach((eventId: string) =>
-		{
-			const { selector, events } = this.boundEvents[eventId];
-
-			/** Unlisten to events */
-			eventHooks.unlisten(selector, events, eventId);
-		});
-
-		this.boundEvents = {};
-
-		/** Remove settings elements */
-		document.body.querySelectorAll(
-			':scope > div.focusOverlay, :scope > div.settingsContainer'
-		).forEach((element) => element.remove());
+		if(this.open) createDialog().hide();
 	}
 
 	getSectionGallery = (section = create.section('gallery'), settings = 0) =>
@@ -613,25 +598,22 @@ export class componentSettings
 
 		sets.push([
 			data.text.settingsLabels.galleryReverseSearch.text,
-			'reverseOptions',
-			data.text.settingsLabels.galleryReverseSearch.description
+			'reverseOptions'
 		]);
 
 		sets.push([
 			data.text.settingsLabels.galleryVideoAutoplay.text,
-			'autoplay',
-			data.text.settingsLabels.galleryVideoAutoplay.description
+			'autoplay'
 		]);
 
 		sets.push([
 			data.text.settingsLabels.galleryFitContent.text,
-			'fitContent',
-			data.text.settingsLabels.galleryFitContent.description
+			'fitContent'
 		]);
 
 		sets.forEach((e) =>
 		{
-			const [label, key, description] = e;
+			const [label, key] = e;
 
 			section.append(create.option(
 				create.check({
@@ -641,9 +623,7 @@ export class componentSettings
 					return checkNested(this.client, 'gallery', key)
 						? (this.client.gallery[key])
 						: config.get(`gallery.${key}`);
-				}), label, {
-					class : 'interactable'
-				}, description)
+				}), label)
 			);
 
 			settings++;
@@ -655,7 +635,7 @@ export class componentSettings
 		};
 	}
 
-	getSectionMain = (section: HTMLElement = create.section('main'), settings = 0) =>
+	getSectionMain = (section: HTMLElement = create.section('main', 'Appearance'), settings = 0) =>
 	{
 		if(config.exists('style.themes.pool')
 			&& typeof config.get('style.themes.pool') === 'object')
@@ -720,9 +700,7 @@ export class componentSettings
 
 			const option = create.option(
 				checkElement,
-				data.text.settingsLabels.stylingCompact.text, {
-					class : 'interactable'
-				}, data.text.settingsLabels.stylingCompact.description
+				data.text.settingsLabels.stylingCompact.text
 			);
 
 			section.appendChild(option);
@@ -736,120 +714,34 @@ export class componentSettings
 		};
 	}
 
-	removeOnUnbind = ({ selector, events, id }) =>
-	{
-		this.boundEvents[id] = {
-			selector, events
-		};
-	}
-
 	/**
-	 * Create and show the settings menu
+	 * Show settings
 	 */
-	show = () =>
+	show = async (): Promise<void> =>
 	{
-		if(document.body.querySelector(':scope > div.settingsContainer'))
+		if(this.open || document.documentElement.hasAttribute('dialog-is-visible')) return;
+		this.open = true;
+		const selects: Array<() => void> = [];
+		try
 		{
-			return;
+			this.client = user.get();
+			const sections = [this.getSectionMain()];
+			if(config.get('gallery.enabled')) sections.push(this.getSectionGallery());
+			const wrapper = DOM.new('div', { class: 'settingsOptions' });
+			wrapper.append(...sections.filter(item => item.settings > 0).map(item => item.section));
+			wrapper.querySelectorAll<HTMLSelectElement>('select').forEach(select => selects.push(enhanceSelect(select)));
+			await createDialog().show({
+				title: 'Settings',
+				content: wrapper,
+				confirmLabel: 'Apply',
+				initialFocus: wrapper.querySelector<HTMLElement>(
+					'button:not(:disabled), input:not(:disabled), select:not([hidden]):not(:disabled)'
+				),
+				onConfirm: () => this.apply(wrapper, this.client)
+			});
+		} finally {
+			selects.forEach(remove => remove());
+			this.open = false;
 		}
-
-		this.client = user.get();
-		this.boundEvents = {};
-
-		const sections = [];
-
-		if(!document.body.querySelector(':scope > div.focusOverlay'))
-		{
-			const overlay = DOM.new('div', {
-				class : 'focusOverlay'
-			});
-
-			document.body.appendChild(overlay);
-
-			eventHooks.listen(overlay, 'click', 'settingsOverlayClick', () =>
-			{
-				data.components.settings.close();
-			}, {
-				onAdd: this.removeOnUnbind
-			});
-		}
-
-		const container = DOM.new('div', {
-			class : 'settingsContainer'
-		});
-
-		sections.push(this.getSectionMain());
-
-		if(config.get('gallery.enabled'))
-		{
-			sections.push(this.getSectionGallery());
-		}
-
-		const wrapper = DOM.new('div', {
-			class : 'wrapper'
-		});
-
-		wrapper.append(...sections.map((item) =>
-		{
-			return item.settings > 0 ? item.section : null;
-		}).filter((item) =>
-		{
-			return item !== null;
-		}));
-
-		const bottom = DOM.new('div', {
-			class : 'bottom'
-		});
-
-		const applyButton = DOM.new('div', {
-			class : 'apply ns',
-			text : 'Apply'
-		});
-
-		const cancelButton = DOM.new('div', {
-			class : 'cancel ns',
-			text : 'Cancel'
-		});
-
-		container.append(wrapper, bottom);
-
-		/* Add `Apply` and `Cancel` buttons and add callbacks on `click` */
-		[[applyButton, 'settignsApplyClick', () => this.apply(container, this.client)],
-			[cancelButton, 'settingsCancelClick', () => this.close()]
-		].forEach(([ element, id, callback ]) =>
-		{
-			bottom.append(element as Node);
-
-			eventHooks.listen(element as HTMLElement, 'click', id.toString(), callback as (...args: any) => void, {
-				onAdd: this.removeOnUnbind
-			});
-		});
-
-		document.body.appendChild(container);
-
-		container.querySelectorAll('div.section > .option.interactable').forEach((option, index) =>
-		{
-			eventHooks.listen(option as HTMLElement, 'mouseup', `settingsMouseUp_${index}`, (e) =>
-			{
-				if(window.getSelection().toString())
-				{
-					return;
-				}
-
-				if(e.target.tagName !== 'INPUT')
-				{
-					const checkbox = e.currentTarget.querySelector('input[type="checkbox"]');
-
-					if(checkbox)
-					{
-						checkbox.checked = !checkbox.checked;
-
-						return;
-					}
-				}
-			}, {
-				onAdd: this.removeOnUnbind
-			});
-		});
 	}
 }

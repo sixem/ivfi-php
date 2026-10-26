@@ -3,13 +3,6 @@ import {
 } from '../module-event-hooks';
 
 /**
- * Extension for preview anchors
- */
-export interface IPreviewAnchor extends HTMLElement {
-	itemIndex?: number;
-}
-
-/**
  * Extension for media indexing
  */
 export interface ITableRowMI extends HTMLElement {
@@ -32,6 +25,9 @@ export type TOnPreviewLoad = {
  * Preview options
  */
 export type TPreviewOptions = {
+	selector?: string;
+	resolve?: (element: HTMLElement) => TPreviewOptions['force'];
+	available?: () => boolean;
 	delay?: number;
 	cursor?: boolean;
 	encodeAll?: boolean;

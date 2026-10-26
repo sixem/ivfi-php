@@ -15,67 +15,27 @@
 
 ## Introduction
 
-This is a file directory browser script written in PHP and JavaScript.
+IVFi-PHP is a directory browser with an image and video gallery, hover previews, search, and ZIP downloads. It runs on a PHP web server or through Docker.
 
-This is designed to be a image and video friendly Indexer, while also being an Indexer that has all of the other features that you can expect from most directory listers out there. It can be heavily customized, and has a design that attempts to be appealing while also being functional and easy to use.
+Start with [setup](setup.md), then [configure](config.md) it to your liking. Try the [demo](https://five.sh/demo/indexer/) to see it in action.
 
-***Note: The Indexer can be used without JavaScript, but it is needed for the extra functionality.***
-
-## Feedback <!-- {docsify-ignore} -->
-I'm open for any feedback.
-
-You can open an [issue](https://github.com/sixem/ivfi-php/issues) if you encounter any **specific** problems or bugs of any kind.
-
-Or, you can start a [discussion](https://github.com/sixem/ivfi-php/discussions) if you just have any general questions or minor issues you want to troubleshoot. You can also suggest any features or potential changes there.
-
-## Demo
-
-You can visit the [demo](https://five.sh/demo/indexer/) to view the indexer in action.
+Basic listings work without JavaScript; interactive features require it.
 
 ## Features
-#### **Authentication**
-The script supports HTTP authentication, allowing you to add a bit of protection to your directories.
-#### **Gallery Mode**
-A gallery mode where you can view images and videos of the current directory without needing to visit each URL separately. It has support for downloading files and reverse searching images.
-#### **Hover Previews**
-Displays a preview of the image or video when hovering over the name.
-#### **Search Filter**
-The search filter can be used to search for filenames or filetypes in the current directory.
 
-Usage (Desktop): `Shift + F`.
-#### **Single file**
-This script can be set up as a single file script (standalone setup). Only one file needed, nothing more.
-#### **Customizable**
-This script can be customized in a number of ways. (See: [Configuration](config.md))
-#### **Additonal Features**
-It can be built with additional features, like support for displaying `README.md` files on each directory!
-#### **And much more ..**
-+ All dates will match the timezone of the client.
-+ Persistent client-set sorting settings.
-+ Support for custom themes.
-+ Server-side filtering which can help you hide specific files or folders.
-+ Paths can be clicked, allowing for easy navigation between folders.
-+ The client can set their own settings in the menu.
-+ Direct download links.
-+ Mobile friendly.
+- **Gallery:** browse images and videos, download files, and reverse-search images.
+- **Hover previews:** preview media by hovering over its filename.
+- **Search:** filter the current directory by name or type (`Shift + F` on desktop). Supports regex and leading-star wildcards such as `*.mp4`; invalid patterns turn red and leave the last valid results unchanged.
+- **Downloads:** download individual files or a selection as a ZIP archive.
+- **Standalone:** use a single PHP file with embedded assets.
+- **Customization:** themes, saved display preferences, and server-side filters.
+- **Authentication:** optional Digest protection for listings. Direct files need web-server access controls; see [authentication](config.md#authentication).
+- **Extra features:** optional [README support](extras.md), disabled by default.
 
-## Additional features <!-- {docsify-ignore} -->
+## Feedback <!-- {docsify-ignore} -->
 
-When building the Indexer, additional features can be enabled. These features are not bundled with the pre-built releases, and must be flagged as enabled prior to building the Indexer yourself (see below for how the building process is done).
-
-The reason why these features are not included in the default version, is because they may rely on larger libraries and other scripts, which I don't feel should be pushed into the vanilla version unless the user desires to do so themselves!
-
-See [extra features](extras.md) for a list over the features and how these can be implemented.
-
-## Contributing
-You can contribute by either submitting a pull request, reporting issues or bugs, or voicing good ideas. It's all very much welcome!
+Report bugs in [issues](https://github.com/sixem/ivfi-php/issues), or use [discussions](https://github.com/sixem/ivfi-php/discussions) for questions and ideas. Pull requests are welcome; see [contributing](https://github.com/sixem/ivfi-php/blob/master/CONTRIBUTING.md).
 
 ## License
-This project is licensed under GPL-3.0.
 
-It also includes external libraries that are available under a variety of licenses.
-
-See [LICENSE](https://github.com/sixem/ivfi-php/blob/master/LICENSE) for the full license text.
-
-## Disclaimer
-**As you with anything else, use this script at your own risk. There may exist bugs that i do not know of.**
+Licensed under [GPL-3.0](https://github.com/sixem/ivfi-php/blob/master/LICENSE). Included libraries retain their own licenses.

@@ -46,9 +46,21 @@ for(const assetDir of ['indexer', 'media', 'assets/indexer'])
 		assert.ok(!output.includes(`/${assetDir}/css/style.css?bust`));
 		assert.equal((output.match(/data:application\/font-woff2/g) || []).length, 7);
 		assert.ok(output.includes('<script type="text/javascript">'));
-		assert.ok(output.includes(fs.readFileSync(path.join(root, 'build', assetDir, 'main.js'), 'binary')));
+		assert.ok(output.includes(fs.readFileSync(path.join(root, 'build', assetDir, 'main.js'), 'utf8')));
 	});
 }
+
+test('preserves Unicode when embedding JavaScript', (t) =>
+{
+	const root = fixture(t);
+	const script = path.join(root, 'build/indexer/main.js');
+	const text = 'café 한글 日本語 😀';
+	fs.appendFileSync(script, `\n// ${text}\n`);
+	const result = run(root);
+	assert.equal(result.status, 0, result.stdout + result.stderr);
+	const output = fs.readFileSync(path.join(root, 'build/standalone.php'), 'utf8');
+	assert.ok(output.includes(text));
+});
 
 test('rejects missing font references', (t) =>
 {

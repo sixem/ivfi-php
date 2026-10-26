@@ -36,17 +36,17 @@ final class OutputEncodingTest extends TestCase
 
     private function render(string $uri = '/', string $prepend = '', array $config = []): DOMXPath
     {
-        $build = dirname(__DIR__, 2) . '/build/indexer.php';
+        $build = dirname(__DIR__, 2) . '/build/' . (getenv('IVFI_PHP_VARIANT') ?: 'indexer.php');
         self::assertFileExists($build, 'Run pnpm build before the PHP regression tests.');
-        $this->fixture('.indexer.config.php', '<?php return ' . var_export($config + ['debug' => false], true) . ';');
+        $this->fixture('.' . basename($build, '.php') . '.config.php', '<?php return ' . var_export($config + ['debug' => false], true) . ';');
         $process = proc_open(
-            [PHP_BINARY, '-d', 'display_errors=stderr', __DIR__ . '/render.php', $build],
+            [(getenv('IVFI_PHP_BINARY') ?: PHP_BINARY), '-d', 'display_errors=stderr', __DIR__ . '/render.php', $build],
             [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes,
             $this->root
         );
         self::assertIsResource($process);
-        fwrite($pipes[0], json_encode(['uri' => $uri, 'prepend' => $prepend], JSON_THROW_ON_ERROR));
+        fwrite($pipes[0], json_encode(['uri' => $uri, 'prepend' => '', 'serverPrepend' => $prepend], JSON_THROW_ON_ERROR));
         fclose($pipes[0]);
         $html = stream_get_contents($pipes[1]);
         $errors = stream_get_contents($pipes[2]);
@@ -78,8 +78,34 @@ final class OutputEncodingTest extends TestCase
         self::assertSame('Index of /photos/', $page->evaluate('string(//title)'));
         self::assertSame('café & tea.jpg', $page->evaluate('string(//tr[@class="file"]/td[1]/a)'));
         self::assertSame('/public/photos/café & tea.jpg', rawurldecode($page->evaluate('string(//tr[@class="file"]/td[1]/a/@href)')));
-        self::assertSame(2, $page->query('//tr[@class="file"]/td[4]/a/span')->length);
+        self::assertSame(3, $page->query('//tr[@class="file"]/td')->length);
         self::assertSame(1, $page->query('//tr[@class="parent"]/td/a')->length);
+    }
+
+    public function testNestedListingAndThemeUrlsUseForwardSlashes(): void
+    {
+        foreach (['files', 'files/FDP', 'files/FDP/FDP250', 'files/FDP/FDP250/child',
+            'themes', 'themes/Example'] as $directory) {
+            $this->fixture($directory);
+        }
+        $this->fixture('files/FDP/FDP250/café & tea.jpg', 'image');
+        $this->fixture('themes/Example/Example.css', 'body { color: white; }');
+        $this->fixture('themes/Plain.css', 'body { color: black; }');
+        $page = $this->render('/files/FDP/FDP250/', '/public/', [
+            'style' => ['themes' => ['path' => '/themes/', 'default' => 'Example']],
+        ]);
+        self::assertSame('/public/files/FDP/FDP250/café & tea.jpg', rawurldecode($page->evaluate('string(//tr[@class="file"]/td[1]/a/@href)')));
+        self::assertSame('/public/files/FDP/FDP250/child/', $page->evaluate('string(//tr[@class="directory"]/td[1]/a/@href)'));
+        self::assertSame('/public/files/FDP/', $page->evaluate('string(//tr[@class="parent"]/td[1]/a/@href)'));
+        $config = json_decode($page->evaluate('string(//script[@id="__IVFI_DATA__"])'), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('/themes/Example/Example.css', $config['style']['themes']['pool']['example']['path']);
+        self::assertSame('/themes/Plain.css', $config['style']['themes']['pool']['plain']['path']);
+        foreach ($page->query('//a/@href | //link/@href') as $link) {
+            if (str_starts_with($link->nodeValue, '/')) {
+                self::assertStringNotContainsString('\\', $link->nodeValue);
+                self::assertStringNotContainsString('//', $link->nodeValue);
+            }
+        }
     }
 
     public function testFileAndDirectoryNamesStayTextAndAttributeValues(): void
@@ -95,7 +121,6 @@ final class OutputEncodingTest extends TestCase
             self::assertSame($expected, $page->evaluate('string(' . $row . '/td[1]/@data-raw)'));
             self::assertSame('/' . $expected . ($type === 'directory' ? '/' : ''), rawurldecode($page->evaluate('string(' . $row . '/td[1]/a/@href)')));
         }
-        self::assertSame($name . '.jpg', $page->evaluate('string(//a[@download]/@filename)'));
     }
 
     public function testTitleBreadcrumbsAndPrependValuesStayEncoded(): void

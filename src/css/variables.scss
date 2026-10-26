@@ -1,59 +1,67 @@
+@use "sass:map";
+
+$text-color: rgb(255 255 255 / 86%);
+$accent-color: #819bff;
+$accent-color-light: #a3cbff;
+$divider-color: #121017;
+$surface-background: #0d0e11;
+$surface-border: rgb(48 48 48 / 22.7%);
+$success-color: #8bd6a5;
+$close-hover-background: #e81123;
+
 /* Root values */
 $root: (
-  "color-a-download": #6270ae,
-  "color-a-download-visited": #515978,
-  "color-a-file": #9b9b9b,
-  "color-a-file-visited": #757575,
-  "color-a-media": #627be3,
-  "color-a-media-hover": #627be3,
-  "color-a-media-visited": #475282,
-  "color-a-regular": #f45656,
-  "color-a-parent": #ffc752,
-  "color-body": #d6d3ce,
+  "color-a-file": $text-color,
+  "color-a-file-visited": $text-color,
+  "color-a-media": $accent-color,
+  "color-a-media-hover": $accent-color,
+  "color-a-media-visited": $accent-color,
+  "color-a-regular": #ff6969,
+  "color-a-parent": #ffcc61,
+  "color-body": $text-color,
   "color-border-main": #19191d,
-  "color-border-settings-menu": #17171b,
-  "color-background-settings-menu": rgba(18 18 22 / 65%),
-  "color-background-settings-item-hover": #17171b,
-  "color-background-body": #0f0f13,
-  "color-background-table": #121318,
-  "color-header-table": #fff,
-  "color-background-table-hover": rgba(23 26 40 / 55%)
+  "color-background-body": #000,
+  "color-background-table": #000,
+  "color-header-table": $text-color,
+  "color-background-table-hover": rgba(23 26 40 / 55%),
+  "color-background-table-selected": rgba($accent-color, 0.16),
+  "color-background-table-selected-hover": rgba($accent-color, 0.24)
 );
 
 /* Gallery */
 $gallery: (
-  "height-top-bar": 31px,
+  "height-top-bar": 1.9375rem,
   "blur-intensity": 3px,
-  "color-border": #161616de,
-  "color-top-bar": #fff,
-  "color-a-download": #6173c5,
-  "color-a-download-hover": #6a83f5,
-  "color-list-item": #d4d4d4,
-  "color-list-item-selected": #fff,
-  "color-list-item-hover": auto,
+  "color-border": $divider-color,
+  "color-top-bar": $text-color,
+  "color-a-download": $accent-color,
+  "color-list-item": $text-color,
+  "color-list-item-selected": $text-color,
+  "color-list-item-hover": $text-color,
   "color-background-overlay": rgb(4 4 4 / 80%),
-  "color-background-list-selected": #1c2333,
-  "color-background-list-selected-hover": #1c2333,
-  "color-background-list-item-hover": rgb(44 54 81 / 20%),
-  "color-background-top-bar": rgba(25 25 32 / 70%),
-  "color-list-selected-border": #fbfcff,
+  "color-background-list-selected": map.get($root, "color-background-table-selected"),
+  "color-background-list-selected-hover": map.get($root, "color-background-table-selected-hover"),
+  "color-background-list-context": rgba($accent-color, 0.22),
+  "color-background-list-item-hover": map.get($root, "color-background-table-hover"),
+  "color-background-top-bar": #000,
+  "color-list-selected-border": map.get($root, "color-a-media"),
   "width-list-selected-border": 5px
 );
 
 /* Font sizing */
 $font-sizing: (
   /* General */
-  "default": 14px,
+  "default": 0.875rem,
   /* Gallery */
-  "gallery": 13px,
+  "gallery": 0.8125rem,
   /* Table header (Filename, Modified et cetera.) */
-  "table-header": 13px,
+  "table-header": 0.8125rem,
   /* Fixed top bar */
-  "top-bar": 12px,
+  "top-bar": 0.75rem,
   /* Modified and size column */
-  "row-num": 13px,
+  "row-num": 0.8125rem,
   /* Filename column */
-  "row-file": 13px
+  "row-file": 0.8125rem
 );
 
 /* Breakpoints */
@@ -63,6 +71,6 @@ $breakpoints: (
 
 /* Table column width values for deskop and mobile */
 $table-sizing: (
-  "desktop": (50%, 20%, 15%, 11.5%),
-  "mobile": (40.5%, 21%, 19%, 19.5)
+  "desktop": (auto, 180px, 100px),
+  "mobile": (auto, 100px, 70px)
 );

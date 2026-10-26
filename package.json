@@ -4,12 +4,13 @@
     "mail": "emy@five.sh"
   },
   "name": "ivfi",
-  "version": "1.2.4",
+  "version": "1.3.0",
   "description": "The image and video friendly indexer",
   "main": "./core/js/main.ts",
   "type": "module",
   "packageManager": "pnpm@10.34.5",
   "dependencies": {
+    "client-zip": "2.5.1",
     "js-cookie": "^3.0.7"
   },
   "devDependencies": {
@@ -23,7 +24,7 @@
     "eslint": "^7.32.0",
     "html-webpack-plugin": "^5.3.1",
     "mini-css-extract-plugin": "^1.6.0",
-    "moment": "^2.29.1",
+    "moment": "^2.31.0",
     "postcss": "^8.5.28",
     "postcss-loader": "^7.0.1",
     "sass": "^1.52.3",
@@ -37,12 +38,11 @@
     "webpack-cli": "^4.10.0"
   },
   "scripts": {
-    "build": "webpack --config webpack.config.js --mode=production",
-    "build-dev": "webpack --config webpack.config.js --mode=development",
-    "build-dev-watch": "webpack --config webpack.config.js --mode=development --watch",
-    "make-standalone": "webpack --config webpack.config.js --mode=production && node ./scripts/make-standalone.js",
-    "docker-populate": "rm -rf ./docker/public ./build && webpack --config webpack.config.js --mode=production && mv ./build ./docker/public",
-    "lint": "eslint \"./src/core/**/*.ts\" webpack.config.js build.helpers.js \"scripts/*.js\" && stylelint \"./src/css/**/*.scss\"",
+    "build": "webpack --config scripts/build/webpack.config.js --mode=production",
+    "build-dev": "webpack --config scripts/build/webpack.config.js --mode=development",
+    "build-dev-watch": "webpack --config scripts/build/webpack.config.js --mode=development --watch",
+    "make-standalone": "webpack --config scripts/build/webpack.config.js --mode=production && node ./scripts/make-standalone.js",
+    "lint": "eslint \"./src/core/**/*.ts\" \"scripts/build/*.js\" \"scripts/*.js\" && stylelint \"./src/css/**/*.scss\"",
     "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js && node --test scripts/test-standalone.js",
     "pack-release": "bash ./scripts/pack-release.sh"
   },

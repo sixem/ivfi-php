@@ -1,4 +1,8 @@
-<?php
+<%
+const defaultConfig = require('./config.php')
+  .replace(/^<\?php\s+return\s+/, '').trim().replace(/;$/, '')
+  .replace(/__IVFI_ASSET_PATH__/g, indexerPath);
+%><?php
 /**
  * <ivfi-php> [https://github.com/sixem/ivfi-php]
  *
@@ -10,152 +14,13 @@
 /**
  * [Configuration]
  * A more in-depth overview can be found here:
- * https://git.five.sh/ivfi/docs/php/#/config
+ * https://github.com/sixem/ivfi-php/blob/master/docs/config.md
  */
 
 /* Used to bust the cache and to display footer version number */
 $version = '<%= version %>';
 
-$config = [
-    /**
-     * Authentication options
-     */
-    'authentication' => false,
-    /**
-     * Enables single-page features
-     */
-    'single_page' => false,
-    /**
-     * Formatting options
-     */
-    'format' => [
-        'title' => 'Index of %s', /* Title format where %s is the current path */
-        'date' => ['d/m/y H:i', 'd/m/y'], /* Date formats (desktop, mobile) */
-        'sizes' => [' B', ' KiB', ' MiB', ' GiB', ' TiB'] /* Size formats */
-    ],
-    /**
-     * Favicon options
-     */
-    'icon' => [
-        'path' => '/favicon.ico', /* What favicon to use */
-        'mime' => 'image/x-icon' /* Favicon mime type */
-    ],
-    /**
-     * Sorting options.
-     * 
-     * Used as default until the client sets their own sorting settings
-     */
-    'sorting' => [
-        'enabled' => false, /* Whether the server should sort the items */
-        'order' => SORT_ASC, /* Sorting order. asc or desc */
-        'types' => 0, /* What item types to sort. 0 = both. 1 = files only. 2 = directories only */
-        'sort_by' => 'name', /* What to sort by. available options are name, modified, type and size */
-        'use_mbstring' => false /* Enabled mbstring when sorting */
-    ],
-    /**
-     * Gallery options
-     */
-    'gallery' => [
-        'enabled' => true, /* Whether the gallery plugin should be enabled */
-        'reverse_options' => false, /* Reverse search options for images (when hovering over them) */
-        'scroll_interval' => 50, /* Break in ms between scroll navigation events */
-        'list_alignment' => 0, /* List alignment where 0 is right and 1 is left */
-        'fit_content' => true, /* Whether the media should be forced to fill the screen space */
-        'image_sharpen' => false, /* Attempts to disable browser blurriness on images */
-    ],
-    /**
-     * Preview options
-     */
-    'preview' => [
-        'enabled' => true, /* Whether the preview plugin should be enabled */
-        'hover_delay' => 75, /* Delay in milliseconds before the preview is shown */
-        'cursor_indicator' => true /* Displays a loading cursor while the preview is loading */
-    ],
-    /**
-     * Extension that should be marked as media.
-     * These extensions will have potential previews and will be included in the gallery
-     */
-    'extensions' => [
-        'image' => ['jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'],
-        'video' => ['webm', 'mp4', 'ogg', 'ogv', 'mov']
-    ],
-    /**
-     * Injection options
-     */
-    'inject' => false,
-    /**
-     * Styling options
-     */
-    'style' => [
-        /* Set to a path relative to the root directory (location of this file) containg .css files.
-         * Each .css file will be treated as a separate theme. Set to false to disable themes */
-        'themes' => [
-          'path' => '/<%= indexerPath %>/themes/',
-          'default' => false
-        ],
-         /* Cascading style sheets options */
-        'css' => [
-          'additional' => false
-        ],
-        /* Enables a more compact styling of the page */
-        'compact' => false
-    ],
-    /**
-     * Filter what files or directories to show.
-
-     * Uses regular expressions. All names *matching* the regex will be shown.
-     * Setting the value to false will disable the respective filter
-     */
-    'filter' => [
-        'file' => false,
-        'directory' => false
-    ],
-    /** Extensions to exclude */
-    'exclude' => false,
-    /**
-     * Calculates the size of directories.
-
-     * This can be intensive, especially with the recursive
-     * option, so be aware of that
-     */
-    'directory_sizes' => [
-      /* Whether directory sizes should be calculated or not */
-      'enabled' => false,
-      /* Recursively scans the directories when calculating the size */
-      'recursive' => false
-    ],
-    /* Metadata options */
-    'metadata' => false,
-    /* Processing functions */
-    'processor' => false,
-    /* Should ? and # characters be encoded when processing URLs */
-    'encode_all' => false,
-    /* Whether this .php file should be directly accessible */
-    'allow_direct_access' => false,
-    /* Set to 'strict' or 'weak'.
-     * 'strict' uses realpath() to avoid backwards directory traversal
-     * whereas 'weak' uses a similar string-based approach */
-    'path_checking' => 'strict',
-    /* Enabled the performance mode */
-    'performance' => false,
-    /* Whether extra information in the footer should be generated */
-    'footer' => [
-      'enabled' => true,
-      'show_server_name' => true
-    ],
-    /**
-     * Displays a simple link to the git repository in the
-     * footer along with the current version.
-     * 
-     * I would really appreciate it if you would keep this enabled
-     */
-    'credits' => true,
-    /**
-     * Enables console output in JS and PHP debugging.
-     * Also enables random query-strings for js/css files to bust the cache
-     */
-    'debug' => false
-];
+$config = <%= defaultConfig %>;
 
 /* Keep startup/configuration failures private until debug is explicitly enabled. */
 ini_set('display_errors', '0');
@@ -177,7 +42,7 @@ function respondToError($status, $error = NULL)
 
   http_response_code($status);
   header('Content-Type: text/html; charset=UTF-8');
-  $messages = [403 => 'Forbidden', 404 => 'Not Found', 500 => 'Internal Server Error'];
+  $messages = [400 => 'Bad Request', 403 => 'Forbidden', 404 => 'Not Found', 500 => 'Internal Server Error'];
   echo '<h3>' . $status . ' ' . $messages[$status] . '</h3>';
 
   if($error !== NULL)
@@ -206,8 +71,9 @@ set_exception_handler(function (Throwable $error) {
   buildInject.readmeSupport.PARSEDOWN_LIBRARY ?
   buildInject.readmeSupport.PARSEDOWN_LIBRARY : null %>
 
-/* Define current request URI */
-define('CURRENT_URI', rawurldecode($_SERVER['REQUEST_URI']));
+/* Decode the path once, after separating the raw query string. */
+define('CURRENT_URI', rawurldecode(explode('?', $_SERVER['REQUEST_URI'], 2)[0]));
+if(strpos(CURRENT_URI, "\0") !== false) respondToError(400);
 /* Define default configuration file */
 define('CONFIG_FILE', basename(__FILE__, '.php') . '.config.php');
 /* Define default dotfile name */
@@ -225,14 +91,10 @@ $client = isset($_COOKIE['IVFi']) ? $_COOKIE['IVFi'] : NULL;
 /** Define the current theme */
 $currentTheme = NULL;
 
-/* If client cookie is set, then parse it using `json_decode()` */
-if($client)
-{
-  $client = json_decode($client, true);
-}
-
-/* Validate that the cookie is a valid array type */
+/* Ignore malformed preferences instead of failing the page request. */
+$client = is_string($client) ? json_decode($client, true) : NULL;
 $validate = is_array($client);
+if(!$validate) $client = NULL;
 
 /** Define compact mode */
 $compact = NULL;
@@ -362,6 +224,21 @@ class Helpers
     }
 
     return $output;
+  }
+
+  /** Normalizes URL aliases for authentication without changing filesystem boundary checks. */
+  public static function normalizeRequestPath($path)
+  {
+    if(DIRECTORY_SEPARATOR === '\\') $path = str_replace('\\', '/', $path);
+    return self::removeDotSegments(preg_replace('#/+#', '/', $path));
+  }
+
+  /** Joins public URL paths without introducing filesystem separators. */
+  public static function joinUrlPaths(...$parts)
+  {
+    return preg_replace('#/+#', '/', implode('/', array_filter($parts, static function ($part) {
+      return $part !== '';
+    })));
   }
 
   /**
@@ -569,15 +446,8 @@ class Helpers
   }
 }
 
-  /**
-   * Authenticaticates a user
-   *
-   * @param String   $users   An array of users and their password
-   * @param String   $realm   Authenication realm
-   * 
-   * @return Void
-   */ 
-function authenticate($users, $realm)
+/** Authenticates a user with signed, short-lived Digest challenges. */
+function authenticate($users, $realm, $secret)
 {
   function http_digest_parse($text)
   {
@@ -593,43 +463,75 @@ function authenticate($users, $realm)
     ];
 
     $data = [];
-    $keys = implode('|', array_keys($neededParts));
+    $offset = 0;
+    $length = strlen($text);
+    $pattern = <<<'DIGEST_PATTERN'
+~\G[ \t]*([a-zA-Z][a-zA-Z0-9_-]*)[ \t]*=[ \t]*("(?:[^"\\\r\n]|\\[^\r\n])*"|[^\s,"=]+)[ \t]*(,|$)~
+DIGEST_PATTERN;
 
-    preg_match_all(
-      '@(' . $keys . ')=(?:([\'"])([^\2]+?)\2|([^\s,]+))@', $text, $matches, PREG_SET_ORDER
-    );
-
-    foreach($matches as $m)
+    while($offset < $length)
     {
-      $data[$m[1]] = $m[3] ? $m[3] : $m[4];
-      unset($neededParts[$m[1]]);
+      if(!preg_match($pattern, $text, $match, 0, $offset)) return false;
+      $offset += strlen($match[0]);
+      $key = strtolower($match[1]);
+      if(isset($data[$key]) || ($match[3] === ',' && $offset === $length)) return false;
+      $value = $match[2];
+      $data[$key] = $value[0] === '"'
+        ? preg_replace('~\\\\(.)~s', '$1', substr($value, 1, -1))
+        : $value;
+      unset($neededParts[$key]);
     }
 
     return $neededParts ? false : $data;
   }
 
-  /* Create header for when unathorized */
-  function createHeader($realm)
-  {
+  $key = hex2bin($secret);
+  $signNonce = static function ($payload) use ($realm, $key) {
+    return hash_hmac('sha256', "ivfi-digest\n" . $realm . "\n" . $payload, $key);
+  };
+  $challenge = static function ($stale = false) use ($realm, $signNonce) {
+    $payload = time() . ':' . bin2hex(random_bytes(16));
+    $nonce = $payload . ':' . $signNonce($payload);
     http_response_code(401);
-    header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . uniqid() . '",opaque="' . md5($realm) . '"');
-  }
+    header('WWW-Authenticate: Digest realm="' . $realm . '",qop="auth",nonce="' . $nonce
+      . '",opaque="' . md5($realm) . '"' . ($stale ? ',stale=true' : ''));
+    header('Cache-Control: no-store');
+    exit('401 Unauthorized');
+  };
 
-  /* Deny access if no digest is set */
-  if(empty($_SERVER['PHP_AUTH_DIGEST']))
-  {
-    createHeader($realm);
-    die('401 Unauthorized');
-  }
+  if(empty($_SERVER['PHP_AUTH_DIGEST'])) $challenge();
 
   /* Get digest data */
   $data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST']);
 
   /* Deny access if data is invalid or username is unset */
-  if(!$data || !isset($users[$data['username']]))
+  if(!$data || !isset($users[$data['username']]) || $data['qop'] !== 'auth'
+    || $data['nonce'] === '' || $data['cnonce'] === '' || $data['uri'] === ''
+    || !preg_match('/^[0-9a-f]{8}$/iD', $data['nc']) || $data['nc'] === '00000000'
+    || (isset($data['realm']) && $data['realm'] !== $realm)
+    || (isset($data['algorithm']) && strcasecmp($data['algorithm'], 'MD5') !== 0)
+    || !preg_match('/^[0-9a-f]{32}$/iD', $data['response']))
   {
-    createHeader($realm);
-    die('Invalid credentials.');
+    $challenge();
+  }
+
+  /* Authenticate the timestamp before using it to decide whether a nonce expired. */
+  if(!preg_match('/\A([0-9]{1,10}):([a-f0-9]{32}):([a-f0-9]{64})\z/', $data['nonce'], $nonce)
+    || !hash_equals($signNonce($nonce[1] . ':' . $nonce[2]), $nonce[3])
+    || (int) $nonce[1] > time())
+  {
+    $challenge();
+  }
+
+  /* Only server configuration can authorize a rewritten authentication target. */
+  $requestTarget = $_SERVER['REQUEST_URI'];
+  if(!empty($_SERVER['INDEXER_PREPEND_PATH']))
+  {
+    $requestTarget = rtrim($_SERVER['INDEXER_PREPEND_PATH'], '/') . '/' . ltrim($requestTarget, '/');
+  }
+  if($data['uri'] !== $requestTarget)
+  {
+    respondToError(400);
   }
 
   $a1 = md5($data['username'] . ':' . $realm . ':' . $users[$data['username']]);
@@ -638,11 +540,13 @@ function authenticate($users, $realm)
   $validResponse = md5($a1 . ':' . $data['nonce'] . ':' . $data['nc'] . ':' . $data['cnonce'] . ':' . $data['qop'] . ':' . $a2);
 
   /* Deny access if data can't be verified */
-  if($data['response'] != $validResponse)
+  if(!hash_equals($validResponse, strtolower($data['response'])))
   {
-    createHeader($realm);
-    die('Invalid credentials.');
+    $challenge();
   }
+
+  /* A stale challenge lets clients retry without prompting for credentials again. */
+  if(time() - (int) $nonce[1] >= 300) $challenge(true);
 }
 
 /**
@@ -681,7 +585,7 @@ function getThemes($basePath, $themesPath)
             if($theme[0] !== '.')
             {
               $themesPool[strtolower($item)] = [
-                'path' => Helpers::joinPaths($themesPath, $item, $theme)
+                'path' => Helpers::joinUrlPaths($themesPath, $item, $theme)
               ];
               
               break;
@@ -691,7 +595,7 @@ function getThemes($basePath, $themesPath)
         {
           /* The current item is a single .CSS file */
           $themesPool[strtolower(basename($item, '.css'))] = [
-            'path' => Helpers::joinPaths($themesPath, $item)
+            'path' => Helpers::joinUrlPaths($themesPath, $item)
           ];
         }
       }
@@ -703,26 +607,73 @@ function getThemes($basePath, $themesPath)
   }
 }
 
-/**
- * Attempts to search for a configuration file.
- * 
- * If it exists, the default values will be overwritten.
- * Any unset values in the file will take the default values.
- */
-if(file_exists(CONFIG_FILE))
+/** Fill named settings recursively; explicit lists replace the defaults in full. */
+function mergeConfigDefaults(array $config, array $defaults, $path = '')
 {
-  $config = include(CONFIG_FILE);
-  /* Also check for hidden (.) file */
-} else if(file_exists('.' . CONFIG_FILE))
-{
-  $config = include('.' . CONFIG_FILE);
+  foreach($defaults as $key => $value)
+  {
+    if(!isset($config[$key]))
+    {
+      $config[$key] = $value;
+    } else if(is_array($value))
+    {
+      $setting = $path . $key;
+      if(!is_array($config[$key]))
+      {
+        /* These settings also support scalar shorthand in existing configs. */
+        if(($setting === 'format.date' && is_string($config[$key]))
+          || ($setting === 'footer' && is_bool($config[$key]))) continue;
+        throw new RuntimeException('Configuration setting "' . $setting . '" must be an array.');
+      }
+      if($value && array_keys($value) !== range(0, count($value) - 1))
+      {
+        $config[$key] = mergeConfigDefaults($config[$key], $value, $setting . '.');
+      }
+    }
+  }
+  return $config;
 }
 
-/* Apply the explicit setting before authentication and other request processing. */
-ini_set('display_errors', isset($config['debug']) && $config['debug'] === true ? '1' : '0');
+/* Embedded at build time so both PHP distributions remain self-contained. */
+$defaults = <%= defaultConfig %>;
+/* Preserve the external-config defaults for desktop dates and video extension order. */
+$defaults['format']['date'][0] = 'm/d/y H:i';
+$defaults['extensions']['video'] = ['webm', 'mp4', 'ogv', 'ogg', 'mov'];
 
-/* Default configuration values. Used if values from the above config are unset */
-$defaults = array('authentication' => false,'single_page' => false,'format' => array('title' => 'Index of %s','date' => array('m/d/y H:i', 'd/m/y'),'sizes' => array(' B', ' KiB', ' MiB', ' GiB', ' TiB')),'icon' => array('path' => '/favicon.png','mime' => 'image/png'),'sorting' => array('enabled' => false,'order' => SORT_ASC,'types' => 0,'sort_by' => 'name','use_mbstring' => false),'gallery' => array('enabled' => true,'reverse_options' => false,'scroll_interval' => 50,'list_alignment' => 0,'fit_content' => true,'image_sharpen' => false),'preview' => array('enabled' => true,'hover_delay' => 75,'cursor_indicator' => true),'extensions' => array('image' => array('jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'),'video' => array('webm', 'mp4', 'ogv', 'ogg', 'mov')),'inject' => false,'style' => array('themes' => array('path' => '/<%= indexerPath %>/themes/','default' => false),'css' => array('additional' => false),'compact' => false),'filter' => array('file' => false,'directory' => false),'exclude' => false,'directory_sizes' => array('enabled' => false, 'recursive' => false),'processor' => false,'encode_all' => false,'allow_direct_access' => false,'path_checking' => 'strict','performance' => false,'footer' => array('enabled' => true, 'show_server_name' => true),'credits' => true,'debug' => false);
+/* Keep working-directory precedence, then support configs beside the script. */
+foreach(array_unique([getcwd() ?: __DIR__, __DIR__]) as $configDirectory)
+{
+  foreach([CONFIG_FILE, '.' . CONFIG_FILE] as $configName)
+  {
+    $configPath = $configDirectory . DIRECTORY_SEPARATOR . $configName;
+    if(file_exists($configPath))
+    {
+      if(!is_file($configPath) || !is_readable($configPath))
+      {
+        throw new RuntimeException('The configuration file must be a readable PHP file.');
+      }
+      $config = include($configPath);
+      break 2;
+    }
+  }
+}
+if(!is_array($config))
+{
+  throw new RuntimeException('The configuration file must return an array.');
+}
+
+/* Apply explicit debugging before validating the remaining settings. */
+ini_set('display_errors', isset($config['debug']) && $config['debug'] === true ? '1' : '0');
+$config = mergeConfigDefaults($config, $defaults);
+if($config['authentication'] !== false && !is_array($config['authentication']))
+{
+  throw new RuntimeException('Configuration setting "authentication" must be false or an array.');
+}
+if(isset($config['authentication']['users']) && is_array($config['authentication']['users'])
+  && isset($config['authentication']['restrict']) && !is_string($config['authentication']['restrict']))
+{
+  throw new RuntimeException('Configuration setting "authentication.restrict" must be a regular expression string.');
+}
 
 /**
  * Call authentication function
@@ -731,6 +682,12 @@ if(isset($config['authentication'])
   && $config['authentication']
   && is_array($config['authentication']))
 {
+  if(!isset($config['authentication']['secret']) || !is_string($config['authentication']['secret'])
+    || !preg_match('/\A[0-9a-f]{64}\z/i', $config['authentication']['secret']))
+  {
+    throw new RuntimeException('Configuration setting "authentication.secret" must be a generated 64-character hexadecimal secret.');
+  }
+
   /* If `users` key is an array, make way for it and check for restrictions */
   if(isset($config['authentication']['users']) &&
     is_array($config['authentication']['users']))
@@ -741,41 +698,41 @@ if(isset($config['authentication'])
     if(isset($config['authentication']['restrict']) &&
       is_string($config['authentication']['restrict']))
     {
-      /* Check if `restrict` filter matches the current requested URI */
-      $isRestricted = preg_match($config['authentication']['restrict'], CURRENT_URI);
+      /* Check both URL spellings so dot segments and duplicate slashes cannot bypass restrictions. */
+      $isRestricted = false;
+      $authPaths = [CURRENT_URI, Helpers::normalizeRequestPath(CURRENT_URI)];
+      /* Include in-root symlink targets and filesystem aliases in restriction checks. */
+      $authBase = realpath(BASE_PATH);
+      $authTarget = realpath(Helpers::joinPaths(BASE_PATH, CURRENT_URI));
+      if($authBase !== false && $authTarget !== false
+        && Helpers::isAboveCurrent($authTarget, $authBase, false))
+      {
+        $resolvedPath = '/' . ltrim(substr($authTarget, strlen(rtrim($authBase, '/\\'))), '/\\');
+        if(DIRECTORY_SEPARATOR === '\\') $resolvedPath = str_replace('\\', '/', $resolvedPath);
+        $authPaths[] = $resolvedPath;
+        if(is_dir($authTarget)) $authPaths[] = rtrim($resolvedPath, '/') . '/';
+      }
+      foreach(array_unique($authPaths) as $authPath)
+      {
+        $match = preg_match($config['authentication']['restrict'], $authPath);
+        if($match === false)
+        {
+          throw new RuntimeException('Invalid authentication restriction expression.');
+        }
+        $isRestricted = $isRestricted || $match === 1;
+      }
     }
 
     /* Restrict content if `restrict` filter matches successfully or it is unset */
     if($isRestricted)
     {
-      authenticate($config['authentication']['users'], 'Restricted content.');
+      authenticate($config['authentication']['users'], 'Restricted content.', $config['authentication']['secret']);
     }
   } else {
-    /* Don't use any potential `users` array to authenticate, use main array instead */
-    authenticate($config['authentication'], 'Restricted content.');
-  }
-}
-
-/**
- * Set default configuration values if the config is missing any keys
- * 
- * This does not traverse too deep at all
- */
-foreach($defaults as $key => $value)
-{
-  if(!isset($config[$key]))
-  {
-    $config[$key] = $defaults[$key];
-  } else if(is_array($config[$key]) &&
-    is_array($defaults[$key]))
-  {
-    foreach($defaults[$key] as $k => $v)
-    {
-      if(!isset($config[$key][$k]))
-      {
-        $config[$key][$k] = $defaults[$key][$k];
-      }
-    }
+    /* Preserve shorthand user maps without treating the signing secret as a login. */
+    $users = $config['authentication'];
+    unset($users['secret']);
+    authenticate($users, 'Restricted content.', $config['authentication']['secret']);
   }
 }
 
@@ -805,11 +762,7 @@ $footer = [
   'enabled' => is_array(
     $config['footer'])
       ? ($config['footer']['enabled'] ? true : false)
-      : ($config['footer'] ? true : false),
-  'show_server_name' => is_array(
-    $config['footer'])
-      ? $config['footer']['show_server_name']
-      : true
+      : ($config['footer'] ? true : false)
 ];
 
 /**
@@ -1092,14 +1045,11 @@ class Indexer extends Helpers
     /* Iterate over the files, get and store data */
     foreach($files as $file)
     {
-      /** Deconstruction of array */
-      list($fileName, $fileSize, $fileUrl, $fileType, $fileModified) = [
-        $file[1],
-        $file['size'],
-        $file['url'],
-        $file['type'],
-        $file['modified']
-      ];
+      $fileName = $file[1];
+      $fileSize = $file['size'];
+      $fileUrl = $file['url'];
+      $fileType = $file['type'];
+      $fileModified = $file['modified'];
 
       /** Append to total size */
       $totalSize = ($totalSize + $fileSize[0]);
@@ -1132,46 +1082,17 @@ class Indexer extends Helpers
       /** Create modified column */
       $tdModified = parent::createElementHtml('td', [
         'data-raw' => $fileModified[0]
-      ], implode('', [
-        parent::createElementHtml(
-          'span', [], $fileModified[1]
-        )
-      ]));
+      ], parent::createElementHtml('span', [], $fileModified[1]));
 
       /** Create size column */
       $tdSize = parent::createElement('td', [
         'data-raw' => $fileSize[0] === -1 ? 0 : $fileSize[0]
       ], $fileSize[1]);
 
-      /** Create save anchor */
-      $anchorSave = parent::createElementHtml('a', [
-        'href' => $fileUrl,
-        'filename' => $fileName,
-        'download' => ''
-      ], implode('', [
-        parent::createElement(
-          'span', ['data-view' => 'desktop'], '[Download]'
-        ),
-        parent::createElement(
-          'span', ['data-view' => 'mobile'], '[Save]'
-        )
-      ]));
-
-      /** Create save column */
-      $tdSave = parent::createElementHtml('td', [
-        'data-raw' => $fileType[0],
-        'class' => 'download'
-      ], $anchorSave);
-
       /** Create container and add to rows */
       $rows[] = parent::createElementHtml('tr', [
         'class' => 'file'
-      ], implode('', [
-        $tdFileName,
-        $tdModified,
-        $tdSize,
-        $tdSave
-      ]));
+      ], $tdFileName . $tdModified . $tdSize);
     }
 
     return [
@@ -1227,11 +1148,7 @@ class Indexer extends Helpers
       /** Create modified column */
       $tdModified = parent::createElementHtml('td', [
         'data-raw' => $dir['modified'][0]
-      ], implode('', [
-        parent::createElementHtml(
-          'span', [], $dir['modified'][1]
-        )
-      ]));
+      ], parent::createElementHtml('span', [], $dir['modified'][1]));
 
       /** Create size column */
       $tdSize = parent::createElement('td', $this->directorySizes['enabled']
@@ -1239,19 +1156,10 @@ class Indexer extends Helpers
         : [], $size
       );
 
-      $tdType = parent::createElementHtml(
-        'td', [], parent::createElement('span', [], '-')
-      );
-
       /** Create container and add to rows */
       $rows[] = parent::createElementHtml('tr', [
         'class' => 'directory'
-      ], implode('', [
-        $tdDirectoryName,
-        $tdModified,
-        $tdSize,
-        $tdType
-      ]));
+      ], $tdDirectoryName . $tdModified . $tdSize);
 
       if(($mostRecentTimestamp === 0)
         || $dir['modified'][0] > $mostRecentTimestamp)
@@ -1268,37 +1176,29 @@ class Indexer extends Helpers
   }
 
   /**
-   * Gets file/directory information and constructs the HTML of the table
+   * Gets file/directory information and constructs the HTML of the table.
    *
-   * @param String    $sorting    Server-side sorting to use
-   * @param Integer   $sortItems  What type of items to sort
-   * @param String    $sortType   What to sort by
-   * @param Boolean   $sortType   Whether to use mb_* functions for sorting
-   * 
-   * @return String
-   */ 
+   * @param Boolean $sorting Whether to sort the items
+   * @param Integer $sortItems What item types to sort
+   * @param String $sortType What to sort by
+   * @param Boolean $useMb Whether to use mb_* functions for sorting
+   * @return Array
+   */
   public function buildTable($sorting = false, $sortItems = 0, $sortType = 'modified', $useMb = false)
   {
-    /* Get client timezone offset */
-    $cookies = [
-      'timezoneOffset' => intval(is_array($this->client)
-        ? (isset($this->client['timezoneOffset'])
-          ? $this->client['timezoneOffset']
-          : 0)
-        : 0)
-    ];
-
-    $timezone = [
-      'offset' => $cookies['timezoneOffset'] > 0
-        ? -$cookies['timezoneOffset'] * 60
-        : abs($cookies['timezoneOffset']) * 60
-    ];
+    /* Bound cookie-supplied minutes before converting to seconds. */
+    $timezoneOffset = $this->client['timezoneOffset'] ?? 0;
+    if(!is_numeric($timezoneOffset) || $timezoneOffset < -1440 || $timezoneOffset > 1440)
+    {
+      $timezoneOffset = 0;
+    }
+    $timezone = ['offset' => -(int) $timezoneOffset * 60];
 
     /* Gets the current directory */
     $directory = self::getCurrentDirectory();
 
     /* Gets the files from the current path and filter them */
-    $files = $this->handleFiles(self::getFiles(), ($directory === '/'));
+    $data = $this->handleFiles(self::getFiles(), ($directory === '/'));
 
     /** Parent variables */
     $parentDirectory = dirname($directory);
@@ -1307,7 +1207,7 @@ class Indexer extends Helpers
     if($this->pathPrepend)
     {
       $prependedCurrent = ltrim(
-        rtrim($this->joinPaths($this->pathPrepend, $directory), '/'), '/'
+        rtrim($this->joinUrlPaths($this->pathPrepend, $directory), '/'), '/'
       );
 
       $prependedRoot = ltrim(
@@ -1331,17 +1231,13 @@ class Indexer extends Helpers
           'href' => $parentHref
         ], '[Parent Directory]'))
       ],
-      array_fill(0, 3, parent::createElementHtml('td', [], parent::createElement(
+      array_fill(0, 2, parent::createElementHtml('td', [], parent::createElement(
         'span', [], '-'
       ))))
     ));
 
     /** Request data */
-    $data = [
-      'files' => $files['files'],
-      'directories' => $files['directories'],
-      'readme' => $files['readme'],
-      'dotFile' => $files['dotFile'],
+    $data += [
       'recent' => [
         'file' => 0,
         'directory' => 0
@@ -1358,15 +1254,16 @@ class Indexer extends Helpers
       throw new RuntimeException('The mbstring extension is required when use_mbstring is enabled.');
     }
 
+    /* Scanned basenames contain no slashes, so normalize their shared prefix once. */
+    $urlPrefix = self::joinUrlPaths($this->requested, '/');
+
     /**
      * Iterate over the gathered directories and set their data
      */
-    foreach($data['directories'] as $index => $dir)
+    foreach($data['directories'] as &$item)
     {
-      /** Deconstruct array */
-      list($dirPath, $dirName) = $dir;
-
-      $item = &$data['directories'][$index];
+      $modified = array_pop($item);
+      list($dirPath, $dirName) = $item;
 
       /* We only need to set 'name' key if we're sorting by name */
       if($sortType === 'name')
@@ -1377,25 +1274,25 @@ class Indexer extends Helpers
       }
 
       /* Set directory data values */
-      $item['modified'] = self::getModified($dirPath, $timezone['offset']);
+      $item['modified'] = self::formatModified($modified, $timezone['offset']);
       $item['type'] = 'directory';
-      $item['url'] = rtrim($this->joinPaths($this->requested, $dirName), '/');
+      $item['url'] = $urlPrefix . $dirName;
       $item['size'] = $this->directorySizes['enabled']
         ? ($this->directorySizes['recursive']
           ? self::getDirectorySizeRecursively($dirPath)
           : self::getDirectorySize($dirPath))
         : 0;
     }
+    unset($item);
 
     /**
      * Iterate over the gathered files and set their data
      */
-    foreach($data['files'] as $index => $file)
+    foreach($data['files'] as &$item)
     {
-      /** Deconstruct array */
-      list($filePath, $fileName, $fileType) = $file;
-
-      $item = &$data['files'][$index];
+      $modified = array_pop($item);
+      $size = array_pop($item);
+      list($filePath, $fileName, $fileType) = $item;
 
       /* We only need to set 'name' key if we're sorting by name */
       if($sortType === 'name')
@@ -1407,9 +1304,9 @@ class Indexer extends Helpers
 
       /* Set file data values */
       $item['type'] = $fileType;
-      $item['size'] = self::getSize($filePath);
-      $item['modified'] = self::getModified($filePath, $timezone['offset']);
-      $item['url'] = rtrim($this->joinPaths($this->requested, $fileName), '/');
+      $item['size'] = self::formatSize($size);
+      $item['modified'] = self::formatModified($modified, $timezone['offset']);
+      $item['url'] = $urlPrefix . $fileName;
 
       /** Encode URL if `encode_all` is enabled */
       if($this->encodeAll)
@@ -1417,6 +1314,8 @@ class Indexer extends Helpers
         $item['url'] = str_replace('?', '%3F', str_replace('#', '%23', $item['url']));
       }
     }
+
+    unset($item);
 
     /* Pass data to processor if it is set */
     if($this->processor['item'])
@@ -1575,31 +1474,22 @@ class Indexer extends Helpers
   }
 
   /**
-   * Gets the last modified date of a file
+   * Formats a file's last modified timestamp
    *
-   * @param String    $path       File path
+   * @param Integer   $stamp      Modification timestamp
    * @param Integer   $modifier   An integer that gets added to the timestamp
    * 
    * @return Array
    */ 
-  private function getModified($path, $modifier = 0)
+  private function formatModified($stamp, $modifier = 0)
   {
-    $stamp = filemtime($path);
-
     if(count($this->format['date']) === 2)
     {
-      $formatted = "";
-
-      for($i = 0; $i < 2; ++$i)
-      {
-        $format = self::formatDate(
-          $this->format['date'][$i], $stamp, $modifier
-        );
-
-        $formatted .= parent::createElement('span', [
-          'data-view' => $i === 0 ? 'desktop' : 'mobile'
-        ], $format);
-      }
+      $formatted = '<span data-view="desktop">' . parent::escape(self::formatDate(
+        $this->format['date'][0], $stamp, $modifier
+      )) . '</span><span data-view="mobile">' . parent::escape(self::formatDate(
+        $this->format['date'][1], $stamp, $modifier
+      )) . '</span>';
     } else {
       /* Both branches return safe HTML for the date-column wrapper. */
       $formatted = parent::escape(self::formatDate(
@@ -1710,30 +1600,23 @@ class Indexer extends Helpers
       'dotFile' => NULL
     );
 
-    /**
-     * [Check for dotfile presence]
-     * 
-     * It may contain filters for the current directory, so it's
-     * convenient to check for its existence before filtering.
-     * 
-     * array_flip+isset is used because it's the most consistent when
-     * it comes to performance over a wide range of directory lenghts.
-     * 
-     * @see https://gist.github.com/ksimka/21a6ff74b41451c430e8
-     */
-    if(isset(array_flip($files)[DOTFILE_NAME]))
+    /* Read directory filters before processing the entries. */
+    if(in_array(DOTFILE_NAME, $files, true))
     {
-        /** Read file as JSON */
-        $data['dotFile'] = $this->readJson(
-          $this->joinPaths($this->path, DOTFILE_NAME)
-        );
+      $data['dotFile'] = $this->readJson(
+        $this->joinPaths($this->path, DOTFILE_NAME)
+      );
     }
 
-    /** Set used filters */
-    $usedFilters = [
-      'directory' => $this->filter['directory'] ?? [],
-      'file' => $this->filter['file'] ?? []
-    ];
+    /* Normalize filters once so each entry uses the same matching loop. */
+    $usedFilters = [];
+    foreach(['directory', 'file'] as $type)
+    {
+      $filters = $this->filter[$type] ?? false;
+      $usedFilters[$type] = is_array($filters)
+        ? $filters
+        : (is_string($filters) ? [$filters] : []);
+    }
 
     /** Get extra filters */
     $dotFilters = $data['dotFile']
@@ -1742,121 +1625,47 @@ class Indexer extends Helpers
 
     if(isset($dotFilters['ignore']))
     {
-      /** Add any extra filters from dotfile */
-      foreach(['directory', 'file'] as $filterType)
+      foreach(['directory', 'file'] as $type)
       {
-        if(!$usedFilters[$filterType])
+        foreach($dotFilters['ignore'][$type] as $filter)
         {
-          $usedFilters[$filterType] = [];
-        } else if(!is_array($usedFilters[$filterType]))
-        {
-          $usedFilters[$filterType] = is_string($usedFilters[$filterType])
-          ? [$usedFilters[$filterType]]
-          : [];
+          $usedFilters[$type][] = $filter;
         }
       }
-
-      /** Push file filters */
-      array_push(
-        $usedFilters['file'],
-        ...$dotFilters['ignore']['file']
-      );
-
-      /** Push directory filters */
-      array_push(
-        $usedFilters['directory'],
-        ...$dotFilters['ignore']['directory']
-      );
     }
 
     foreach($files as $file)
     {
-      /** Skip hidden files */
-      if($file[0] === '.')
+      if($file[0] === '.') continue;
+
+      $filePath = $this->path . '/' . $file;
+      /* Follow symlink targets once; skip vanished entries and broken links. */
+      $stat = @stat($filePath);
+      if($stat === false) continue;
+      $isDirectory = ($stat['mode'] & 0170000) === 0040000;
+
+      if(!$isDirectory && $file === 'README.md')
       {
-        continue;
+        $data['readme'] = $filePath;
       }
 
-      $filePath = ($this->path . '/' . $file);
-      $skipItem = false;
+      if($isBase && $file === ($isDirectory ? 'indexer' : $scriptName)) continue;
 
-      if(is_dir($filePath))
+      $type = $isDirectory ? 'directory' : 'file';
+      $filterName = $isDirectory ? $file . '/' : $file;
+      foreach($usedFilters[$type] as $filter)
       {
-        if($isBase && $file === 'indexer')
-        {
-          /** Ignore `indexer` directory */
-          continue;
-        } else if($usedFilters['directory'] !== false)
-        {
-          if(is_array($usedFilters['directory']))
-          {
-            foreach($usedFilters['directory'] as $filter)
-            {
-              if(!preg_match($filter, $file . '/'))
-              {
-                $skipItem = true;
-                break;
-              }
-            }
-          } else if(!preg_match($usedFilters['directory'], $file . '/'))
-          {
-            /** Ignore directories matching any potential filter */
-            continue;
-          }
-        }
+        if(!preg_match($filter, $filterName)) continue 2;
+      }
 
-        if(!$skipItem)
-        {
-          array_push(
-            $data['directories'], array($filePath, $file)
-          );
-        }
-      } else if(file_exists($filePath))
+      /* Temporary metadata is consumed before sorting or invoking processors. */
+      if($isDirectory)
       {
-        if($file === 'README.md')
-        {
-          /** Set README data */
-          $data['readme'] = $filePath;
-        }
-        
-        if($isBase && $file === $scriptName)
-        {
-          continue;
-        } else if($usedFilters['file'] !== false)
-        {
-          if(is_array($usedFilters['file']))
-          {
-            foreach($usedFilters['file'] as $filter)
-            {
-              if(!preg_match($filter, $file))
-              {
-                $skipItem = true;
-                break;
-              }
-            }
-          } else if(!$skipItem)
-          {
-            $skipItem = !preg_match($usedFilters['file'], $file);
-          }
-        }
-
+        $data['directories'][] = [$filePath, $file, $stat['mtime']];
+      } else {
         $fileType = $this->getFileType($file);
-
-        if(($this->exclude && is_array($this->exclude))
-          && in_array($fileType[1], $this->exclude))
-        {
-          $skipItem = true;
-        }
-
-        if($skipItem)
-        {
-          continue;
-        }
-
-        array_push(
-          $data['files'],
-          array($filePath, $file, $fileType)
-        );
+        if($this->exclude && in_array($fileType[1], $this->exclude)) continue;
+        $data['files'][] = [$filePath, $file, $fileType, $stat['size'], $stat['mtime']];
       }
     }
 
@@ -1864,29 +1673,15 @@ class Indexer extends Helpers
   }
 
   /**
-   * Gets a client cookie key
+   * Formats a file size
    *
-   * @param String    $path       File path
-   * @param Integer   $modifier   An integer that gets added to the timestamp
+   * @param Integer  $bytes  File size in bytes
    * 
    * @return Array
    */ 
-  private function getCookie($key, $default = NULL)
+  private function formatSize($bytes)
   {
-    return isset($_COOKIE[$key]) ? $_COOKIE[$key] : $default;
-  }
-
-  /**
-   * Gets the size of a file
-   *
-   * @param String   $path   File path
-   * 
-   * @return Array
-   */ 
-  private function getSize($path)
-  {
-    $fs = filesize($path);
-    $size = ($fs < 0 ? -1 : $fs);
+    $size = ($bytes < 0 ? -1 : $bytes);
 
     return array($size, self::getReadableFileSize($size));
   }
@@ -2052,9 +1847,6 @@ if($cookies['sorting']['ascending'] !== NULL
 if(isset($_SERVER['INDEXER_PREPEND_PATH']))
 {
   $prependPath = $_SERVER['INDEXER_PREPEND_PATH'];
-} else if(isset($_SERVER['HTTP_X_INDEXER_PREPEND_PATH']))
-{
-  $prependPath = $_SERVER['HTTP_X_INDEXER_PREPEND_PATH'];
 } else {
   $prependPath = '';
 }
@@ -2063,7 +1855,7 @@ try
 {
   /* Call class with options set */
   $indexer = new Indexer(
-      CURRENT_URI,
+      $_SERVER['REQUEST_URI'],
       [
           'path' => [
             'relative' => BASE_PATH,
@@ -2112,14 +1904,7 @@ $itemsTotal = (count($data['files']) + count($data['directories']));
 /* Check if performance mode depends on item count */
 if(is_int($config['performance']))
 {
-  $itemsTotal = (count($data['files']) + count($data['directories']));
-
-  if($itemsTotal >= $config['performance'])
-  {
-    $config['performance'] = true;
-  } else {
-    $config['performance'] = false;
-  }
+  $config['performance'] = $itemsTotal >= $config['performance'];
 }
 
 /* Set some data like file count etc */
@@ -2144,7 +1929,8 @@ if(count($themes) > 0)
 {
   /* Check if client has a custom theme already set */
   if(is_array($client)
-    && isset($client['style']['theme']))
+    && isset($client['style']['theme']) && is_string($client['style']['theme'])
+    && isset($themes[$client['style']['theme']]))
   {
     $currentTheme = $client['style']['theme'] ? $client['style']['theme'] : NULL;
   /* Check for a default theme */
@@ -2294,8 +2080,8 @@ function buildHeader(
   /** Construct header icon */
   $header[] = Helpers::createElement('link', [
     'rel' => 'shortcut icon',
-    'href' => $config['icon']['path'],
-    'type' => $config['icon']['mime']
+    'href' => !empty($config['icon']['path']) ? $config['icon']['path'] : '<%= require('../assets/favicon.webp') %>',
+    'type' => !empty($config['icon']['path']) ? $config['icon']['mime'] : 'image/webp'
   ], NULL);
 
   /** Add base stylesheet link */
@@ -2340,41 +2126,24 @@ function buildHeader(
   return $header;
 }
 
-/** Server name constructor */
-function constructServerNameNotice()
-{
-  return !empty($_SERVER['SERVER_NAME']) ? sprintf(
-    ' @ %s', Helpers::createElement('a', [
-      'href' => '/'
-    ], $_SERVER['SERVER_NAME'])
-  ) : '';
-}
-
 /**
  * Builds the footer for the page
  *
  * @param Float     $renderTime       Render time
- * @param String    $currentDirectory Current directory
  * @param Array     $config           Configuration values
  * @param String    $version          Current version
  * 
  * @return String
  */ 
-function constructFooter($renderTime, $currentDirectory, $config, $version)
+function constructFooter($renderTime, $config, $version)
 {
   $footerHtml = [
     Helpers::createElementHtml('div', [
       'class' => 'currentPageInfo'
-    ], sprintf('Page generated in %s', Helpers::createElement('span', [
+    ], sprintf('Generated in %s', Helpers::createElement('span', [
       'class' => 'generationTime'
-    ], sprintf("%.6f", $renderTime) . 's')))
+    ], sprintf('%.0f', $renderTime * 1000) . ' ms')))
   ];
-
-  $footerHtml[] = Helpers::createElementHtml('div', [], sprintf(
-    'Browsing %s%s', Helpers::createElement(
-      'span', [], $currentDirectory
-    ), constructServerNameNotice()
-  ));
 
   if($config['credits'] !== false)
   {
@@ -2383,7 +2152,7 @@ function constructFooter($renderTime, $currentDirectory, $config, $version)
     ], implode('',  [
       Helpers::createElement('a', [
         'target' => '_blank',
-        'href' => 'https://git.five.sh/ivfi/'
+        'href' => 'https://github.com/sixem/ivfi-php/'
       ], 'IVFi'),
       Helpers::createElement('span', [], $version)
     ]));
@@ -2404,16 +2173,21 @@ function constructFooter($renderTime, $currentDirectory, $config, $version)
  * 
  * @return String
  */ 
-function generateCountDiv($modified, $count, $sString, $pString)
+function generateCountSpan($modified, $count, $sString, $pString)
 {
   $attributes = ['data-count' => $pString];
+
+  if($count === 0)
+  {
+    $attributes['hidden'] = NULL;
+  }
 
   if($modified)
   {
     $attributes['data-raw'] = $modified;
   }
 
-  return Helpers::createElement('div', $attributes, sprintf(
+  return Helpers::createElement('span', $attributes, sprintf(
     '%s %s', $count, ($count === 1 ? $sString : $pString)
   ));
 }
@@ -2455,6 +2229,7 @@ function constructJsConfig($config, $sorting, $timestamp, $bust, $theme)
   $jsConfig = [
     'bust' => $bust,
     'singlePage' => $config['single_page'],
+    'selection' => ['enabled' => $config['selection']['enabled'] !== false],
     'preview' => [
       'enabled' => $preview['enabled'],
       'hoverDelay' => $preview['hover_delay'],
@@ -2577,15 +2352,15 @@ $jsConfig = constructJsConfig(
   <body class="rootDirectory<?=$compact ? ' compact' : ''?><?=!$footer['enabled'] ? ' pb' : ''?>" is-loading<?=$config['performance'] ? ' optimize' : '';?> root>
     <?=$getInjectable('body');?>
     <div class="topBar">
-        <div class="extend">&#9881;</div>
+        <div class="topActions" role="group" aria-label="Directory actions"></div>
         <div class="directoryInfo">
-          <div data-count="size"><?=Helpers::escape($data['size']['readable']);?></div>
-          <?=generateCountDiv(
-            $data['recent']['file'], $counts['files'], 'file', 'files'
-          ) . PHP_EOL;?>
-          <?=generateCountDiv(
-            $data['recent']['directory'], $counts['directories'], 'directory', 'directories'
-          );?>
+          <div class="directorySummary">
+            <span data-count="size"><?=Helpers::escape($data['size']['readable']);?></span><span class="itemCounts"<?=$itemsTotal === 0 ? ' hidden' : '';?>> (<?=generateCountSpan(
+              $data['recent']['file'], $counts['files'], 'file', 'files'
+            );?><span class="countSeparator"<?=$counts['files'] === 0 || $counts['directories'] === 0 ? ' hidden' : '';?>>, </span><?=generateCountSpan(
+              $data['recent']['directory'], $counts['directories'], 'directory', 'directories'
+            );?>)</span>
+          </div>
         </div>
     </div>
 
@@ -2599,22 +2374,17 @@ $jsConfig = constructJsConfig(
       <thead>
         <tr>
           <th>
-            <span sortable="true" title="Sort by filename">Filename</span>
+            <span sortable="true" data-tooltip="Sort by filename">Filename</span>
             <span class="sortingIndicator"></span>
           </th>
 
           <th>
-            <span sortable="true" title="Sort by modification date">Modified</span>
+            <span sortable="true" data-tooltip="Sort by modification date">Modified</span>
             <span class="sortingIndicator"></span>
           </th>
 
           <th>
-            <span sortable="true" title="Sort by filesize">Size</span>
-            <span class="sortingIndicator"></span>
-          </th>
-
-          <th>
-            <span sortable="true" title="Sort by filetype">Type</span>
+            <span sortable="true" data-tooltip="Sort by filesize">Size</span>
             <span class="sortingIndicator"></span>
           </th>
         </tr>
@@ -2625,15 +2395,15 @@ $jsConfig = constructJsConfig(
       </table>
     </div>
 
-    <?=$config['footer']['enabled'] ? (constructFooter(
-      (microtime(true) - $render), $indexer->getCurrentDirectory(), $config, $version)
+    <?=$footer['enabled'] ? (constructFooter(
+      (microtime(true) - $render), $config, $version)
     ) : '';?>
 
-    <div class="filterContainer" style="display: none;">
-        <input type="text" placeholder="Search .." value="">
+    <div class="filterContainer" id="directory-filter" style="display: none;">
+      <input type="text" id="directory-filter-input" name="filter" spellcheck="false" placeholder="Search .." value="">
     </div>
 
-    <!-- [https://git.five.sh/ivfi/ — The image and video friendly indexer]  -->  
+    <!-- [https://github.com/sixem/ivfi-php/ — The image and video friendly indexer]  -->  
 
     <script id="<?=SCRIPT_ID;?>" type="application/json"><?=$jsConfig;?></script>
 

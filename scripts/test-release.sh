@@ -13,7 +13,8 @@ cp scripts/pack-release.sh "$test_tmp/project/scripts/"
 cp -R package.json build README.md logo.svg LICENSE docs "$test_tmp/project/"
 cd "$test_tmp/project"
 
-archive="$(jq -r '.name + "-" + .version + ".zip"' package.json)"
+mkdir releases
+archive="releases/$(jq -r '.name + "-" + .version + ".zip"' package.json)"
 mkdir standalone
 touch standalone/keep-me obsolete.txt
 7z a -tzip "$archive" obsolete.txt >/dev/null

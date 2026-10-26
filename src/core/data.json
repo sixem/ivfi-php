@@ -1,43 +1,25 @@
 {
-	"settingsLabels" : {
-		"stylingCompact" : {
-			"text" : "Compact Style",
-			"description" : "Set the page to use a more compact style."
+	"settingsLabels": {
+		"stylingCompact": {
+			"text": "Compact Style"
 		},
-		"galleryListAlignment" : {
-			"text" : "List Alignment"
+		"galleryListAlignment": {
+			"text": "List Alignment"
 		},
-		"galleryReverseSearch" : {
-			"text" : "Reverse Search",
-			"description" : "Toggle the visibility of reverse search options on images."
+		"galleryReverseSearch": {
+			"text": "Reverse Search"
 		},
-		"galleryVideoAutoplay" : {
-			"text" : "Autoplay Videos",
-			"description" : "Toggle the autoplaying of videos."
+		"galleryVideoAutoplay": {
+			"text": "Autoplay Videos"
 		},
-		"galleryFitContent" : {
-			"text" : "Fit Content",
-			"description" : "Force images and videos to fill the screen."
+		"galleryFitContent": {
+			"text": "Fit Content"
 		}
 	},
-	"menuLabels" : {
-		"filter" : {
-			"text" : "[Show] Filter"
-		},
-		"wget" : {
-			"text" : "[Copy] WGET"
-		},
-		"gallery" : {
-			"text" : "[Open] Gallery"
-		},
-		"settings" : {
-			"text" : "[Open] Settings"
-		}
-	},
-	"reverseSearch" : {
-		"Google" : "https://lens.google.com/uploadbyurl?url={URL}",
-		"Yandex" : "https://yandex.com/images/search?rpt=imageview&url={URL}",
-		"Bing" : "https://bing.com/images/search?q=imgurl:{URL}&view=detailv2&iss=sbi#enterInsights",
-		"SauceNAO" : "https://saucenao.com/search.php?url={URL}"
+	"reverseSearch": {
+		"Google": "https://lens.google.com/uploadbyurl?url={URL}",
+		"Yandex": "https://yandex.com/images/search?rpt=imageview&url={URL}",
+		"Bing": "https://bing.com/images/search?q=imgurl:{URL}&view=detailv2&iss=sbi#enterInsights",
+		"SauceNAO": "https://saucenao.com/search.php?url={URL}"
 	}
 }

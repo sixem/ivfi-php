@@ -1,0 +1,204 @@
+@use "variables";
+
+html > body > .readmeContainer {
+  margin: 0 22px 18px 10px;
+  border-top: 2px solid variables.$divider-color;
+  border-bottom: 2px solid variables.$divider-color;
+  background: #000;
+  color: variables.$text-color;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  text-align: left;
+  overflow-wrap: anywhere;
+
+  > summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 4px;
+    list-style: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    user-select: none;
+    cursor: pointer;
+    outline: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::before {
+      content: "";
+      flex: none;
+      width: 6px;
+      height: 6px;
+      border-right: 2px solid currentcolor;
+      border-bottom: 2px solid currentcolor;
+      transform: rotate(-45deg);
+      transition: transform 150ms ease;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: variables.$accent-color;
+    }
+  }
+
+  &[open] > summary {
+    border-bottom: 2px solid variables.$divider-color;
+
+    &::before {
+      transform: rotate(45deg);
+    }
+  }
+
+  > .contents {
+    min-width: 0;
+    padding: 16px 4px 20px;
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin: 1.5rem 0 0.625rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+    }
+
+    h2 {
+      font-size: 1rem;
+    }
+
+    h3 {
+      font-size: 0.875rem;
+    }
+
+    h4,
+    h5,
+    h6 {
+      font-size: 0.8125rem;
+    }
+
+    p,
+    ul,
+    ol,
+    blockquote,
+    pre,
+    table {
+      margin: 0 0 1rem;
+    }
+
+    a {
+      color: variables.$accent-color;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+
+      &:hover,
+      &:focus-visible {
+        color: variables.$accent-color-light;
+      }
+    }
+
+    ul,
+    ol {
+      padding-left: 1.5rem;
+
+      ul,
+      ol {
+        margin: 0.25rem 0;
+      }
+    }
+
+    li + li {
+      margin-top: 0.25rem;
+    }
+
+    blockquote {
+      padding: 4px 12px;
+      background: variables.$surface-background;
+      border-left: 2px solid variables.$surface-border;
+
+      > :last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    code {
+      padding: 2px 4px;
+      border: 2px solid variables.$surface-border;
+      border-radius: 3px;
+      background: variables.$surface-background;
+      font: 0.8rem / 1.6 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    pre {
+      max-width: 100%;
+      overflow-x: auto;
+      padding: 10px 12px;
+      border: 2px solid variables.$surface-border;
+      border-radius: 3px;
+      background: variables.$surface-background;
+      white-space: pre;
+      overflow-wrap: normal;
+
+      > code {
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+    }
+
+    table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+      border-collapse: collapse;
+      font-size: inherit;
+
+      th,
+      td {
+        padding: 7px 10px;
+        text-align: left;
+        border-bottom: 2px solid variables.$surface-border;
+      }
+
+      th {
+        background: variables.$surface-background;
+        font-weight: 500;
+      }
+    }
+
+    hr {
+      margin: 1.25rem 0;
+      border: 0;
+      border-top: 2px solid variables.$surface-border;
+    }
+
+    img,
+    video {
+      max-width: 100%;
+      height: auto;
+    }
+
+    > :first-child {
+      margin-top: 0;
+    }
+
+    > :last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    > summary::before {
+      transition: none;
+    }
+  }
+}

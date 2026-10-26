@@ -1,0 +1,297 @@
+@use "sass:color";
+@use "sass:map";
+@use "variables";
+
+html[dialog-is-visible] {
+  overflow: hidden;
+}
+
+html > body > dialog.dialog {
+  position: fixed;
+  inset: clamp(3rem, 12vh, 7rem) 0 auto;
+  box-sizing: border-box;
+  width: min(27rem, calc(100% - 24px));
+  max-width: none;
+  max-height: calc(100vh - clamp(3rem, 12vh, 7rem) - 16px);
+  max-height: calc(100dvh - clamp(3rem, 12vh, 7rem) - 16px);
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid variables.$surface-border;
+  border-radius: 5px;
+  outline: none;
+  background: #08090a;
+  color: variables.$text-color;
+  font: 400 0.8rem / 1.45 Inter, sans-serif;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 70%);
+  user-select: none;
+
+  &[open] {
+    display: flex;
+  }
+
+  &::backdrop {
+    background: rgb(0 0 0 / 50%);
+    backdrop-filter: blur(2px);
+    opacity: 1;
+    transition: opacity 220ms ease;
+  }
+
+  &.is-closing::backdrop {
+    opacity: 0;
+    transition-duration: 140ms;
+    transition-timing-function: ease-in;
+  }
+
+  > form {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 0;
+    max-height: inherit;
+    margin: 0;
+
+    > header {
+      display: flex;
+      flex: none;
+      align-items: stretch;
+      padding: 0;
+      border-bottom: 2px solid variables.$divider-color;
+      background: #000;
+
+      > h2 {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        padding: 6px 12px;
+        overflow: hidden;
+        font-size: 0.8rem;
+        font-weight: 600;
+        line-height: 1.4;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      > .dialogClose {
+        display: flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 2.125rem;
+        min-height: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+        outline: none;
+        transition: background-color 150ms ease, color 150ms ease;
+
+        &:hover,
+        &:focus-visible {
+          background: variables.$close-hover-background;
+          color: #fff;
+        }
+
+        > svg {
+          width: 1rem;
+          height: 1rem;
+          pointer-events: none;
+        }
+      }
+    }
+
+    > .dialogBody {
+      min-width: 0;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 14px 16px 16px;
+    }
+
+    > footer {
+      display: flex;
+      flex: none;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 10px 16px;
+      border-top: 2px solid variables.$divider-color;
+    }
+  }
+
+  .dialogContent {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .dialogDescription {
+    margin: 0 0 14px;
+    font-size: 0.8rem;
+  }
+
+  .dialogField {
+    display: grid;
+    gap: 6px;
+
+    > label {
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+  }
+
+  input[type="checkbox"] {
+    appearance: none;
+    display: grid;
+    place-content: center;
+    flex: none;
+    box-sizing: border-box;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    padding: 0;
+    border: 2px solid #2d2935;
+    border-radius: 4px;
+    background: #000;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 150ms ease, border-color 150ms ease;
+
+    &::after {
+      content: "";
+      width: 0.5rem;
+      height: 0.5rem;
+      background: #000;
+      clip-path: polygon(14% 44%, 0 59%, 38% 100%, 100% 16%, 80% 0, 37% 62%);
+      transform: scale(0.8);
+      opacity: 0;
+      transition: opacity 120ms ease, transform 120ms ease;
+    }
+
+    &:checked {
+      border-color: variables.$accent-color;
+      background: variables.$accent-color;
+
+      &::after {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    &:indeterminate {
+      border-color: variables.$accent-color;
+      background: variables.$accent-color;
+
+      &::after {
+        width: 0.5rem;
+        height: 2px;
+        clip-path: none;
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    &:hover,
+    &:focus-visible {
+      border-color: variables.$accent-color;
+    }
+
+    &:focus-visible {
+      box-shadow: 0 0 0 2px color.change(variables.$accent-color, $alpha: 0.25);
+    }
+  }
+
+  input:not([type="checkbox"], [type="radio"]) {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 2px solid #2d2935;
+    border-radius: 5px;
+    background: #000;
+    color: inherit;
+    font: inherit;
+    outline: none;
+    transition: border-color 150ms ease;
+
+    &:hover,
+    &:focus-visible {
+      border-color: variables.$accent-color;
+    }
+
+    &[aria-invalid="true"] {
+      border-color: #ff6969;
+    }
+  }
+
+  input:not([type="checkbox"], [type="radio"]),
+  textarea,
+  [contenteditable]:not([contenteditable="false"]) {
+    user-select: text;
+  }
+
+  .dialogError {
+    margin: 0;
+    color: #ff6969;
+    font-size: 0.8rem;
+  }
+
+  > form > footer > button {
+    min-height: 2rem;
+    padding: 5px 12px;
+    border: 2px solid variables.$divider-color;
+    border-radius: 5px;
+    background: #000;
+    color: inherit;
+    font: 500 0.8rem / 1.4 Inter, sans-serif;
+    cursor: pointer;
+    outline: none;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      border-color: variables.$accent-color;
+      background: map.get(variables.$root, "color-background-table-hover");
+    }
+
+    &.dialogConfirm {
+      border-color: variables.$accent-color;
+      background: variables.$accent-color;
+      color: #000;
+
+      &:hover:not(:disabled),
+      &:focus-visible {
+        background: variables.$accent-color;
+        filter: brightness(1.1);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+
+  [hidden] {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::backdrop,
+    > form > header > .dialogClose,
+    input,
+    input[type="checkbox"]::after {
+      transition: none;
+    }
+  }
+}
+
+@starting-style {
+  html > body > dialog.dialog::backdrop {
+    opacity: 0;
+  }
+}

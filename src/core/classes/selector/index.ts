@@ -9,7 +9,7 @@ export default class selectorClass
 	/* Default definitions for common elements */
 	readonly defaultDefinitions = {
 		FILTER_INPUT: ':scope > div.filterContainer > input[type="text"]',
-		TOP_EXTEND: ':scope > div.topBar > div.extend',
+		TOP_ACTIONS: ':scope > div.topBar > div.topActions',
 		TABLE_CONTAINER: ':scope > div.tableContainer',
 		README_CONTAINER: ':scope > .readmeContainer',
 		TABLE: ':scope > div.tableContainer > table',

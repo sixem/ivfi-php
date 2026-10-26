@@ -87,6 +87,7 @@ export class componentGallery
 						? data.instances.gallery.data.selected.index
 						: index, items
 				);
+				eventHooks.trigger('galleryOpen');
 			}
 
 			return;
@@ -160,6 +161,7 @@ export class componentGallery
 
 		/* Store instance to variable */
 		data.instances.gallery = instance;
+		eventHooks.trigger('galleryOpen');
 
 		if(instance)
 		{

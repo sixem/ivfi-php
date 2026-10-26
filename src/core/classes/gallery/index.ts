@@ -7,6 +7,12 @@ import { user } from '../../config/config';
 /** Modules */
 import { log } from '../../modules/logger';
 import { eventHooks } from '../../modules/event-hooks';
+import { createOverlayScrollbar } from '../../modules/scrollbar';
+import { onPageReplace } from '../../modules/lifecycle';
+import { loadImage, playVideo, releaseMedia } from '../../helpers/media';
+import { createContextMenu } from '../../modules/context-menu';
+import { showFileContextMenu, notifyDownloadStarted } from '../../modules/file-actions';
+import { createIcon } from '../../icons';
 /** Classes */
 import optimizeClass from './../optimize';
 /** Helpers */
@@ -25,7 +31,6 @@ import {
 	TGalleryTableItem,
 	IGalleryOptions,
 	TUserStorage,
-	TPayloadgalleryItemChanged,
 	THTMLElement,
 	HTMLElementExtend
 } from '../../types';
@@ -52,6 +57,16 @@ export default class galleryClass
 
 	public options: IGalleryOptions;
 
+	private imageLoad: AbortController = null;
+
+	private pendingVideo: HTMLVideoElement = null;
+
+	private videoCleanup = new Map<HTMLVideoElement, () => void>();
+
+	private mediaRequest = 0;
+
+	private mediaReady = false;
+
 	constructor(items: Array<TGalleryTableItem>, options: object = {})
 	{
 		/* Get default values */
@@ -70,6 +85,14 @@ export default class galleryClass
 
 		/* Set options */
 		this.options = options;
+
+		onPageReplace(() =>
+		{
+			this.cancelMediaLoad();
+			this.optimize?.destroy();
+			for(const video of this.videoCleanup.keys()) this.disposeVideo(video);
+			this.container?.querySelectorAll('img').forEach(image => releaseMedia(image));
+		});
 
 		/* Initiate */
 		this.init(items);
@@ -211,67 +234,52 @@ export default class galleryClass
 		}
 	}
 
-	/**
-	 * Preloads an image
-	 */
-	private loadImage = (src: string): Promise<{
-		src: string,
-		img: HTMLImageElement,
-		cancelled: boolean,
-		dimensions:
-		{
-			height: number;
-			width: number;
-		}
-	}> =>
+	private disposeVideo = (video: HTMLVideoElement): void =>
 	{
-		eventHooks.unsubscribe('galleryItemChanged', 'loadImage');
+		this.videoCleanup.get(video)?.();
+		this.videoCleanup.delete(video);
+		if(this.pendingVideo === video) this.pendingVideo = null;
+		releaseMedia(video);
+	}
 
-		return new Promise((resolve, reject) =>
+	private hasVideoPreview = (index: number): boolean =>
+	{
+		const preview = data.preview.data;
+		return preview?.element instanceof HTMLVideoElement
+			&& preview.src === this.items[index ?? this.data.selected.index]?.url
+			&& preview.element.readyState >= 2 && !preview.element.error && preview.element.isConnected;
+	}
+
+	private cancelMediaLoad = (): void =>
+	{
+		this.mediaRequest++;
+		this.imageLoad?.abort();
+		this.imageLoad = null;
+		if(this.pendingVideo) this.disposeVideo(this.pendingVideo);
+	}
+
+	private loadImage = async (src: string) =>
+	{
+		const controller = new AbortController();
+		this.imageLoad = controller;
+		try
 		{
-			let img: HTMLImageElement = document.createElement('img');
-
-			const onError = (): void =>
-			{
-				reject(new Error(`failed to load image URL: ${src}`));
+			const img = await loadImage(src, controller.signal);
+			return {
+				src, img, cancelled: false,
+				dimensions: { width: img.naturalWidth, height: img.naturalHeight }
 			};
-
-			const onLoad = (): void =>
+		} catch(error)
+		{
+			if(error instanceof DOMException && error.name === 'AbortError')
 			{
-				const dimensions = {
-					width: img.naturalWidth,
-					height: img.naturalHeight
-				};
-
-				resolve({ src, img, dimensions, cancelled: false });
-			};
-
-			img.src = src;
-
-			/* Add listeners */
-			img.addEventListener('error', onError, true);
-			img.addEventListener('load', onLoad, true);
-
-			eventHooks.subscribe('galleryItemChanged', 'loadImage', (event: TPayloadgalleryItemChanged) =>
-			{
-				/* If current source has changed to something else, cancel load */
-				if(event.source !== src)
-				{
-					/* Remove listeners */
-					img.removeEventListener('error', onError, true);
-					img.removeEventListener('load', onLoad, true);
-				
-					/* Clear image object */
-					img.src = '';
-					img = null;
-
-					/* "self destruct" on trigger */
-					eventHooks.unsubscribe('galleryItemChanged', 'loadImage');
-				}
-
-				resolve({ src, img: null, dimensions: null, cancelled: true });
-			});
-		});
+				return { src, img: null, dimensions: null, cancelled: true };
+			}
+			throw error;
+		} finally
+		{
+			if(this.imageLoad === controller) this.imageLoad = null;
+		}
 	}
 
 	/**
@@ -354,6 +362,8 @@ export default class galleryClass
 	 */
 	private getScrollbarWidth = (): number =>
 	{
+		if(document.documentElement.classList.contains('overlayScrollArea')) return 0;
+
 		if(!this.elementHasScrollbar(document.body))
 		{
 			return 0;
@@ -454,9 +464,10 @@ export default class galleryClass
 
 		if(bool === true)
 		{
+			index = index ?? this.data.selected.index ?? Math.min(this.options.start, this.items.length - 1);
 			this.bind().style.display = 'block';
 
-			if(index !== this.data.selected.index)
+			if(index !== this.data.selected.index || !this.mediaReady || this.hasVideoPreview(index))
 			{
 				const elements: NodeList = this.container.querySelectorAll(
 					':scope > div.galleryContent > div.media > div.wrapper img, \
@@ -476,6 +487,9 @@ export default class galleryClass
 				}
 			}
 		} else {
+			this.cancelMediaLoad();
+			this.container.querySelectorAll('video').forEach(video => video.pause());
+			this.busy(false);
 			this.unbind();
 			this.container.style.display = 'none';
 		}
@@ -488,11 +502,10 @@ export default class galleryClass
 
 		if(video)
 		{
-			if(bool === true &&
+			if(bool === true && this.mediaReady &&
 				video.style.display !== 'none')
 			{
-				let currentTime: number = video.currentTime,
-					sourceMatch = false;
+				let sourceMatch = false;
 
 				if(this.options.continue.video &&
 					Object.prototype.hasOwnProperty.call(this.options.continue.video, 'src'))
@@ -502,15 +515,14 @@ export default class galleryClass
 
 				if(this.options.continue.video && sourceMatch)
 				{
-					currentTime = this.options.continue.video.time;
+					video.currentTime = this.options.continue.video.time;
 					this.options.continue.video = null;
 				}
 
-				video.currentTime = currentTime;
 				video.muted = false;
-				video[this.options.autoplay ? 'play': 'pause']();
-
 				this.video.setVolume(video, this.video.getVolume());
+				if(this.options.autoplay) void playVideo(video);
+				else video.pause();
 			} else if(bool === false)
 			{
 				video.pause();
@@ -524,18 +536,10 @@ export default class galleryClass
 			this.list &&
 			this.table)
 		{
-			const selectedItem: HTMLElement = this.table.querySelector('tr.selected');
+			const selectedItem = this.table.querySelector<HTMLElementExtend>('tr.selected');
+			const selectedItemTop = selectedItem?._offsetTop;
 
-			let selectedItemTop: number | boolean = parseInt(
-				selectedItem.style.top.replace(/\D+/g, '')
-			);
-
-			if(Number.isInteger(selectedItemTop) && !(selectedItemTop >= 0))
-			{
-				selectedItemTop = false;
-			}
-
-			if(selectedItemTop)
+			if(Number.isFinite(selectedItemTop) && selectedItemTop >= 0)
 			{
 				if(!(this.list.scrollTop <= selectedItemTop &&
 					selectedItemTop <= (this.list.scrollTop + this.list.offsetHeight)))
@@ -582,6 +586,7 @@ export default class galleryClass
 		/* Removes any previous optimize instances */
 		if(this.optimize)
 		{
+			this.optimize.destroy();
 			delete this.optimize;
 
 			eventHooks.unlisten(this.list, 'scroll', 'galleryTableScroll');
@@ -638,33 +643,14 @@ export default class galleryClass
 			{
 				log('gallery', 'windowResize (gallery)', 'Resized.');
 				page.update();
+				this.optimize.attemptRefresh();
 			}
 		}));
 
-		let scrollEndTimer: null | number = null;
-
-		/** Listen to list scrolling */
+		/* The optimizer coalesces scroll events into one frame. */
 		eventHooks.listen(this.list, 'scroll', 'galleryTableScroll', (): void =>
 		{
-			if(this.options.performance &&
-				this.optimize.enabled)
-			{
-				/* Get scrolled position */
-				const scrolled = this.list.scrollTop;
-
-				/* Trigger optimization refresh if 175 px has been scrolled */
-				if(Math.abs(scrolled - (this.page).scrolledY) > 175)
-				{
-					this.optimize.attemptRefresh();
-				}
-
-				clearTimeout(scrollEndTimer);
-
-				scrollEndTimer = window.setTimeout(() =>
-				{
-					this.optimize.attemptRefresh();
-				}, 150);
-			}
+			this.optimize.attemptRefresh();
 		});
 
 		return this.optimize;
@@ -685,7 +671,7 @@ export default class galleryClass
 
 		for(let i = 0; i <= items.length - 1; i++)
 		{
-			const row = DOM.new('tr', { title: items[i].name });
+			const row = DOM.new('tr', { 'data-tooltip': items[i].name });
 			row.appendChild(DOM.new('td', { text: items[i].name }));
 			buffer[i] = row.outerHTML;
 		}
@@ -703,6 +689,14 @@ export default class galleryClass
 	 * Updating functions
 	 */
 	public update = {
+		listToggle: (visible: boolean, element: HTMLElement = this.container.querySelector('button[data-action="toggle"]')): void =>
+		{
+			if(!element) return;
+			const pointsRight = visible !== this.options.list.reverse;
+			element.replaceChildren(createIcon(pointsRight ? 'list-indent-increase' : 'list-indent-decrease'));
+			element.setAttribute('aria-expanded', String(visible));
+			element.setAttribute('aria-label', visible ? 'Hide gallery list' : 'Show gallery list');
+		},
 		/* Updates the list width */
 		listWidth: (wrapper?: HTMLElement): void =>
 		{
@@ -857,11 +851,11 @@ export default class galleryClass
 			DOM.attributes.set(download, {
 				filename: item.name,
 				href: url,
-				title: `Download: ${item.name}`
+				'aria-label': `Download ${item.name}`
 			});
 
 			const buffer: Array<string> = [
-				DOM.new('span', { text: `${index + 1} of ${max}` }).outerHTML,
+				DOM.new('span', { text: `${index + 1} / ${max}` }).outerHTML,
 				DOM.new('a', { target: '_blank', href: url, text: name }).outerHTML
 			];
 
@@ -936,8 +930,7 @@ export default class galleryClass
 			const source: HTMLSourceElement = DOM.new('source', {
 				type: `video/${extension === 'mov' ? 'mp4': (
 					extension === 'ogv' ? 'ogg': extension
-				)}`,
-				src: ''
+				)}`
 			}) as HTMLSourceElement;
 
 			video.append(source);
@@ -949,7 +942,7 @@ export default class galleryClass
 		/* Volume getter */
 		getVolume: (): number =>
 		{
-			let volume = parseFloat(this.options.volume.toString());
+			let volume = parseFloat(String(this.options.volume));
 
 			volume = (isNaN(volume) || volume < 0 || volume > 1) ? 0: volume;
 
@@ -1002,322 +995,149 @@ export default class galleryClass
 	}
 
 	/**
-	 * Shows an item (called on show, navigate etc.)
+	 * Keeps the previous media visible until its replacement is ready.
 	 */
 	private showItem = (
 		type: number,
 		element: HTMLVideoElement | HTMLImageElement,
 		src: string,
-		init: boolean,
 		index: number,
-		data: {
-			img?: {
-				height: number;
-				width: number;
-			}
-		} = null
+		dimensions?: { width: number; height: number }
 	): void =>
 	{
-		log('gallery', 'showItem', { type, element, src, init, index, data });
-
-		const wrapper: HTMLElement = this.container.querySelector(
-			':scope > div.galleryContent > div.media > div.wrapper'
-		);
-
-		let video: any;
-		let source: HTMLSourceElement = null;
-		let hasEvented = false;
-
-		/* Hides the opposite media element */
-		const hideOther = (): void =>
+		const wrapper = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper') as HTMLElement;
+		const cover = wrapper.querySelector(':scope > .cover') as HTMLElement;
+		const commit = () =>
 		{
-			const opposite: HTMLElement = wrapper.querySelector(type === 0 ? 'video': 'img');
-
-			if(opposite && type === 1)
-			{
-				(opposite.closest('.cover') as HTMLElement).style.display = 'none';
-			}
-
-			if(opposite)
-			{
-				opposite.style.display = 'none';
-			}
-		};
-
-		const applyChange = (onChange?: () => void) =>
-		{
-			const elements: NodeList = this.container.querySelectorAll(':scope > \
-				div.galleryContent > div.media > div.wrapper > div:not(.cover)');
-
-			elements.forEach((element: HTMLElement) => element.remove());
-
+			wrapper.querySelectorAll(':scope > div:not(.cover)').forEach(element => element.remove());
 			this.apply.itemInfo(true);
 			this.data.selected.type = type;
-
+			this.mediaReady = true;
 			wrapper.style.display = '';
-
-			if(onChange)
-			{
-				onChange();
-			}
-
 			this.busy(false);
 		};
 
-		const display = (): void =>
+		if(type === 0)
 		{
-			/* Image type */
-			if(type === 0)
+			const image = element as HTMLImageElement;
+			const imageCover = cover || DOM.new('div', { class: 'cover' });
+			const previous = imageCover.querySelector('img');
+			if(!cover) wrapper.prepend(imageCover);
+			this.items[index].dimensions = dimensions;
+			this.apply.itemDimensions(index);
+			if(this.options.sharpen) image.setAttribute('sharpened', '');
+			if(this.options.fitContent)
 			{
-				/* Select video from wrapper */
-				video = wrapper.querySelector('video');
-
-				/* Get dimensions */
-				this.items[index].dimensions = {
-					height: data.img.height,
-					width: data.img.width
-				};
-
-				/* Apply dimensions */
-				this.apply.itemDimensions(index);
-
-				/* Call `applyChange` */
-				applyChange((): void =>
-				{
-					if(this.options.sharpen)
-					{
-						element.setAttribute('sharpened', '');
-					}
-
-					element.onload = (): void =>
-					{
-						/* Hide any image elements from the cover */
-						hideOther();
-
-						/* Fit content */
-						if(this.options.fitContent)
-						{
-							const height = `calc(calc(100vw - var(--width-list)) / ${
-								(data.img.width / data.img.height).toFixed(4)
-							})`;
-							
-							this.update.listWidth(wrapper);
-
-							DOM.style.set(element, {
-								'width': 'auto',
-								'height': height
-							});
-
-							DOM.style.set(element.closest('.cover'), {
-								'height': height
-							});
-						}
-					};
-
-					/* Set style and attribute */
-					element.setAttribute('src', src);
-					element.style.display = 'inline-block';
-					(element.closest('.cover') as HTMLElement).style.display = '';
-
-					/* If a video exists, pause and reset source */
-					if(video)
-					{
-						/* Get source */
-						const videoSource = video.querySelector('source');
-
-						/* Pause and reset source */
-						video.pause();
-						videoSource.setAttribute('src', '');
-
-						const videoListeners: Array<any> = [
-							[video, 'videoError'],
-							[videoSource, 'sourceError']
-						];
-
-						/* Unlisten to video events */
-						(videoListeners).forEach(([element, id]: Array<any>): void =>
-						{
-							eventHooks.unlisten(element, 'error', id);
-						});
-					}
-				});
-			/* Video type */
-			} else if(type === 1)
-			{
-				if(init === false)
-				{
-					/* Create a new video element if `!init` */
-					[video, source] = this.video.create(this.data.selected.ext);
-					wrapper.append(video);
-				} else {
-					/* Select existing source and video */
-					source = element.querySelector('source');
-					video = element;
-				}
-
-				/* Set video source */
-				source.setAttribute('src', src);
-
-				video.srcId = src;
-
-				/** Triggered on video error */
-				const error = (event: Event) =>
-				{
-					console.error('Failed to load video source.', event);
-					
-					this.busy(false);
-
-					video.remove();
-				};
-
-				const videoListeners: Array<[HTMLVideoElement | HTMLSourceElement, string]> = [
-					[video, 'videoError'],
-					[source, 'sourceError']
-				];
-
-				/* Add video error listeners */
-				(videoListeners).forEach(([element, id]: Array<any>): void =>
-				{
-					eventHooks.listen(element, 'error', id, (event: Event): void =>
-					{
-						error(event);
-					});
-				});
-
-				/* Add video volume change listener */
-				eventHooks.listen(video, 'volumechange', 'galleryVideoVolumeChange', (): void =>
-				{
-					this.options.volume = video.muted ? 0: parseFloat(
-						parseFloat(video.volume).toFixed(2)
-					);
-
-					/* Trigger volume change event */
-					eventHooks.trigger('galleryVolumeChange', this.options.volume);
-				});
-
-				/* Events that indiciate that the video is "ready" */
-				const videoReadyEvents: Array<string> = [
-					'canplay',
-					'canplaythrough',
-					'playing'
-				];
-
-				/* Listen for gallery item changes */
-				eventHooks.subscribe('galleryItemChanged', 'loadVideo', () =>
-				{
-					if(video.srcId !== this.data.selected.src)
-					{
-						/* Cancel video load */
-						source.setAttribute('src', '');
-
-						/* Unlisten and unsubscribe */
-						eventHooks.unlisten(video, videoReadyEvents, 'awaitGalleryVideo');
-						eventHooks.unsubscribe('galleryItemChanged', 'loadVideo');
-
-						/**
-						 * [Mark video as disposable]
-						 * 
-						 * We could just remove it here, but the transition
-						 * between loading videos will be smoother if we let
-						 * this element remain visible until the next video has
-						 * finished loading, and then we remove all `video.disposable`.
-						 */
-						video.classList.add('disposable');
-					}
-				});
-
-				/* Add video load listener */
-				eventHooks.listen(video, videoReadyEvents, 'awaitGalleryVideo', (): boolean | void =>
-				{
-					/** Clear listener */
-
-					//eventHooks.unlisten(video, videoReadyEvents, 'awaitGalleryVideo');
-
-					if(hasEvented || video.srcId !== this.data.selected.src)
-					{
-						return false;
-					}
-
-					/* Video dimensions */
-					const height: number = video.videoHeight,
-						width: number = video.videoWidth;
-
-					this.items[index].dimensions = {
-						height: height,
-						width: width
-					};
-
-					/* Apply dimensions */
-					this.apply.itemDimensions(index);
-
-					applyChange((): void =>
-					{
-						if(this.options.fitContent)
-						{
-							this.update.listWidth(wrapper);
-
-							DOM.style.set(video, {
-								width: 'auto',
-								height: `calc(calc(100vw - var(--width-list)) / ${(width / height).toFixed(4)})`
-							});
-						}
-
-						if(this.options.volume)
-						{
-							video.volume = this.options.volume;
-						}
-
-						/* Plays the video if the gallery is visible, otherwise pauses it */
-						if(this.isVisible && this.options.autoplay)
-						{
-							video.play();
-						} else if(!this.isVisible)
-						{
-							video.pause();
-						}
-
-						/* Remove disposable video elements */
-						this.container.querySelectorAll('video.disposable').forEach((item) => item.remove());
-
-						/* Hide any image elements from the cover */
-						hideOther();
-
-						/* Show video */
-						video.style.display = 'inline-block';
-
-						/* If the gallery was hidden while loading, pause video and hide loader. */
-						if(this.container.style.display === 'none')
-						{
-							(this.container.querySelector(
-								'div.galleryContent .media div.spinner'
-							) as HTMLElement).style.opacity = '0';
-
-							video.pause();
-						}
-
-						if(init === false)
-						{
-							element.remove();
-						}
-
-						hasEvented = true;
-					});
-				}, {
-					destroy: true
-				});
-
-				if(this.options.continue.video &&
-					src == this.options.continue.video.src)
-				{
-					video.currentTime = this.options.continue.video.time;
-					this.options.continue.video = null;
-				}
+				const height = `calc(calc(100vw - var(--width-list)) / ${(dimensions.width / dimensions.height).toFixed(4)})`;
+				this.update.listWidth(wrapper);
+				DOM.style.set(image, { width: 'auto', height });
+				DOM.style.set(imageCover, { height });
 			}
 
-			this.data.selected.index = index;
-		};
+			image.style.display = 'inline-block';
+			if(previous) previous.replaceWith(image);
+			else imageCover.prepend(image);
+			imageCover.style.display = '';
+			if(previous) releaseMedia(previous);
+			wrapper.querySelectorAll('video').forEach(video => this.disposeVideo(video));
+			commit();
+			return;
+		}
 
-		display();
+		const video = element as HTMLVideoElement;
+		const source = video.querySelector('source');
+		const reused = !!video.currentSrc && video.readyState >= 2;
+		if(reused)
+		{
+			this.options.continue.video = null;
+			video.controls = true;
+			video.preload = 'auto';
+			video.autoplay = false;
+			video.muted = false;
+			this.video.setVolume(video, this.video.getVolume());
+			video.style.removeProperty('max-width');
+			video.style.removeProperty('max-height');
+			video.style.removeProperty('visibility');
+			if(!this.options.autoplay) video.pause();
+		}
+		const request = this.mediaRequest;
+		const current = () => request === this.mediaRequest && src === this.data.selected.src;
+		const readyEvents = ['canplay', 'canplaythrough', 'playing', 'seeked'];
+		let loaded = false;
+		const metadata = () =>
+		{
+			if(current() && this.options.continue.video?.src === src)
+			{
+				video.currentTime = this.options.continue.video.time;
+				this.options.continue.video = null;
+			}
+		};
+		const ready = () =>
+		{
+			if(!current() || loaded || video.seeking || video.readyState < 2) return;
+			loaded = true;
+			this.pendingVideo = null;
+			clearReady();
+			const dimensions = { width: video.videoWidth, height: video.videoHeight };
+			this.items[index].dimensions = dimensions;
+			this.apply.itemDimensions(index);
+			if(this.options.fitContent)
+			{
+				this.update.listWidth(wrapper);
+				DOM.style.set(video, {
+					width: 'auto',
+					height: `calc(calc(100vw - var(--width-list)) / ${(dimensions.width / dimensions.height).toFixed(4)})`
+				});
+			}
+			video.style.display = 'inline-block';
+			if(cover) cover.style.display = 'none';
+			wrapper.querySelectorAll('video').forEach(previous =>
+			{
+				if(previous !== video) this.disposeVideo(previous);
+			});
+			commit();
+			if(this.isVisible && this.options.autoplay) void playVideo(video);
+		};
+		const clearReady = () =>
+		{
+			video.removeEventListener('loadedmetadata', metadata);
+			readyEvents.forEach(event => video.removeEventListener(event, ready));
+		};
+		const error = (event: Event) =>
+		{
+			if(current() || (this.mediaReady && src === this.data.selected.src))
+			{
+				console.error('Failed to load video source.', event);
+				this.mediaReady = false;
+				this.busy(false);
+			}
+			this.disposeVideo(video);
+		};
+		const volumeChange = () =>
+		{
+			if(src !== this.data.selected.src) return;
+			this.options.volume = video.muted ? 0 : parseFloat(video.volume.toFixed(2));
+			eventHooks.trigger('galleryVolumeChange', this.options.volume);
+		};
+		this.videoCleanup.set(video, () =>
+		{
+			clearReady();
+			video.removeEventListener('error', error);
+			source.removeEventListener('error', error);
+			video.removeEventListener('volumechange', volumeChange);
+		});
+		this.pendingVideo = video;
+		video.addEventListener('loadedmetadata', metadata);
+		readyEvents.forEach(event => video.addEventListener(event, ready));
+		video.addEventListener('error', error);
+		source.addEventListener('error', error);
+		video.addEventListener('volumechange', volumeChange);
+		if(reused) ready();
+		else
+		{
+			source.src = src;
+			video.load();
+		}
 	}
 
 	/**
@@ -1342,17 +1162,21 @@ export default class galleryClass
 			index = this.calculateIndex(index, step, max);
 		}
 
-		if(this.data.selected.index === index)
+		if(this.data.selected.index === index && (this.mediaReady || this.imageLoad || this.pendingVideo)
+			&& !this.hasVideoPreview(index))
 		{
 			return false;
 		}
 
-		let init = null, item = null;
+		this.cancelMediaLoad();
+		this.mediaReady = false;
+		const request = this.mediaRequest;
+		let item = null;
 
 		const contentContainer: HTMLElement = this.container.querySelector(':scope > div.galleryContent');
 
 		/* Select video and image elements */
-		let image: HTMLImageElement = contentContainer.querySelector(':scope > div.media > div.wrapper img'),
+		const image: HTMLImageElement = contentContainer.querySelector(':scope > div.media > div.wrapper img'),
 			video: HTMLVideoElement = contentContainer.querySelector(':scope > div.media > div.wrapper video');
 
 		/* Select list, table and table items */
@@ -1364,6 +1188,8 @@ export default class galleryClass
 
 		const encodedItemSource = this.encodeUrl(item.url);
 
+		contentContainer.querySelectorAll('video').forEach(video => video.pause());
+		this.data.selected.index = index;
 		this.data.selected.src = encodedItemSource;
 		this.data.selected.ext = this.getExtension(item.name);
 
@@ -1413,55 +1239,20 @@ export default class galleryClass
 			/* Set busy state */
 			this.busy(true);
 
-			init = image ? false: true;
-
-			if(video)
-			{
-				/* Pause any existing videos */
-				video.pause();
-			}
-
-			/* If initial navigate, create image element */
-			if(init === true)
-			{
-				const cover: HTMLElement = DOM.new('div', {
-					class: 'cover',
-					style: 'display: none'
-				});
-
-				const wrapper = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
-
-				image = DOM.new('img') as HTMLImageElement;
-
-				wrapper.prepend(cover);
-				cover.append(image);
-			}
-
 			/* Await image loading */
-			this.loadImage(encodedItemSource).then(({ src, dimensions, cancelled }) =>
+			this.loadImage(encodedItemSource).then(({ src, img, dimensions, cancelled }) =>
 			{
-				if(dimensions && !cancelled)
+				if(cancelled) return;
+				if(request !== this.mediaRequest || this.data.selected.src !== src)
 				{
-					const [w, h] = [dimensions.width, dimensions.height];
-
-					if(this.data.selected.src === src)
-					{
-						this.showItem(0, image, src, init, index, {
-							img: {
-								width: w,
-								height: h
-							}
-						});
-
-						if(this.options.reverseOptions)
-						{
-							/* Show reverse options if enabled */
-							this.reverse(image as HTMLElement);
-						}
-					}
+					releaseMedia(img);
+					return;
 				}
+				this.showItem(0, img, src, index, dimensions);
+				if(this.options.reverseOptions) this.reverse(img.parentElement);
 			}).catch((error: unknown) =>
 			{
+				if(request !== this.mediaRequest) return;
 				/* Image could not be loaded */
 				console.error(error);
 
@@ -1471,7 +1262,8 @@ export default class galleryClass
 				this.container.querySelectorAll(':scope > div.galleryContent > div.media > div.wrapper img, \
 					:scope > div.galleryContent > div.media > div.wrapper video').forEach((element: HTMLElement) =>
 				{
-					element.style.display = 'none';
+					if(element instanceof HTMLVideoElement) this.disposeVideo(element);
+					else element.style.display = 'none';
 				});
 
 				if(this.container.querySelector(
@@ -1500,17 +1292,11 @@ export default class galleryClass
 			/* Set busy state */
 			this.busy(true);
 
-			init = (video ? false: true);
-
-			if(init)
-			{
-				/* Create video if initial navigate */
-				video = this.video.create(this.data.selected.ext)[0];
-
-				this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper').append(video);
-			}
-
-			this.showItem(1, video, encodedItemSource, init, index);
+			const wrapper = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper') as HTMLElement;
+			const nextVideo = data.preview.takeVideo?.(item.url, wrapper) || this.video.create(this.data.selected.ext)[0];
+			nextVideo.style.display = 'none';
+			if(nextVideo.parentElement !== wrapper) wrapper.append(nextVideo);
+			this.showItem(1, nextVideo, encodedItemSource, index);
 
 			return true;
 		}
@@ -1531,7 +1317,7 @@ export default class galleryClass
 			|| key === Keys.pageDown
 			|| key === Keys.arrowRight)
 		{
-			if(key === Keys.arrowRight && this.data.selected.type === 1)
+			if(key === Keys.arrowRight && this.mediaReady && this.data.selected.type === 1)
 			{
 				/* Seek (+) video on `arrowRight` (video elements) */
 				if(this.video.seek(5)) this.navigate(null, 1);
@@ -1543,7 +1329,7 @@ export default class galleryClass
 			|| key === Keys.pageUp
 			|| key === Keys.arrowLeft)
 		{
-			if(key === Keys.arrowLeft && this.data.selected.type === 1)
+			if(key === Keys.arrowLeft && this.mediaReady && this.data.selected.type === 1)
 			{
 				/* Seek (-) video on `arrowLeft` (video elements) */
 				if(this.video.seek(-5)) this.navigate(null, -1);
@@ -1578,6 +1364,7 @@ export default class galleryClass
 	 */
 	private unbind = (): void =>
 	{
+		createContextMenu().hide();
 		Object.keys(this.data.boundEvents).forEach((eventId: string) =>
 		{
 			const { selector, events }: {
@@ -1617,11 +1404,11 @@ export default class galleryClass
 		if(!element)
 		{
 			element = document.body.querySelector(
-				'div.rootGallery > div.galleryBar .galleryBarRight span[data-action="toggle"]'
+				'div.rootGallery > div.galleryBar .galleryBarRight button[data-action="toggle"]'
 			);
 		}
 
-		element.innerHTML = `List<span class="inheritParentAction">${visible ? '+': '-'}</span>`;
+		this.update.listToggle(!visible, element);
 
 		DOM.style.set(list, {
 			'display': visible ? 'none': 'table-cell'
@@ -1644,11 +1431,15 @@ export default class galleryClass
 	{
 		this.unbind();
 
-		eventHooks.listen(this.data.listDrag, 'mousedown', 'galleryListMouseDown', (): void =>
+		eventHooks.listen(this.data.listDrag, 'mousedown', 'galleryListMouseDown', (event: MouseEvent): void =>
 		{
+			if(event.button !== 0) return;
+			event.preventDefault();
 			this.data.listDragged = true;
 
 			const windowWidth = window.innerWidth,
+				startX = event.clientX,
+				startWidth = this.data.list.getBoundingClientRect().width,
 				wrapper: HTMLElement = this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
 
 			/* Set cursors and pointer events */
@@ -1680,7 +1471,7 @@ export default class galleryClass
 
 				if(x < windowWidth)
 				{
-					const width = this.options.list.reverse ? (x + this.getScrollbarWidth()) : (windowWidth - x);
+					const width = startWidth + (x - startX) * (this.options.list.reverse ? 1 : -1);
 
 					requestAnimationFrame((): void =>
 					{
@@ -1755,15 +1546,15 @@ export default class galleryClass
 		/* Add action events */
 		eventHooks.listen('body > div.rootGallery', 'click', 'galleryContainerClick', (event: MouseEvent) =>
 		{
-			let eventTarget = event.target as HTMLElement;
-
-			if(eventTarget && eventTarget.tagName === 'SPAN'
-				&& eventTarget.classList.contains('inheritParentAction'))
+			const target = event.target as HTMLElement;
+			const download = target.closest<HTMLAnchorElement>('a.download[download][href]');
+			if(download && event.button === 0 && !event.defaultPrevented)
 			{
-				eventTarget = eventTarget.parentNode as HTMLElement;
+				notifyDownloadStarted(download.getAttribute('filename'));
 			}
 
-			if(eventTarget && eventTarget.hasAttribute('data-action'))
+			const eventTarget = target.closest<HTMLElement>('[data-action]');
+			if(eventTarget)
 			{
 				/* Current action */
 				const action = eventTarget.getAttribute('data-action').toLowerCase();
@@ -1810,6 +1601,20 @@ export default class galleryClass
 			{
 				this.navigate(DOM.getIndex((event.target as HTMLElement)));
 			}
+		}, {
+			onAdd: this.removeOnUnbind
+		});
+
+		eventHooks.listen(this.table, 'contextmenu', 'galleryListContextMenu', (event: MouseEvent): void =>
+		{
+			const row = (event.target as Element).closest<HTMLElement>('tr');
+			if(!row || row.closest('table') !== this.table) return;
+			const item = this.items[DOM.getIndex(row)];
+			if(!item?.url) return;
+			event.preventDefault();
+			const keyboard = event.clientX === 0 && event.clientY === 0;
+			showFileContextMenu({ name: item.name, url: this.encodeUrl(item.url) }, row,
+				keyboard ? null : { x: event.clientX, y: event.clientY }, keyboard);
 		}, {
 			onAdd: this.removeOnUnbind
 		});
@@ -1891,6 +1696,9 @@ export default class galleryClass
 		/* Handles `keyup` events in the gallery (well - document, but unbinds on close) */
 		eventHooks.listen(window, 'keyup', 'galleryKeyUp', (event: KeyboardEvent): void =>
 		{
+			if(document.documentElement.hasAttribute('context-menu-is-visible')
+				|| document.documentElement.hasAttribute('dialog-is-visible')) return;
+
 			this.handleKey(event.code, (prevent: boolean) =>
 			{
 				if(prevent)
@@ -1905,6 +1713,9 @@ export default class galleryClass
 		/* Handles `keydown` events */
 		eventHooks.listen(window, 'keydown', 'galleryKeyDown', (event: KeyboardEvent): void =>
 		{
+			if(document.documentElement.hasAttribute('context-menu-is-visible')
+				|| document.documentElement.hasAttribute('dialog-is-visible')) return;
+
 			if(this.data.keyPrevent.includes(event.code))
 			{
 				event.preventDefault();
@@ -1928,46 +1739,52 @@ export default class galleryClass
 	private barConstruct = (bar: HTMLElement): HTMLElement =>
 	{
 		/* Create `download` button */
-		bar.append(DOM.new('a', {
-			'text': this.options.mobile ? 'Save': 'Download',
+		const download = DOM.new('a', {
 			'class': 'download',
-			'download': ''
-		}));
+			'download': '',
+			'aria-label': 'Download current item'
+		});
+		download.append(createIcon('download'));
+		bar.append(download);
 
 		if(!this.options.mobile)
 		{
 			/* Create `previous` button */
-			bar.append(DOM.new('span', {
+			const previous = DOM.new('button', {
+				type: 'button',
 				'data-action': 'previous',
-				'text': 'Previous'
-			}));
+				'aria-label': 'Previous item'
+			});
+			previous.append(createIcon('arrow-left'));
+			bar.append(previous);
 
 			/* Create `next` button */
-			bar.append(DOM.new('span', {
+			const next = DOM.new('button', {
+				type: 'button',
 				'data-action': 'next',
-				'text': 'Next'
-			}));
-
-			/* Create `list toggle` button */
-			const listToggle: HTMLElement = DOM.new('span', {
-				'data-action': 'toggle',
-				'text': 'List'
+				'aria-label': 'Next item'
 			});
-
-			listToggle.append(DOM.new('span', {
-				'class': 'inheritParentAction',
-				'text': this.options.list.show ? '-': '+'
-			}));
+			next.append(createIcon('arrow-left'));
+			bar.append(next);
 
 			/* Create `list toggle` button */
+			const listToggle: HTMLElement = DOM.new('button', {
+				type: 'button',
+				'data-action': 'toggle',
+			});
+			this.update.listToggle(this.options.list.show, listToggle);
+
 			bar.append(listToggle);
 		}
 
 		/* Create `close` button */
-		bar.append(DOM.new('span', {
+		const close = DOM.new('button', {
+			type: 'button',
 			'data-action': 'close',
-			'text': 'Close'
-		}));
+			'aria-label': 'Close gallery'
+		});
+		close.append(createIcon('close'));
+		bar.append(close);
 
 		return bar;
 	}
@@ -1979,16 +1796,6 @@ export default class galleryClass
 	{
 		/* Fix body overflow and paddings */
 		this.limitBody(true);
-
-		const preview: HTMLElement = document.body.querySelector(
-			':scope > div.preview-container'
-		);
-
-		/* Remove any active hover previews just in case */
-		if(preview)
-		{
-			preview.remove();
-		}
 
 		/* Create main container */
 		this.container = DOM.new('div', {
@@ -2096,8 +1903,12 @@ export default class galleryClass
 				'data-action': 'next'
 			});
 
-			navigateLeft.append(DOM.new('span'));
-			navigateRight.append(DOM.new('span'));
+			const leftIcon = DOM.new('span');
+			const rightIcon = DOM.new('span');
+			leftIcon.append(createIcon('arrow-left'));
+			rightIcon.append(createIcon('arrow-left'));
+			navigateLeft.append(leftIcon);
+			navigateRight.append(rightIcon);
 
 			content.append(navigateRight, navigateLeft);
 		}
@@ -2121,6 +1932,11 @@ export default class galleryClass
 
 		/* Add items to list */
 		this.populateTable(this.items);
+
+		createOverlayScrollbar(list, {
+			label: 'Gallery list scroll position', parent: this.container,
+			hoverOnly: true, shadows: true
+		});
 
 		callback(true);
 	}

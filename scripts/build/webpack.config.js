@@ -13,12 +13,11 @@ import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 /** Developer imports */
 import webpack from 'webpack';
 import moment from 'moment';
-import { dirname } from 'path';
+import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-/** Directory name and file name constants */
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+/** Resolve source and output paths from the repository root. */
+const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 /**
  * Read build.options.js if it exists
@@ -143,7 +142,7 @@ const config = (env, argv) => {
 	const isProduction = argv.mode === 'production';
 
 	return {
-		context: __dirname,
+		context: projectRoot,
 		mode: isProduction ? 'production' : 'development',
 		devtool: isProduction ? false : 'source-map',
 		target: 'browserslist',
@@ -155,7 +154,7 @@ const config = (env, argv) => {
 		},
 		output: {
 			filename: `${assetDir}/main.js`,
-			path: __dirname + '/build',
+			path: projectRoot + '/build',
 			publicPath: '/',
 			clean: isProduction
 		},
@@ -172,7 +171,7 @@ const config = (env, argv) => {
 			new HtmlWebpackPlugin({
 				inject: false,
 				minify: false,
-				template: __dirname + '/src/php/template.php',
+				template: projectRoot + '/src/php/template.php',
 				filename: 'indexer.php',
 				templateParameters: () => {
 					return templateParameters;
@@ -189,6 +188,14 @@ const config = (env, argv) => {
 		module: {
 			rules: [
 				{
+					test: /config\.php$/,
+					type: 'asset/source'
+				},
+				{
+					test: /favicon\.webp$/,
+					type: 'asset/inline'
+				},
+				{
 					test: /\.tsx?$/,
 					loader: 'ts-loader'
 				},
@@ -203,7 +210,8 @@ const config = (env, argv) => {
 							}
 						},
 						{
-							loader: 'postcss-loader'
+							loader: 'postcss-loader',
+							options: { postcssOptions: { config: false, plugins: ['autoprefixer'] } }
 						},
 						{
 							loader: 'sass-loader'

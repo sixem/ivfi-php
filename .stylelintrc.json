@@ -5,6 +5,22 @@
         "selector-id-pattern": null,
         "no-descending-specificity": null,
         "color-function-notation": "modern",
-        "hue-degree-notation": "angle"
+        "hue-degree-notation": "angle",
+        "scss/at-rule-no-unknown": [
+            true,
+            {
+                "ignoreAtRules": [
+                    "starting-style"
+                ]
+            }
+        ],
+        "value-no-vendor-prefix": [
+            true,
+            {
+                "ignoreValues": [
+                    "box"
+                ]
+            }
+        ]
     }
 }

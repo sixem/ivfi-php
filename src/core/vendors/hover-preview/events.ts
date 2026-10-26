@@ -4,212 +4,127 @@ import {
 	createContainer,
 	getType
 } from './utils';
+import { releaseMedia } from '../../helpers/media';
 
-function setOffset(e)
+function setOffset(event)
 {
-	this.data.offset = {
-		x : e.clientX,
-		y : e.clientY
-	};
+	this.data.offset = { x: event.clientX, y: event.clientY };
 }
 
-function onEnter(e)
+function onEnter()
 {
-	let target = e.target;
-
-	// get source
-	if(Object.prototype.hasOwnProperty.call(this.options, 'source') && this.options.source)
+	if(this.options.available && !this.options.available())
 	{
-		this.data.src = this.options.source;
-	} else {
-		if(target.hasAttribute('data-src'))
-		{
-			this.data.src = target.getAttribute('data-src');
-		} else if(target.hasAttribute('src'))
-		{
-			this.data.src = target.getAttribute('src');
-		} else if(target.hasAttribute('href'))
-		{
-			this.data.src = target.getAttribute('href');
-		}
+		mouseleave.call(this);
+		return;
 	}
 
-	if(this.data.src === null)
-	{
-		throw Error('No valid source value found.');
-	}
+	const target = this.handle;
+	this.data.src = this.options.source || target.getAttribute('data-src')
+		|| target.getAttribute('src') || target.getAttribute('href');
+	if(!this.data.src) return;
 
-	// get source type
 	this.data.type = getType.call(this);
+	if(this.data.type === null) return;
 
-	// if valid source type
-	if(this.data.type != null)
+	const id = this.id;
+	const container = createContainer();
+	this.data.left = this.data.offset.x <= window.innerWidth / 2;
+	this.data.container = container;
+	document.body.prepend(container);
+
+	if(this.options.cursor)
 	{
-		let _this = this;
-
-		// whether the cursor is on the left or ride side of the viewport
-		this.data.left = this.data.offset.x <= (window.innerWidth / 2);
-
-		// create preview container
-		let container = createContainer();
-
-		document.body.prepend(container);
-
-		// change cursor style if option is set
-		if(this.options.cursor && this.data.cursor === null)
-		{
-			this.data.cursor = target.style.cursor;
-			target.style.cursor = 'progress';
-		}
-
-		// handle image type
-		if(this.data.type === 0 || this.data.type === 1)
-		{
-			// wait for media to show its dimensions
-			(this.data.type === 0 ? loadImage : loadVideo)
-			.call(this, this.data.src, function(e, dimensions)
-			{
-				if(!e)
-				{
-					if(_this.options.cursor)
-					{
-						target.style.cursor = (_this.data.cursor ? _this.data.cursor : '');
-					}
-
-					return;
-				}
-
-				container.appendChild(e);
-
-				_this.data.container = container;
-				_this.data.dimensions = {
-					x : dimensions[0],
-					y : dimensions[1]
-				};
-
-				_this.loaded = true;
-
-				update.call(_this);
-
-				container.style['visibility'] = 'visible';
-
-				// media is loaded, revert loading cursor
-				if(_this.options.cursor)
-				{
-					target.style.cursor = (_this.data.cursor ? _this.data.cursor : '');
-				}
-			});
-		}
+		this.data.cursor = target.style.cursor;
+		target.style.cursor = 'progress';
 	}
+
+	(this.data.type === 0 ? loadImage : loadVideo).call(this, this.data.src, (element, dimensions) =>
+	{
+		if(!this.active || id !== this.id) return;
+		if(!element)
+		{
+			mouseleave.call(this);
+			this.failed = true;
+			return;
+		}
+
+		container.appendChild(element);
+		this.data.dimensions = { x: dimensions[0], y: dimensions[1] };
+		this.loaded = true;
+		update.call(this);
+		container.style.visibility = 'visible';
+		if(this.options.cursor) target.style.cursor = this.data.cursor;
+	});
 }
 
 function update()
 {
-	this.updater(
-		this.data.left,
-		this.data.container, {
-		dimensions : this.data.dimensions,
-		offset : {
-			x : this.data.offset.x,
-			y : this.data.offset.y
-		}
+	this.updater(this.data.left, this.data.container, {
+		dimensions: this.data.dimensions,
+		offset: this.data.offset
 	});
 }
 
-export function mousemove(e)
+export function mousemove(event)
 {
-	setOffset.call(this, e);
-
-	if(!this.loaded)
+	if(this.suspended)
 	{
-		return false;
+		if((!event.movementX && !event.movementY) || !document.hasFocus() || document.hidden) return;
+		this.suspended = false;
 	}
-
-	update.call(this);
+	if(event.buttons || this.failed) return;
+	if(!this.active) mouseenter.call(this, event);
+	setOffset.call(this, event);
+	if(this.loaded) update.call(this);
 }
 
-export function mouseenter(e)
+export function mouseenter(event)
 {
+	if(this.suspended || this.active || (this.options.available && !this.options.available())) return;
+	this.failed = false;
 	this.active = true;
-
-	let id = parseInt(this.id);
-	
-	let _this = this;
-
-	setOffset.call(this, e);
-
-	if(this.options.delay && this.options.delay > 0)
+	const id = this.id;
+	setOffset.call(this, event);
+	if(this.options.delay > 0)
 	{
-		this.timers.delay = setTimeout(function()
+		this.timers.delay = window.setTimeout(() =>
 		{
-			if(_this.active && id === _this.id)
-			{
-				onEnter.call(_this, e);
-			}
+			if(this.active && id === this.id) onEnter.call(this);
 		}, this.options.delay);
-	} else {
-		onEnter.call(_this, e);
-	}
+	} else onEnter.call(this);
 }
 
-// destroy preview container
-export function mouseleave(e)
+export function mouseleave(timestamp: number = null)
 {
-	let timestamp = null;
-
+	if(!this.active && !this.currentElement && !this.data.container) return;
 	this.active = false;
-
 	this.id++;
+	clearTimeout(this.timers.delay);
+	this.loadController?.abort();
+	this.loadController = null;
+	this.cleanupMedia?.();
+	this.cleanupMedia = null;
+	this.updater.cancel();
 
 	if(this.currentElement)
 	{
-		if(this.currentElement.tagName === 'VIDEO')
-		{
-			timestamp = this.currentElement.currentTime;
-
-			this.currentElement.pause();
-			this.currentElement.muted = true;
-
-			this.currentElement.onloadeddata = () => {};
-			this.currentElement.onloadedmetadata = () => {};
-		}
-
-		this.currentElement.remove();
+		if(this.currentElement instanceof HTMLVideoElement) timestamp = this.currentElement.currentTime;
+		releaseMedia(this.currentElement);
+		this.currentElement = null;
 	}
-
-	if(this.options.cursor && e.target.style.cursor === 'progress')
-	{
-		e.target.style.cursor = this.data.cursor ? this.data.cursor : '';
-		this.data.cursor = null;
-	}
-
-	let container = document.querySelector('.preview-container');
-
-	if(container)
-	{
-		container.remove();
-	}
-
-	clearTimeout(this.timers.delay);
-	clearInterval(this.timers.load);
-
+	if(this.options.cursor && this.data.cursor !== null) this.handle.style.cursor = this.data.cursor;
+	this.data.cursor = null;
+	this.data.container?.remove();
+	this.data.container = null;
 	this.loaded = false;
 
-	if(this.data.on.hasOwnProperty('onLoaded'))
-	{
-		try
-		{
-			this.data.on.onLoaded({
-				loaded : false,
-				type : null,
-				audible : false,
-				element : null,
-				timestamp : timestamp,
-				src : this.data.src
-			});
-		} catch(error)
-		{
-			console.error(error);
-		}
-	}
+	this.data.on.onLoaded?.({
+		loaded: false,
+		type: null,
+		audible: false,
+		element: null,
+		timestamp,
+		src: this.data.src
+	});
 }

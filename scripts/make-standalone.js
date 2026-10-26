@@ -177,7 +177,7 @@ try
 
 			if(fs.existsSync(scriptFile))
 			{
-				scriptsData.push(fs.readFileSync(scriptFile, 'binary'));
+				scriptsData.push(fs.readFileSync(scriptFile, 'utf-8'));
 			} else {
 				onError(`Script file: '${scriptFile}' does not exist!`);
 			}
