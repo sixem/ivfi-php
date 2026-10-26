@@ -1,112 +1,110 @@
-import {
-	getMove
-} from './utils';
-
-import {
-	mouseenter,
-	mouseleave,
-	mousemove
-} from './events';
-
-const defaults = {
-	delay: 75,
-	encodeAll: false,
-	cursor: true,
-	force: null
-};
+import { getMove } from './utils';
+import { mouseenter, mouseleave, mousemove } from './events';
+import type { TPreviewOptions } from '../../types/common';
 
 class hoverPreview
 {
-	public element: HTMLElement;
+	public options: TPreviewOptions;
 
-	public options: object;
+	public suspended = false;
 
-	private events: any;
+	private handle: HTMLElement = null;
 
-	private handle: any;
+	private data = {
+		cursor: null,
+		left: null,
+		src: null,
+		type: null,
+		offset: null,
+		dimensions: null,
+		force: null,
+		on: null,
+		container: null
+	};
 
-	constructor(element: HTMLElement, options: object = {})
+	private timers = { delay: null };
+
+	private updater = getMove();
+
+	private loadController: AbortController = null;
+
+	private cleanupMedia: (() => void) = null;
+
+	private currentElement: HTMLImageElement | HTMLVideoElement = null;
+
+	private failed = false;
+
+	private active = false;
+
+	private loaded = false;
+
+	private id = 0;
+
+	private events: Record<string, (event: MouseEvent) => void>;
+
+	constructor(private element: HTMLElement, options: TPreviewOptions = {})
 	{
-		if(!element)
+		this.options = { delay: 75, encodeAll: false, cursor: true, selector: 'a.preview', ...options };
+		this.data.on = this.options.on || {};
+		const target = (node: EventTarget): HTMLElement =>
 		{
-			throw Error('No element were passed.');
-		}
-
-		this.element = element;
-		this.options = options;
-
-		setup.call(this);
+			const anchor = node instanceof Element ? node.closest<HTMLElement>(this.options.selector) : null;
+			return anchor && this.element.contains(anchor) ? anchor : null;
+		};
+		this.events = {
+			mouseover: event => this.setHandle(target(event.target), event),
+			mouseout: event => this.setHandle(target(event.relatedTarget), event),
+			mousemove: event =>
+			{
+				this.setHandle(target(event.target), event);
+				if(this.handle) mousemove.call(this, event);
+			}
+		};
+		Object.entries(this.events).forEach(([type, listener]) => this.element.addEventListener(type, listener));
 	}
 
-	reload()
+	private setHandle(target: HTMLElement, event: MouseEvent): void
 	{
-		this.destroy();
+		if(target === this.handle) return;
+		mouseleave.call(this);
+		this.handle = null;
+		this.failed = false;
+		this.data.force = null;
+		if(!target) return;
 
-		setup.call(this);
+		const force = this.options.resolve ? this.options.resolve(target) : this.options.force;
+		if(this.options.resolve && !force) return;
+		this.handle = target;
+		this.data.force = force;
+		mouseenter.call(this, event);
 	}
 
-	destroy()
+	public takeVideo(src: string, parent: HTMLElement): HTMLVideoElement
 	{
-		const events = this.events;
+		const video = this.currentElement;
+		if(!(video instanceof HTMLVideoElement) || !this.active || this.data.src !== src
+			|| video.readyState < 2 || video.error || !video.isConnected) return null;
 
-		this.handle.removeEventListener('mouseenter', events.mouseenter, false);
-		this.handle.removeEventListener('mouseleave', events.mouseleave, false);
-		this.handle.removeEventListener('mousemove', events.mousemove, false);
+		parent.append(video);
+		/* Preview cleanup must leave the transferred media intact. */
+		this.currentElement = null;
+		mouseleave.call(this, video.currentTime);
+		this.suspended = true;
+		return video;
+	}
+
+	public hide(suspend = false): void
+	{
+		mouseleave.call(this);
+		this.suspended = suspend;
+	}
+
+	public destroy(): void
+	{
+		this.hide();
+		Object.entries(this.events).forEach(([type, listener]) => this.element.removeEventListener(type, listener));
+		this.handle = null;
 	}
 }
 
-function setup()
-{
-	// set options and data
-	this.options = {...defaults, ...this.options};
-
-	this.data = {
-		cursor : null,
-		left : null,
-		src : null,
-		type : null,
-		offset : null,
-		dimensions : null,
-		force : null
-	};
-
-	this.data.on = {};
-
-	if(typeof this.options.on === 'object' && this.options.on !== null)
-	{
-		this.data.on = this.options.on;
-	}
-
-	if(this.options.force)
-	{
-		this.data.force = this.options.force;
-	}
-
-	this.timers = {
-		load : null,
-		delay : null
-	}
-
-	// set handle
-	this.handle = this.element;
-
-	// move function
-	this.updater = getMove();
-
-	this.events = {
-		mouseenter : mouseenter.bind(this),
-		mouseleave : mouseleave.bind(this),
-		mousemove : mousemove.bind(this)
-	};
-
-	this.active = false;
-	this.id = 0;
-
-	// add events
-	this.handle.addEventListener('mouseleave', this.events.mouseleave, false);
-	this.handle.addEventListener('mouseenter', this.events.mouseenter, false);
-	this.handle.addEventListener('mousemove', this.events.mousemove, false);
-}
-
-// export default
-export default (element, options) => new hoverPreview(element, options)
+export default (element: HTMLElement, options: TPreviewOptions = {}) => new hoverPreview(element, options);

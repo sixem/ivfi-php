@@ -45,6 +45,7 @@ export function createContextMenu(): ContextMenu
 		menu.hidden = true;
 		document.documentElement.removeAttribute('context-menu-is-visible');
 		const previous = owner;
+		previous?.removeAttribute('data-context-menu-open');
 		owner = null;
 		if(previous?.getAttribute('aria-haspopup') === 'menu') previous.setAttribute('aria-expanded', 'false');
 		if(menu.hidePopover && menu.matches(':popover-open')) menu.hidePopover();
@@ -58,6 +59,7 @@ export function createContextMenu(): ContextMenu
 		const parent = trigger.closest('dialog[open]') || document.body;
 		if(menu.parentElement !== parent) parent.append(menu);
 		owner = trigger;
+		owner.setAttribute('data-context-menu-open', '');
 		menu.toggleAttribute('data-keyboard', options.keyboard === true);
 		menu.setAttribute('aria-label', options.label || 'Item actions');
 		menu.style.minWidth = options.minWidth ? `${Math.min(options.minWidth, window.innerWidth - 16)}px` : '';

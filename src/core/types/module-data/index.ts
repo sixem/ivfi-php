@@ -50,6 +50,7 @@ type TDataSets = {
 };
 
 type TDataPreview = {
+	takeVideo?: (src: string, parent: HTMLElement) => HTMLVideoElement;
 	volume?: number;
 	isLoadable?: boolean;
 	data?: any;

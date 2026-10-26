@@ -41,6 +41,7 @@ $gallery: (
   "color-background-overlay": rgb(4 4 4 / 80%),
   "color-background-list-selected": map.get($root, "color-background-table-selected"),
   "color-background-list-selected-hover": map.get($root, "color-background-table-selected-hover"),
+  "color-background-list-context": rgba($accent-color, 0.22),
   "color-background-list-item-hover": map.get($root, "color-background-table-hover"),
   "color-background-top-bar": #000,
   "color-list-selected-border": map.get($root, "color-a-media"),

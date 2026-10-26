@@ -4,6 +4,7 @@ import data from '../../config/data';
 /** Modules */
 import { eventHooks } from '../../modules/event-hooks';
 import { DOM, setVideoVolume } from '../../helpers';
+import { playVideo } from '../../helpers/media';
 import { log } from '../../modules/logger';
 
 /** Constants */
@@ -97,7 +98,9 @@ events.handlePreviewScroll = (event: WheelEvent): void =>
 				data.preview.data.audible &&
 				data.preview.data.type === 'VIDEO')
 			{
-				setVideoVolume(data.preview.data.element, data.preview.volume / 100);
+				const video = data.preview.data.element as HTMLVideoElement;
+				setVideoVolume(video, data.preview.volume / 100);
+				void playVideo(video, true, () => data.preview.data?.element === video);
 			}
 		}
 

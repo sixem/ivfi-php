@@ -7,7 +7,8 @@ import data from './config/data';
 /** Modules */
 import { log } from './modules/logger';
 import { eventHooks } from './modules/event-hooks';
-import { disposePage } from './modules/lifecycle';
+import { disposePage, onPageReplace } from './modules/lifecycle';
+import { playVideo } from './helpers/media';
 import { createOverlayScrollbar } from './modules/scrollbar';
 import { createRowSelection } from './modules/row-selection';
 import { createTooltip } from './modules/tooltip';
@@ -27,7 +28,6 @@ import {
 
 /** Helpers */
 import {
-	DOM,
 	debounce,
 	setVideoVolume,
 	identifyExtension,
@@ -37,9 +37,7 @@ import {
 /** Types */
 import {
 	ITableRowMI,
-	IPreviewAnchor,
 	TOnPreviewLoad,
-	TPreviewOptions,
 	TExtensionArray,
 	IWindowGlobals,
 	IDocumentGlobals
@@ -258,22 +256,14 @@ eventHooks.listen(window, 'resize', 'windowResize', debounce((): void =>
 if(config.get('mobile') === false
 	&& config.get('preview.enabled') === true)
 {
-	const previews = {};
-
 	let resume = null;
-	let timerReadyState = null;
+	let cancelReveal: (() => void) = null;
 
 	const onLoaded = (event: TOnPreviewLoad) =>
 	{
 		log('preview', 'Preview loaded =>', event);
 
-		if(data.preview.data
-			&& data.preview.data.element)
-		{
-			data.preview.data.element.remove();
-		}
-
-		if(!data.preview.isLoadable) return null;
+		cancelReveal?.();
 
 		const [element, type, src] = [
 			event.element,
@@ -282,9 +272,6 @@ if(config.get('mobile') === false
 		];
 
 		data.preview.data = event;
-
-		/* Clear timer */
-		clearInterval(timerReadyState);
 
 		if(element && type === 'VIDEO')
 		{
@@ -296,30 +283,31 @@ if(config.get('mobile') === false
 				resume = null;
 			}
 
-			/* Set stored preview volume */
-			setVideoVolume((element as HTMLVideoElement), data.preview.volume / 100, false);
-
-			/* Check for valid readystate (4, 3, 2) before we show the video */
-			timerReadyState = setInterval(() =>
+			const video = element as HTMLVideoElement;
+			const reveal = () =>
 			{
-				if((element as HTMLVideoElement).readyState > 1)
-				{
-					/* Show video */
-					DOM.style.set(element, {
-						visibility : 'visible'
-					});
-
-					/* Clear timer */
-					clearInterval(timerReadyState);
-				}
-			}, 25);
+				if(video.readyState < 2 || video.seeking || data.preview.data?.element !== video) return;
+				video.style.visibility = 'visible';
+				cancelReveal?.();
+			};
+			cancelReveal = () =>
+			{
+				video.removeEventListener('loadeddata', reveal);
+				video.removeEventListener('seeked', reveal);
+				cancelReveal = null;
+			};
+			video.addEventListener('loadeddata', reveal);
+			video.addEventListener('seeked', reveal);
+			setVideoVolume(video, data.preview.volume / 100, false);
+			void playVideo(video, true, () => data.preview.data?.element === video);
+			reveal();
 		} else {
 			/* Not a video, clear resume */
 			resume = null;
 		}
 
 		/* Store timestamp if exists */
-		if(Object.prototype.hasOwnProperty.call(event, 'timestamp'))
+		if(typeof event.timestamp === 'number')
 		{
 			const timestamp = event.timestamp;
 
@@ -338,71 +326,37 @@ if(config.get('mobile') === false
 		}
 	};
 
-	const createPreview = (element: IPreviewAnchor) =>
-	{
-		const src: string = element.getAttribute('href');
-		const extensions: TExtensionArray = config.get('extensions');
-
-		const identified = identifyExtension(stripUrl(src), {
-			image: extensions.image,
-			video: extensions.video
-		});
-
-		if(identified)
+	const extensions: TExtensionArray = config.get('extensions');
+	const preview = hoverPreview(selector.use('TABLE') as HTMLElement, {
+		available: () => data.preview.isLoadable && document.hasFocus() && !document.hidden
+			&& !document.documentElement.hasAttribute('gallery-is-visible'),
+		delay: config.get('preview.hoverDelay'),
+		cursor: config.get('preview.cursorIndicator'),
+		encodeAll: config.get('encodeAll'),
+		resolve: element =>
 		{
-			const [extension, type] = identified;
-
-			const options: TPreviewOptions = {};
-
-			/* Delay prior to showing preview */
-			options.delay = config.get('preview.hoverDelay');
-
-			/* Loading cursor */
-			options.cursor = config.get('preview.cursorIndicator');
-
-			/* Encoding */
-			options.encodeAll = config.get('encodeAll');
-
-			/* Events */
-			options.on = {
-				onLoaded: onLoaded
-			};
-
-			/* Force set extension data */
-			options.force = {
-				extension,
-				type
-			};
-
-			/* Create preview */
-			previews[element.itemIndex] = hoverPreview(element, options);
-		}
-	};
-
-	/* Get previewable elements */
-	const previewable = document.querySelectorAll('body > div.tableContainer > table > tbody > tr.file > td > a.preview');
-
-	/* Set preview indexes */
-	previewable.forEach((preview: IPreviewAnchor, index) =>
-	{
-		preview.itemIndex = index;
-
-		if(index === 0) createPreview(preview);
+			const identified = identifyExtension(stripUrl(element.getAttribute('href')), extensions);
+			return identified ? { extension: identified[0], type: identified[1] } : null;
+		},
+		on: { onLoaded }
 	});
+	data.preview.takeVideo = (src, parent) => preview.takeVideo(src, parent);
 
-	/* Add preview hover listener */
-	eventHooks.listen(selector.use('TABLE') as HTMLElement, 'mouseover', 'previewMouseEnter', (e) =>
+	const hidePreview = () => preview.hide(true);
+	const onVisibility = () => { if(document.hidden) hidePreview(); };
+	window.addEventListener('blur', hidePreview);
+	window.addEventListener('pagehide', hidePreview);
+	document.addEventListener('visibilitychange', onVisibility);
+	eventHooks.subscribe('galleryOpen', 'hidePreview', hidePreview);
+	onPageReplace(() =>
 	{
-		/* Check if element is `a` element with a preview class */
-		if(e.target.tagName === 'A' && e.target.className == 'preview')
-		{
-			const index = (e.target.itemIndex);
-
-			if(!Object.prototype.hasOwnProperty.call(previews, index))
-			{
-				createPreview(e.target);
-			}
-		}
+		preview.destroy();
+		data.preview.takeVideo = null;
+		cancelReveal?.();
+		window.removeEventListener('blur', hidePreview);
+		window.removeEventListener('pagehide', hidePreview);
+		document.removeEventListener('visibilitychange', onVisibility);
+		eventHooks.unsubscribe('galleryOpen', 'hidePreview');
 	});
 }
 

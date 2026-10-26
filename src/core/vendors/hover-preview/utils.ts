@@ -1,3 +1,5 @@
+import { loadImage as loadDecodedImage, releaseMedia } from '../../helpers/media';
+
 function getLeft(left, eWidth, offsetX)
 {
 	if(left)
@@ -49,21 +51,27 @@ function move(left, element, data)
 
 export function getMove()
 {
-	if(window.requestAnimationFrame)
+	let frame: number = null;
+	let latest = null;
+	const update = (left, element, data) =>
 	{
-		return function(left, element, data)
+		latest = { left, element, data };
+		if(frame !== null) return;
+		frame = requestAnimationFrame(() =>
 		{
-			window.requestAnimationFrame(function()
-			{
-				move(left, element, data);
-			});
-		};
-	}
-
-	return function(left, element, data)
-	{
-		move(left, element, data);
+			frame = null;
+			const { left, element, data } = latest;
+			latest = null;
+			if(element.isConnected) move(left, element, data);
+		});
 	};
+	update.cancel = () =>
+	{
+		if(frame !== null) cancelAnimationFrame(frame);
+		frame = null;
+		latest = null;
+	};
+	return update;
 }
 
 export function getType()
@@ -152,114 +160,79 @@ function isAudible(video)
 
 export function loadImage(src, callback)
 {
-	var _this = this;
-
-	var img = document.createElement('img');
-
-	this.currentElement = img;
-
-	img.style['max-width'] = 'inherit';
-	img.style['max-height'] = 'inherit';
-
-	img.src = encodeUrl.call(_this, src);
-
-	_this.timers.load = setInterval(function()
+	const id = this.id;
+	const controller = new AbortController();
+	this.loadController = controller;
+	loadDecodedImage(encodeUrl.call(this, src), controller.signal).then(image =>
 	{
-		if(!_this.active)
+		if(!this.active || id !== this.id)
 		{
-			callback(false);
-
+			releaseMedia(image);
 			return;
 		}
-
-		var w = img.naturalWidth, h = img.naturalHeight;
-				
-		if(w && h)
+		if(this.options.available && !this.options.available())
 		{
-			if(_this.data.on.hasOwnProperty('onLoaded'))
-			{
-				try
-				{
-					_this.data.on.onLoaded({
-						loaded : true,
-						type : 'IMAGE',
-						audible : false,
-						element : img,
-						src : src
-					});
-				} catch(error)
-				{
-					console.error(error);
-				}
-			}
-
-			clearInterval(_this.timers.load);
-
-			callback(img, [w, h]);
+			releaseMedia(image);
+			callback(false);
+			return;
 		}
-	}, 30);
+		this.currentElement = image;
+		image.style.maxWidth = 'inherit';
+		image.style.maxHeight = 'inherit';
+		this.data.on.onLoaded?.({ loaded: true, type: 'IMAGE', audible: false, element: image, src });
+		callback(image, [image.naturalWidth, image.naturalHeight]);
+	}).catch(error =>
+	{
+		if(error.name !== 'AbortError' && this.active && id === this.id) callback(false);
+	}).finally(() =>
+	{
+		if(this.loadController === controller) this.loadController = null;
+	});
 }
 
 export function loadVideo(src, callback)
 {
-	var _this = this;
-
-	var video = document.createElement('video');
-
-	var source = video.appendChild(document.createElement('source'));
-
+	const id = this.id;
+	const video = document.createElement('video');
+	const source = video.appendChild(document.createElement('source'));
 	this.currentElement = video;
-
-	['muted', 'loop', 'autoplay'].forEach((key) =>
+	video.muted = true;
+	video.loop = true;
+	video.autoplay = true;
+	video.style.maxWidth = 'inherit';
+	video.style.maxHeight = 'inherit';
+	let loaded = false;
+	const current = () => this.active && id === this.id;
+	const metadata = () =>
 	{
-		video[key] = true;
-	});
-
-	source.type = 'video/' + (this.data.extension === 'mov' ? 'mp4' : (this.data.extension === 'ogv' ? 'ogg' : this.data.extension));
-
-	source.src = encodeUrl.call(this, src);
-
-	video.style['max-width'] = 'inherit';
-	video.style['max-height'] = 'inherit';
-
-	video.onloadeddata = function()
-	{
-		if(!_this.active)
-		{
-			callback(false);
-
-			return;
-		}
-
-		if(_this.data.on.hasOwnProperty('onLoaded'))
-		{
-			try
-			{
-				_this.data.on.onLoaded({
-					loaded : true,
-					type : 'VIDEO',
-					audible : isAudible(video),
-					element : video,
-					src : src
-				});
-			} catch(error)
-			{
-				console.error(error);
-			}
-		}
+		if(current()) callback(video, [video.videoWidth, video.videoHeight]);
 	};
-
-	video.onloadedmetadata = function(event)
+	const ready = () =>
 	{
-		let eventTarget: HTMLVideoElement = event.target as HTMLVideoElement;
-
-		if(!_this.active)
+		if(!current() || loaded || video.readyState < 2) return;
+		if(this.options.available && !this.options.available())
 		{
 			callback(false);
-
 			return;
 		}
-
-		callback(video, [eventTarget.videoWidth, eventTarget.videoHeight]);
-	}; 
+		loaded = true;
+		this.data.on.onLoaded?.({ loaded: true, type: 'VIDEO', audible: isAudible(video), element: video, src });
+	};
+	const error = () => { if(current()) callback(false); };
+	video.addEventListener('loadedmetadata', metadata);
+	video.addEventListener('loadeddata', ready);
+	video.addEventListener('canplay', ready);
+	video.addEventListener('error', error);
+	source.addEventListener('error', error);
+	this.cleanupMedia = () =>
+	{
+		video.removeEventListener('loadedmetadata', metadata);
+		video.removeEventListener('loadeddata', ready);
+		video.removeEventListener('canplay', ready);
+		video.removeEventListener('error', error);
+		source.removeEventListener('error', error);
+	};
+	source.type = 'video/' + (this.data.extension === 'mov' ? 'mp4' : (this.data.extension === 'ogv' ? 'ogg' : this.data.extension));
+	source.src = encodeUrl.call(this, src);
+	video.load();
 }

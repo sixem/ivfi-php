@@ -197,7 +197,6 @@ html > body > .rootGallery {
 
         border-left: none;
         border-right: $width-list-selected-border solid $color-list-selected-border;
-        background-color: map.get(variables.$gallery, "color-background-list-selected");
       }
 
       > div.list > table > tbody > tr:not(.selected) > td:hover {
@@ -422,6 +421,14 @@ html > body > .rootGallery {
 
             &:hover {
               background-color: map.get(variables.$gallery, "color-background-list-selected-hover");
+            }
+          }
+
+          &[data-context-menu-open] > td {
+            background-color: map.get(variables.$gallery, "color-background-list-context");
+
+            &:hover {
+              background-color: map.get(variables.$gallery, "color-background-list-context");
             }
           }
 
