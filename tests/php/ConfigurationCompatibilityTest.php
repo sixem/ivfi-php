@@ -27,6 +27,12 @@ final class ConfigurationCompatibilityTest extends TestCase
         rmdir($this->root);
     }
 
+    private function variants(): array
+    {
+        $variant = getenv('IVFI_PHP_VARIANT');
+        return $variant ? [$variant] : ['indexer.php', 'standalone.php'];
+    }
+
     private function render(string $variant, ?string $config = null, ?string $beside = null, array $request = []): array
     {
         $project = dirname(__DIR__, 2);
@@ -37,7 +43,7 @@ final class ConfigurationCompatibilityTest extends TestCase
             elseif (is_file($path)) unlink($path);
         }
         $process = proc_open(
-            [PHP_BINARY, $project . '/tests/php/render.php', $this->root . '/script/custom.php'],
+            [(getenv('IVFI_PHP_BINARY') ?: PHP_BINARY), $project . '/tests/php/render.php', $this->root . '/script/custom.php'],
             [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes, $this->root . '/media'
         );
@@ -63,7 +69,7 @@ final class ConfigurationCompatibilityTest extends TestCase
 
     public function testDateAndFooterShorthandsWorkInBothDistributions(): void
     {
-        foreach (['indexer.php', 'standalone.php'] as $variant) {
+        foreach ($this->variants() as $variant) {
             foreach ([false, true] as $footer) {
                 $response = $this->render($variant, '<?php return ' . var_export([
                     'format' => ['date' => 'Y-m-d'], 'footer' => $footer,
@@ -76,7 +82,7 @@ final class ConfigurationCompatibilityTest extends TestCase
 
     public function testObsoleteFooterSettingsAreIgnored(): void
     {
-        foreach (['indexer.php', 'standalone.php'] as $variant) {
+        foreach ($this->variants() as $variant) {
             foreach ([false, true] as $enabled) {
                 foreach ([false, true, ['unused']] as $obsolete) {
                     $response = $this->render($variant, '<?php return ' . var_export([
@@ -98,7 +104,7 @@ final class ConfigurationCompatibilityTest extends TestCase
 
     public function testPartialNestedSettingsAndExplicitListsKeepTheirMeaning(): void
     {
-        foreach (['indexer.php', 'standalone.php'] as $variant) {
+        foreach ($this->variants() as $variant) {
             $response = $this->render($variant, '<?php return ' . var_export([
                 'style' => ['themes' => ['default' => false], 'css' => []],
                 'extensions' => ['image' => ['avif'], 'video' => []],
@@ -115,7 +121,7 @@ final class ConfigurationCompatibilityTest extends TestCase
 
     public function testDefaultsAndConfigLookupRemainCompatibleAfterRenaming(): void
     {
-        foreach (['indexer.php', 'standalone.php'] as $variant) {
+        foreach ($this->variants() as $variant) {
             self::assertSame('d/m/y H:i', $this->jsConfig($this->render($variant))['format']['date'][0]);
             $config = $this->jsConfig($this->render($variant, '<?php return [];'));
             self::assertSame('m/d/y H:i', $config['format']['date'][0]);
@@ -129,7 +135,7 @@ final class ConfigurationCompatibilityTest extends TestCase
 
     public function testMalformedConfigFailsClosedWithoutExposingSource(): void
     {
-        foreach (['indexer.php', 'standalone.php'] as $variant) {
+        foreach ($this->variants() as $variant) {
             foreach (['<?php // no return', '<?php return "invalid";', '<?php return ["gallery" => "invalid"];', '<?php return ["authentication" => true];'] as $source) {
                 $response = $this->render($variant, $source);
                 self::assertSame(500, $response['status']);
@@ -140,7 +146,7 @@ final class ConfigurationCompatibilityTest extends TestCase
 
     public function testCallbacksAndExtensionKeysSurviveMerging(): void
     {
-        foreach (['indexer.php', 'standalone.php'] as $variant) {
+        foreach ($this->variants() as $variant) {
             $response = $this->render($variant, <<<'CONFIG'
 <?php return [
     'custom' => 'callback-value',
@@ -163,7 +169,7 @@ CONFIG
     {
         file_put_contents($this->root . '/media/ignored.txt', 'ignored');
         file_put_contents($this->root . '/media/notes.md', 'notes');
-        foreach (['indexer.php', 'standalone.php'] as $variant) {
+        foreach ($this->variants() as $variant) {
             file_put_contents($this->root . '/media/.ivfi', '{"metadata":[]}');
             $response = $this->render($variant, '<?php return [];');
             self::assertSame(200, $response['status']);
@@ -181,7 +187,7 @@ CONFIG
     {
         mkdir($this->root . '/media/%70rotected');
         mkdir($this->root . '/media/question?dir');
-        foreach (['indexer.php', 'standalone.php'] as $variant) {
+        foreach ($this->variants() as $variant) {
             foreach (['/%2570rotected/' => '%70rotected', '/question%3Fdir/' => 'question?dir'] as $uri => $name) {
                 $response = $this->render($variant, null, null, ['uri' => $uri]);
                 self::assertSame(200, $response['status']);
@@ -201,7 +207,7 @@ CONFIG
         $config = '<?php return ["authentication" => ["users" => ["fixture" => "secret"], "restrict" => "~^/protected(?:/|$)~"]];';
         $response = md5(md5('fixture:Restricted content.:secret') . ':fixture-nonce:00000001:client:auth:' . md5('GET:/protected/'));
         $digest = 'username="fixture", nonce="fixture-nonce", nc=00000001, cnonce="client", qop=auth, uri="/protected/", response="' . $response . '"';
-        foreach (['indexer.php', 'standalone.php'] as $variant) {
+        foreach ($this->variants() as $variant) {
             foreach (['/protected/', '//protected/', '/public/../protected/'] as $uri) {
                 self::assertSame(401, $this->render($variant, $config, null, ['uri' => $uri])['status']);
             }

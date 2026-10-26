@@ -4,9 +4,7 @@
 
 <br/>
 
-You can build this script from source using Node 20 or newer and `pnpm`.
-
-Node 24 is the recommended version and is recorded in `.nvmrc` for users of Node Version Manager.
+Use Node 20 or newer and `pnpm`. Node 24 is recommended (`.nvmrc`).
 
 **Clone repository and install dependencies:**
 ```bash
@@ -31,7 +29,7 @@ Build a standalone file from source:
 pnpm run make-standalone
 ```
 
-Output goes in `build`. Config defaults come from `src/php/config.php` and are embedded in both PHP outputs, where they remain editable.
+Output goes in `build`. See [setup](setup.md) for deployment.
 
 ## Development builds
 
@@ -59,9 +57,3 @@ You can edit `build.options.json` to enable extra features or change output opti
 * `extrasDir` sets the directory where `extras` are located.
 
 * `assetDir` sets the directory where resources (`.js`, `.css` and fonts) will be placed in. This also affects any references in the HTML/CSS.
-
-## Release checks
-
-Run `pnpm test` for lint, build and standalone checks. Run `composer install` and `composer test` for PHP tests. Run `bash scripts/test-release.sh` for packaging checks (`7z` and `jq` required).
-
-Keep `pnpm-workspace.yaml` when building from source; it selects patched build dependencies.

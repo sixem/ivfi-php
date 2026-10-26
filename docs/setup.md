@@ -1,42 +1,34 @@
 <h1 align="center">Setup</h1>
 <p align="center">How to set up and use the Indexer</p>
 
-</br>
-
 ## Download
 
-<p>Download the latest release <a href="https://github.com/sixem/ivfi-php/releases">HERE</a>!</p>
-<p>Alternatively, you can also build it from source yourself, for that see: <a href="#building">building</a></p>
-<p>You can also find every release and specific builds here: <a href="https://github.com/sixem/ivfi-php/releases">https://github.com/sixem/ivfi-php/releases</a></p>
+Download the [latest release](https://github.com/sixem/ivfi-php/releases), or [build from source](building.md).
+
+## PHP support
+
+Regular and standalone builds are tested on PHP 8.2, 8.3, 8.4 and 8.5. Older versions are not covered by the current runtime checks.
 
 ## Files
 
-You can choose between having a **default** setup and a **standalone** setup.
+Choose one setup from the release archive:
 
-The default setup will import assets (`js`, `css` and fonts) as separate files, like most sites. This is the normal setup.
-
-The standalone setup will have all of these files bundled directly into the `.php` file instead, serving everything through HTML.
-
-### a) Default
-Place the files from the `build` directory into your root web directory.
-### b) Standalone (single file)
-Place the file from the `standalone` directory into your root web directory.
+- **Default:** copy the contents of `build/` into your web root. Assets are separate files.
+- **Standalone:** copy `standalone/indexer.php` into your web root. Assets are embedded in this single file.
 
 ## Server Configuration
 
-The Indexer does require you to use it as an `index` file, that way it can be automatically applied to directories that do not have a defualt `index` file present. This makes it behave just like any other default and built-in directory indexes. This can all be done easily by following the steps below, **depending** on what web server you are using.
+Your web server must be configured to run PHP. Add IVFi as a fallback index for directories without their own index page.
 
 ### Nginx
-To use this script for all directories without a default index you need append `/indexer.php` to the end of your `index` line in your server configuration. This will tell Nginx to use the Indexer if none of the default indexes exist.
-
-Example usage:
+Append `/indexer.php` to the `index` directive:
 ```conf
 server {
         index index.html index.php /indexer.php;
 }
 
 ```
-Another example, here it is only being applied to a few directories:
+To limit it to specific directories:
 ```conf
 server {
         location ~ ^/(videos|images)/ {
@@ -46,44 +38,38 @@ server {
 
 ```
 ### Apache
-In order to automatically use this script as a default index, you need to edit your Apache configuration. To do this, you must place `/indexer.php` at the end of your `DirectoryIndex` directive.
-
-Example usage:
+Append `/indexer.php` to `DirectoryIndex` in your server config or `.htaccess`:
 
 ```conf
 DirectoryIndex index.html index.php /indexer.php
 ```
 
-This line can be placed in either your server's `.conf` file or your `.htaccess` file. This will tell Apache to use the Indexer if none of the default indexes exist. This can be set globally or on a per-directory basis depending on your usecase.
-
 ## Docker
-The script can also be run through a simple docker container using `docker compose`.
-#### Clone the repository and install dependencies:
-The dependency installation can be skipped if you are manually creating `docker/public` without building from source.
+
+Docker builds the app and runs Nginx with PHP 8.4-FPM. No local Node or PHP installation is needed.
+
 ```bash
 git clone https://github.com/sixem/ivfi-php
-cd ivfi-php
-pnpm install
+cd ivfi-php/docker
+cp .env.example .env
 ```
 
-#### Build and populate the docker directory:
-This is not required as it can be done manually by simply placing the Indexer files in `docker/public`. This command will however build it from source and place the files there automatically. 
+Set `SERVEPOINT` in `.env` to an existing directory containing your files. `PORT` defaults to `8080`; `BIND_ADDRESS` defaults to `127.0.0.1`.
 
-This directory (`docker/public`) will serve as the root path of the webserver from where we serve the script.
+Use `0.0.0.0` to accept connections from other machines.
+
+Edit `config.php` for Indexer settings, then start:
+
 ```bash
-pnpm run docker-populate
+docker compose up --build -d
 ```
 
-#### Edit the configuration:
-Find `docker/.env.local` and edit it to fit your liking:
+Open `http://localhost:8080/`. Use `docker compose logs` to inspect logs and `docker compose down` to stop.
 
-`SERVEPOINT` is the root directory containing files that should be browsable and `PORT` are the ports being used.
+After changing `config.php`, restart PHP with `docker compose restart php`.
 
-Any Indexer configurations can be placed in `docker/config.php` prior to starting the container.
+Media and config mounts are read-only. Both services run without root privileges, so mounted files must be readable by their container users. Hidden files and PHP files are not served; Nginx does not serve symlinked media files. Keep private files outside the media directory. Indexer authentication protects listings, not direct file downloads.
 
-#### Run the container:
-```bash
-cd docker
-docker compose --env-file .env.local up
-```
-The script should now be running on `http://localhost:8080/` if you are using the default ports. You can also add a `-d` flag to the command in order to run the container in detached mode.
+For updates, rebuild with `docker compose build --pull` and run `docker compose up -d`.
+
+Upgrading an older Docker setup? Use the new `.env.example`; `PORT` now takes only the host port. `docker-populate` is no longer needed.

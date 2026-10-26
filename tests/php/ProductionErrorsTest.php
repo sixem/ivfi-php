@@ -25,7 +25,7 @@ final class ProductionErrorsTest extends TestCase
 
     private function request(string $uri, ?string $config = null): array
     {
-        $build = dirname(__DIR__, 2) . '/build/indexer.php';
+        $build = dirname(__DIR__, 2) . '/build/' . (getenv('IVFI_PHP_VARIANT') ?: 'indexer.php');
         self::assertFileExists($build, 'Run pnpm build before the PHP tests.');
         if($config !== null) {
             file_put_contents($this->root . '/.indexer.config.php', '<?php return ' . $config . ';');
@@ -35,7 +35,7 @@ final class ProductionErrorsTest extends TestCase
         $build = $this->root . '/indexer.php';
         // Start with display_errors ON to check that production overrides it.
         $process = proc_open(
-            [PHP_BINARY, '-d', 'display_errors=1', __DIR__ . '/render.php', $build],
+            [(getenv('IVFI_PHP_BINARY') ?: PHP_BINARY), '-d', 'display_errors=1', __DIR__ . '/render.php', $build],
             [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes, $this->root
         );

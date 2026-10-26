@@ -17,11 +17,7 @@
 
 # About
 
-IVFi-PHP is a file directory browser script made in PHP and TypeScript.
-
-It is designed to be a comprehensive indexer, with a focus on efficiently handling image and video files. IVFi has a modern and user-friendly interface, offering features such as a gallery view, hoverable previews, and many customization options.
-
-This project can be easily set up on most web servers.
+IVFi-PHP is a directory browser written in PHP and TypeScript, with an image and video gallery, hover previews, search, and ZIP downloads.
 
 # Quick setup :zap:
 
@@ -41,28 +37,26 @@ server {
 DirectoryIndex index.html index.php /indexer.php
 ```
 
-For detailed instructions on how to configure the script, refer to [setup](https://github.com/sixem/ivfi-php/blob/master/docs/setup.md).
-
-The releases and individual builds are available [here](https://github.com/sixem/ivfi-php/releases).
+See [setup](docs/setup.md) for standalone and Docker options, and [configuration](docs/config.md) for settings.
 
 # Features
 
 ### **Authentication**
-> It includes support for HTTP authentication, providing some added security for your directories.
+> Optional HTTP Digest authentication for listings. Direct downloads need web-server access controls; see [authentication](docs/config.md#authentication).
 ### **Gallery Mode**
-> A gallery mode that allows you to view images and videos from the current directory in one place, as well as the ability to download files and perform reverse image searches.
+> Browse images and videos without leaving the listing, download files, or reverse-search images.
 ### **Hover Previews**
 > An image or video preview is displayed when hovering over the file name.
 ### **Search Filter**
-> The filter function allows you to search for specific filenames or file types within the directory.<br/><br/>Usage (Desktop): `Shift + F`.
+> Search filenames or file types in the current directory. Open with `Shift + F` on desktop.
 ### **Downloads**
 > Download individual files or bundle a selection into a ZIP archive, with progress shown while the archive is created.
 ### **Single file**
-> The script can be configured as a standalone solution, where all required assets are combined into a single file, making it easy to use with just one file needed.
+> A standalone build bundles the app and its assets into one PHP file.
 ### **Customizable**
 > This script offers multiple customization options.
-### **Additonal Features**
-> It can be built with added functionality, such as the ability to display `README.md` files in each directory!
+### **Additional Features**
+> Optional [README support](docs/extras.md), disabled by default.
 
 ### **And much more ...**
 + :clock12: The dates will be adjusted to match the time zone of the client.
@@ -76,9 +70,7 @@ The releases and individual builds are available [here](https://github.com/sixem
 
 # Feedback
 
-If you have come across any specific problems or bugs that you would like to report, you have the option to open an [issue](https://github.com/sixem/ivfi-php/issues). This will allow us to better understand the issue at hand and take the necessary steps to resolve it.
-
-Alternatively, if you have any general questions, minor issues, or ideas for improvements that you would like to discuss, you can start a [discussion](https://github.com/sixem/ivfi-php/discussions). This is a good way for you to share your thoughts and ideas with us, and we would be more than happy to listen and consider them.
+Report bugs in [issues](https://github.com/sixem/ivfi-php/issues), or use [discussions](https://github.com/sixem/ivfi-php/discussions) for questions and ideas. For code changes and test commands, see [contributing](https://github.com/sixem/ivfi-php/blob/master/CONTRIBUTING.md).
 
 ## License
 This project is licensed under GPL-3.0. It also includes external libraries that are available under a variety of licenses.

@@ -7,3 +7,4 @@ docker/public
 *.7z
 *.zip
 *.ignore
+docker/.env

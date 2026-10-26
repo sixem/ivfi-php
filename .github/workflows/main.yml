@@ -55,6 +55,14 @@ jobs:
         if: matrix.node-version == '24'
         run: composer test -- --testdox
 
+      - name: Test PHP compatibility
+        if: matrix.node-version == '24'
+        run: bash scripts/test-php-versions.sh
+
+      - name: Test Docker deployment
+        if: matrix.node-version == '24'
+        run: bash scripts/test-docker.sh
+
       - name: Install release packaging tools
         if: matrix.node-version == '24'
         run: sudo apt-get update && sudo apt-get install -y p7zip-full jq

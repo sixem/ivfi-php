@@ -48,10 +48,10 @@ final class PathBoundariesTest extends TestCase
                 }
             }
 
-            $build = dirname(__DIR__, 2) . '/build/indexer.php';
+            $build = dirname(__DIR__, 2) . '/build/' . (getenv('IVFI_PHP_VARIANT') ?: 'indexer.php');
             self::assertFileExists($build, 'Run pnpm build before the PHP tests.');
             $process = proc_open(
-                [PHP_BINARY, __DIR__ . '/check-boundaries.php', $build],
+                [(getenv('IVFI_PHP_BINARY') ?: PHP_BINARY), __DIR__ . '/check-boundaries.php', $build],
                 [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
                 $pipes, $root
             );

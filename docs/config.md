@@ -2,48 +2,22 @@
 
 <br/>
 
-Here is an overview of what each configurable option does.
-
-These options can be found and changed at the top of the `indexer.php` file, or you can create a config file that makes updating a bit easier (see below).
-
-*Some* of these settings can be changed by the client/user. These are only values for the script to use as defaults.
+Edit the settings at the top of `indexer.php`, or use a separate config file to keep settings across updates. User preferences override some display defaults.
 
 ## Configuration File
 
-You can edit the configuration in the file directly, but if you wish to keep a separate config file that does not reset between updates, then creating your own config file can be a good solution.
+Create `indexer.config.php` beside the script. If you rename the script, match the config name; hidden names such as `.indexer.config.php` also work.
 
-The script checks the PHP working directory first, then the directory containing the script. If the file is named `indexer.php` (as it is by default), then it'll look for a file called `indexer.config.php`. If you rename the file to `something.php`, then it'll look for `something.config.php` and so on.
+The PHP working directory is checked before the script's directory.
 
-The file must return an array. Missing or null settings use defaults; lists such as file extensions replace the defaults, even when empty. Named sections such as `gallery` must be arrays. Custom keys and callbacks are preserved. Hidden config files such as `.indexer.config.php` also work.
-
-A basic example of a config file:
+Return an array containing the settings you want to change. Missing or null settings use defaults; lists such as extensions replace their defaults, even when empty.
 
 ```php
 <?php
-return array(
-    'authentication' => array(
-		'users' => array(
-			'username' => 'password'
-		),
-		'restrict' => '/^\/(protected|secret|directory\/protected)\/?/i'
-    ),
-    'icon' => array(
-        'path' => '/favicon.png',
-        'mime' => 'image/png'
-    ),
-    'style' => array(
-        'themes' => array(
-            'path' => 'indexer/css/themes',
-            'default' => false
-        ),
-        'compact' => true
-    ),
-    'gallery' => array(
-        'image_sharpen' => true
-    ),
-    'debug' => true
-);
-?>
+return [
+    'style' => ['compact' => true],
+    'gallery' => ['image_sharpen' => true]
+];
 ```
 
 ## Authentication
@@ -51,7 +25,7 @@ Key: **`authentication`**
 
 Enables HTTP authentication through PHP (Digest access authentication).
 
-Don't rely on this for any strong protection. Digest requests are bound to their request URI, but nonces are not tracked or expired, so a captured authenticated request can still be replayed against the same URI. Use HTTPS. Authentication applies only to requests handled by the script; files served directly by the web server need separate access controls.
+Protects listings handled by IVFi, not files served directly by your web server. Use HTTPS and server-level access controls for private files. Captured authenticated requests can still be replayed.
 
 | Child key | Type | Value | Description |
 |-----|------|---------|-------------|
@@ -66,12 +40,14 @@ return array(
         'users' => array(
             'username' => 'password'
         ),
-        'restrict' => '/^\/(protected|secret|directory\/protected)\/?/i'
+        'restrict' => '~^/(protected|secret|directory/protected)(/|$)~i'
     )
 );
 ?>
 ```
-This would apply authentication to `/protected/`, `/secret/` and `/directory/protected/`. Restrictions check the decoded URL, its normalized path, and any resolved target within the media root, so an in-root symlink cannot bypass a target restriction. On case-insensitive filesystems, use a case-insensitive expression (`i` modifier).
+This protects `/protected/`, `/secret/` and `/directory/protected/`, including their children.
+
+Restrictions also check resolved paths within the media root. Use the `i` modifier on case-insensitive filesystems.
 
 ## File selection and archives
 Key: **`selection`**
@@ -88,8 +64,10 @@ Key: **`format`**
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `title` | String | `Index of %s` | Page title where  `%s` represents the current path.
-| `date` | String/Array | `array('d/m/y H:i', 'd/m/y')` (inline); `array('m/d/y H:i', 'd/m/y')` (external config) | Date format as per [datetime.format.php](https://www.php.net/manual/en/datetime.format.php#refsect1-datetime.format-parameters). Can be a string or an array. If it is an array then the first value will be shown on desktop devices and the second will be shown on mobile devices. It is a good idea to set a shorter mobile format because of the limited screen space.
+| `date` | String/Array | `array('d/m/y H:i', 'd/m/y')` | A [PHP date format](https://www.php.net/manual/en/datetime.format.php), or an array of desktop and mobile formats.
 | `sizes` | Array | `' B', ' KiB', ' MiB', ' GiB', ' TiB'` | Size formats for when displaying filesizes.
+
+External configs default to `m/d/y H:i` for desktop dates. Set `date` explicitly to choose your format.
 
 ## Icon
 Key: **`icon`**
@@ -102,22 +80,20 @@ Key: **`icon`**
 ## Sorting
 Key: **`sorting`**
 
-Default sorting settings.
-
-Once the client sorts the items themselves, then those settings will be active for them instead.
+Initial sorting settings. A user's saved sort takes precedence.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `enabled` | Bool | `false` | Enables a specific sorting order on page-load. If disabled, the server keeps filesystem enumeration order. Enable sorting for a predictable initial order.
+| `enabled` | Bool | `false` | Sorts the initial listing. When disabled, the server keeps filesystem enumeration order.
 | `order` | Integer | `SORT_ASC` | Sorting order. `SORT_ASC` or `SORT_DESC`.
 | `types` | Integer | `0` | What item types to sort.<br/>`0` = Both. `1` = Files only. `2` = Directories only.
 | `sort_by` | String | `name` | What to sort by. Available options are `name`, `modified`, `type` and `size`.
-| `use_mbstring` | Bool | `false` | Enables [mbstring](https://www.php.net/manual/en/book.mbstring.php). This will solve some sorting issues with cyrillic capital letters et cetera, but it'll require `mbstring` to be installed. Only affects server-side sorting.
+| `use_mbstring` | Bool | `false` | Uses [mbstring](https://www.php.net/manual/en/book.mbstring.php) for server-side name sorting. Requires the PHP extension.
 
 ## Gallery
 Key: **`gallery`**
 
-The gallery plugin will display a gallery of the images and videos inside the current path.
+Displays images and videos from the current directory.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -131,7 +107,7 @@ The gallery plugin will display a gallery of the images and videos inside the cu
 ## Preview
 Key: **`preview`**
 
-The preview plugin displays a preview of the image or video when hovering over the filename.
+Shows an image or video preview when hovering over its filename.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -142,9 +118,7 @@ The preview plugin displays a preview of the image or video when hovering over t
 ## Extensions
 Key: **`extensions`**
 
-This setting decides which extensions will be marked as `media`.
-
-This means that the extensions included here will have previews and will be included in the gallery mode.
+Extensions eligible for previews and the gallery. Playback depends on browser support.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -154,9 +128,7 @@ This means that the extensions included here will have previews and will be incl
 ## Inject
 Key: **`inject`**
 
-Injects any HTML code into the document.
-
-This can be useful if you want to add meta tags or an external script, for example.
+Adds HTML such as meta tags or scripts to the page.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -164,19 +136,17 @@ This can be useful if you want to add meta tags or an external script, for examp
 | `body` | String / Function | `NULL` | Injects (by prepending) the code into the &lt;body&gt; of the document.
 | `footer` | String / Function | `NULL` | Injects (by appending) the code into the &lt;body&gt; of the document.
 
-If the value is a function, then the returned string of that function will be used. The function will also be called with an argument containing an array with data that can be useful:
-* `$param['path']` contains the currently shown path (example: `/files/directory/`)
+Callbacks return an HTML string and receive an array with:
 
-* `$param['counts']` contains two keys — `files` and `directories` — both showing the respective file and directory count of the current directory.
-
-* `$param['size']` contains two keys — `total` and `readable` — both showing the total size of the directory. The `total` value contains the total bytes and the `readable` value contains the readable size.
-
-* `$param['config']` contains the parsed and active configuration.
+- `path`: current URL path.
+- `counts`: `files` and `directories` counts.
+- `size`: `total` bytes and `readable` size.
+- `config`: active configuration.
 
 ## Metadata
 Key: **`metadata`**
 
-This option will add metadata to the header. This can be set globally using this option, or you can also set it on a per-directory basis using [dotfiles](dotfile.md).
+Adds HTML meta tags globally. Use [dotfiles](dotfile.md) for per-directory metadata.
 
 Example:
 ```php
@@ -195,9 +165,7 @@ Example:
 ## Style
 Key: **`style`**
 
-Various visual options for the script.
-
-The `compact` setting can be changed by the client in the settings menu, as can `themes`, if they are enabled.
+Display defaults. Users can change compact mode and themes in the settings menu.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -209,21 +177,19 @@ The `compact` setting can be changed by the client in the settings menu, as can 
 ## Filter
 Key: **`filter`**
 
-This option can be used if you want to filter the files or directories using `regular expressions`.
+Only names matching the regular expression are listed. Directory names include a trailing `/`. Filters do not restrict direct file access.
 
-All filenames and directory names **matching** the `regex` will be shown. Please note that directory names will always end in a slash (`/`), this is done to make them easier to differentiate from files.
+For example, `/^.{1,10}\.(jpg|png)$/` keeps JPG and PNG files whose name before the extension is 1–10 characters long.
 
-For example, setting `file` to `/^.{1,10}\.(jpg|png)$/` will only include `.jpg` and `.png` files with a filename between `1 - 10` characters in length when reading the directory files.
-
-#### Another is example is when you want to hide files with invalid characters or specific filenames:
+To hide specific names or characters:
 
  `'/^(?!README\.md$|secret\.pwd$).*$/'`<br/>
 This example will hide any `README.md` and `secret.pwd` files from the directory.
 
  `'/^[^\#\?]*$/'`<br/>
-Will hide any filenames that contains `#` or `?`.
+Hides filenames containing `#` or `?`.
 
-If you want to apply multiple filters easily, then you can also pass them as an array:
+Pass an array to combine filters:
 ```php
 'filter' => array(
     'file' => array(
@@ -245,7 +211,7 @@ Setting the value to `false` will disable the filter.
 ## Exclude
 Key: **`exclude`**
 
-This option will exclude certain extensions from showing up in any directory.
+Hides files with the listed extensions.
 
 An example that'll exclude any `jpg` or `jpeg` files:
 ```php
@@ -259,9 +225,7 @@ An example that'll exclude any `jpg` or `jpeg` files:
 ## Directory Sizes
 Key: **`directory_sizes`**
 
-Shows the sizes of directories.
-
-Leaving this off is recommended as calculating the directory sizes can be a bit intensive, especially with the recursive option.
+Calculates directory sizes. This can slow down listings, especially with recursive scanning.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -271,7 +235,7 @@ Leaving this off is recommended as calculating the directory sizes can be a bit 
 ## Footer
 Key: **`footer`**
 
-Shows a footer with some general information at the bottom of the page.
+Shows generation time and optional project credits.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -280,28 +244,26 @@ Shows a footer with some general information at the bottom of the page.
 ## Other
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `processor` | Bool/Array | `false` | Allows you to handle and modify data by passing functions to the indexer. See [PROCESSOR](processor.md) for more information.
+| `processor` | Bool/Array | `false` | Modify listing data with PHP callbacks. See [processor](processor.md).
 | `single_page` | Bool | `false` | Enables navigation between folders without forcing a page reload (experimental).
 | `encode_all` | Bool | `false` | Should `?` and `#` characters be encoded when processing URLs and filenames.
 | `allow_direct_access` | Bool | `false` | Whether direct access to the `indexer.php` should be allowed or not.
-| `path_checking` | String | `strict` | Use `weak` if you need to support symbolic link directories. `strict` will use [realpath](https://www.php.net/manual/en/function.realpath.php) when verifiying the location of the current directory, whereas `weak` will use a similar string-based approach which doesn't resolve symbolic links.
-| `performance` | Bool/Integer | `false` | Enables [performance mode](performance.md). `true` will enable it for all folders, while setting it to a number, will enable it on directories above or equal to that respective amount of files.
-| `credits` | Bool | `true` | When set to true, it will display a simple link to the git repository in the footer along with the version number. I would appreciate it if you keep this enabled, but i also understand that it is not always desirable, so the option to hide it is there.
+| `path_checking` | String | `strict` | Use `strict` to keep resolved directory paths inside the media root. `weak` also allows symlinks to directories outside it.
+| `performance` | Bool/Integer | `false` | Enable [performance mode](performance.md) with `true`, or set a minimum file-and-folder count.
+| `credits` | Bool | `true` | Shows the project link and version in the footer.
 | `debug` | Bool | `false` | Enables PHP debugging and `console.log()` info messages.
 
 # Advanced
 ## Server <!-- {docsify-ignore} -->
 
-Some server variables can be passed to the script via your web server in order to modify some of the more advanced features of the script.
+Set these variables through your web server when the default paths do not fit your deployment.
 
 ### Base Path
 | Key | Type | Description |
 |-----|------|-------------|
 | `INDEXER_BASE_PATH` | String | Overrides the default base directory of the script.
 
-This option can be used if you are dealing with a dynamic `root` path or if you want to place the script outside of the `root` directory, for example.
-
-This does **not** work with themes out of the box.
+Use this when the media directory differs from the script directory. Theme paths resolve against this base and must also be served at their public URLs.
 
 Example usage with Nginx:
 ```
@@ -317,13 +279,11 @@ Example usage with Nginx:
 |-----|------|-------------|
 | `INDEXER_PREPEND_PATH` | String | Adds a path to the beginning of every parsed path and file in the script.
 
-This option can be used if you for example are serving the script through a reverse proxy to a path that is not the actual web root.
+Use this when a reverse proxy serves IVFi under a path prefix. The proxy can set `X-Indexer-Prepend-Path` for navigation links.
 
-This can also be set as a header (`X-Indexer-Prepend-Path`) in cases where the script is being processed through a proxy. When using Digest authentication behind a proxy that strips this prefix, configure `INDEXER_PREPEND_PATH` in the PHP server environment as well. Authentication deliberately does not trust the client-supplied header to rewrite the signed request URI.
+With Digest authentication, also set `INDEXER_PREPEND_PATH` on the PHP server if the proxy strips the prefix.
 
-#### An example where this can be used:
-
-Assume you are serving the script through a proxied server:
+Example:
 ```
 location /file/upstream/ {
         proxy_pass http://192.168.1.100:8080/;
@@ -334,10 +294,6 @@ location /file/upstream/ {
 }
 ```
 
-If `X-Indexer-Prepend-Path` is excluded from this configuration, the script would not know that it is actually supposed to serve the files from `/file/upstream/` instead of `/`, thus the navigation and file links would point to incorrect directories and files.
+This makes `/image.jpg` link to `/file/upstream/image.jpg`.
 
-By setting the prepend value to `/file/upstream/`, every link will have that string prepended to it, so a file like `/image.jpg` would correctly point to `/file/upstream/image.jpg`.
-
-#### Note:
-
-This does not prepend any assets file, so the assets will have to be placed in the root directory or forwarded from a directory or a proxy to `/indexer/` in the web root.
+Asset URLs are not prefixed; serve or forward `/indexer/` separately.

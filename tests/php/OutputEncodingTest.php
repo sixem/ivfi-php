@@ -36,11 +36,11 @@ final class OutputEncodingTest extends TestCase
 
     private function render(string $uri = '/', string $prepend = '', array $config = []): DOMXPath
     {
-        $build = dirname(__DIR__, 2) . '/build/indexer.php';
+        $build = dirname(__DIR__, 2) . '/build/' . (getenv('IVFI_PHP_VARIANT') ?: 'indexer.php');
         self::assertFileExists($build, 'Run pnpm build before the PHP regression tests.');
-        $this->fixture('.indexer.config.php', '<?php return ' . var_export($config + ['debug' => false], true) . ';');
+        $this->fixture('.' . basename($build, '.php') . '.config.php', '<?php return ' . var_export($config + ['debug' => false], true) . ';');
         $process = proc_open(
-            [PHP_BINARY, '-d', 'display_errors=stderr', __DIR__ . '/render.php', $build],
+            [(getenv('IVFI_PHP_BINARY') ?: PHP_BINARY), '-d', 'display_errors=stderr', __DIR__ . '/render.php', $build],
             [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes,
             $this->root
