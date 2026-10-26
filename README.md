@@ -1,6 +1,6 @@
 <br/>
 <div align="center">
-	<img height="100" src="./logo.svg">
+	<img height="100" src="./docs/logo.svg">
 	<br/><br/>
 	<h3 align="center">IVFi-PHP</h3>
 	<p align="center"><i>The image and video friendly indexer</i></p>
@@ -27,7 +27,7 @@ Basic listings work without JavaScript; interactive features require it.
 2. Copy the contents of `build/` into your web root, such as `/var/www/html/`.
 3. Add `indexer.php` as a fallback index file in your web-server configuration.
 
-**Nginx** — inside your `server` block:
+**Nginx** - inside your `server` block:
 
 ```nginx
 index index.html index.php /indexer.php;
@@ -49,8 +49,8 @@ See [setup](docs/setup.md) for standalone and Docker options, [configuration](do
 - **Downloads:** download individual files or a selection as a ZIP archive.
 - **Standalone:** use a single PHP file with embedded assets.
 - **Customization:** themes, saved display preferences, and server-side filters.
-- **Authentication:** optional Digest protection for listings. Direct files need web-server access controls; see [authentication](docs/config.md#authentication).
-- **Extra features:** optional [README support](docs/extras.md), disabled by default.
+- **Authentication:** optional Digest protection for listings. See [authentication](docs/config.md#authentication).
+- **Extra features:** optional [README support](docs/extras.md).
 
 ## Feedback
 
