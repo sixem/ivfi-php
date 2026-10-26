@@ -15,67 +15,47 @@
 	<a href="https://github.com/sixem/ivfi-php/blob/master/docs/building.md">Building</a>
 </p>
 
-# About
+## Introduction
 
-IVFi-PHP is a directory browser written in PHP and TypeScript, with an image and video gallery, hover previews, search, and ZIP downloads.
+IVFi-PHP is a directory browser with an image and video gallery, hover previews, search, and ZIP downloads. It runs on a PHP web server or through Docker.
 
-# Quick setup :zap:
+Basic listings work without JavaScript; interactive features require it.
 
-* Download the latest release [here](https://github.com/sixem/ivfi-php/releases).
-* Place the `/build/` files into your web root. For example `/var/www/html/`.
-* Then, use the `indexer.php` as an index file for any of the directories where the script should be used:
+## Quick setup
 
-#### Nginx - Example using the [index](https://nginx.org/en/docs/http/ngx_http_index_module.html#index) directive:
+1. Download the [latest release](https://github.com/sixem/ivfi-php/releases).
+2. Copy the contents of `build/` into your web root, such as `/var/www/html/`.
+3. Add `indexer.php` as a fallback index file in your web-server configuration.
+
+**Nginx** — inside your `server` block:
+
+```nginx
+index index.html index.php /indexer.php;
 ```
-server {
-        index index.html index.php /indexer.php;
-}
-```
 
-#### Apache - Example using the [DirectoryIndex](https://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex) directive:
-```
+**Apache:**
+
+```apache
 DirectoryIndex index.html index.php /indexer.php
 ```
 
-See [setup](docs/setup.md) for standalone and Docker options, and [configuration](docs/config.md) for settings.
+See [setup](docs/setup.md) for standalone and Docker options, [configuration](docs/config.md) for settings, or [building](docs/building.md) to build from source.
 
-# Features
+## Features
 
-### **Authentication**
-> Optional HTTP Digest authentication for listings. Direct downloads need web-server access controls; see [authentication](docs/config.md#authentication).
-### **Gallery Mode**
-> Browse images and videos without leaving the listing, download files, or reverse-search images.
-### **Hover Previews**
-> An image or video preview is displayed when hovering over the file name.
-### **Search Filter**
-> Search filenames or file types in the current directory. Open with `Shift + F` on desktop.
-### **Downloads**
-> Download individual files or bundle a selection into a ZIP archive, with progress shown while the archive is created.
-### **Single file**
-> A standalone build bundles the app and its assets into one PHP file.
-### **Customizable**
-> This script offers multiple customization options.
-### **Additional Features**
-> Optional [README support](docs/extras.md), disabled by default.
+- **Gallery:** browse images and videos, download files, and reverse-search images.
+- **Hover previews:** preview media by hovering over its filename.
+- **Search:** filter filenames with regex or wildcards such as `*.mp4` (`Shift + F` on desktop).
+- **Downloads:** download individual files or a selection as a ZIP archive.
+- **Standalone:** use a single PHP file with embedded assets.
+- **Customization:** themes, saved display preferences, and server-side filters.
+- **Authentication:** optional Digest protection for listings. Direct files need web-server access controls; see [authentication](docs/config.md#authentication).
+- **Extra features:** optional [README support](docs/extras.md), disabled by default.
 
-### **And much more ...**
-+ :clock12: The dates will be adjusted to match the time zone of the client.
-+ :arrow_up_down: Client-defined sorting preferences are stored persistently.
-+ :art: Support for custom themes.
-+ :mag: Server-side filtering which can help you hide specific files or folders.
-+ :link: Navigating between folders is made easy with the clickable paths.
-+ :gear: The client has the option to personalize their settings through the menu.
-+ :inbox_tray: Direct download links for all files.
-+ :desktop_computer: Compatible with both mobile and desktop devices.
+## Feedback
 
-# Feedback
-
-Report bugs in [issues](https://github.com/sixem/ivfi-php/issues), or use [discussions](https://github.com/sixem/ivfi-php/discussions) for questions and ideas. For code changes and test commands, see [contributing](https://github.com/sixem/ivfi-php/blob/master/CONTRIBUTING.md).
+Report bugs in [issues](https://github.com/sixem/ivfi-php/issues), or use [discussions](https://github.com/sixem/ivfi-php/discussions) for questions and ideas. Pull requests are welcome; see [contributing](https://github.com/sixem/ivfi-php/blob/master/CONTRIBUTING.md).
 
 ## License
-This project is licensed under GPL-3.0. It also includes external libraries that are available under a variety of licenses.
 
-See [LICENSE](LICENSE) for the full license text.
-
-## Disclaimer
-As with anything else, use this script at your own risk. There could exist bugs that I do not know of :v:
+Licensed under [GPL-3.0](LICENSE). Included libraries retain their own licenses.
