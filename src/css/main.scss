@@ -10,16 +10,16 @@ html > body > div.tableContainer > table [sortable] {
 
 body,
 input {
-  font-family: Inter, "Inter Fallback", sans-serif;
+  font-family: Inter, "Inter Arial Fallback", "Inter Fallback", sans-serif;
   font-weight: normal;
 }
 
 select {
-  font-family: Inter, "Inter Fallback", sans-serif;
+  font-family: Inter, "Inter Arial Fallback", "Inter Fallback", sans-serif;
   font-weight: normal;
 
   > option {
-    font-family: Inter, "Inter Fallback", sans-serif;
+    font-family: Inter, "Inter Arial Fallback", "Inter Fallback", sans-serif;
     font-weight: normal;
   }
 }
@@ -231,7 +231,7 @@ html > body {
       @include mixins.fonting(
         $key: "table-header",
         $align: left,
-        $spacing: 1px,
+        $spacing: 0.0625rem,
         $color-scope: variables.$root,
         $color-key: "color-header-table"
       );
@@ -279,7 +279,7 @@ html > body {
       @include mixins.fonting(
         $key: "row-file",
         $weight: 500,
-        $spacing: 1px
+        $spacing: 0.0625rem
       );
 
       text-decoration: none;
@@ -369,7 +369,7 @@ html > body {
       padding: 5px 10px;
       border-radius: 4px;
       pointer-events: none;
-      letter-spacing: 1px;
+      letter-spacing: 0.0625rem;
       z-index: 10000;
       font-feature-settings: "tnum";
       transition: opacity 0.33s;
@@ -382,7 +382,7 @@ html > body {
       position: relative;
       color: variables.$text-color;
       font-size: 0.8125rem;
-      letter-spacing: 1px;
+      letter-spacing: 0.0625rem;
 
       &::before {
         content: "";
@@ -422,7 +422,7 @@ html > body {
     text-overflow: ellipsis;
     font-style: normal;
     font-size: 1.1875rem;
-    letter-spacing: 1px;
+    letter-spacing: 0.0625rem;
     margin: 20px 0 16px 8px;
     padding-right: 10px;
 
@@ -512,7 +512,7 @@ html > body {
     > input[type="text"] {
       @include mixins.fonting(
         $key: "default",
-        $spacing: 1px,
+        $spacing: 0.0625rem,
         $color: variables.$text-color
       );
 
@@ -615,7 +615,7 @@ html > body {
       &.path {
         font-style: normal;
         font-size: 1.1875rem;
-        letter-spacing: 1px;
+        letter-spacing: 0.0625rem;
         margin: 24px 0 22px 8px;
         text-align: center;
         user-select: none;
@@ -652,7 +652,7 @@ html > body {
       &.directoryInfo {
         @include mixins.fonting(
           $key: "top-bar",
-          $spacing: 1px
+          $spacing: 0.0625rem
         );
 
         display: flex;
@@ -699,7 +699,7 @@ html > body {
             padding: 0 10px;
             font: inherit;
             font-weight: 500;
-            letter-spacing: 1px;
+            letter-spacing: 0.0625rem;
 
             > .copyWgetContent {
               display: grid;

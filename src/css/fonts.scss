@@ -1,3 +1,13 @@
+/* Match Windows Arial to Inter while its font files load. */
+@font-face {
+  font-family: "Inter Arial Fallback";
+  src: local("Arial");
+  size-adjust: 106%;
+  ascent-override: 91.39%;
+  descent-override: 22.78%;
+  line-gap-override: 0%;
+}
+
 /* Keep the system fallback close to Inter while its font files load. */
 @font-face {
   font-family: "Inter Fallback";

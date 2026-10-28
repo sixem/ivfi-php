@@ -12,6 +12,7 @@ html > body > dialog.dialog .archiveOptions {
 
   .archiveSummary {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
@@ -22,16 +23,26 @@ html > body > dialog.dialog .archiveOptions {
 
   .archiveSelectAll {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 10px;
     min-width: 0;
+    max-width: 100%;
     padding-left: 4px;
     cursor: pointer;
   }
 
   .archiveCount {
     display: inline-flex;
-    white-space: pre;
+    min-width: 0;
+    white-space: pre-wrap;
+
+    > span:last-child {
+      min-width: 0;
+
+      /* Keep singular and plural labels from changing the summary's wrapping. */
+      width: 10.5ch;
+    }
   }
 
   .archiveCountNumber {
@@ -44,6 +55,7 @@ html > body > dialog.dialog .archiveOptions {
     grid-template-columns: 8ch 3ch;
     gap: 0.5ch;
     flex-shrink: 0;
+    margin-left: auto;
     text-align: right;
     color: variables.$accent-color;
     font-weight: bold;

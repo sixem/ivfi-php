@@ -33,7 +33,7 @@ html > body > .rootGallery {
 
   > div {
     &.galleryBar {
-      @include mixins.fonting($key: "top-bar", $spacing: 1px);
+      @include mixins.fonting($key: "top-bar", $spacing: 0.0625rem);
 
       line-height: 1.4;
       background-color: map.get(variables.$gallery, "color-background-top-bar");
@@ -395,7 +395,7 @@ html > body > .rootGallery {
           @include mixins.fonting(
             $key: "gallery",
             $align: false,
-            $spacing: 1px,
+            $spacing: 0.0625rem,
             $color-scope: variables.$gallery,
             $color-key: "color-list-item"
           );
