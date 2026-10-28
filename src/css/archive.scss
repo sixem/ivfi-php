@@ -2,13 +2,18 @@
 @use "variables";
 
 html > body > dialog.dialog .archiveOptions {
+  .dialogField > input,
+  .archiveStatus {
+    font-variant-numeric: tabular-nums;
+  }
+
   .archiveSelection {
     margin-top: 16px;
   }
 
   .archiveSummary {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 8px;
@@ -42,6 +47,7 @@ html > body > dialog.dialog .archiveOptions {
     flex-shrink: 0;
     text-align: right;
     color: variables.$accent-color;
+    font-weight: bold;
     white-space: nowrap;
   }
 

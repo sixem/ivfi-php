@@ -761,6 +761,10 @@ html > body {
               visibility: visible;
               pointer-events: auto;
               transition-delay: 0s;
+
+              &:disabled {
+                opacity: 0.35;
+              }
             }
 
             > svg {

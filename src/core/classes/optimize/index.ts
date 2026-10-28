@@ -162,9 +162,10 @@ export default class optimizeClass
 		{
 			const item: TOptimizeRowItem = rows[i];
 			const itemClasses: Array<string> = ['rel-row'];
+			item._isHidden = !(i >= start && i <= limit) && item !== this.focused;
 
 			/* Out of viewport? hide it here - speeds up page load */
-			if(!(i >= start && i <= limit) && item !== this.focused)
+			if(item._isHidden)
 			{
 				itemClasses.push('hid-row');
 			}
@@ -231,7 +232,23 @@ export default class optimizeClass
 		this.activeHasChanged = true;
 		this.page.scrolledY = (this.scope[0])[this.scope[1]];
 
-		const [activeRows] = this.getActiveData();
+		const [activeRows, activeIndexes] = this.getActiveData();
+		const origin = Math.ceil(-table.getBoundingClientRect().top + this.page.windowHeight / 2);
+		const margin = Math.ceil(Math.ceil(this.page.windowHeight / this.rowHeight) * 1.75);
+		const fullIndex = this.scanForClosest(origin, 1E3, 0);
+		const index = this.getRelativeIndex(activeIndexes, fullIndex) ?? fullIndex;
+		const [start, limit] = this.calculateRange(index, margin);
+
+		/* Reveal incoming rows before moving them; the deferred refresh hides outgoing rows. */
+		for(let i = start; i <= limit && i < activeRows.length; i++)
+		{
+			const item = activeRows[i];
+			if(item._isHidden)
+			{
+				item.classList.remove('hid-row');
+				item._isHidden = false;
+			}
+		}
 
 		/* Iterate over stored rows, check status and arrange new table */
 		for(let index = 0; index < (this.rows).length; index++)

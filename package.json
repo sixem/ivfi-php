@@ -4,7 +4,7 @@
     "mail": "emy@five.sh"
   },
   "name": "ivfi",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "The image and video friendly indexer",
   "main": "./core/js/main.ts",
   "type": "module",
@@ -43,7 +43,7 @@
     "build-dev-watch": "webpack --config scripts/build/webpack.config.js --mode=development --watch",
     "make-standalone": "webpack --config scripts/build/webpack.config.js --mode=production && node ./scripts/make-standalone.js",
     "lint": "eslint \"./src/core/**/*.ts\" \"scripts/build/*.js\" \"scripts/*.js\" && stylelint \"./src/css/**/*.scss\"",
-    "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js && node --test scripts/test-standalone.js",
+    "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js && node --test scripts/test-standalone.js scripts/test-optimize.js",
     "pack-release": "bash ./scripts/pack-release.sh"
   },
   "repository": {
