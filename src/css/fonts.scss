@@ -1,3 +1,13 @@
+/* Keep the system fallback close to Inter while its font files load. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial"), local("Helvetica Neue"), local("Roboto"), local("Liberation Sans"), local("DejaVu Sans");
+  size-adjust: 96%;
+  ascent-override: 100.91%;
+  descent-override: 25.15%;
+  line-gap-override: 0%;
+}
+
 /* Inter Font - Cyrillic Extended */
 @font-face {
   font-family: Inter;

@@ -1,5 +1,5 @@
 <?php
-$readmeHtml = (static function ($path) {
+$readmeHtml = (static function ($path, $allowUnsafe) {
     if(!$path || !extension_loaded('mbstring') || !is_file($path)) return null;
 
     $stream = @fopen($path, 'rb');
@@ -15,8 +15,8 @@ $readmeHtml = (static function ($path) {
         fclose($stream);
     }
 
-    return (new Parsedown())->setSafeMode(true)->text($contents);
-})($data['readme']);
+    return (new Parsedown())->setSafeMode(!$allowUnsafe)->text($contents);
+})($data['readme'], $config['allow_unsafe_readme'] === true);
 
 if($readmeHtml !== null)
 {

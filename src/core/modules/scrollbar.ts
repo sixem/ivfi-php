@@ -196,6 +196,8 @@ export function createOverlayScrollbar(target: Window | HTMLElement, options: {
 	window.addEventListener('pageshow', schedule);
 	window.addEventListener('blur', stopDrag);
 	measure();
+	/* Handoff only after the page scrollbar is fully initialized. */
+	if(isPage) scroller.classList.remove('overlayScrollbarPending');
 
 	return onPageReplace(() =>
 	{

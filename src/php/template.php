@@ -741,7 +741,7 @@ $bust = md5($config['debug'] ? time() : $version);
 
 /* Default stylesheet output */
 $baseStylesheet = sprintf(
-  '<link rel="stylesheet" type="text/css" href="<%= indexerPath %>css/style.css?bust=%s">',
+  '<link rel="preload" href="<%= indexerPath %>assets/fonts/Inter-Regular-Latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" type="text/css" href="<%= indexerPath %>css/style.css?bust=%s">',
   $bust
 );
 
@@ -2346,6 +2346,18 @@ $jsConfig = constructJsConfig(
 <!DOCTYPE HTML>
 <html lang="en">
   <head>
+    <script>
+      /* Hide the native scrollbar before the deferred bundle runs; restore it if setup fails. */
+      (function(root) {
+        root.classList.add('overlayScrollbarPending');
+        document.addEventListener('DOMContentLoaded', function() {
+          if(root !== document.documentElement || !root.classList.contains('overlayScrollbarPending')) return;
+          root.classList.remove('overlayScrollbarPending', 'overlayScrollArea');
+          var track = document.querySelector('body > .overlayScrollbar');
+          if(track) track.remove();
+        });
+      })(document.documentElement);
+    </script>
     <?=implode(PHP_EOL . '    ', $header) . PHP_EOL;?>
   </head>
 

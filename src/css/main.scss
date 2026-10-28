@@ -10,16 +10,16 @@ html > body > div.tableContainer > table [sortable] {
 
 body,
 input {
-  font-family: Inter, sans-serif;
+  font-family: Inter, "Inter Fallback", sans-serif;
   font-weight: normal;
 }
 
 select {
-  font-family: Inter, sans-serif;
+  font-family: Inter, "Inter Fallback", sans-serif;
   font-weight: normal;
 
   > option {
-    font-family: Inter, sans-serif;
+    font-family: Inter, "Inter Fallback", sans-serif;
     font-weight: normal;
   }
 }

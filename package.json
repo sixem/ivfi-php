@@ -43,7 +43,7 @@
     "build-dev-watch": "webpack --config scripts/build/webpack.config.js --mode=development --watch",
     "make-standalone": "webpack --config scripts/build/webpack.config.js --mode=production && node ./scripts/make-standalone.js",
     "lint": "eslint \"./src/core/**/*.ts\" \"scripts/build/*.js\" \"scripts/*.js\" && stylelint \"./src/css/**/*.scss\"",
-    "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js && node --test scripts/test-standalone.js scripts/test-optimize.js",
+    "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js && node --test scripts/test-standalone.js scripts/test-optimize.js scripts/test-archive-selection-totals.js",
     "pack-release": "bash ./scripts/pack-release.sh"
   },
   "repository": {

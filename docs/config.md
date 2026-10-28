@@ -257,6 +257,7 @@ Shows generation time and optional project credits.
 | `processor` | Bool/Array | `false` | Modify listing data with PHP callbacks. See [processor](processor.md).
 | `single_page` | Bool | `false` | Enables navigation between folders without forcing a page reload (experimental).
 | `encode_all` | Bool | `false` | Should `?` and `#` characters be encoded when processing URLs and filenames.
+| `allow_unsafe_readme` | Bool | `false` | Allow raw HTML and unsafe links in README previews. Enable only for trusted files; requires [README support](extras.md#readme-support).
 | `allow_direct_access` | Bool | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `strict` to keep resolved directory paths inside the media root. `weak` also allows symlinks to directories outside it.
 | `performance` | Bool/Integer | `250` | Enable [performance mode](performance.md) with `true`, or set a minimum file-and-folder count.

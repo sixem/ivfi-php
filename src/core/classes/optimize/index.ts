@@ -289,6 +289,35 @@ export default class optimizeClass
 		return state;
 	}
 
+	/** Remeasure rows when a font finishes loading after optimization started. */
+	public remeasure = (): void =>
+	{
+		if(this.destroyed || !this.initiated) return;
+		const first = this.table.querySelector<TOptimizeRowItem>('tbody > tr');
+		if(!first) return;
+		const container = this.table.closest<HTMLElement>('.tableContainer');
+		const filter = container?.getAttribute('is-active-filter');
+		const wasRelative = first.classList.contains('rel-row');
+		const hidden = this.rows.filter(row => row.classList.contains('hid-row'));
+
+		/* Temporarily expose hidden and filtered rows to measure their actual heights.
+		 * The changes are restored synchronously, before the browser can paint. */
+		if(filter !== null && filter !== undefined) container.removeAttribute('is-active-filter');
+		for(const row of hidden) row.classList.remove('hid-row');
+		if(wasRelative) first.classList.remove('rel-row');
+		try
+		{
+			this.tableOffsetBegin = first.offsetTop;
+			for(const row of this.rows) row._offsetHeight = row.offsetHeight || row._offsetHeight;
+			this.rowHeight = first._offsetHeight || 1;
+		} finally {
+			if(wasRelative) first.classList.add('rel-row');
+			for(const row of hidden) row.classList.add('hid-row');
+			if(filter !== null && filter !== undefined) container.setAttribute('is-active-filter', filter);
+		}
+		this.refactor();
+	}
+
 	/**
 	 * Calculates the active index range
 	 */

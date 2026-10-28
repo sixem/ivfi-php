@@ -136,6 +136,14 @@ if(config.get('performance'))
 			});
 			data.instances.optimize.main = optimizer;
 			onPageReplace(() => optimizer.destroy());
+			/* Font swaps can change row heights after the initial measurement. */
+			if(document.fonts && document.fonts.status === 'loading')
+			{
+				void document.fonts.ready.then(() =>
+				{
+					if(table.isConnected && optimizer.enabled) optimizer.remeasure();
+				});
+			}
 		});
 	}, 1);
 }

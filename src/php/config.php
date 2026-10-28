@@ -117,6 +117,8 @@ return [
     'processor' => false,
     /* Should ? and # characters be encoded when processing URLs */
     'encode_all' => false,
+    /* Allow raw HTML and unsafe links in README previews (trusted files only) */
+    'allow_unsafe_readme' => false,
     /* Whether this .php file should be directly accessible */
     'allow_direct_access' => false,
     /* Set to 'strict' or 'weak'.
