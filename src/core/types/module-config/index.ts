@@ -47,7 +47,7 @@ export type TUserStorage = {
  * Configuration object (from backend)
  */
 export interface IConfigData extends Omit<TUserStorage, 'style'> {
-    selection?: { enabled: boolean };
+    selection?: { enabled: boolean; archive: { requestDelayMs: number; bufferLimitMib: number } };
     mobile?: boolean;
     bust?: string;
     style?: {

@@ -65,6 +65,22 @@ Key: **`selection`**
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `enabled` | Boolean | `true` | Enables file selection and ZIP archive downloads. |
+| `archive.request_delay_ms` | Integer | `0` | Delay in milliseconds between completed file requests. Accepts 0–2147483647. |
+| `archive.buffer_limit_mib` | Number | `256` | Maximum ZIP size buffered in memory, in MiB. Accepts 0–8589934591, including fractional values. |
+
+For example, to pause for 100 ms between requests and allow up to 512 MiB in memory:
+
+```php
+'selection' => [
+    'enabled' => true,
+    'archive' => [
+        'request_delay_ms' => 100,
+        'buffer_limit_mib' => 512
+    ]
+],
+```
+
+Files are fetched one at a time; the delay starts after each completed file except the last. The buffer limit includes ZIP overhead. Larger ZIPs require direct file saving in a supported browser on HTTPS or localhost. Set the buffer limit to `0` to require direct saving for every archive. Browser memory use can exceed the configured limit.
 
 Set `'selection' => ['enabled' => false]` to disable selection and ZIP downloads. Individual downloads remain available through the context menu and gallery. This does not restrict file access.
 

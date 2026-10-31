@@ -665,6 +665,18 @@ if(!is_array($config))
 /* Apply explicit debugging before validating the remaining settings. */
 ini_set('display_errors', isset($config['debug']) && $config['debug'] === true ? '1' : '0');
 $config = mergeConfigDefaults($config, $defaults);
+$archiveConfig = $config['selection']['archive'];
+if(!is_int($archiveConfig['request_delay_ms']) || $archiveConfig['request_delay_ms'] < 0
+  || $archiveConfig['request_delay_ms'] > 2147483647)
+{
+  throw new RuntimeException('Configuration setting "selection.archive.request_delay_ms" must be an integer between 0 and 2147483647.');
+}
+$bufferLimit = $archiveConfig['buffer_limit_mib'];
+if((!is_int($bufferLimit) && !is_float($bufferLimit)) || !is_finite($bufferLimit)
+  || $bufferLimit < 0 || $bufferLimit > 8589934591)
+{
+  throw new RuntimeException('Configuration setting "selection.archive.buffer_limit_mib" must be a finite number between 0 and 8589934591.');
+}
 if($config['authentication'] !== false && !is_array($config['authentication']))
 {
   throw new RuntimeException('Configuration setting "authentication" must be false or an array.');
@@ -2229,7 +2241,13 @@ function constructJsConfig($config, $sorting, $timestamp, $bust, $theme)
   $jsConfig = [
     'bust' => $bust,
     'singlePage' => $config['single_page'],
-    'selection' => ['enabled' => $config['selection']['enabled'] !== false],
+    'selection' => [
+      'enabled' => $config['selection']['enabled'] !== false,
+      'archive' => [
+        'requestDelayMs' => $config['selection']['archive']['request_delay_ms'],
+        'bufferLimitMib' => $config['selection']['archive']['buffer_limit_mib']
+      ]
+    ],
     'preview' => [
       'enabled' => $preview['enabled'],
       'hoverDelay' => $preview['hover_delay'],

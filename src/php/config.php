@@ -10,7 +10,11 @@ return [
     'single_page' => false,
     /** Enables file selection and ZIP archive downloads together */
     'selection' => [
-        'enabled' => true
+        'enabled' => true,
+        'archive' => [
+            'request_delay_ms' => 0, /* Pause between file requests, in milliseconds */
+            'buffer_limit_mib' => 256 /* In-memory ZIP limit; larger archives require direct saving */
+        ]
     ],
     /**
      * Formatting options

@@ -26,12 +26,32 @@ import { createToast } from '../../modules/toast';
 import { startDownload } from '../../modules/file-actions';
 import { onPageReplace } from '../../modules/lifecycle';
 import { getRowFile } from './download';
+import { getReadableSize } from '../../helpers/getReadableSize';
 import { hasControlCharacters } from '../../helpers/stringUtils';
 import type { ArchiveFile } from '../../types/archive';
 
-/* Larger archives stream directly to disk */
-const BUFFER_LIMIT = 256 * 1024 * 1024;
-const LARGE_ARCHIVE_MESSAGE = 'Archives over 256 MiB need direct file saving over HTTPS or localhost in a supported browser. Try selecting fewer files.';
+const MIB = 1024 * 1024;
+
+/** Wait between requests, but stop promptly if the archive is cancelled. */
+const waitBetweenFiles = (milliseconds: number, signal: AbortSignal): Promise<void> =>
+{
+	if(signal.aborted) return Promise.reject(new DOMException('Archive cancelled', 'AbortError'));
+	return new Promise((resolve, reject) =>
+	{
+		const abort = () =>
+		{
+			window.clearTimeout(timer);
+			signal.removeEventListener('abort', abort);
+			reject(new DOMException('Archive cancelled', 'AbortError'));
+		};
+		const timer = window.setTimeout(() =>
+		{
+			signal.removeEventListener('abort', abort);
+			resolve();
+		}, milliseconds);
+		signal.addEventListener('abort', abort, { once: true });
+	});
+};
 let archiving = false;
 const listeners = new Set<() => void>();
 export const archiveState = {
@@ -74,6 +94,15 @@ export async function archiveSelection(rows: HTMLElement[]): Promise<void>
 	{
 		if(!rows.length) return;
 		if(rows.length > 50000) throw new Error('Select at most 50,000 files for one archive.');
+		const configuredLimit = config.get('selection.archive.bufferLimitMib');
+		const bufferLimitMib = typeof configuredLimit === 'number' && Number.isFinite(configuredLimit)
+			&& configuredLimit >= 0 && configuredLimit <= 8589934591 ? configuredLimit : 256;
+		const bufferLimit = Math.floor(bufferLimitMib * MIB);
+		const configuredDelay = config.get('selection.archive.requestDelayMs');
+		const requestDelay = Number.isInteger(configuredDelay) && configuredDelay >= 0
+			&& configuredDelay <= 2147483647 ? configuredDelay : 0;
+		const limitLabel = getReadableSize([' B', ' KiB', ' MiB', ' GiB', ' TiB', ' PiB'], bufferLimit);
+		const largeArchiveMessage = `Archives over ${limitLabel} need direct file saving over HTTPS or localhost in a supported browser. Try selecting fewer files.`;
 		const encoder = new TextEncoder();
 		let files: ArchiveFile[] = rows.map(row =>
 		{
@@ -94,7 +123,7 @@ export async function archiveSelection(rows: HTMLElement[]): Promise<void>
 		});
 		const initialTotal = files.reduce((sum, file) => sum + file.size, 0);
 		if(!Number.isSafeInteger(initialTotal)) throw new Error('This selection is too large to archive in the browser.');
-		const confirmed = await confirmArchive(files, BUFFER_LIMIT);
+		const confirmed = await confirmArchive(files, bufferLimit);
 		if(!confirmed || controller.signal.aborted) return;
 		files = confirmed.files;
 		const { filename, needsDisk, picker } = confirmed;
@@ -126,6 +155,7 @@ export async function archiveSelection(rows: HTMLElement[]): Promise<void>
 		{
 			for(const file of files)
 			{
+				if(completed && requestDelay) await waitBetweenFiles(requestDelay, controller.signal);
 				report(file.name, true);
 				const response = await fetch(file.url.href, {
 					credentials: 'same-origin', redirect: 'error', signal: controller.signal
@@ -164,7 +194,7 @@ export async function archiveSelection(rows: HTMLElement[]): Promise<void>
 			transform(chunk, stream)
 			{
 				outputSize += chunk.byteLength;
-				if(!needsDisk && outputSize > BUFFER_LIMIT) throw new Error(LARGE_ARCHIVE_MESSAGE);
+				if(!needsDisk && outputSize > bufferLimit) throw new Error(largeArchiveMessage);
 				stream.enqueue(chunk);
 			}
 		}));
