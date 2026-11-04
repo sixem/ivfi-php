@@ -6,7 +6,7 @@ const defaultConfig = require('./config.php')
 /**
  * <ivfi-php> [https://github.com/sixem/ivfi-php]
  *
- * @license  https://github.com/sixem/ivfi-php/blob/master/LICENSE GPL-3.0
+ * @license  https://github.com/sixem/ivfi-php/blob/main/LICENSE GPL-3.0
  * @author   emy (sixem@github) <emy@five.sh>
  * @version  <%= version %>
  */
@@ -14,7 +14,7 @@ const defaultConfig = require('./config.php')
 /**
  * [Configuration]
  * A more in-depth overview can be found here:
- * https://github.com/sixem/ivfi-php/blob/master/docs/config.md
+ * https://github.com/sixem/ivfi-php/blob/main/docs/config.md
  */
 
 /* Used to bust the cache and to display footer version number */

@@ -10,9 +10,9 @@
 
 <p align="center">
 	<a href="https://five.sh/demo/indexer/">Demo</a>&nbsp;&nbsp;
-	<a href="https://github.com/sixem/ivfi-php/blob/master/docs/README.md">Documentation</a>&nbsp;&nbsp;
-	<a href="https://github.com/sixem/ivfi-php/blob/master/docs/config.md">Configuration</a>&nbsp;&nbsp;
-	<a href="https://github.com/sixem/ivfi-php/blob/master/docs/building.md">Building</a>
+	<a href="https://github.com/sixem/ivfi-php/blob/main/docs/README.md">Documentation</a>&nbsp;&nbsp;
+	<a href="https://github.com/sixem/ivfi-php/blob/main/docs/config.md">Configuration</a>&nbsp;&nbsp;
+	<a href="https://github.com/sixem/ivfi-php/blob/main/docs/building.md">Building</a>
 </p>
 
 ## Introduction
@@ -66,7 +66,7 @@ See [development options](docs/building.md#development).
 
 ## Feedback
 
-Report bugs in [issues](https://github.com/sixem/ivfi-php/issues), or use [discussions](https://github.com/sixem/ivfi-php/discussions) for questions and ideas. Pull requests are welcome; see [contributing](https://github.com/sixem/ivfi-php/blob/master/CONTRIBUTING.md).
+Report bugs in [issues](https://github.com/sixem/ivfi-php/issues), or use [discussions](https://github.com/sixem/ivfi-php/discussions) for questions and ideas. Pull requests are welcome; see [contributing](https://github.com/sixem/ivfi-php/blob/main/CONTRIBUTING.md).
 
 ## License
 
