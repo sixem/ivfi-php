@@ -38,9 +38,9 @@ export function loadImage(src: string, signal?: AbortSignal): Promise<HTMLImageE
 	});
 }
 
-export function releaseMedia(element: HTMLImageElement | HTMLVideoElement): void
+export function releaseMedia(element: HTMLImageElement | HTMLMediaElement): void
 {
-	if(element instanceof HTMLVideoElement)
+	if(element instanceof HTMLMediaElement)
 	{
 		element.pause();
 		element.removeAttribute('src');

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="color-scheme" content="dark">
+	<title>Building IVFi</title>
+	<link rel="icon" href="data:,">
+	<link rel="preload" href="/__ivfi_dev/font.woff2" as="font" type="font/woff2" crossorigin>
+	<style>
+		@font-face {
+			font-family: Inter;
+			font-style: normal;
+			font-weight: 400;
+			font-display: swap;
+			src: url("/__ivfi_dev/font.woff2") format("woff2");
+		}
+		body {
+			box-sizing: border-box;
+			min-height: 100vh;
+			min-height: 100svh;
+			margin: 0;
+			padding: 24px;
+			display: grid;
+			place-items: center;
+			background: #000;
+			color: #d5d5d5;
+			font: 400 13px / 1.6 Inter, Arial, sans-serif;
+			text-align: center;
+		}
+		h1 {
+			margin: 0 0 8px;
+			font-size: 18px;
+			font-weight: 400;
+			letter-spacing: 0.0625rem;
+		}
+		p { max-width: 38ch; margin: 0 auto; color: #85858b; }
+		svg {
+			display: block;
+			margin: 0 auto 20px;
+			animation: spin 1s linear infinite;
+		}
+		@keyframes spin { to { transform: rotate(360deg); } }
+		@media (prefers-reduced-motion: reduce) { svg { animation: none; } }
+	</style>
+</head>
+<body>
+	<main role="status" aria-live="polite">
+		<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+			<circle cx="14" cy="14" r="11" stroke="#222225" stroke-width="2" />
+			<path d="M14 3a11 11 0 0 1 11 11" stroke="#b5b5bd" stroke-width="2" stroke-linecap="round" />
+		</svg>
+		<h1>Building IVFi</h1>
+		<p>This page will open automatically when it’s ready.</p>
+	</main>
+	<!--dev-client-->
+</body>
+</html>

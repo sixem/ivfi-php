@@ -12,6 +12,8 @@ export function createOverlayScrollbar(target: Window | HTMLElement, options: {
 	/** Hide until hover, focus, or drag; default false */
 	hoverOnly?: boolean;
 	shadows?: boolean;
+	/** An adjacent element whose resizing can move the scroller. */
+	layoutElement?: HTMLElement;
 }): () => void
 {
 	const isPage = target === window;
@@ -74,7 +76,7 @@ export function createOverlayScrollbar(target: Window | HTMLElement, options: {
 		/* Reserve space for an adjacent resize handle */
 		const insetRight = parseFloat(getComputedStyle(scroller).getPropertyValue('--scrollbar-inset-right')) || 0;
 		const locked = isPage && [document.body, scroller].some(element => ['hidden', 'clip'].includes(getComputedStyle(element).overflowY));
-		const visible = !locked && max > 1 && travel > 0 && scroller.getClientRects().length > 0;
+		const visible = !locked && !scroller.closest('[inert]') && max > 1 && travel > 0 && scroller.getClientRects().length > 0;
 		track.style.top = `${Math.max(0, top) + 8 - originTop}px`;
 		track.style.left = `${(isPage ? scroller.clientWidth : bounds.left + scroller.clientLeft + scroller.clientWidth) - 12 - insetRight - originLeft}px`;
 		track.style.height = `${height}px`;
@@ -178,6 +180,7 @@ export function createOverlayScrollbar(target: Window | HTMLElement, options: {
 
 	const resize = new ResizeObserver(schedule);
 	resize.observe(scroller);
+	if(options.layoutElement) resize.observe(options.layoutElement);
 	const content = isPage ? document.body : scroller;
 	if(content !== scroller) resize.observe(content);
 	Array.from(content.children).forEach(child => resize.observe(child));

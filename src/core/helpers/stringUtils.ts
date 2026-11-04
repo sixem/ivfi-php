@@ -43,6 +43,10 @@ export const identifyExtension = (
 	{
 		return [extension, 0];
 
+	} else if(extensions.audio?.includes(extension))
+	{
+		return [extension, 2];
+
 	} else if(extensions.video.includes(extension))
 	{
 		return [extension, 1];

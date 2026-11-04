@@ -1,5 +1,5 @@
 export type IconName = 'search' | 'filter' | 'gallery' | 'settings' | 'download' | 'archive' | 'chevron' | 'check' | 'copy' | 'close' | 'arrow-left'
-	| 'list-indent-decrease' | 'list-indent-increase';
+	| 'play' | 'pause' | 'volume' | 'volume-off' | 'expand';
 
 type IconDefinition = {
 	viewBox: string;
@@ -8,25 +8,25 @@ type IconDefinition = {
 };
 
 const icons: Record<IconName, IconDefinition> = {
-	'list-indent-decrease': {
-		viewBox: '0 0 24 24',
-		filled: false,
-		shapes: [
-			{ tag: 'path', attributes: { d: 'M21 5H11' } },
-			{ tag: 'path', attributes: { d: 'M21 12H11' } },
-			{ tag: 'path', attributes: { d: 'M21 19H11' } },
-			{ tag: 'path', attributes: { d: 'm7 8-4 4 4 4' } },
-		]
+	expand: {
+		viewBox: '0 0 24 24', filled: false,
+		shapes: [{ tag: 'path', attributes: { d: 'M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5' } }]
 	},
-	'list-indent-increase': {
-		viewBox: '0 0 24 24',
-		filled: false,
-		shapes: [
-			{ tag: 'path', attributes: { d: 'M21 5H11' } },
-			{ tag: 'path', attributes: { d: 'M21 12H11' } },
-			{ tag: 'path', attributes: { d: 'M21 19H11' } },
-			{ tag: 'path', attributes: { d: 'm3 8 4 4-4 4' } },
-		]
+	play: {
+		viewBox: '0 0 24 24', filled: false,
+		shapes: [{ tag: 'path', attributes: { d: 'm7 4 14 8-14 8Z' } }]
+	},
+	pause: {
+		viewBox: '0 0 24 24', filled: false,
+		shapes: [{ tag: 'path', attributes: { d: 'M8 4v16M16 4v16' } }]
+	},
+	volume: {
+		viewBox: '0 0 24 24', filled: false,
+		shapes: [{ tag: 'path', attributes: { d: 'M11 4 6 8H2v8h4l5 4ZM15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14' } }]
+	},
+	'volume-off': {
+		viewBox: '0 0 24 24', filled: false,
+		shapes: [{ tag: 'path', attributes: { d: 'M11 4 6 8H2v8h4l5 4ZM16 9l6 6M16 15l6-6' } }]
 	},
 	close: {
 		viewBox: '0 0 24 24',

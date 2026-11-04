@@ -180,6 +180,8 @@ export namespace MComponentMain
 			url?: string;
 			name?: string;
 			size?: string;
+			bytes?: number;
+			modified?: number;
 		}>;
 
 		sortTableColumn?: (

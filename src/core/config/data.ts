@@ -63,15 +63,10 @@ if(config.get('mobile') === false &&
 {
 	const storedVolume: string = localStorage.getItem(`${StorageKey}.previewVolume`);
 
-	data.preview.volume = parseInt(storedVolume) ? parseInt(storedVolume) : null;
-
-	if(data.preview.volume === null || !(data.preview.volume >= 0))
-	{
-		data.preview.volume = 10;
-		localStorage.setItem(`${StorageKey}.previewVolume`, '10');
-	} else {
-		data.preview.volume = parseInt(data.preview.volume.toString());
-	}
+	const volume = Number(storedVolume);
+	const valid = storedVolume !== null && Number.isFinite(volume) && volume >= 0 && volume <= 100;
+	data.preview.volume = valid ? volume : 10;
+	if(!valid) localStorage.setItem(`${StorageKey}.previewVolume`, '10');
 }
 
 /* Initiate selector class */

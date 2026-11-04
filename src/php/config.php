@@ -68,7 +68,8 @@ return [
      */
     'extensions' => [
         'image' => ['jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'],
-        'video' => ['webm', 'mp4', 'ogg', 'ogv', 'mov']
+        'video' => ['webm', 'mp4', 'ogv', 'mov'],
+        'audio' => ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'oga', 'opus']
     ],
     /**
      * Injection options

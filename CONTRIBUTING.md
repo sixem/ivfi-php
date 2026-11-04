@@ -2,6 +2,8 @@
 
 Bug reports, feature suggestions and pull requests are welcome. See [building](docs/building.md) for source setup.
 
+Run `pnpm dev --files /path/to/files` for the PHP server, automatic rebuilding and browser updates. Development output is isolated from production builds.
+
 ## Checks
 
 Run the checks relevant to your change from the repository root:
@@ -9,6 +11,7 @@ Run the checks relevant to your change from the repository root:
 | Command | Checks | Requirements |
 |---|---|---|
 | `pnpm test` | Lint, production build and standalone output | Node 20+ and pnpm |
+| `pnpm test:dev` | Dev configuration, browser reload logic and PHP server integration | Node 20+, pnpm and PHP 8+ |
 | `composer install` then `composer test` | PHP regression tests | PHP 8.3+, Composer and built PHP outputs |
 | `bash scripts/test-php-versions.sh` | Both outputs on PHP 8.2–8.5 | Docker and the PHP test dependencies above |
 | `bash scripts/test-readme.sh` | Optional README rendering in both outputs | Node, PHP with mbstring, and installed build/test dependencies |

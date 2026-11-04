@@ -90,7 +90,7 @@ export default class optimizeClass
 	 */
 	private setup = (): boolean =>
 	{
-		log('optimize', '->', 'optimize.setup');
+		log.debug('optimize', 'Initializing row layout');
 
 		const table: HTMLElement = this.table;
 		this.focused = table.contains(document.activeElement)
@@ -121,7 +121,7 @@ export default class optimizeClass
 
 		this.rows = Array.from(rows);
 
-		log('optimize', `Calculated rows in ${performance.now() - measureStart} ms.`);
+		log.debug('optimize', `Measured ${rows.length} rows in ${(performance.now() - measureStart).toFixed(1)} ms`);
 
 		/* Apply table height */
 		DOM.style.set(table, {
@@ -198,7 +198,7 @@ export default class optimizeClass
 		/* Start measuring execution time */
 		const measureStart: number = performance.now();
 
-		log('optimize', '->', 'optimize.refactor');
+		log.debug('optimize', 'Updating row layout');
 
 		/* Declare variables */
 		const table: HTMLElement = this.table;
@@ -273,7 +273,7 @@ export default class optimizeClass
 		/* Set table height */
 		table.style.height = `${combinedHeight + 6}px`;
 
-		log('optimize', `Ran refactor in ${performance.now() - measureStart} ms.`);
+		log.debug('optimize', `Updated row layout in ${(performance.now() - measureStart).toFixed(1)} ms`);
 
 		/* Call a refresh after refactor */
 		this.attemptRefresh();
@@ -342,7 +342,7 @@ export default class optimizeClass
 	{
 		if(this.activeHasChanged || !this.activeData)
 		{
-			log('optimize', 'Updating active data ..');
+			log.debug('optimize', 'Updating visible rows');
 
 			const activeRows: Array<TOptimizeRowItem> = [],
 				activeIndexes: {

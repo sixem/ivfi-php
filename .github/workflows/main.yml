@@ -45,6 +45,10 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Test development server
+        if: matrix.node-version == '24'
+        run: pnpm test:dev
+
       - name: Install PHP test dependencies
         if: matrix.node-version == '24'
         run: |

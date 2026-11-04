@@ -5,6 +5,7 @@ import galleryClass from '../../classes/gallery';
 
 /** Types */
 import { TPageObject } from '../class-optimize';
+import type { AudioCard } from '../../components/audio/card';
 
 type TDataText = {
 	reverseSearch?: {
@@ -50,6 +51,9 @@ type TDataSets = {
 };
 
 type TDataPreview = {
+	audio?: AudioCard;
+	takeAudio?: (src: string, parent: HTMLElement) => AudioCard;
+	hasAudio?: (src: string) => boolean;
 	takeVideo?: (src: string, parent: HTMLElement) => HTMLVideoElement;
 	volume?: number;
 	isLoadable?: boolean;

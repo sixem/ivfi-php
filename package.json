@@ -38,13 +38,15 @@
     "webpack-cli": "^4.10.0"
   },
   "scripts": {
+    "dev": "node scripts/dev.js",
     "build": "webpack --config scripts/build/webpack.config.js --mode=production",
     "build-dev": "webpack --config scripts/build/webpack.config.js --mode=development",
     "build-dev-watch": "webpack --config scripts/build/webpack.config.js --mode=development --watch",
     "make-standalone": "webpack --config scripts/build/webpack.config.js --mode=production && node ./scripts/make-standalone.js",
-    "lint": "eslint \"./src/core/**/*.ts\" \"scripts/build/*.js\" \"scripts/*.js\" && stylelint \"./src/css/**/*.scss\"",
-    "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js && node --test scripts/test-standalone.js scripts/test-optimize.js scripts/test-archive-selection-totals.js",
-    "pack-release": "bash ./scripts/pack-release.sh"
+    "lint": "eslint \"./src/core/**/*.ts\" \"scripts/**/*.js\" && stylelint \"./src/css/**/*.scss\"",
+    "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js && node --test scripts/test-standalone.js scripts/test-optimize.js scripts/test-archive-selection-totals.js scripts/test-dev.js",
+    "pack-release": "bash ./scripts/pack-release.sh",
+    "test:dev": "node --test scripts/test-dev.js scripts/test-dev-server.js scripts/test-dev-watch.js"
   },
   "repository": {
     "type": "git",

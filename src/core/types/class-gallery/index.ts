@@ -73,6 +73,8 @@ export type TGalleryTableItem = {
 	name: string;
     url?: string;
 	size?: number;
+	bytes?: number;
+	modified?: number;
 	dimensions?: {
 		height: number;
 		width: number;

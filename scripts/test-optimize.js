@@ -21,7 +21,7 @@ function fixture()
 		module, exports: module.exports,
 		require: name => name === '../../helpers'
 			? { DOM: { style: { set: (element, styles) => Object.assign(element.style, styles) } } }
-			: { log: () => {} },
+			: { log: { debug: () => {} } },
 		document: { activeElement: null },
 		performance: { now: () => 0 },
 		setTimeout: callback => queue(timers, callback),

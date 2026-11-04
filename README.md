@@ -17,7 +17,7 @@
 
 ## Introduction
 
-IVFi-PHP is a directory browser with an image and video gallery, hover previews, search, and ZIP downloads. It runs on a PHP web server or through Docker.
+IVFi-PHP is a directory browser with an image, video, and audio gallery, hover previews, search, and ZIP downloads. It runs on a PHP web server or through Docker.
 
 Basic listings work without JavaScript; interactive features require it.
 
@@ -41,10 +41,22 @@ DirectoryIndex index.html index.php /indexer.php
 
 See [setup](docs/setup.md) for standalone and Docker options, [configuration](docs/config.md) for settings, or [building](docs/building.md) to build from source.
 
+## Development
+
+With Node 20+, pnpm and PHP 8+ installed:
+
+```sh
+pnpm install
+pnpm dev --files /path/to/files
+```
+
+See [building](docs/building.md#development) for local configuration, options and troubleshooting.
+
 ## Features
 
-- **Gallery:** browse images and videos, download files, and reverse-search images.
+- **Gallery:** browse images, videos, and audio, download files, and reverse-search images. On desktop, collapse the file list with its edge chevron or `L`. Hover the top-bar filename for its full name, size, and modified date.
 - **Hover previews:** preview media by hovering over its filename.
+- **Audio:** a shared preview/gallery player with a live visualiser, duration, seeking, and volume. Hover previews autoplay at the saved video-preview volume; clicking the filename or expand button opens the gallery at the current playback position. The gallery also shows approximate average bitrate from file size and duration.
 - **Search:** filter filenames with regex or wildcards such as `*.mp4` (`Ctrl + F`, or `Cmd + F` on Mac).
 - **Downloads:** download individual files or a selection as a ZIP archive.
 - **Standalone:** use a single PHP file with embedded assets.

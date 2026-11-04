@@ -1,5 +1,6 @@
 /** Build helpers */
 import build from './build.helpers.js';
+import WatchTypeScriptPlugin from './watch-typescript.js';
 
 /** Package information */
 const pck = build.readJson('./package.json');
@@ -49,13 +50,6 @@ let templateParameters = {
 	version: pck.version,
 	indexerPath : `/${assetDir}/`
 };
-
-if(buildOptions)
-{
-	console.info('Build options:', JSON.stringify(buildOptions, null, 2), '\n');
-} else {
-	console.info('No build options was found - skipping any potential build options during the build.\n');
-}
 
 /**
  * Handle any extra build features
@@ -141,6 +135,16 @@ const banner = () =>
 const config = (env, argv) => {
 	const isProduction = argv.mode === 'production';
 
+	if(!env?.devServer)
+	{
+		if(buildOptions)
+		{
+			console.info('Build options:', JSON.stringify(buildOptions, null, 2), '\n');
+		} else {
+			console.info('No build options was found - skipping any potential build options during the build.\n');
+		}
+	}
+
 	return {
 		context: projectRoot,
 		mode: isProduction ? 'production' : 'development',
@@ -168,20 +172,21 @@ const config = (env, argv) => {
 			]
 		},
 		plugins: [
+			...(!isProduction ? [new WatchTypeScriptPlugin()] : []),
 			new HtmlWebpackPlugin({
 				inject: false,
 				minify: false,
 				template: projectRoot + '/src/php/template.php',
 				filename: 'indexer.php',
 				templateParameters: () => {
-					return templateParameters;
+					return { ...templateParameters, devServer: !isProduction && env?.devServer === true };
 				}
 			}),
 			new MiniCssExtractPlugin({
 				filename: `${assetDir}/css/style.css`
 			}),
 			new webpack.BannerPlugin({
-				banner: banner(),
+				banner: isProduction ? banner() : 'IVFi-PHP development build | GPL-3.0',
 				entryOnly: true
 			}),
 		],

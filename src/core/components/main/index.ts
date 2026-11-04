@@ -396,7 +396,9 @@ main.getTableItems = () =>
 				items.push({
 					url: anchor.getAttribute('href'),
 					name: row.children[0].getAttribute('data-raw'),
-					size: row.children[2].textContent
+					size: row.children[2].textContent,
+					bytes: Number(row.children[2].getAttribute('data-raw')),
+					modified: parseInt(row.children[1].getAttribute('data-raw'), 10)
 				});
 			}
 		}
@@ -416,7 +418,9 @@ main.getTableItems = () =>
 				items.push({
 					url: url,
 					name: parent.getAttribute('data-raw'),
-					size: container.querySelector('td:nth-child(3)').textContent
+					size: container.querySelector('td:nth-child(3)').textContent,
+					bytes: Number(container.children[2].getAttribute('data-raw')),
+					modified: parseInt(container.children[1].getAttribute('data-raw'), 10)
 				});
 			}
 		});

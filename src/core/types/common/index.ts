@@ -43,6 +43,7 @@ export type TPreviewOptions = {
 export type TExtensionArray = {
 	image: Array<string>;
 	video: Array<string>;
+	audio?: Array<string>;
 };
 
 /**

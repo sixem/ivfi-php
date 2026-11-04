@@ -10,6 +10,8 @@ import { createIcon } from './icons';
 import { eventHooks } from './modules/event-hooks';
 import { disposePage, onPageReplace } from './modules/lifecycle';
 import { playVideo } from './helpers/media';
+import { AudioPreview } from './components/audio/preview';
+import { StorageKey } from './constant';
 import { createOverlayScrollbar } from './modules/scrollbar';
 import { createRowSelection } from './modules/row-selection';
 import { createTooltip } from './modules/tooltip';
@@ -49,6 +51,20 @@ import '../css/root.scss';
 import '../css/fonts.scss';
 import '../css/main.scss';
 
+/* Keep managed media exclusive without loading or polling inactive players. */
+const pauseOtherMedia = (event: Event) =>
+{
+	const playing = event.target;
+	if(!(playing instanceof HTMLMediaElement)
+		|| !playing.closest('.preview-container, .rootGallery, .audioCard')) return;
+	document.querySelectorAll<HTMLMediaElement>('.preview-container video, .rootGallery video, .audioCard audio').forEach(media =>
+	{
+		if(media !== playing && !media.paused) media.pause();
+	});
+};
+document.addEventListener('play', pauseOtherMedia, true);
+onPageReplace(() => document.removeEventListener('play', pauseOtherMedia, true));
+
 /* References */
 const selector = data.instances.selector;
 
@@ -58,7 +74,7 @@ try
 	navigator.mediaSession.setActionHandler('play', null);
 } catch(error)
 {
-	log('error', error);
+	log.debug('media', 'Media Session controls are unavailable', error);
 }
 
 /* Set main component in data */
@@ -233,7 +249,7 @@ eventHooks.listen(selector.use('TABLE') as HTMLElement, 'click', 'sortClick', (e
  */
 eventHooks.listen(window, 'resize', 'windowResize', debounce((): void =>
 {
-	log('event', 'windowResize (main)', 'Resized');
+	log.debug('layout', 'Window resized');
 
 	/** Get mobile status */
 	const isMobile = Modernizr.mq('(max-width: 768px)');
@@ -243,7 +259,7 @@ eventHooks.listen(window, 'resize', 'windowResize', debounce((): void =>
 		/** Update mobile status */
 		config.set('mobile', Modernizr.mq('(max-width: 768px)'));
 
-		log('view', `Switched to ${isMobile ? 'mobile' : 'desktop'} view`);
+		log.info('layout', `Switched to ${isMobile ? 'mobile' : 'desktop'} view`);
 	}
 
 	if(data.instances.gallery)
@@ -273,7 +289,7 @@ if(config.get('mobile') === false
 
 	const onLoaded = (event: TOnPreviewLoad) =>
 	{
-		log('preview', 'Preview loaded =>', event);
+		log.debug('preview', 'Loaded', event);
 
 		cancelReveal?.();
 
@@ -330,7 +346,7 @@ if(config.get('mobile') === false
 		}
 
 		/* If video is audible, enable scrollLock */
-		if(event.loaded && event.audible)
+		if((event.loaded && event.audible) || data.preview.audio)
 		{
 			data.scrollLock = true;
 		} else {
@@ -348,13 +364,44 @@ if(config.get('mobile') === false
 		resolve: element =>
 		{
 			const identified = identifyExtension(stripUrl(element.getAttribute('href')), extensions);
-			return identified ? { extension: identified[0], type: identified[1] } : null;
+			return identified && identified[1] !== 2 ? { extension: identified[0], type: identified[1] } : null;
 		},
 		on: { onLoaded }
 	});
 	data.preview.takeVideo = (src, parent) => preview.takeVideo(src, parent);
 
-	const hidePreview = () => preview.hide(true);
+	let audioVolumeSave = 0;
+	const saveAudioVolume = () =>
+	{
+		audioVolumeSave = 0;
+		localStorage.setItem(`${StorageKey}.previewVolume`, String(data.preview.volume));
+	};
+	const audioPreview = new AudioPreview(selector.use('TABLE') as HTMLElement, {
+		extensions,
+		delay: config.get('preview.hoverDelay'),
+		volume: () => data.preview.volume / 100,
+		onExpand: config.get('gallery.enabled') ? anchor => anchor.click() : undefined,
+		available: () => data.preview.isLoadable && document.hasFocus() && !document.hidden
+			&& !document.documentElement.hasAttribute('gallery-is-visible')
+			&& !document.documentElement.hasAttribute('dialog-is-visible')
+			&& !document.documentElement.hasAttribute('context-menu-is-visible'),
+		onActive: card =>
+		{
+			data.preview.audio = card;
+			data.scrollLock = !!card || !!(data.preview.data?.loaded && data.preview.data?.audible);
+		},
+		onVolumeChange: volume =>
+		{
+			const nextVolume = Math.round(volume * 100);
+			if(nextVolume === data.preview.volume) return;
+			data.preview.volume = nextVolume;
+			clearTimeout(audioVolumeSave);
+			audioVolumeSave = window.setTimeout(saveAudioVolume, 100);
+		}
+	});
+	data.preview.takeAudio = (src, parent) => audioPreview.take(src, parent);
+	data.preview.hasAudio = src => audioPreview.has(src);
+	const hidePreview = () => { preview.hide(true); audioPreview.hide(); };
 	const onVisibility = () => { if(document.hidden) hidePreview(); };
 	window.addEventListener('blur', hidePreview);
 	window.addEventListener('pagehide', hidePreview);
@@ -363,6 +410,11 @@ if(config.get('mobile') === false
 	onPageReplace(() =>
 	{
 		preview.destroy();
+		audioPreview.destroy();
+		clearTimeout(audioVolumeSave);
+		if(audioVolumeSave) saveAudioVolume();
+		data.preview.takeAudio = null;
+		data.preview.hasAudio = null;
 		data.preview.takeVideo = null;
 		cancelReveal?.();
 		window.removeEventListener('blur', hidePreview);
@@ -447,7 +499,7 @@ if(config.get('singlePage'))
 			 * This removes any accidental navigates to unknown sources */
 			if(response.headers.get('navigate-type') === 'dynamic')
 			{
-				log('main', 'Valid header. Navigating pages ..');
+				log.info('navigation', 'Loading directory');
 				
 				response.text().then((content) =>
 				{
@@ -618,4 +670,5 @@ eventHooks.subscribe('galleryUnbound', 'mainBind', () =>
 	data.components.main.bind();
 });
 
-log('main', 'Config loaded =>', config.data);
+log.debug('config', 'Loaded', config.data);
+log.info('main', 'Ready. Enable Verbose in DevTools for detailed diagnostics.');

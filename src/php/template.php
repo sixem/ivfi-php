@@ -21,6 +21,9 @@ const defaultConfig = require('./config.php')
 $version = '<%= version %>';
 
 $config = <%= defaultConfig %>;
+<% if (typeof devServer !== 'undefined' && devServer) { %>/* Local dev server: enable existing PHP and browser diagnostics. */
+$config['debug'] = true;
+<% } %>
 
 /* Keep startup/configuration failures private until debug is explicitly enabled. */
 ini_set('display_errors', '0');
@@ -638,7 +641,7 @@ function mergeConfigDefaults(array $config, array $defaults, $path = '')
 $defaults = <%= defaultConfig %>;
 /* Preserve the external-config defaults for desktop dates and video extension order. */
 $defaults['format']['date'][0] = 'm/d/y H:i';
-$defaults['extensions']['video'] = ['webm', 'mp4', 'ogv', 'ogg', 'mov'];
+$defaults['extensions']['video'] = ['webm', 'mp4', 'ogv', 'mov'];
 
 /* Keep working-directory precedence, then support configs beside the script. */
 foreach(array_unique([getcwd() ?: __DIR__, __DIR__]) as $configDirectory)
@@ -662,6 +665,9 @@ if(!is_array($config))
   throw new RuntimeException('The configuration file must return an array.');
 }
 
+<% if (typeof devServer !== 'undefined' && devServer) { %>/* Keep development logging enabled after loading external configuration. */
+$config['debug'] = true;
+<% } %>
 /* Apply explicit debugging before validating the remaining settings. */
 ini_set('display_errors', isset($config['debug']) && $config['debug'] === true ? '1' : '0');
 $config = mergeConfigDefaults($config, $defaults);
@@ -1078,8 +1084,8 @@ class Indexer extends Helpers
         'href' => $this->handlePathing($fileUrl, false)
       ];
 
-      /** If file is an image or video, add preview class */
-      if($fileType[0] === 'image' || $fileType[0] === 'video')
+      /** Mark supported media for previews, filtering, and the gallery. */
+      if(in_array($fileType[0], ['image', 'video', 'audio'], true))
       {
         $anchorAttributes['class'] = 'preview';
       }
@@ -2270,7 +2276,8 @@ function constructJsConfig($config, $sorting, $timestamp, $bust, $theme)
     ],
     'extensions' => [
       'image' => $extensions['image'],
-      'video' => $extensions['video']
+      'video' => $extensions['video'],
+      'audio' => $extensions['audio']
     ],
     'style' => [
       'themes' => [

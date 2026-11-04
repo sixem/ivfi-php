@@ -3,6 +3,7 @@ import '../../css/tooltip.scss';
 
 type Tooltip = {
 	show: (target: HTMLElement, text: string, duration?: number) => void;
+	setDetails: (target: HTMLElement, title: string, rows: Array<[string, string]>) => void;
 	hide: () => void;
 	destroy: () => void;
 };
@@ -27,6 +28,7 @@ export function createTooltip(): Tooltip
 	let feedback = false;
 	let feedbackAnimation: Animation = null;
 	const cleanups: Array<() => void> = [];
+	const details = new WeakMap<HTMLElement, Array<[string, string]>>();
 	const listen = (target: EventTarget, type: string, handler: EventListener, options: AddEventListenerOptions = {}) =>
 	{
 		target.addEventListener(type, handler, options);
@@ -65,7 +67,23 @@ export function createTooltip(): Tooltip
 	};
 	const render = (text: string) =>
 	{
-		element.textContent = text;
+		const rows = !feedback && details.get(owner);
+		element.classList.toggle('tooltipDetails', !!rows);
+		if(rows)
+		{
+			const title = document.createElement('div');
+			title.className = 'tooltipTitle';
+			title.textContent = text;
+			const list = document.createElement('dl');
+			for(const [label, value] of rows)
+			{
+				const term = document.createElement('dt'), description = document.createElement('dd');
+				term.textContent = label;
+				description.textContent = value;
+				list.append(term, description);
+			}
+			element.replaceChildren(title, list);
+		} else element.textContent = text;
 		element.style.visibility = 'hidden';
 		element.style.left = '0px';
 		element.style.top = '0px';
@@ -155,6 +173,11 @@ export function createTooltip(): Tooltip
 	listen(document, 'visibilitychange', () => { if(document.hidden) dismiss(); });
 
 	instance = {
+		setDetails: (target, title, rows) =>
+		{
+			target.setAttribute('data-tooltip', title);
+			details.set(target, rows);
+		},
 		show: (target, text, duration = 3000) =>
 		{
 			clear();

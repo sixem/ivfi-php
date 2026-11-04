@@ -1,0 +1,333 @@
+@use "variables";
+@use "mixins";
+
+@keyframes audio-bitrate-in {
+  from { opacity: 0; }
+}
+
+.audioCard {
+  box-sizing: border-box;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  padding: 8px 12px;
+  border: 2px solid #121017;
+  border-radius: 0;
+  background: #000;
+  color: variables.$text-color;
+  font: inherit;
+  line-height: 1.4;
+  letter-spacing: 0.0625rem;
+  text-align: left;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 35%);
+  backdrop-filter: blur(8px);
+
+  [hidden] {
+    display: none !important;
+  }
+
+  .audioHeading,
+  .audioControls,
+  .audioTimes {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .audioName {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #d5d5d5;
+  }
+
+  .audioBitrate {
+    flex: none;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    &:not([hidden]) {
+      animation: audio-bitrate-in 200ms ease-out;
+
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+      }
+    }
+  }
+
+  button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    min-height: 28px;
+    padding: 4px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    > svg {
+      width: 16px;
+      height: 16px;
+      pointer-events: none;
+    }
+
+    &:hover:not(:disabled) {
+      color: variables.$accent-color;
+      background: #ffffff0d;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+
+  button:focus-visible,
+  input:focus-visible {
+    outline: 2px solid variables.$accent-color;
+    outline-offset: 2px;
+  }
+
+  .audioExpand {
+    min-width: 24px;
+    min-height: 20px;
+    padding: 2px;
+    border-radius: 2px;
+    color: #92929c;
+
+    > svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  .audioSpectrum {
+    display: block;
+    width: calc(100% + 24px);
+    height: 60px;
+    box-sizing: border-box;
+    border: 2px solid variables.$surface-border;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    background: #000;
+    margin: 4px -12px;
+    color: variables.$accent-color;
+  }
+
+  .audioTimes {
+    flex: 1;
+    gap: 6px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .audioTimeSeparator,
+  .audioDuration,
+  .audioBitrate {
+    opacity: 0.7;
+  }
+
+  input[type="range"] {
+    --audio-progress: 0%;
+
+    display: block;
+    box-sizing: border-box;
+    min-width: 0;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    accent-color: variables.$accent-color;
+    cursor: pointer;
+    appearance: none;
+
+    &::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 2px;
+      background:
+        linear-gradient(
+          to right,
+          variables.$accent-color var(--audio-progress),
+          #303138 var(--audio-progress)
+        );
+    }
+
+    &::-moz-range-track {
+      height: 4px;
+      border-radius: 2px;
+      background: #303138;
+    }
+
+    &::-moz-range-progress {
+      height: 4px;
+      background: variables.$accent-color;
+    }
+
+    &::-webkit-slider-thumb {
+      width: 10px;
+      height: 10px;
+      margin-top: -3px;
+      border-radius: 50%;
+      background: variables.$accent-color;
+      appearance: none;
+    }
+
+    &::-moz-range-thumb {
+      width: 10px;
+      height: 10px;
+      border: 0;
+      border-radius: 50%;
+      background: variables.$accent-color;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+
+  .audioSeek {
+    width: 100%;
+  }
+
+  .audioControls {
+    margin-top: 0;
+    gap: 4px;
+  }
+
+  .audioStatus {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  &.audioError {
+    .audioStatus {
+      position: static;
+      width: auto;
+      height: auto;
+      flex: 1;
+      clip-path: none;
+    }
+
+    .audioTimes,
+    .audioMute,
+    .audioVolume {
+      display: none;
+    }
+  }
+
+  .audioVolume {
+    flex: 0 1 58px;
+    width: 58px;
+  }
+
+  .audioDownload {
+    color: variables.$accent-color;
+    font-size: 0.75rem;
+  }
+
+  &.audioCardGallery {
+    @include mixins.fonting($key: "gallery", $spacing: 0.0625rem);
+
+    width: min(720px, calc(100vw - 32px));
+    max-width: calc(100% - 32px);
+    max-height: calc(100dvh - 80px);
+    margin: 16px;
+    padding: 0;
+    border: 2px solid #121017;
+    border-radius: 7px;
+    background: #000;
+    box-shadow: none;
+    backdrop-filter: none;
+    overflow-y: auto;
+
+    .audioHeading {
+      padding: 10px 14px;
+      border-bottom: 2px solid variables.$divider-color;
+    }
+
+    .audioSpectrum {
+      width: 100%;
+      height: clamp(80px, 18vh, 144px);
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .audioSeek {
+      width: calc(100% - 28px);
+      margin: 0 14px;
+    }
+
+    .audioControls {
+      margin: 0;
+      padding: 6px 10px 10px;
+      gap: 8px;
+    }
+
+    button {
+      min-width: 34px;
+      min-height: 32px;
+      border-radius: 2px;
+      background: transparent;
+
+      > svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      &:hover:not(:disabled) {
+        background: variables.$divider-color;
+      }
+    }
+
+    .audioVolume {
+      flex-basis: 88px;
+      width: 88px;
+    }
+
+    .audioName {
+      font-size: inherit;
+    }
+  }
+
+  @media (pointer: coarse) {
+    button,
+    &.audioCardGallery button {
+      min-width: 40px;
+      min-height: 40px;
+    }
+
+    input[type="range"] {
+      height: 32px;
+    }
+
+    &.audioCardGallery {
+      padding: 0;
+      margin: 12px;
+      max-width: calc(100% - 24px);
+    }
+  }
+}
+
+.audioPreview {
+  position: fixed;
+  z-index: 9999;
+
+  .audioPlay:hover:not(:disabled) {
+    background: #ffffff0a;
+    color: #e5e5e5;
+  }
+}

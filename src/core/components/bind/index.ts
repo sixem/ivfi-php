@@ -3,7 +3,7 @@ import { config } from '../../config/config';
 import data from '../../config/data';
 /** Modules */
 import { eventHooks } from '../../modules/event-hooks';
-import { DOM, setVideoVolume } from '../../helpers';
+import { DOM, setVideoVolume, showVolumeIndicator } from '../../helpers';
 import { playVideo } from '../../helpers/media';
 import { log } from '../../modules/logger';
 
@@ -90,9 +90,14 @@ events.handlePreviewScroll = (event: WheelEvent): void =>
 				localStorage.setItem(`${StorageKey}.previewVolume`, data.preview.volume.toString());
 			}, 100);
 
-			log('main', 'data.previewVolume', data.preview.volume, data.preview.data);
+			log.debug('preview', `Volume: ${data.preview.volume}%`, data.preview.data);
 
-			if(data.preview.data &&
+			if(data.preview.audio)
+			{
+				data.preview.audio.setVolume(data.preview.volume / 100);
+				showVolumeIndicator(data.preview.volume);
+				void data.preview.audio.play(true);
+			} else if(data.preview.data &&
 				data.preview.data.element &&
 				data.preview.data.audible &&
 				data.preview.data.type === 'VIDEO')

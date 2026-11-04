@@ -119,7 +119,9 @@ Initial sorting settings. A user's saved sort takes precedence.
 ## Gallery
 Key: **`gallery`**
 
-Displays images and videos from the current directory.
+Displays images, videos, and audio from the current directory.
+
+On desktop, use the chevron beside the gallery list (or press `L`) to slide the list out of view and back. Its visibility and dragged width are remembered. The chevron follows the configured list alignment.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -133,7 +135,7 @@ Displays images and videos from the current directory.
 ## Preview
 Key: **`preview`**
 
-Shows an image or video preview when hovering over its filename.
+Shows a media preview when hovering over its filename. Audio uses an anchored player with duration, seeking, volume, and a live visualiser. It loads and autoplays on hover using the saved video-preview volume; clicking the filename or expand button opens the gallery at the current playback position. The gallery header shows approximate average bitrate (`≈ kbps`), calculated from file size and duration without extra requests; it stays hidden when that information is unavailable. Audio and video previews share their saved volume, wheel-volume steps, on-screen indicator, and scroll lock while a preview is open. Browsers that block audible autoplay start the preview muted; use its mute button or volume slider to listen.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -149,7 +151,12 @@ Extensions eligible for previews and the gallery. Playback depends on browser su
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `image` | Array | `'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'` | Extensions marked as `image`.
-| `video` | Array | `'webm', 'mp4', 'ogv', 'ogg', 'mov'` | Extensions marked as `video`.
+| `video` | Array | `'webm', 'mp4', 'ogv', 'mov'` | Extensions marked as `video`.
+| `audio` | Array | `'mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'oga', 'opus'` | Extensions marked as `audio`.
+
+Audio is marked as media and participates in filtering and gallery navigation. OGG is treated as audio by default; OGV is treated as video. For OGG video files, move `ogg` from the audio list to the video list. Set `audio` to `[]` to disable audio previews and gallery inclusion. Recognized extensions still require a browser-supported codec; unsupported audio offers a download instead.
+
+In the audio gallery, use Left/Right to seek five seconds, Space to play/pause, and Up/Down or Page Up/Page Down to switch items. Focused sliders keep their native keyboard controls. The **Autoplay Media** setting applies to both audio and video in the gallery, including playback continued from previews.
 
 ## Inject
 Key: **`inject`**
@@ -278,7 +285,7 @@ Shows generation time and optional project credits.
 | `path_checking` | String | `strict` | Use `strict` to keep resolved directory paths inside the media root. `weak` also allows symlinks to directories outside it.
 | `performance` | Bool/Integer | `250` | Enable [performance mode](performance.md) with `true`, or set a minimum file-and-folder count.
 | `credits` | Bool | `true` | Shows the project link and version in the footer.
-| `debug` | Bool | `false` | Enables PHP debugging and `console.log()` info messages.
+| `debug` | Bool | `false` | Enables PHP debugging and browser console diagnostics. Detailed traces appear at the Verbose (Debug) level.
 
 # Advanced
 ## Server <!-- {docsify-ignore} -->

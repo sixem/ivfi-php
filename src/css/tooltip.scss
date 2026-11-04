@@ -10,13 +10,42 @@ html > body > .tooltip {
   padding: 6px 9px;
   border: 2px solid variables.$surface-border;
   border-radius: 3px;
-  background: variables.$surface-background;
+  background: #08090a;
   color: variables.$text-color;
   font: 400 0.8125rem / 1.45 Inter, sans-serif;
   white-space: pre-line;
   overflow-wrap: anywhere;
   box-shadow: 0 3px 12px rgb(0 0 0 / 50%);
   pointer-events: none;
+
+  &.tooltipDetails {
+    max-width: min(24rem, calc(100vw - 16px));
+    padding: 10px 12px;
+    white-space: normal;
+
+    .tooltipTitle {
+      padding-bottom: 8px;
+      border-bottom: 2px solid variables.$surface-border;
+      color: #d5d5d5;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: max-content minmax(0, 1fr);
+      gap: 5px 14px;
+      margin: 8px 0 0;
+      font-size: 0.75rem;
+    }
+
+    dt {
+      color: #92929c;
+    }
+
+    dd {
+      margin: 0;
+      font-variant-numeric: tabular-nums;
+    }
+  }
 
   &[hidden] {
     display: none;

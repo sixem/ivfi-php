@@ -131,9 +131,30 @@ final class ConfigurationCompatibilityTest extends TestCase
             ], true) . ';');
             $config = $this->jsConfig($response);
             self::assertSame('/indexer/themes/', $config['style']['themes']['path']);
-            self::assertSame(['image' => ['avif'], 'video' => []], $config['extensions']);
+            self::assertSame(['image' => ['avif'], 'video' => [],
+                'audio' => ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'oga', 'opus']], $config['extensions']);
             self::assertFalse($config['selection']['enabled']);
             self::assertTrue($config['preview']['enabled']);
+        }
+    }
+
+    public function testAudioIsMediaAndCanBeDisabledOrReclassified(): void
+    {
+        $extensions = ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'oga', 'opus'];
+        foreach (array_merge($extensions, ['ogv', 'txt']) as $extension) {
+            file_put_contents($this->root . '/media/track.' . $extension, 'fixture');
+        }
+        foreach ($this->variants() as $variant) {
+            $response = $this->render($variant);
+            self::assertSame($extensions, $this->jsConfig($response)['extensions']['audio']);
+            foreach (array_merge($extensions, ['ogv']) as $extension) {
+                self::assertMatchesRegularExpression('~<a[^>]+href="[^"<]*track\.' . $extension . '"[^>]+class="preview"~', $response['body']);
+            }
+            self::assertDoesNotMatchRegularExpression('~<a[^>]+href="[^"<]*track\.txt"[^>]+class="preview"~', $response['body']);
+            $disabled = $this->render($variant, '<?php return ["extensions" => ["audio" => [], "video" => ["ogg"]]];');
+            self::assertSame([], $this->jsConfig($disabled)['extensions']['audio']);
+            self::assertDoesNotMatchRegularExpression('~<a[^>]+href="[^"<]*track\.mp3"[^>]+class="preview"~', $disabled['body']);
+            self::assertMatchesRegularExpression('~<a[^>]+href="[^"<]*track\.ogg"[^>]+class="preview"~', $disabled['body']);
         }
     }
 
