@@ -75,7 +75,7 @@ main.toolbar.create = () =>
 			if(archiveState.busy) return;
 			const rows = main.selection.getSelectedRows();
 			if(rows.length === 1) downloadRow(rows[0]);
-			else if(rows.length > 1) void archiveSelection(rows);
+			else if(rows.length > 1) void archiveSelection(rows, main.selection.clear);
 		});
 	}
 	const copy = DOM.new('button', {

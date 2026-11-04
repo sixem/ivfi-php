@@ -5,9 +5,10 @@ import type { RowSelection } from '../../modules/row-selection';
 import { archiveSelection, archiveState } from './archive';
 import { getRowFile } from './download';
 
-export function showSelectionContextMenu(rows: HTMLElement[], trigger: HTMLElement,
+export function showSelectionContextMenu(selection: RowSelection, trigger: HTMLElement,
 	position: { x: number; y: number } | null = null, keyboard = false): void
 {
+	const rows = selection.getSelectedRows();
 	if(!rows.length) return;
 	const menu = createContextMenu();
 	if(rows.length > 1)
@@ -17,7 +18,7 @@ export function showSelectionContextMenu(rows: HTMLElement[], trigger: HTMLEleme
 			label: 'Download as Archive',
 			icon: 'archive',
 			disabled: archiveState.busy,
-			onSelect: () => { void archiveSelection(rows); }
+			onSelect: () => { void archiveSelection(rows, selection.clear); }
 		}], position, trigger, { keyboard });
 		return;
 	}
@@ -42,7 +43,7 @@ export function bindTableContextMenu(table: HTMLElement, selection: RowSelection
 			if(file) showFileContextMenu(file, row, { x, y }, keyboard);
 		} else {
 			selection.selectRow(row);
-			showSelectionContextMenu(selection.getSelectedRows(), row, { x, y }, keyboard);
+			showSelectionContextMenu(selection, row, { x, y }, keyboard);
 		}
 	};
 	table.addEventListener('contextmenu', (event) =>

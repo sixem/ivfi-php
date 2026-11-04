@@ -4,14 +4,14 @@
 
 html > body > .toast {
   position: fixed;
-  top: calc(var(--topbar-height, 31px) + 12px);
-  right: 20px;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
   z-index: 10002;
   display: flex;
   align-items: flex-start;
   gap: 10px;
   box-sizing: border-box;
-  width: min(21.25rem, calc(100vw - 40px));
+  width: min(21.25rem, calc(100vw - 32px));
   padding: 12px;
   border: 2px solid variables.$divider-color;
   border-radius: 3px;
@@ -21,7 +21,7 @@ html > body > .toast {
   box-shadow: 0 8px 24px rgb(0 0 0 / 70%);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-6px);
+  transform: translateY(6px);
   pointer-events: none;
   transition: opacity 180ms ease, transform 180ms ease, visibility 0s linear 180ms;
 
@@ -179,6 +179,10 @@ html > body > .toast {
 
   [hidden] {
     display: none !important;
+  }
+
+  @media (width <= 480px) {
+    width: calc(100% - 32px);
   }
 
   @media (prefers-reduced-motion: reduce) {

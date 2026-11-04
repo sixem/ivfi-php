@@ -1,5 +1,12 @@
 @use "variables";
 
+html > body > dialog.dialog .archiveDeselect {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
 html > body > dialog.dialog .archiveOptions {
   .dialogField > input,
   .archiveStatus {

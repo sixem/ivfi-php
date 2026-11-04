@@ -8,6 +8,7 @@ type DialogOptions = {
 	title: string;
 	description?: string;
 	content: HTMLElement;
+	footerContent?: HTMLElement;
 	confirmLabel?: string;
 	confirmDisabled?: boolean;
 	cancelLabel?: string;
@@ -49,12 +50,14 @@ export function createDialog(): Dialog
 	content.className = 'dialogContent';
 	body.append(description, content);
 	const footer = document.createElement('footer');
+	const footerContent = document.createElement('div');
+	footerContent.className = 'dialogFooterContent';
 	const cancel = document.createElement('button');
 	cancel.type = 'button';
 	const confirm = document.createElement('button');
 	confirm.type = 'submit';
 	confirm.className = 'dialogConfirm';
-	footer.append(cancel, confirm);
+	footer.append(footerContent, cancel, confirm);
 	form.append(header, body, footer);
 	element.append(form);
 	document.body.append(element);
@@ -95,6 +98,7 @@ export function createDialog(): Dialog
 			animation?.cancel();
 			animation = null;
 			content.replaceChildren();
+			footerContent.replaceChildren();
 			document.documentElement.removeAttribute('dialog-is-visible');
 			closing = false;
 			done(confirmed);
@@ -154,6 +158,8 @@ export function createDialog(): Dialog
 			if(next.description) element.setAttribute('aria-describedby', description.id);
 			else element.removeAttribute('aria-describedby');
 			content.replaceChildren(next.content);
+			footerContent.replaceChildren(...(next.footerContent ? [next.footerContent] : []));
+			footerContent.hidden = !next.footerContent;
 			confirm.textContent = next.confirmLabel || 'Confirm';
 			confirm.disabled = Boolean(next.confirmDisabled);
 			cancel.textContent = next.cancelLabel || 'Cancel';

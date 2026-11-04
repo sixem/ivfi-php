@@ -17,6 +17,7 @@ type ArchiveOptions = {
 	filename: string;
 	needsDisk: boolean;
 	picker: Promise<ArchiveHandle>;
+	deselectOnStart: boolean;
 };
 const ROW_HEIGHT = 36;
 const ROW_BUFFER = 8;
@@ -38,6 +39,13 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 	let anchor: number = null;
 	const content = document.createElement('div');
 	content.className = 'archiveOptions';
+	const deselectLabel = document.createElement('label');
+	deselectLabel.className = 'archiveDeselect';
+	const deselectCheckbox = document.createElement('input');
+	deselectCheckbox.type = 'checkbox';
+	deselectCheckbox.name = 'archive-deselect';
+	deselectCheckbox.checked = true;
+	deselectLabel.append(deselectCheckbox, document.createTextNode('Deselect on start'));
 	const field = document.createElement('div');
 	field.className = 'dialogField';
 	const label = document.createElement('span');
@@ -319,8 +327,9 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 	renderRows();
 	update();
 	const confirmation = dialog.show({
-		title: 'Download archive',
+		title: 'Download Archive',
 		content,
+		footerContent: deselectLabel,
 		confirmLabel: 'Download',
 		confirmDisabled: blocked,
 		initialFocus: input,
@@ -351,7 +360,8 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 				/* Prevent unhandled rejection during dialog exit */
 				void picker.catch(() => {});
 			}
-			confirmed = { files: files.filter(file => !excluded.has(file)), filename, needsDisk, picker };
+			confirmed = { files: files.filter(file => !excluded.has(file)), filename, needsDisk, picker,
+				deselectOnStart: deselectCheckbox.checked };
 		}
 	});
 	const removeScrollbar = createOverlayScrollbar(list, {

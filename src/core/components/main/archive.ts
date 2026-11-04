@@ -25,6 +25,7 @@ import { confirmArchive } from './archive-dialog';
 import { createToast } from '../../modules/toast';
 import { startDownload } from '../../modules/file-actions';
 import { onPageReplace } from '../../modules/lifecycle';
+import { log } from '../../modules/logger';
 import { getRowFile } from './download';
 import { getReadableSize } from '../../helpers/getReadableSize';
 import { hasControlCharacters } from '../../helpers/stringUtils';
@@ -68,13 +69,20 @@ const setBusy = (busy: boolean) =>
 	listeners.forEach(listener => listener());
 };
 
-export async function archiveSelection(rows: HTMLElement[]): Promise<void>
+export async function archiveSelection(rows: HTMLElement[], clearSelection: () => void): Promise<void>
 {
 	if(config.get('selection.enabled') === false || archiving) return;
 	setBusy(true);
 	const toast = createToast();
 	const controller = new AbortController();
 	const abort = () => controller.abort();
+	const cancel = () =>
+	{
+		if(controller.signal.aborted) return;
+		log.info('archive', 'Archive cancelled');
+		abort();
+	};
+	const progressOptions = { loading: true, duration: 0, onClose: cancel, closeLabel: 'Cancel archive' };
 	window.addEventListener('pagehide', abort, { once: true });
 	const cancelOnReplace = onPageReplace(abort);
 	let inputReader: ReadableStreamDefaultReader<Uint8Array> = null;
@@ -135,8 +143,9 @@ export async function archiveSelection(rows: HTMLElement[]): Promise<void>
 			destination = await handle.createWritable();
 		}
 		if(controller.signal.aborted) return;
+		if(confirmed.deselectOnStart) clearSelection();
 		toast.show('Preparing archive', {
-			detail: `${files.length} ${files.length === 1 ? 'file' : 'files'} selected`, loading: true, duration: 0, progress: 0
+			...progressOptions, detail: `${files.length} ${files.length === 1 ? 'file' : 'files'} selected`, progress: 0
 		});
 		let loaded = 0;
 		let completed = 0;
@@ -148,7 +157,7 @@ export async function archiveSelection(rows: HTMLElement[]): Promise<void>
 			reportedAt = now;
 			const progress = Math.min(0.99, total ? loaded / total : completed / files.length);
 			toast.update(`Creating archive (${Math.floor(progress * 100)}%)`, {
-				detail: name, filename: 'detail', loading: true, duration: 0, progress
+				...progressOptions, detail: name, filename: 'detail', progress
 			});
 		};
 		const inputs = async function* ()
@@ -187,7 +196,7 @@ export async function archiveSelection(rows: HTMLElement[]): Promise<void>
 				yield { name: file.name, lastModified: file.lastModified, input: chunks() };
 				completed++;
 			}
-			toast.update('Finishing archive', { loading: true, duration: 0, progress: 1 });
+			toast.update('Finishing archive', { ...progressOptions, progress: 1 });
 		};
 		let outputSize = 0;
 		output = makeZip(inputs()).pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
@@ -197,7 +206,7 @@ export async function archiveSelection(rows: HTMLElement[]): Promise<void>
 				if(!needsDisk && outputSize > bufferLimit) throw new Error(largeArchiveMessage);
 				stream.enqueue(chunk);
 			}
-		}));
+		}), { signal: controller.signal });
 		if(destination)
 		{
 			await output.pipeTo(destination, { signal: controller.signal });

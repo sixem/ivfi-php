@@ -25,13 +25,13 @@ export function bindSelectionSummary(selection: RowSelection): void
 	element.addEventListener('click', (event) =>
 	{
 		if(element.getAttribute('aria-expanded') === 'true') createContextMenu().hide(true);
-		else showSelectionContextMenu(selection.getSelectedRows(), element, null, event.detail === 0);
+		else showSelectionContextMenu(selection, element, null, event.detail === 0);
 	});
 	element.addEventListener('contextmenu', (event) =>
 	{
 		event.preventDefault();
 		const keyboard = event.clientX === 0 && event.clientY === 0;
-		showSelectionContextMenu(selection.getSelectedRows(), element,
+		showSelectionContextMenu(selection, element,
 			keyboard ? null : { x: event.clientX, y: event.clientY }, keyboard);
 	});
 	element.addEventListener('keydown', (event) =>
@@ -40,7 +40,7 @@ export function bindSelectionSummary(selection: RowSelection): void
 			&& !(event.key === 'F10' && event.shiftKey)) return;
 		event.preventDefault();
 		event.stopPropagation();
-		showSelectionContextMenu(selection.getSelectedRows(), element, null, true);
+		showSelectionContextMenu(selection, element, null, true);
 	});
 	selection.subscribe(rows =>
 	{
