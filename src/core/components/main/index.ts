@@ -120,7 +120,7 @@ main.toolbar.create = () =>
 		disabled?: boolean;
 	}> = [{
 		icon: 'filter',
-		label: 'Toggle filter',
+		label: `Search files and folders (${/Mac|iPhone|iPad|iPod/.test(navigator.platform) ? 'Cmd' : 'Ctrl'}+F)`,
 		run: () => data.components.filter.toggle()
 	}];
 
@@ -155,6 +155,7 @@ main.toolbar.create = () =>
 		if(action.icon === 'filter')
 		{
 			button.setAttribute('aria-controls', 'directory-filter');
+			button.setAttribute('aria-keyshortcuts', 'Control+f Meta+f');
 			button.setAttribute('aria-expanded', 'false');
 		}
 		eventHooks.listen(button, 'click', `toolbar-${action.icon}`, action.run);
@@ -367,9 +368,8 @@ main.sort.load = () =>
  */
 main.overlay.hide = (callback = null): void =>
 {
-	const filter = document.body.querySelector<HTMLElement>(':scope > div.filterContainer');
-	const visible = Boolean(filter && filter.style.display !== 'none' && !filter.classList.contains('closing'));
-	if(visible) data.components.filter.toggle();
+	const visible = data.components.filter.isOpen();
+	if(visible) data.components.filter.toggle(false);
 	callback?.(visible);
 };
 

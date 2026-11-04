@@ -1,4 +1,4 @@
-export type IconName = 'filter' | 'gallery' | 'settings' | 'download' | 'archive' | 'chevron' | 'check' | 'copy' | 'close' | 'arrow-left'
+export type IconName = 'search' | 'filter' | 'gallery' | 'settings' | 'download' | 'archive' | 'chevron' | 'check' | 'copy' | 'close' | 'arrow-left'
 	| 'list-indent-decrease' | 'list-indent-increase';
 
 type IconDefinition = {
@@ -79,6 +79,14 @@ const icons: Record<IconName, IconDefinition> = {
 			{ tag: 'path', attributes: { d: 'M12 17V3' } },
 			{ tag: 'path', attributes: { d: 'm6 11 6 6 6-6' } },
 			{ tag: 'path', attributes: { d: 'M19 21H5' } },
+		]
+	},
+	search: {
+		viewBox: '0 0 24 24',
+		filled: false,
+		shapes: [
+			{ tag: 'circle', attributes: { cx: '10.5', cy: '10.5', r: '6.5' } },
+			{ tag: 'path', attributes: { d: 'm16 16 4.5 4.5' } },
 		]
 	},
 	filter: {

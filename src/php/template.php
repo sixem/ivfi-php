@@ -2429,8 +2429,12 @@ $jsConfig = constructJsConfig(
       (microtime(true) - $render), $config, $version)
     ) : '';?>
 
-    <div class="filterContainer" id="directory-filter" style="display: none;">
-      <input type="text" id="directory-filter-input" name="filter" spellcheck="false" placeholder="Search .." value="">
+    <div class="filterContainer" id="directory-filter" role="search" aria-label="Search current directory" style="display: none;">
+      <div class="filterField">
+        <input type="text" id="directory-filter-input" name="filter" spellcheck="false" autocomplete="off" aria-describedby="directory-filter-status directory-filter-hint" placeholder="Search files…" value="">
+        <span class="filterStatus" id="directory-filter-status" role="status" aria-atomic="true"></span>
+      </div>
+      <p class="filterHint" id="directory-filter-hint">Press <kbd class="filterShortcut">Ctrl</kbd> <kbd>F</kbd> again for browser search</p>
     </div>
 
     <!-- [https://github.com/sixem/ivfi-php/ — The image and video friendly indexer]  -->  

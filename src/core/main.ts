@@ -563,22 +563,24 @@ data.components.main.dates.load();
 /* Add the filter controls using the shared icons. */
 const filterInput = selector.use('FILTER_INPUT') as HTMLInputElement;
 filterInput.value = '';
-filterInput.setAttribute('aria-label', 'Filter files and folders');
-const filterIcon = createIcon('filter');
+filterInput.setAttribute('aria-label', 'Search files and folders');
+const findModifier = /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? 'Cmd' : 'Ctrl';
+document.querySelector('.filterShortcut').textContent = findModifier;
+const filterIcon = createIcon('search');
 filterIcon.classList.add('filterIcon');
 filterInput.before(filterIcon);
 
 const collapseFilter = document.createElement('button');
 collapseFilter.type = 'button';
 collapseFilter.className = 'filterCollapse';
-collapseFilter.setAttribute('aria-label', 'Collapse filter');
+collapseFilter.setAttribute('aria-label', 'Hide search (keep filter)');
 collapseFilter.append(createIcon('chevron'));
 collapseFilter.addEventListener('click', () => componentFilter.toggle());
 
 const closeFilter = document.createElement('button');
 closeFilter.type = 'button';
 closeFilter.className = 'filterClose';
-closeFilter.setAttribute('aria-label', 'Exit filter');
+closeFilter.setAttribute('aria-label', 'Clear and close search');
 closeFilter.append(createIcon('close'));
 closeFilter.addEventListener('click', () =>
 {
@@ -586,7 +588,7 @@ closeFilter.addEventListener('click', () =>
 	componentFilter.apply(null);
 	componentFilter.toggle();
 });
-filterInput.after(collapseFilter, closeFilter);
+filterInput.parentElement.append(collapseFilter, closeFilter);
 
 /* Create toolbar actions */
 data.components.main.toolbar.create();

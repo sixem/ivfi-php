@@ -8,7 +8,8 @@ import type { RowSelection } from '../../modules/row-selection';
  */
 export type TComponentFilter = {
 	apply?: (query: string) => void;
-	toggle?: () => void;
+	toggle?: (open?: boolean) => void;
+	isOpen?: () => boolean;
 };
 
 /**

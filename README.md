@@ -45,7 +45,7 @@ See [setup](docs/setup.md) for standalone and Docker options, [configuration](do
 
 - **Gallery:** browse images and videos, download files, and reverse-search images.
 - **Hover previews:** preview media by hovering over its filename.
-- **Search:** filter filenames with regex or wildcards such as `*.mp4` (`Shift + F` on desktop).
+- **Search:** filter filenames with regex or wildcards such as `*.mp4` (`Ctrl + F`, or `Cmd + F` on Mac).
 - **Downloads:** download individual files or a selection as a ZIP archive.
 - **Standalone:** use a single PHP file with embedded assets.
 - **Customization:** themes, saved display preferences, and server-side filters.

@@ -32,6 +32,7 @@ componentFilter.apply = (query = ''): void =>
 	const filterData: TFilterData = {};
 	let pattern: RegExp;
 	const input = selector.use('FILTER_INPUT') as HTMLInputElement;
+	const status = document.getElementById('directory-filter-status');
 	try
 	{
 		/* Leading-star filename patterns are wildcards; other queries retain regex syntax. */
@@ -44,6 +45,8 @@ componentFilter.apply = (query = ''): void =>
 	} catch
 	{
 		input.setAttribute('aria-invalid', 'true');
+		status.textContent = 'Invalid pattern';
+		status.setAttribute('data-error', '');
 		return;
 	}
 
@@ -148,6 +151,11 @@ componentFilter.apply = (query = ''): void =>
 		}
 	}
 
+	const matches = filterData.shown.files + filterData.shown.directories;
+	status.textContent = filterData.reset ? '' : matches === 0 ? 'No matches'
+		: `${matches.toLocaleString()} ${matches === 1 ? 'match' : 'matches'}`;
+	status.toggleAttribute('data-error', !filterData.reset && matches === 0);
+
 	/* Set parent class so that we can hide all - .filtered -> .filtered */
 	if(filterData.reset)
 	{
@@ -227,7 +235,13 @@ componentFilter.apply = (query = ''): void =>
 
 };
 
-componentFilter.toggle = (): void =>
+componentFilter.isOpen = (): boolean =>
+{
+	const container = document.getElementById('directory-filter');
+	return container.style.display !== 'none' && !container.classList.contains('closing');
+};
+
+componentFilter.toggle = (open = !componentFilter.isOpen()): void =>
 {
 	const container: HTMLElement = document.body.querySelector(
 		':scope > div.filterContainer'
@@ -237,7 +251,7 @@ componentFilter.toggle = (): void =>
 		'input[type="text"]'
 	);
 
-	const visible = container.style.display === 'none' || container.classList.contains('closing');
+	const visible = open;
 	container.onanimationend = null;
 	container.classList.remove('closing');
 	container.inert = !visible;
@@ -258,8 +272,11 @@ componentFilter.toggle = (): void =>
 	}
 	const button = document.querySelector<HTMLButtonElement>('.topActions > button[data-action="filter"]');
 	if(button) button.setAttribute('aria-expanded', String(visible));
-	if(visible) input.focus();
-	else button?.focus({ preventScroll: true });
+	if(visible)
+	{
+		input.focus({ preventScroll: true });
+		input.select();
+	} else button?.focus({ preventScroll: true });
 };
 
 export {
