@@ -50,16 +50,21 @@ export function releaseMedia(element: HTMLImageElement | HTMLMediaElement): void
 	element.remove();
 }
 
+const autoplayMuted = new WeakSet<HTMLVideoElement>();
+export const isAutoplayMuted = (video: HTMLVideoElement): boolean => autoplayMuted.has(video);
+
 export async function playVideo(video: HTMLVideoElement, mutedFallback = false, isCurrent?: () => boolean): Promise<void>
 {
 	try
 	{
 		await video.play();
+		if(!video.muted) autoplayMuted.delete(video);
 	} catch(error)
 	{
 		if(mutedFallback && (!isCurrent || isCurrent()) && error instanceof DOMException && error.name === 'NotAllowedError'
 			&& !video.muted && video.isConnected && video.currentSrc)
 		{
+			autoplayMuted.add(video);
 			video.muted = true;
 			try { await video.play(); } catch { return; }
 		}

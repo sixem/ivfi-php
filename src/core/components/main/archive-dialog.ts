@@ -40,17 +40,31 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 	content.className = 'archiveOptions';
 	const field = document.createElement('div');
 	field.className = 'dialogField';
-	const label = document.createElement('label');
-	label.htmlFor = 'ivfi-archive-filename';
+	const label = document.createElement('span');
+	label.id = 'ivfi-archive-filename-label';
+	label.className = 'dialogLabel';
 	label.textContent = 'Archive filename';
 	const input = document.createElement('input');
-	input.id = label.htmlFor;
+	input.id = 'ivfi-archive-filename';
+	input.setAttribute('aria-labelledby', label.id);
 	input.name = 'filename';
 	input.type = 'text';
 	input.value = filename;
 	input.maxLength = 240;
 	input.autocomplete = 'off';
 	input.spellcheck = false;
+	const selectName = () => input.setSelectionRange(0, input.value.replace(/\.zip$/i, '').length);
+	let selectOnClick = false;
+	input.addEventListener('pointerdown', () => { selectOnClick = document.activeElement !== input; });
+	input.addEventListener('focus', selectName);
+	input.addEventListener('click', () =>
+	{
+		// A first pointer click can place the caret after focus has selected the name.
+		if(selectOnClick) selectName();
+		selectOnClick = false;
+	});
+	input.addEventListener('blur', () => { selectOnClick = false; });
+	input.addEventListener('pointercancel', () => { selectOnClick = false; });
 	const error = document.createElement('p');
 	error.id = 'ivfi-archive-filename-error';
 	error.className = 'dialogError';
@@ -347,7 +361,6 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 	});
 	try
 	{
-		input.setSelectionRange(0, filename.length - 4);
 		return await confirmation ? confirmed : null;
 	} finally {
 		cancelAnimationFrame(renderFrame);

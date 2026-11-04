@@ -32,6 +32,11 @@ if (!$buildAsset) {
     }
 }
 if ($file !== false && is_file($file)) {
+    if (preg_match('/\.(?:php[0-9]*|phtml|phar)$/i', $file)) {
+        http_response_code(404);
+        return true;
+    }
+    $offload = getenv('IVFI_DEV_STREAM_FILES') === '1';
     $types = [
         'mp3' => 'audio/mpeg', 'wav' => 'audio/wav', 'flac' => 'audio/flac',
         'm4a' => 'audio/mp4', 'aac' => 'audio/aac', 'ogg' => 'application/ogg',
@@ -39,9 +44,15 @@ if ($file !== false && is_file($file)) {
         'webm' => 'video/webm', 'ogv' => 'video/ogg', 'mov' => 'video/quicktime',
     ];
     $type = $types[strtolower(pathinfo($file, PATHINFO_EXTENSION))] ?? null;
-    if ($type === null && !$buildAsset) return false;
+    if ($type === null && !$buildAsset && !$offload) return false;
     $type ??= match (strtolower(pathinfo($file, PATHINFO_EXTENSION))) {
-        'css' => 'text/css', 'js' => 'text/javascript', 'woff2' => 'font/woff2',
+        // Keep previews and web assets usable even when PHP's optional fileinfo extension is absent.
+        'jpg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif',
+        'ico' => 'image/x-icon', 'svg' => 'image/svg+xml', 'bmp' => 'image/bmp',
+        'webp' => 'image/webp', 'avif' => 'image/avif',
+        'html', 'htm' => 'text/html', 'txt' => 'text/plain', 'xml' => 'application/xml',
+        'css' => 'text/css', 'js', 'mjs' => 'text/javascript',
+        'woff' => 'font/woff', 'woff2' => 'font/woff2', 'ttf' => 'font/ttf', 'otf' => 'font/otf',
         'map', 'json' => 'application/json',
         default => function_exists('mime_content_type') ? (mime_content_type($file) ?: 'application/octet-stream') : 'application/octet-stream',
     };
@@ -88,6 +99,15 @@ if ($file !== false && is_file($file)) {
         header("Content-Range: bytes $start-$end/$size");
     }
     $remaining = max(0, $end - $start + 1);
+    if ($offload) {
+        // The proxy streams the body so a paused download cannot occupy PHP's only worker.
+        header('X-IVFi-Dev-File: ' . base64_encode($file));
+        header('X-IVFi-Dev-Offset: ' . $start);
+        header('X-IVFi-Dev-Length: ' . $remaining);
+        header('Content-Length: 0');
+        fclose($stream);
+        return true;
+    }
     header('Content-Length: ' . $remaining);
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         fseek($stream, $start);

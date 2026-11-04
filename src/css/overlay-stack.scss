@@ -1,0 +1,66 @@
+@use "variables";
+
+html > body > .overlayStack {
+  position: fixed;
+  top: calc(var(--topbar-height, 31px) + 8px);
+  left: 50%;
+  z-index: 10001;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  transform: translateX(-50%);
+  pointer-events: none;
+
+  > .overlayItem {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: grid-template-rows 240ms ease, opacity 180ms ease, transform 240ms ease, visibility 0s linear 240ms;
+
+    &.is-visible {
+      grid-template-rows: 1fr;
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      transition-delay: 0s;
+    }
+
+    > .overlayClip {
+      min-height: 0;
+      overflow: hidden;
+
+      > .overlayContent {
+        display: flex;
+        justify-content: center;
+        padding-bottom: 4px;
+      }
+    }
+  }
+
+  .selectionSummary,
+  #indicatorPreviewVolume {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 4px 8px;
+    border: 2px solid variables.$surface-border;
+    border-radius: 4px;
+    background: #08090a;
+    color: variables.$text-color;
+    font: 500 0.8125rem / 1.35 Inter, sans-serif;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    overflow-wrap: anywhere;
+    user-select: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    > .overlayItem { transition: none; }
+  }
+}
+
+html[gallery-is-visible] > body > .overlayStack {
+  visibility: hidden;
+
+  > .overlayItem { visibility: hidden; }
+}

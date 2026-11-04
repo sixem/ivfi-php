@@ -1,8 +1,10 @@
 import { execFile, spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { once } from 'node:events';
+import { createReadStream } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import http from 'node:http';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { createInterface } from 'node:readline';
@@ -21,6 +23,8 @@ const listen = (server, port) => new Promise((resolve, reject) => {
 
 export async function startServer({ port, files, php, buildDir, onExit = () => {}, onDiagnostic = message => console.error(`[php] ${message}`) })
 {
+	// The backend runs in the media directory; explicit executable paths belong to the caller's cwd.
+	if(/[\\/]/.test(php)) php = resolve(php);
 	try {
 		const { stdout } = await execute(php, ['-r', 'echo PHP_VERSION_ID;'], { timeout: 10000 });
 		if(Number(stdout) < 80000 || !/^\d+$/.test(stdout)) throw new Error('PHP 8.0 or newer is required.');
@@ -72,9 +76,37 @@ export async function startServer({ port, files, php, buildDir, onExit = () => {
 		const upstream = http.request({ hostname: '127.0.0.1', port: backendPort, path: request.url, method: request.method, headers, agent: false }, incoming => {
 			const headers = { ...incoming.headers, 'cache-control': 'no-store' };
 			const inject = headers['x-ivfi-dev-page'] === '1' && incoming.statusCode === 200 && request.method === 'GET';
+			const file = headers['x-ivfi-dev-file'];
+			const offset = Number(headers['x-ivfi-dev-offset']), length = Number(headers['x-ivfi-dev-length']);
 			delete headers['x-ivfi-dev-page'];
+			delete headers['x-ivfi-dev-file'];
+			delete headers['x-ivfi-dev-offset'];
+			delete headers['x-ivfi-dev-length'];
 			incoming.on('error', () => response.destroy());
-			if(inject)
+			if(file)
+			{
+				// PHP validates paths and ranges, then releases its worker before Node streams the body.
+				incoming.resume();
+				if(response.destroyed) return;
+				headers['content-length'] = String(length);
+				delete headers['transfer-encoding'];
+				if(request.method === 'HEAD' || !length)
+				{
+					response.writeHead(incoming.statusCode, headers).end();
+					return;
+				}
+				const stream = createReadStream(Buffer.from(file, 'base64'), { start: offset, end: offset + length - 1 });
+				response.once('close', () => stream.destroy());
+				stream.once('error', () => {
+					if(response.headersSent) response.destroy();
+					else response.writeHead(404).end('File is no longer available.');
+				});
+				stream.once('open', () => {
+					if(response.destroyed) { stream.destroy(); return; }
+					response.writeHead(incoming.statusCode, headers);
+					stream.pipe(response);
+				});
+			} else if(inject)
 			{
 				const chunks = [];
 				incoming.on('data', chunk => chunks.push(chunk));
@@ -85,7 +117,7 @@ export async function startServer({ port, files, php, buildDir, onExit = () => {
 					response.writeHead(incoming.statusCode, headers).end(body);
 				});
 			} else {
-				// Preserve byte ranges and stream files with backpressure; only listings are buffered.
+				// Non-listing PHP responses pass through unchanged.
 				response.writeHead(incoming.statusCode, headers);
 				incoming.pipe(response);
 			}
@@ -120,7 +152,7 @@ export async function startServer({ port, files, php, buildDir, onExit = () => {
 		await listen(reservation, 0);
 		backendPort = reservation.address().port;
 		await new Promise(done => reservation.close(done));
-		const environment = { ...process.env, IVFI_DEV_BUILD_DIR: buildDir };
+		const environment = { ...process.env, IVFI_DEV_BUILD_DIR: buildDir, IVFI_DEV_STREAM_FILES: '1' };
 		delete environment.PHP_CLI_SERVER_WORKERS;
 		backend = spawn(php, ['-d', 'output_buffering=0', '-d', 'zlib.output_compression=0', '-d', 'opcache.enable_cli=0',
 			'-S', `127.0.0.1:${backendPort}`, '-t', files, router], {

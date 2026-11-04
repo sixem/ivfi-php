@@ -16,6 +16,7 @@ import { createTooltip } from '../../modules/tooltip';
 import { showFileContextMenu, notifyDownloadStarted } from '../../modules/file-actions';
 import { createIcon } from '../../icons';
 import { AudioCard } from '../../components/audio/card';
+import { getAudioVolume, saveAudioVolume } from '../../helpers/audioVolume';
 /** Classes */
 import optimizeClass from './../optimize';
 /** Helpers */
@@ -707,6 +708,28 @@ export default class galleryClass
 	 * Updating functions
 	 */
 	public update = {
+		layout: (mobile: boolean = this.options.mobile): void =>
+		{
+			this.options.mobile = mobile;
+			const visible = this.options.list.show && !mobile;
+			const content = this.list.parentElement;
+			const toggle = content.querySelector<HTMLButtonElement>('.galleryListToggle');
+			if((!visible && (this.list.contains(document.activeElement)
+				|| document.activeElement?.getAttribute('aria-controls') === this.list.id))
+				|| (mobile && document.activeElement === toggle))
+			{
+				const target = mobile ? this.container.querySelector<HTMLButtonElement>('button[data-action="close"]') : toggle;
+				target?.focus({ preventScroll: true });
+			}
+			toggle.hidden = mobile;
+			this.list.toggleAttribute('inert', !visible);
+			this.list.setAttribute('aria-hidden', String(!visible));
+			content.classList.toggle('list-collapsed', !visible);
+			this.update.listToggle(visible, toggle);
+			this.update.listWidth();
+			if(visible && this.options.performance && this.optimize?.enabled)
+				this.optimize.attemptRefresh();
+		},
 		listToggle: (visible: boolean, element: HTMLElement = this.container.querySelector('button[data-action="toggle"]')): void =>
 		{
 			if(!element) return;
@@ -1318,19 +1341,15 @@ export default class galleryClass
 			wrapper.querySelectorAll('video').forEach(video => this.disposeVideo(video));
 			const card = data.preview.takeAudio?.(item.url, wrapper) || new AudioCard({
 				src: new URL(item.url, document.baseURI).href, name: item.name,
-				volume: this.video.getVolume(), startTime: audioStartTime, bytes: item.bytes
+				volume: getAudioVolume(), startTime: audioStartTime, bytes: item.bytes
 			});
+			card.setGallery();
 			if(this.options.autoplay) void card.play(true);
 			else card.pause();
 			this.audioCard = card;
-			this.options.volume = card.media.muted ? 0 : card.media.volume;
-			card.setGallery();
+			saveAudioVolume(card.media.muted ? 0 : card.media.volume);
 			if(card.element.parentElement !== wrapper) wrapper.append(card.element);
-			card.onVolumeChange = volume =>
-			{
-				this.options.volume = volume;
-				eventHooks.trigger('galleryVolumeChange', volume);
-			};
+			card.onVolumeChange = saveAudioVolume;
 			this.data.selected.type = 2;
 			this.mediaReady = true;
 			wrapper.style.display = '';
@@ -1471,21 +1490,7 @@ export default class galleryClass
 		client.gallery.listState = visible ? 1 : 0;
 		user.set(client);
 		this.options.list.show = visible;
-		const content = this.list.parentElement;
-		const toggle = content.querySelector<HTMLButtonElement>('.galleryListToggle');
-		if(!visible && (this.list.contains(document.activeElement)
-			|| document.activeElement?.getAttribute('aria-controls') === this.list.id))
-			toggle.focus({ preventScroll: true });
-		this.list.toggleAttribute('inert', !visible);
-		this.list.setAttribute('aria-hidden', String(!visible));
-		content.classList.toggle('list-collapsed', !visible);
-		this.update.listToggle(visible);
-		this.update.listWidth();
-
-		if(visible && this.options.performance && this.optimize?.enabled)
-		{
-			this.optimize.attemptRefresh();
-		}
+		this.update.layout();
 
 		return visible;
 	}
@@ -1764,6 +1769,7 @@ export default class galleryClass
 		/* Handles `keyup` events in the gallery (well - document, but unbinds on close) */
 		eventHooks.listen(window, 'keyup', 'galleryKeyUp', (event: KeyboardEvent): void =>
 		{
+			if(event.code !== Keys.escape && (event.target as Element).closest?.('.audioCard input, .audioCard button')) return;
 			if((event.target as Element).closest?.('.galleryListToggle') && ['Space', 'Enter'].includes(event.code)) return;
 			if(document.documentElement.hasAttribute('context-menu-is-visible')
 				|| document.documentElement.hasAttribute('dialog-is-visible')) return;
@@ -1782,6 +1788,7 @@ export default class galleryClass
 		/* Handles `keydown` events */
 		eventHooks.listen(window, 'keydown', 'galleryKeyDown', (event: KeyboardEvent): void =>
 		{
+			if(event.code !== Keys.escape && (event.target as Element).closest?.('.audioCard input, .audioCard button')) return;
 			if((event.target as Element).closest?.('.galleryListToggle') && ['Space', 'Enter'].includes(event.code)) return;
 			if(document.documentElement.hasAttribute('context-menu-is-visible')
 				|| document.documentElement.hasAttribute('dialog-is-visible')) return;
@@ -1904,15 +1911,13 @@ export default class galleryClass
 			'aria-hidden': String(!listVisible)
 		});
 		list.toggleAttribute('inert', !listVisible);
-		if(!this.options.mobile)
-		{
-			const listToggle = DOM.new('button', {
-				type: 'button', class: 'galleryListToggle', 'data-action': 'toggle',
-				'aria-controls': list.id, 'aria-keyshortcuts': 'L'
-			});
-			this.update.listToggle(listVisible, listToggle);
-			media.append(listToggle);
-		}
+		const listToggle = DOM.new('button', {
+			type: 'button', class: 'galleryListToggle', 'data-action': 'toggle',
+			'aria-controls': list.id, 'aria-keyshortcuts': 'L'
+		});
+		listToggle.hidden = this.options.mobile;
+		this.update.listToggle(listVisible, listToggle);
+		media.append(listToggle);
 
 		/* Add to content container, respecting list reverse status */
 		content.append(this.options.list.reverse ? list: media);

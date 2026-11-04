@@ -50,14 +50,14 @@ pnpm install
 pnpm dev --files /path/to/files
 ```
 
-See [building](docs/building.md#development) for local configuration, options and troubleshooting.
+See [development options](docs/building.md#development).
 
 ## Features
 
-- **Gallery:** browse images, videos, and audio, download files, and reverse-search images. On desktop, collapse the file list with its edge chevron or `L`. Hover the top-bar filename for its full name, size, and modified date.
+- **Gallery:** browse images, videos, and audio, download files, and reverse-search images.
 - **Hover previews:** preview media by hovering over its filename.
-- **Audio:** a shared preview/gallery player with a live visualiser, duration, seeking, and volume. Hover previews autoplay at the saved video-preview volume; clicking the filename or expand button opens the gallery at the current playback position. The gallery also shows approximate average bitrate from file size and duration.
-- **Search:** filter filenames with regex or wildcards such as `*.mp4` (`Ctrl + F`, or `Cmd + F` on Mac).
+- **Audio:** playback with a live visualiser, seeking, and separate volume control.
+- **Search:** filter filenames with regex or wildcards (`Ctrl/Cmd + F`).
 - **Downloads:** download individual files or a selection as a ZIP archive.
 - **Standalone:** use a single PHP file with embedded assets.
 - **Customization:** themes, saved display preferences, and server-side filters.

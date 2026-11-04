@@ -110,6 +110,22 @@ export function createDialog(): Dialog
 	});
 	close.addEventListener('click', () => finish(false));
 	cancel.addEventListener('click', () => finish(false));
+	const isBackdrop = (event: MouseEvent): boolean =>
+	{
+		if(event.target !== element) return false;
+		const bounds = element.getBoundingClientRect();
+		return event.clientX < bounds.left || event.clientX > bounds.right
+			|| event.clientY < bounds.top || event.clientY > bounds.bottom;
+	};
+	let backdropPressed = false;
+	element.addEventListener('pointerdown', event => { backdropPressed = event.button === 0 && isBackdrop(event); });
+	element.addEventListener('pointercancel', () => { backdropPressed = false; });
+	element.addEventListener('click', event =>
+	{
+		const dismiss = backdropPressed && isBackdrop(event);
+		backdropPressed = false;
+		if(dismiss) finish(false);
+	});
 	element.addEventListener('cancel', (event) =>
 	{
 		event.preventDefault();

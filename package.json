@@ -25,6 +25,7 @@
     "html-webpack-plugin": "^5.3.1",
     "mini-css-extract-plugin": "^1.6.0",
     "moment": "^2.31.0",
+    "playwright-core": "1.64.1",
     "postcss": "^8.5.28",
     "postcss-loader": "^7.0.1",
     "sass": "^1.52.3",
@@ -46,7 +47,8 @@
     "lint": "eslint \"./src/core/**/*.ts\" \"scripts/**/*.js\" && stylelint \"./src/css/**/*.scss\"",
     "test": "pnpm run lint && pnpm run build && node ./scripts/make-standalone.js && node --test scripts/test-standalone.js scripts/test-optimize.js scripts/test-archive-selection-totals.js scripts/test-dev.js",
     "pack-release": "bash ./scripts/pack-release.sh",
-    "test:dev": "node --test scripts/test-dev.js scripts/test-dev-server.js scripts/test-dev-watch.js"
+    "test:dev": "node --test scripts/test-dev.js scripts/test-dev-server.js scripts/test-dev-watch.js",
+    "test:gallery": "node --test scripts/test-gallery.js"
   },
   "repository": {
     "type": "git",

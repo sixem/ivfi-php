@@ -105,10 +105,12 @@ export class AudioCard
 		});
 		listen(this.volumeInput, 'input', () =>
 		{
+			const blocked = this.autoplayMuted;
 			this.autoplayMuted = false;
 			if(!this.media.paused) this.resumeAnalysis();
 			this.media.volume = Number(this.volumeInput.value);
 			this.media.muted = this.media.volume === 0;
+			if(blocked) void this.play();
 		});
 		listen(this.seekInput, 'input', () =>
 		{
@@ -181,10 +183,22 @@ export class AudioCard
 
 	public setGallery = (): void =>
 	{
+		// Opening a preview is an explicit activation, including while its autoplay is pending.
+		this.playRequest++;
+		this.restoreAutoplayVolume();
 		this.element.classList.add('audioCardGallery');
 		this.expand.hidden = true;
 		this.options.onExpand = undefined;
 		this.updateBitrate();
+	}
+
+	private restoreAutoplayVolume = (): void =>
+	{
+		if(!this.autoplayMuted) return;
+		this.autoplayMuted = false;
+		this.media.muted = false;
+		this.updateVolume();
+		this.updateState();
 	}
 
 	private resumeAnalysis = (): void =>
@@ -220,6 +234,7 @@ export class AudioCard
 	{
 		if(this.disposed || this.media.error) return;
 		const request = ++this.playRequest;
+		if(!autoplay) this.restoreAutoplayVolume();
 		/* Do not route hover audio through a graph the browser has not unlocked. */
 		const activation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
 		if(!autoplay || activation?.hasBeenActive) this.resumeAnalysis();
@@ -281,12 +296,13 @@ export class AudioCard
 
 	private updateVolume = (): void =>
 	{
-		const volume = this.media.muted ? 0 : this.media.volume;
+		const volume = this.media.muted && !this.autoplayMuted ? 0 : this.media.volume;
 		this.volumeInput.value = String(volume);
 		this.volumeInput.style.setProperty('--audio-progress', `${volume * 100}%`);
-		this.muteButton.replaceChildren(createIcon(volume === 0 ? 'volume-off' : 'volume'));
-		this.muteButton.setAttribute('aria-label', volume === 0 ? 'Unmute audio' : 'Mute audio');
-		this.muteButton.setAttribute('aria-pressed', String(volume === 0));
+		const muted = this.media.muted || this.media.volume === 0;
+		this.muteButton.replaceChildren(createIcon(muted ? 'volume-off' : 'volume'));
+		this.muteButton.setAttribute('aria-label', muted ? 'Unmute audio' : 'Mute audio');
+		this.muteButton.setAttribute('aria-pressed', String(muted));
 	}
 
 	private updateTime = (time = this.media.currentTime): void =>

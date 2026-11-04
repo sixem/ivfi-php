@@ -3,7 +3,7 @@ import { config } from '../../config/config';
 import data from '../../config/data';
 /** Modules */
 import { eventHooks } from '../../modules/event-hooks';
-import { DOM, setVideoVolume, showVolumeIndicator } from '../../helpers';
+import { DOM, setVideoVolume } from '../../helpers';
 import { playVideo } from '../../helpers/media';
 import { log } from '../../modules/logger';
 
@@ -57,6 +57,7 @@ events.handleTopBarVisibility = (): void =>
 
 events.handlePreviewScroll = (event: WheelEvent): void =>
 {
+	if(data.preview.audio) return;
 	if(data.scrollLock && !scrollData.break)
 	{
 		if(event.deltaY && Math.abs(event.deltaY) !== 0)
@@ -92,12 +93,7 @@ events.handlePreviewScroll = (event: WheelEvent): void =>
 
 			log.debug('preview', `Volume: ${data.preview.volume}%`, data.preview.data);
 
-			if(data.preview.audio)
-			{
-				data.preview.audio.setVolume(data.preview.volume / 100);
-				showVolumeIndicator(data.preview.volume);
-				void data.preview.audio.play(true);
-			} else if(data.preview.data &&
+			if(data.preview.data &&
 				data.preview.data.element &&
 				data.preview.data.audible &&
 				data.preview.data.type === 'VIDEO')

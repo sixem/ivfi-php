@@ -9,9 +9,9 @@ import { log } from './modules/logger';
 import { createIcon } from './icons';
 import { eventHooks } from './modules/event-hooks';
 import { disposePage, onPageReplace } from './modules/lifecycle';
-import { playVideo } from './helpers/media';
+import { playVideo, isAutoplayMuted } from './helpers/media';
+import { getAudioVolume, saveAudioVolume } from './helpers/audioVolume';
 import { AudioPreview } from './components/audio/preview';
-import { StorageKey } from './constant';
 import { createOverlayScrollbar } from './modules/scrollbar';
 import { createRowSelection } from './modules/row-selection';
 import { createTooltip } from './modules/tooltip';
@@ -264,8 +264,7 @@ eventHooks.listen(window, 'resize', 'windowResize', debounce((): void =>
 
 	if(data.instances.gallery)
 	{
-		data.instances.gallery.options.mobile = isMobile;
-		data.instances.gallery.update.listWidth();
+		data.instances.gallery.update.layout(isMobile);
 	}
 
 	/* Update page values */
@@ -346,7 +345,7 @@ if(config.get('mobile') === false
 		}
 
 		/* If video is audible, enable scrollLock */
-		if((event.loaded && event.audible) || data.preview.audio)
+		if(event.loaded && event.audible)
 		{
 			data.scrollLock = true;
 		} else {
@@ -370,16 +369,10 @@ if(config.get('mobile') === false
 	});
 	data.preview.takeVideo = (src, parent) => preview.takeVideo(src, parent);
 
-	let audioVolumeSave = 0;
-	const saveAudioVolume = () =>
-	{
-		audioVolumeSave = 0;
-		localStorage.setItem(`${StorageKey}.previewVolume`, String(data.preview.volume));
-	};
 	const audioPreview = new AudioPreview(selector.use('TABLE') as HTMLElement, {
 		extensions,
 		delay: config.get('preview.hoverDelay'),
-		volume: () => data.preview.volume / 100,
+		volume: getAudioVolume,
 		onExpand: config.get('gallery.enabled') ? anchor => anchor.click() : undefined,
 		available: () => data.preview.isLoadable && document.hasFocus() && !document.hidden
 			&& !document.documentElement.hasAttribute('gallery-is-visible')
@@ -388,19 +381,23 @@ if(config.get('mobile') === false
 		onActive: card =>
 		{
 			data.preview.audio = card;
-			data.scrollLock = !!card || !!(data.preview.data?.loaded && data.preview.data?.audible);
+			data.scrollLock = !card && !!(data.preview.data?.loaded && data.preview.data?.audible);
 		},
-		onVolumeChange: volume =>
-		{
-			const nextVolume = Math.round(volume * 100);
-			if(nextVolume === data.preview.volume) return;
-			data.preview.volume = nextVolume;
-			clearTimeout(audioVolumeSave);
-			audioVolumeSave = window.setTimeout(saveAudioVolume, 100);
-		}
+		onVolumeChange: saveAudioVolume
 	});
 	data.preview.takeAudio = (src, parent) => audioPreview.take(src, parent);
 	data.preview.hasAudio = src => audioPreview.has(src);
+	const unlockVideo = () =>
+	{
+		const video = data.preview.data?.element;
+		if(video instanceof HTMLVideoElement && isAutoplayMuted(video))
+		{
+			setVideoVolume(video, data.preview.volume / 100);
+			void playVideo(video, true, () => data.preview.data?.element === video);
+		}
+	};
+	window.addEventListener('pointerdown', unlockVideo);
+	window.addEventListener('keydown', unlockVideo);
 	const hidePreview = () => { preview.hide(true); audioPreview.hide(); };
 	const onVisibility = () => { if(document.hidden) hidePreview(); };
 	window.addEventListener('blur', hidePreview);
@@ -409,10 +406,10 @@ if(config.get('mobile') === false
 	eventHooks.subscribe('galleryOpen', 'hidePreview', hidePreview);
 	onPageReplace(() =>
 	{
+		window.removeEventListener('pointerdown', unlockVideo);
+		window.removeEventListener('keydown', unlockVideo);
 		preview.destroy();
 		audioPreview.destroy();
-		clearTimeout(audioVolumeSave);
-		if(audioVolumeSave) saveAudioVolume();
 		data.preview.takeAudio = null;
 		data.preview.hasAudio = null;
 		data.preview.takeVideo = null;

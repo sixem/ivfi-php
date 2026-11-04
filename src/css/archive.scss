@@ -17,7 +17,7 @@ html > body > dialog.dialog .archiveOptions {
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 8px;
-    font-weight: 500;
+    font-weight: inherit;
     font-variant-numeric: tabular-nums;
   }
 
@@ -28,7 +28,7 @@ html > body > dialog.dialog .archiveOptions {
     gap: 10px;
     min-width: 0;
     max-width: 100%;
-    padding-left: 4px;
+    padding-left: 8px;
     cursor: pointer;
   }
 
@@ -41,7 +41,8 @@ html > body > dialog.dialog .archiveOptions {
       min-width: 0;
 
       /* Keep singular and plural labels from changing the summary's wrapping. */
-      width: 10.5ch;
+      width: calc(10.5ch + 1rem);
+      white-space: pre;
     }
   }
 
@@ -57,13 +58,16 @@ html > body > dialog.dialog .archiveOptions {
     flex-shrink: 0;
     margin-left: auto;
     text-align: right;
-    color: variables.$accent-color;
-    font-weight: bold;
+    color: inherit;
+    font-weight: inherit;
     white-space: nowrap;
   }
 
   .archiveFileList {
     position: relative;
+    margin-inline: -16px;
+    border-block: 2px solid variables.$divider-color;
+    background: #000;
   }
 
   .archiveFiles {
@@ -71,8 +75,6 @@ html > body > dialog.dialog .archiveOptions {
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 12px;
-    border-top: 2px solid variables.$divider-color;
-    border-bottom: 2px solid variables.$divider-color;
   }
 
   .archiveFileRows {
@@ -89,7 +91,7 @@ html > body > dialog.dialog .archiveOptions {
     gap: 10px;
     box-sizing: border-box;
     height: var(--archive-row-height);
-    padding: 7px 4px;
+    padding: 7px 24px;
     cursor: pointer;
 
     &[data-range-anchor]::before {
@@ -102,8 +104,9 @@ html > body > dialog.dialog .archiveOptions {
       opacity: 0.65;
     }
 
-    &:not([data-index="0"]) {
-      border-top: 2px solid variables.$divider-color;
+    &:hover,
+    &:focus-within {
+      background: #121317;
     }
   }
 
@@ -114,12 +117,16 @@ html > body > dialog.dialog .archiveOptions {
   }
 
   .archiveFileSize {
+    color: inherit;
+    font-size: inherit;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
 
   .archiveStatus {
     margin: 12px 0 0;
+    color: inherit;
+    font-size: inherit;
 
     &[data-blocked] {
       padding-left: 10px;

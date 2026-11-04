@@ -32,6 +32,7 @@ export function createContextMenu(): ContextMenu
 	if(menu.showPopover) menu.setAttribute('popover', 'manual');
 	document.body.append(menu);
 	let owner: HTMLElement = null;
+	let anchorLayout: ResizeObserver = null;
 	const pressedKeys = new Set<string>();
 	const cleanups: Array<() => void> = [];
 	const listen = (target: EventTarget, type: string, handler: EventListener, capture = false) =>
@@ -41,6 +42,8 @@ export function createContextMenu(): ContextMenu
 	};
 	const hide = (restoreFocus = false) =>
 	{
+		anchorLayout?.disconnect();
+		anchorLayout = null;
 		if(menu.hidden) return;
 		menu.hidden = true;
 		document.documentElement.removeAttribute('context-menu-is-visible');
@@ -96,17 +99,30 @@ export function createContextMenu(): ContextMenu
 		menu.style.top = '0px';
 		menu.hidden = false;
 		menu.showPopover?.();
-		const bounds = menu.getBoundingClientRect();
-		/* Null position anchors the menu to its trigger */
-		const anchor = trigger.getBoundingClientRect();
-		const gap = options.keyboard ? 0 : 12;
-		const x = position ? (position.x + gap + bounds.width <= window.innerWidth - 8
-			? position.x + gap : position.x - bounds.width - gap) : anchor.left;
-		let y = position ? (position.y + gap + bounds.height <= window.innerHeight - 8
-			? position.y + gap : position.y - bounds.height - gap) : anchor.bottom + 4;
-		if(!position && y + bounds.height > window.innerHeight - 8) y = anchor.top - bounds.height - 4;
-		menu.style.left = `${Math.max(8, Math.min(x, window.innerWidth - bounds.width - 8))}px`;
-		menu.style.top = `${Math.max(8, Math.min(y, window.innerHeight - bounds.height - 8))}px`;
+		const positionMenu = () =>
+		{
+			if(menu.hidden || owner !== trigger) return;
+			const bounds = menu.getBoundingClientRect();
+			/* Null position anchors the menu to its trigger */
+			const anchor = trigger.getBoundingClientRect();
+			const gap = options.keyboard ? 0 : 12;
+			const x = position ? (position.x + gap + bounds.width <= window.innerWidth - 8
+				? position.x + gap : position.x - bounds.width - gap) : trigger.dataset.menuAlign === 'center'
+				? anchor.left + (anchor.width - bounds.width) / 2 : anchor.left;
+			let y = position ? (position.y + gap + bounds.height <= window.innerHeight - 8
+				? position.y + gap : position.y - bounds.height - gap) : anchor.bottom + 4;
+			if(!position && y + bounds.height > window.innerHeight - 8) y = anchor.top - bounds.height - 4;
+			menu.style.left = `${Math.max(8, Math.min(x, window.innerWidth - bounds.width - 8))}px`;
+			menu.style.top = `${Math.max(8, Math.min(y, window.innerHeight - bounds.height - 8))}px`;
+		};
+		positionMenu();
+		const stack = trigger.closest('.overlayStack');
+		if(!position && stack)
+		{
+			// Follow the anchor while preceding notifications collapse; no idle animation loop.
+			anchorLayout = new ResizeObserver(positionMenu);
+			anchorLayout.observe(stack);
+		}
 		menu.style.visibility = '';
 		(menu.querySelector<HTMLButtonElement>('button[aria-checked="true"]:not(:disabled)')
 			|| menu.querySelector<HTMLButtonElement>('button:not(:disabled)') || menu).focus({ preventScroll: true });

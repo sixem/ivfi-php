@@ -15,7 +15,7 @@
 
 ## Introduction
 
-IVFi-PHP is a directory browser with an image and video gallery, hover previews, search, and ZIP downloads. It runs on a PHP web server or through Docker.
+IVFi-PHP is a directory browser with an image, video, and audio gallery, hover previews, search, and ZIP downloads. It runs on a PHP web server or through Docker.
 
 Start with [setup](setup.md), then [configure](config.md) it to your liking. Try the [demo](https://five.sh/demo/indexer/) to see it in action.
 
@@ -23,9 +23,9 @@ Basic listings work without JavaScript; interactive features require it.
 
 ## Features
 
-- **Gallery:** browse images and videos, download files, and reverse-search images.
+- **Gallery:** browse images, videos, and audio, download files, and reverse-search images.
 - **Hover previews:** preview media by hovering over its filename.
-- **Search:** filter the current directory by name or type (`Ctrl + F`, or `Cmd + F` on Mac). The search box opens in the top-right corner; press the shortcut again while it is open to use browser search. `Esc` hides the box while keeping the filter, and the close button clears it. Supports regex and leading-star wildcards such as `*.mp4`; invalid patterns turn red and leave the last valid results unchanged.
+- **Search:** filter filenames with regex or wildcards (`Ctrl/Cmd + F`).
 - **Downloads:** download individual files or a selection as a ZIP archive.
 - **Standalone:** use a single PHP file with embedded assets.
 - **Customization:** themes, saved display preferences, and server-side filters.

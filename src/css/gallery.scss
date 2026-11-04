@@ -192,6 +192,8 @@ html > body > .rootGallery {
         cursor: pointer;
         transition: background-color 180ms ease, color 180ms ease;
 
+        &[hidden] { display: none; }
+
         > svg {
           width: 16px;
           height: 16px;

@@ -68,19 +68,7 @@ Key: **`selection`**
 | `archive.request_delay_ms` | Integer | `0` | Delay in milliseconds between completed file requests. Accepts 0–2147483647. |
 | `archive.buffer_limit_mib` | Number | `256` | Maximum ZIP size buffered in memory, in MiB. Accepts 0–8589934591, including fractional values. |
 
-For example, to pause for 100 ms between requests and allow up to 512 MiB in memory:
-
-```php
-'selection' => [
-    'enabled' => true,
-    'archive' => [
-        'request_delay_ms' => 100,
-        'buffer_limit_mib' => 512
-    ]
-],
-```
-
-Files are fetched one at a time; the delay starts after each completed file except the last. The buffer limit includes ZIP overhead. Larger ZIPs require direct file saving in a supported browser on HTTPS or localhost. Set the buffer limit to `0` to require direct saving for every archive. Browser memory use can exceed the configured limit.
+Files download sequentially. ZIPs above the buffer limit require browser support for direct saving on HTTPS or localhost; `0` always requires it. The limit includes ZIP overhead, but total memory use can be higher.
 
 Set `'selection' => ['enabled' => false]` to disable selection and ZIP downloads. Individual downloads remain available through the context menu and gallery. This does not restrict file access.
 
@@ -121,7 +109,7 @@ Key: **`gallery`**
 
 Displays images, videos, and audio from the current directory.
 
-On desktop, use the chevron beside the gallery list (or press `L`) to slide the list out of view and back. Its visibility and dragged width are remembered. The chevron follows the configured list alignment.
+Toggle the desktop sidebar with its chevron or `L`. **Autoplay Media** applies to audio and video.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -135,7 +123,9 @@ On desktop, use the chevron beside the gallery list (or press `L`) to slide the 
 ## Preview
 Key: **`preview`**
 
-Shows a media preview when hovering over its filename. Audio uses an anchored player with duration, seeking, volume, and a live visualiser. It loads and autoplays on hover using the saved video-preview volume; clicking the filename or expand button opens the gallery at the current playback position. The gallery header shows approximate average bitrate (`≈ kbps`), calculated from file size and duration without extra requests; it stays hidden when that information is unavailable. Audio and video previews share their saved volume, wheel-volume steps, on-screen indicator, and scroll lock while a preview is open. Browsers that block audible autoplay start the preview muted; use its mute button or volume slider to listen.
+Preview media by hovering over its filename. Audio keeps its playback position when opened in the gallery.
+
+Audio and video save volume separately: use the audio controls or scroll over video previews. If autoplay starts muted, use the audio controls or click/press a key for video.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -154,9 +144,7 @@ Extensions eligible for previews and the gallery. Playback depends on browser su
 | `video` | Array | `'webm', 'mp4', 'ogv', 'mov'` | Extensions marked as `video`.
 | `audio` | Array | `'mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'oga', 'opus'` | Extensions marked as `audio`.
 
-Audio is marked as media and participates in filtering and gallery navigation. OGG is treated as audio by default; OGV is treated as video. For OGG video files, move `ogg` from the audio list to the video list. Set `audio` to `[]` to disable audio previews and gallery inclusion. Recognized extensions still require a browser-supported codec; unsupported audio offers a download instead.
-
-In the audio gallery, use Left/Right to seek five seconds, Space to play/pause, and Up/Down or Page Up/Page Down to switch items. Focused sliders keep their native keyboard controls. The **Autoplay Media** setting applies to both audio and video in the gallery, including playback continued from previews.
+OGG defaults to audio; move `ogg` to the video list for OGG video files. Set `audio` to `[]` to disable audio previews and gallery playback.
 
 ## Inject
 Key: **`inject`**
@@ -280,12 +268,12 @@ Shows generation time and optional project credits.
 | `processor` | Bool/Array | `false` | Modify listing data with PHP callbacks. See [processor](processor.md).
 | `single_page` | Bool | `false` | Enables navigation between folders without forcing a page reload (experimental).
 | `encode_all` | Bool | `false` | Should `?` and `#` characters be encoded when processing URLs and filenames.
-| `allow_unsafe_readme` | Bool | `false` | Allow raw HTML and unsafe links in README previews. Enable only for trusted files; requires [README support](extras.md#readme-support).
+| `allow_unsafe_readme` | Bool | `false` | Allow HTML and unsafe links in [README previews](extras.md#readme-support). Trusted files only.
 | `allow_direct_access` | Bool | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `strict` to keep resolved directory paths inside the media root. `weak` also allows symlinks to directories outside it.
 | `performance` | Bool/Integer | `250` | Enable [performance mode](performance.md) with `true`, or set a minimum file-and-folder count.
 | `credits` | Bool | `true` | Shows the project link and version in the footer.
-| `debug` | Bool | `false` | Enables PHP debugging and browser console diagnostics. Detailed traces appear at the Verbose (Debug) level.
+| `debug` | Bool | `false` | Enable PHP and browser debugging; use DevTools Verbose for traces.
 
 # Advanced
 ## Server <!-- {docsify-ignore} -->
