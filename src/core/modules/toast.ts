@@ -13,6 +13,8 @@ type ToastOptions = {
 	/** Progress from 0 to 1; null is indeterminate */
 	progress?: number | null;
 	complete?: boolean;
+	onClose?: () => void;
+	closeLabel?: string;
 };
 type Toast = {
 	show: (title: string, options?: ToastOptions) => void;
@@ -35,6 +37,7 @@ export function createToast(): Toast
 	const element = document.createElement('div');
 	element.className = 'toast';
 	element.setAttribute('aria-hidden', 'true');
+	element.setAttribute('inert', '');
 	const icon = document.createElement('span');
 	icon.className = 'toastIcon';
 	icon.setAttribute('aria-hidden', 'true');
@@ -74,13 +77,27 @@ export function createToast(): Toast
 	let visible = false;
 	let hovered = false;
 	let focused = false;
+	let previousFocus: HTMLElement = null;
 	let duration = 4500;
 	let currentIcon: IconName = null;
+	let onClose: () => void = null;
 	const hide = () =>
 	{
 		clearTimeout(timer);
 		visible = false;
+		if(element.contains(document.activeElement))
+		{
+			if(previousFocus?.isConnected && !previousFocus.closest('[inert], [hidden], [aria-hidden="true"]')
+				&& !previousFocus.matches(':disabled') && previousFocus.getClientRects().length
+				&& getComputedStyle(previousFocus).visibility === 'visible')
+				previousFocus.focus({ preventScroll: true });
+			// The original control may have disappeared while the archive was running.
+			if(element.contains(document.activeElement)) close.blur();
+		}
+		previousFocus = null;
+		onClose = null;
 		element.classList.remove('is-visible');
+		element.setAttribute('inert', '');
 		element.setAttribute('aria-hidden', 'true');
 		close.tabIndex = -1;
 	};
@@ -97,6 +114,8 @@ export function createToast(): Toast
 	};
 	const update: Toast['update'] = (text, options = {}) =>
 	{
+		onClose = options.onClose || null;
+		close.setAttribute('aria-label', options.closeLabel || 'Dismiss notification');
 		duration = options.duration ?? 4500;
 		if(currentIcon !== options.icon)
 		{
@@ -124,10 +143,21 @@ export function createToast(): Toast
 		}
 		startTimer();
 	};
-	close.addEventListener('click', hide);
+	close.addEventListener('click', () =>
+	{
+		const action = onClose;
+		hide();
+		action?.();
+	});
 	element.addEventListener('pointerenter', () => { hovered = true; startTimer(); });
 	element.addEventListener('pointerleave', () => { hovered = false; startTimer(); });
-	element.addEventListener('focusin', () => { focused = true; startTimer(); });
+	element.addEventListener('focusin', (event) =>
+	{
+		if(!element.contains(event.relatedTarget as Node))
+			previousFocus = event.relatedTarget instanceof HTMLElement ? event.relatedTarget : null;
+		focused = true;
+		startTimer();
+	});
 	element.addEventListener('focusout', (event) =>
 	{
 		focused = element.contains(event.relatedTarget as Node);
@@ -141,6 +171,7 @@ export function createToast(): Toast
 			update(text, options);
 			visible = true;
 			element.setAttribute('aria-hidden', 'false');
+			element.removeAttribute('inert');
 			element.classList.add('is-visible');
 			close.tabIndex = 0;
 			hovered = element.matches(':hover');

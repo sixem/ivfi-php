@@ -121,9 +121,23 @@ html > body > dialog.dialog {
     > footer {
       display: flex;
       flex: none;
+      flex-wrap: wrap;
+      align-items: center;
       justify-content: flex-end;
       gap: 8px;
       padding: 10px 16px 12px;
+    }
+  }
+
+  .dialogFooterContent:not([hidden]) {
+    flex: 1;
+    min-width: 0;
+    margin-right: auto;
+    font-size: 0.8125rem;
+    font-weight: 500;
+
+    @media (width <= 380px) {
+      flex-basis: 100%;
     }
   }
 
@@ -245,6 +259,7 @@ html > body > dialog.dialog {
   }
 
   > form > footer > button {
+    flex: none;
     min-height: 2rem;
     padding: 5px 12px;
     border: 2px solid variables.$divider-color;
