@@ -34,8 +34,8 @@ Basic listings work without JavaScript; interactive features require it.
 
 ## Feedback <!-- {docsify-ignore} -->
 
-Report bugs in [issues](https://github.com/sixem/ivfi-php/issues), or use [discussions](https://github.com/sixem/ivfi-php/discussions) for questions and ideas. Pull requests are welcome; see [contributing](https://github.com/sixem/ivfi-php/blob/master/CONTRIBUTING.md).
+Report bugs in [issues](https://github.com/sixem/ivfi-php/issues), or use [discussions](https://github.com/sixem/ivfi-php/discussions) for questions and ideas. Pull requests are welcome; see [contributing](https://github.com/sixem/ivfi-php/blob/main/CONTRIBUTING.md).
 
 ## License
 
-Licensed under [GPL-3.0](https://github.com/sixem/ivfi-php/blob/master/LICENSE). Included libraries retain their own licenses.
+Licensed under [GPL-3.0](https://github.com/sixem/ivfi-php/blob/main/LICENSE). Included libraries retain their own licenses.
