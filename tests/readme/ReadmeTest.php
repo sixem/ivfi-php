@@ -16,7 +16,7 @@ final class ReadmeTest extends TestCase
 
     protected function tearDown(): void
     {
-        foreach (['README.md', 'example.txt'] as $name) {
+        foreach (['README.md', 'example.txt', '.indexer.config.php', '.standalone.config.php'] as $name) {
             $path = $this->root . '/' . $name;
             if (file_exists($path)) {
                 chmod($path, 0600);
@@ -80,6 +80,21 @@ final class ReadmeTest extends TestCase
             self::assertDoesNotMatchRegularExpression('/^(?:javascript|vbscript|data):/i', $attribute->nodeValue);
         }
         self::assertSame(1, $page->query('//details//a[@href="https://example.com/"]')->length);
+    }
+
+    public function testUnsafeHtmlRequiresExplicitTrue(): void
+    {
+        file_put_contents($this->root . '/README.md', "<div class=\"example\">raw HTML</div>\n\n[bad](javascript:alert(1))\n");
+        $variant = getenv('IVFI_PHP_VARIANT') ?: 'indexer.php';
+        $config = $this->root . '/.' . basename($variant, '.php') . '.config.php';
+        foreach ([false, 'true', 1, true] as $value) {
+            file_put_contents($config, '<?php return ' . var_export(['allow_unsafe_readme' => $value], true) . ';');
+            $page = $this->render();
+            $unsafe = $value === true;
+            self::assertSame($unsafe ? 1 : 0, $page->query('//details//div[@class="example"]')->length);
+            $link = $page->evaluate('string(//details//a/@href)');
+            self::assertSame($unsafe, str_starts_with($link, 'javascript:'));
+        }
     }
 
     public function testSizeLimit(): void

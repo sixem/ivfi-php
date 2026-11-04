@@ -21,6 +21,9 @@ const defaultConfig = require('./config.php')
 $version = '<%= version %>';
 
 $config = <%= defaultConfig %>;
+<% if (typeof devServer !== 'undefined' && devServer) { %>/* Local dev server: enable existing PHP and browser diagnostics. */
+$config['debug'] = true;
+<% } %>
 
 /* Keep startup/configuration failures private until debug is explicitly enabled. */
 ini_set('display_errors', '0');
@@ -638,7 +641,7 @@ function mergeConfigDefaults(array $config, array $defaults, $path = '')
 $defaults = <%= defaultConfig %>;
 /* Preserve the external-config defaults for desktop dates and video extension order. */
 $defaults['format']['date'][0] = 'm/d/y H:i';
-$defaults['extensions']['video'] = ['webm', 'mp4', 'ogv', 'ogg', 'mov'];
+$defaults['extensions']['video'] = ['webm', 'mp4', 'ogv', 'mov'];
 
 /* Keep working-directory precedence, then support configs beside the script. */
 foreach(array_unique([getcwd() ?: __DIR__, __DIR__]) as $configDirectory)
@@ -662,9 +665,24 @@ if(!is_array($config))
   throw new RuntimeException('The configuration file must return an array.');
 }
 
+<% if (typeof devServer !== 'undefined' && devServer) { %>/* Keep development logging enabled after loading external configuration. */
+$config['debug'] = true;
+<% } %>
 /* Apply explicit debugging before validating the remaining settings. */
 ini_set('display_errors', isset($config['debug']) && $config['debug'] === true ? '1' : '0');
 $config = mergeConfigDefaults($config, $defaults);
+$archiveConfig = $config['selection']['archive'];
+if(!is_int($archiveConfig['request_delay_ms']) || $archiveConfig['request_delay_ms'] < 0
+  || $archiveConfig['request_delay_ms'] > 2147483647)
+{
+  throw new RuntimeException('Configuration setting "selection.archive.request_delay_ms" must be an integer between 0 and 2147483647.');
+}
+$bufferLimit = $archiveConfig['buffer_limit_mib'];
+if((!is_int($bufferLimit) && !is_float($bufferLimit)) || !is_finite($bufferLimit)
+  || $bufferLimit < 0 || $bufferLimit > 8589934591)
+{
+  throw new RuntimeException('Configuration setting "selection.archive.buffer_limit_mib" must be a finite number between 0 and 8589934591.');
+}
 if($config['authentication'] !== false && !is_array($config['authentication']))
 {
   throw new RuntimeException('Configuration setting "authentication" must be false or an array.');
@@ -741,7 +759,7 @@ $bust = md5($config['debug'] ? time() : $version);
 
 /* Default stylesheet output */
 $baseStylesheet = sprintf(
-  '<link rel="stylesheet" type="text/css" href="<%= indexerPath %>css/style.css?bust=%s">',
+  '<link rel="preload" href="<%= indexerPath %>assets/fonts/Inter-Regular-Latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" type="text/css" href="<%= indexerPath %>css/style.css?bust=%s">',
   $bust
 );
 
@@ -1066,8 +1084,8 @@ class Indexer extends Helpers
         'href' => $this->handlePathing($fileUrl, false)
       ];
 
-      /** If file is an image or video, add preview class */
-      if($fileType[0] === 'image' || $fileType[0] === 'video')
+      /** Mark supported media for previews, filtering, and the gallery. */
+      if(in_array($fileType[0], ['image', 'video', 'audio'], true))
       {
         $anchorAttributes['class'] = 'preview';
       }
@@ -2229,7 +2247,13 @@ function constructJsConfig($config, $sorting, $timestamp, $bust, $theme)
   $jsConfig = [
     'bust' => $bust,
     'singlePage' => $config['single_page'],
-    'selection' => ['enabled' => $config['selection']['enabled'] !== false],
+    'selection' => [
+      'enabled' => $config['selection']['enabled'] !== false,
+      'archive' => [
+        'requestDelayMs' => $config['selection']['archive']['request_delay_ms'],
+        'bufferLimitMib' => $config['selection']['archive']['buffer_limit_mib']
+      ]
+    ],
     'preview' => [
       'enabled' => $preview['enabled'],
       'hoverDelay' => $preview['hover_delay'],
@@ -2252,7 +2276,8 @@ function constructJsConfig($config, $sorting, $timestamp, $bust, $theme)
     ],
     'extensions' => [
       'image' => $extensions['image'],
-      'video' => $extensions['video']
+      'video' => $extensions['video'],
+      'audio' => $extensions['audio']
     ],
     'style' => [
       'themes' => [
@@ -2346,6 +2371,18 @@ $jsConfig = constructJsConfig(
 <!DOCTYPE HTML>
 <html lang="en">
   <head>
+    <script>
+      /* Hide the native scrollbar before the deferred bundle runs; restore it if setup fails. */
+      (function(root) {
+        root.classList.add('overlayScrollbarPending');
+        document.addEventListener('DOMContentLoaded', function() {
+          if(root !== document.documentElement || !root.classList.contains('overlayScrollbarPending')) return;
+          root.classList.remove('overlayScrollbarPending', 'overlayScrollArea');
+          var track = document.querySelector('body > .overlayScrollbar');
+          if(track) track.remove();
+        });
+      })(document.documentElement);
+    </script>
     <?=implode(PHP_EOL . '    ', $header) . PHP_EOL;?>
   </head>
 
@@ -2399,8 +2436,12 @@ $jsConfig = constructJsConfig(
       (microtime(true) - $render), $config, $version)
     ) : '';?>
 
-    <div class="filterContainer" id="directory-filter" style="display: none;">
-      <input type="text" id="directory-filter-input" name="filter" spellcheck="false" placeholder="Search .." value="">
+    <div class="filterContainer" id="directory-filter" role="search" aria-label="Search current directory" style="display: none;">
+      <div class="filterField">
+        <input type="text" id="directory-filter-input" name="filter" spellcheck="false" autocomplete="off" aria-describedby="directory-filter-status directory-filter-hint" placeholder="Search files…" value="">
+        <span class="filterStatus" id="directory-filter-status" role="status" aria-atomic="true"></span>
+      </div>
+      <p class="filterHint" id="directory-filter-hint">Press <kbd class="filterShortcut">Ctrl</kbd> <kbd>F</kbd> again for browser search</p>
     </div>
 
     <!-- [https://github.com/sixem/ivfi-php/ — The image and video friendly indexer]  -->  

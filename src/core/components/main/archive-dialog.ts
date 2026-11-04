@@ -1,9 +1,8 @@
-import { predictLength } from 'client-zip';
 import { createDialog } from '../../modules/dialog';
 import { createOverlayScrollbar } from '../../modules/scrollbar';
-import { createIcon } from '../../icons';
 import { getReadableSize } from '../../helpers/getReadableSize';
 import { hasControlCharacters } from '../../helpers/stringUtils';
+import { ArchiveSelectionTotals } from './archive-selection-totals';
 import type { ArchiveFile, ArchiveHandle } from '../../types/archive';
 import '../../../css/archive.scss';
 
@@ -19,7 +18,8 @@ type ArchiveOptions = {
 	needsDisk: boolean;
 	picker: Promise<ArchiveHandle>;
 };
-const PAGE_SIZE = 100;
+const ROW_HEIGHT = 36;
+const ROW_BUFFER = 8;
 const units = [' B', ' KiB', ' MiB', ' GiB', ' TiB', ' PiB'];
 const formatSize = (bytes: number) => getReadableSize(units, bytes);
 
@@ -29,29 +29,42 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 	const browser = window as ArchiveWindow;
 	const canSaveDirectly = window.isSecureContext && typeof browser.showSaveFilePicker === 'function';
 	const excluded = new Set<ArchiveFile>();
-	let included = files.slice();
+	const totals = new ArchiveSelectionTotals(files);
 	let filename = `${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}Z.zip`;
 	let needsDisk = false;
 	let blocked = false;
 	let picker: Promise<ArchiveHandle> = null;
 	let confirmed: ArchiveOptions = null;
-	let page = 0;
 	let anchor: number = null;
 	const content = document.createElement('div');
 	content.className = 'archiveOptions';
 	const field = document.createElement('div');
 	field.className = 'dialogField';
-	const label = document.createElement('label');
-	label.htmlFor = 'ivfi-archive-filename';
+	const label = document.createElement('span');
+	label.id = 'ivfi-archive-filename-label';
+	label.className = 'dialogLabel';
 	label.textContent = 'Archive filename';
 	const input = document.createElement('input');
-	input.id = label.htmlFor;
+	input.id = 'ivfi-archive-filename';
+	input.setAttribute('aria-labelledby', label.id);
 	input.name = 'filename';
 	input.type = 'text';
 	input.value = filename;
 	input.maxLength = 240;
 	input.autocomplete = 'off';
 	input.spellcheck = false;
+	const selectName = () => input.setSelectionRange(0, input.value.replace(/\.zip$/i, '').length);
+	let selectOnClick = false;
+	input.addEventListener('pointerdown', () => { selectOnClick = document.activeElement !== input; });
+	input.addEventListener('focus', selectName);
+	input.addEventListener('click', () =>
+	{
+		// A first pointer click can place the caret after focus has selected the name.
+		if(selectOnClick) selectName();
+		selectOnClick = false;
+	});
+	input.addEventListener('blur', () => { selectOnClick = false; });
+	input.addEventListener('pointercancel', () => { selectOnClick = false; });
 	const error = document.createElement('p');
 	error.id = 'ivfi-archive-filename-error';
 	error.className = 'dialogError';
@@ -95,38 +108,31 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 	listContainer.className = 'archiveFileList';
 	const list = document.createElement('div');
 	list.className = 'archiveFiles';
+	let rowHeight = ROW_HEIGHT;
+	const listContent = document.createElement('div');
+	listContent.className = 'archiveFileRows';
+	listContent.style.height = `${files.length * ROW_HEIGHT}px`;
+	listContent.style.setProperty('--archive-row-height', `${ROW_HEIGHT}px`);
+	listContent.setAttribute('role', 'list');
+	listContent.setAttribute('aria-label', 'Files to include');
+	list.append(listContent);
 	listContainer.append(list);
-	const pager = document.createElement('div');
-	pager.className = 'archivePager';
-	pager.hidden = files.length <= PAGE_SIZE;
-	const range = document.createElement('span');
-	const previous = document.createElement('button');
-	previous.type = 'button';
-	previous.setAttribute('aria-label', 'Previous files');
-	previous.append(createIcon('arrow-left'));
-	const next = document.createElement('button');
-	next.type = 'button';
-	next.className = 'archiveNext';
-	next.setAttribute('aria-label', 'Next files');
-	next.append(createIcon('arrow-left'));
-	pager.append(range, previous, next);
 	const status = document.createElement('p');
 	status.className = 'archiveStatus';
 	status.setAttribute('role', 'status');
-	selection.append(summary, listContainer, pager);
+	selection.append(summary, listContainer);
 	content.append(field, selection, status);
 	const update = () =>
 	{
-		included = files.filter(file => !excluded.has(file));
-		selectAllCheckbox.checked = included.length === files.length;
-		selectAllCheckbox.indeterminate = included.length > 0 && included.length < files.length;
+		selectAllCheckbox.checked = totals.count === files.length;
+		selectAllCheckbox.indeterminate = totals.count > 0 && totals.count < files.length;
 		selectAllCheckbox.setAttribute('aria-label', selectAllCheckbox.checked ? 'Deselect all files' : 'Select all files');
-		const totalBytes = included.reduce((sum, file) => sum + file.size, 0);
-		const zipBytes = Number(predictLength(included));
+		const totalBytes = totals.totalBytes;
+		const zipBytes = Number(totals.zipBytes);
 		needsDisk = zipBytes > bufferLimit;
-		blocked = !included.length || (needsDisk && !canSaveDirectly);
-		countNumber.textContent = included.length.toLocaleString();
-		countLabel.textContent = ` ${included.length === 1 ? 'file' : 'files'} included`;
+		blocked = !totals.count || (needsDisk && !canSaveDirectly);
+		countNumber.textContent = totals.count.toLocaleString();
+		countLabel.textContent = ` ${totals.count === 1 ? 'file' : 'files'} included`;
 		let unit = 0;
 		let amount = totalBytes;
 		while(amount >= 1024 && unit < units.length - 1)
@@ -137,7 +143,7 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 		totalNumber.textContent = amount.toLocaleString(undefined, { minimumFractionDigits: unit ? 2 : 0, maximumFractionDigits: 2 });
 		totalUnit.textContent = units[unit];
 		status.toggleAttribute('data-blocked', blocked);
-		status.textContent = !included.length ? 'Select at least one file.'
+		status.textContent = !totals.count ? 'Select at least one file.'
 			: blocked ? `The ZIP is ${formatSize(zipBytes - bufferLimit)} over the ${formatSize(bufferLimit)} limit. Remove files or ${window.isSecureContext
 				? 'use a browser that supports direct file saving.'
 				: 'use HTTPS or localhost in a browser that supports direct file saving.'}`
@@ -146,36 +152,90 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 		status.hidden = !status.textContent;
 		if(content.isConnected) dialog.setConfirmDisabled(blocked);
 	};
-	const renderPage = () =>
+	const rendered = new Map<number, HTMLLabelElement>();
+	let renderFrame = 0;
+	const fileCheckbox = (target: EventTarget) => target instanceof HTMLInputElement && target.name === 'archive-file' ? target : null;
+	const makeRow = (i: number): HTMLLabelElement =>
 	{
-		const start = page * PAGE_SIZE;
-		const end = Math.min(files.length, start + PAGE_SIZE);
-		const fragment = document.createDocumentFragment();
-		for(let i = start; i < end; i++)
+		const file = files[i];
+		const row = document.createElement('label');
+		row.className = 'archiveFile';
+		row.dataset.index = String(i);
+		row.style.top = `${i * rowHeight}px`;
+		row.setAttribute('role', 'listitem');
+		row.setAttribute('aria-posinset', String(i + 1));
+		row.setAttribute('aria-setsize', String(files.length));
+		row.toggleAttribute('data-range-anchor', anchor === i);
+		const checkbox = document.createElement('input');
+		checkbox.type = 'checkbox';
+		checkbox.name = 'archive-file';
+		checkbox.value = String(i);
+		checkbox.checked = !excluded.has(file);
+		const name = document.createElement('span');
+		name.className = 'archiveFileName';
+		name.textContent = file.name;
+		const size = document.createElement('span');
+		size.className = 'archiveFileSize';
+		size.textContent = formatSize(file.size);
+		row.append(checkbox, name, size);
+		return row;
+	};
+	const renderRows = () =>
+	{
+		renderFrame = 0;
+		const start = Math.max(0, Math.floor(list.scrollTop / rowHeight) - ROW_BUFFER);
+		const end = Math.min(files.length, Math.ceil((list.scrollTop + list.clientHeight) / rowHeight) + ROW_BUFFER);
+		const desired = new Set<number>();
+		for(let i = start; i < end; i++) desired.add(i);
+		/* Retain the focused checkbox even if the user scrolls it out of view. */
+		const focused = fileCheckbox(document.activeElement);
+		if(focused && list.contains(focused)) desired.add(Number(focused.value));
+		for(const [index, row] of rendered)
 		{
-			const file = files[i];
-			const row = document.createElement('label');
-			row.className = 'archiveFile';
-			row.toggleAttribute('data-range-anchor', anchor === i);
-			const checkbox = document.createElement('input');
-			checkbox.type = 'checkbox';
-			checkbox.name = 'archive-file';
-			checkbox.value = String(i);
-			checkbox.checked = !excluded.has(file);
-			const name = document.createElement('span');
-			name.className = 'archiveFileName';
-			name.textContent = file.name;
-			const size = document.createElement('span');
-			size.className = 'archiveFileSize';
-			size.textContent = formatSize(file.size);
-			row.append(checkbox, name, size);
-			fragment.append(row);
+			if(desired.has(index)) continue;
+			row.remove();
+			rendered.delete(index);
 		}
-		list.replaceChildren(fragment);
-		list.scrollTop = 0;
-		range.textContent = `${(start + 1).toLocaleString()}–${end.toLocaleString()} of ${files.length.toLocaleString()}`;
-		previous.disabled = page === 0;
-		next.disabled = end === files.length;
+		const order = [...desired].sort((a, b) => a - b);
+		for(let i = 0; i < order.length; i++)
+		{
+			const index = order[i];
+			if(rendered.has(index)) continue;
+			const row = makeRow(index);
+			const next = order.slice(i + 1).map(nextIndex => rendered.get(nextIndex)).find(Boolean);
+			listContent.insertBefore(row, next || null);
+			rendered.set(index, row);
+		}
+	};
+	const scheduleRows = () =>
+	{
+		if(!renderFrame) renderFrame = requestAnimationFrame(renderRows);
+	};
+	const resizeRows = () =>
+	{
+		if(!list.isConnected) return;
+		const lineHeight = parseFloat(getComputedStyle(list).lineHeight);
+		const height = Math.max(ROW_HEIGHT, Math.ceil((Number.isFinite(lineHeight) ? lineHeight : 0) + 16));
+		if(height !== rowHeight)
+		{
+			const scrollPosition = list.scrollTop / rowHeight;
+			rowHeight = height;
+			listContent.style.height = `${files.length * rowHeight}px`;
+			listContent.style.setProperty('--archive-row-height', `${rowHeight}px`);
+			for(const [index, row] of rendered) row.style.top = `${index * rowHeight}px`;
+			list.scrollTop = scrollPosition * rowHeight;
+		}
+		scheduleRows();
+	};
+	const focusRow = (index: number) =>
+	{
+		const top = index * rowHeight;
+		if(top < list.scrollTop) list.scrollTop = top;
+		else if(top + rowHeight > list.scrollTop + list.clientHeight)
+			list.scrollTop = top + rowHeight - list.clientHeight;
+		if(renderFrame) cancelAnimationFrame(renderFrame);
+		renderRows();
+		rendered.get(index)?.querySelector<HTMLInputElement>('input').focus({ preventScroll: true });
 	};
 	const syncCheckboxes = () =>
 	{
@@ -193,6 +253,7 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 		{
 			if(checked) excluded.delete(files[i]);
 			else excluded.add(files[i]);
+			totals.setIncluded(i, checked);
 		}
 		if(!shift || anchor === null) anchor = index;
 		syncCheckboxes();
@@ -202,11 +263,11 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 	{
 		excluded.clear();
 		if(!checked) files.forEach(file => excluded.add(file));
+		totals.setAll(checked);
 		anchor = null;
 		syncCheckboxes();
 		update();
 	};
-	const fileCheckbox = (target: EventTarget) => target instanceof HTMLInputElement && target.name === 'archive-file' ? target : null;
 	list.addEventListener('click', (event) =>
 	{
 		const checkbox = fileCheckbox(event.target);
@@ -224,14 +285,38 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 			return;
 		}
 		const checkbox = fileCheckbox(event.target);
+		if(checkbox)
+		{
+			const index = Number(checkbox.value);
+			let nextIndex: number = null;
+			switch(event.key)
+			{
+				case 'Tab': nextIndex = index + (event.shiftKey ? -1 : 1); break;
+				case 'ArrowDown': nextIndex = index + 1; break;
+				case 'ArrowUp': nextIndex = index - 1; break;
+				case 'Home': nextIndex = 0; break;
+				case 'End': nextIndex = files.length - 1; break;
+				case 'PageDown': nextIndex = Math.min(files.length - 1, index + Math.max(1, Math.floor(list.clientHeight / rowHeight))); break;
+				case 'PageUp': nextIndex = Math.max(0, index - Math.max(1, Math.floor(list.clientHeight / rowHeight))); break;
+			}
+			if(nextIndex !== null && nextIndex >= 0 && nextIndex < files.length)
+			{
+				event.preventDefault();
+				event.stopPropagation();
+				focusRow(nextIndex);
+				return;
+			}
+		}
 		if(event.key !== ' ' || !event.shiftKey || !checkbox) return;
 		event.preventDefault();
 		event.stopPropagation();
 		if(!event.repeat) toggle(Number(checkbox.value), !checkbox.checked, true);
 	});
-	previous.addEventListener('click', () => { page--; renderPage(); });
-	next.addEventListener('click', () => { page++; renderPage(); });
-	renderPage();
+	list.addEventListener('scroll', scheduleRows, { passive: true });
+	list.addEventListener('focusout', scheduleRows);
+	const listResize = new ResizeObserver(resizeRows);
+	listResize.observe(list);
+	renderRows();
 	update();
 	const confirmation = dialog.show({
 		title: 'Download archive',
@@ -266,7 +351,7 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 				/* Prevent unhandled rejection during dialog exit */
 				void picker.catch(() => {});
 			}
-			confirmed = { files: included.slice(), filename, needsDisk, picker };
+			confirmed = { files: files.filter(file => !excluded.has(file)), filename, needsDisk, picker };
 		}
 	});
 	const removeScrollbar = createOverlayScrollbar(list, {
@@ -276,9 +361,12 @@ export async function confirmArchive(files: ArchiveFile[], bufferLimit: number):
 	});
 	try
 	{
-		input.setSelectionRange(0, filename.length - 4);
 		return await confirmation ? confirmed : null;
 	} finally {
+		cancelAnimationFrame(renderFrame);
+		listResize.disconnect();
+		list.removeEventListener('scroll', scheduleRows);
+		list.removeEventListener('focusout', scheduleRows);
 		removeScrollbar();
 	}
 }

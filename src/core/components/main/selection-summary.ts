@@ -1,4 +1,5 @@
 import { config } from '../../config/config';
+import { addOverlayItem } from '../../modules/overlay-stack';
 import { createContextMenu } from '../../modules/context-menu';
 import { getReadableSize } from '../../helpers/getReadableSize';
 import type { RowSelection } from '../../modules/row-selection';
@@ -11,6 +12,7 @@ export function bindSelectionSummary(selection: RowSelection): void
 	const element = document.createElement('button');
 	element.type = 'button';
 	element.className = 'selectionSummary';
+	element.dataset.menuAlign = 'center';
 	element.setAttribute('aria-haspopup', 'menu');
 	element.setAttribute('aria-expanded', 'false');
 	element.setAttribute('aria-live', 'polite');
@@ -19,7 +21,7 @@ export function bindSelectionSummary(selection: RowSelection): void
 	const total = document.createElement('span');
 	total.className = 'selectionSize';
 	element.append(count, document.createTextNode(' / '), total);
-	document.body.append(element);
+	const show = addOverlayItem(element);
 	element.addEventListener('click', (event) =>
 	{
 		if(element.getAttribute('aria-expanded') === 'true') createContextMenu().hide(true);
@@ -44,7 +46,7 @@ export function bindSelectionSummary(selection: RowSelection): void
 	{
 		if(element.getAttribute('aria-expanded') === 'true') createContextMenu().hide();
 		element.disabled = rows.length === 0;
-		element.classList.toggle('is-visible', rows.length > 0);
+		show(rows.length > 0);
 		element.setAttribute('aria-hidden', String(rows.length === 0));
 		if(!rows.length) return;
 		const units: string[] = config.get('format.sizes');

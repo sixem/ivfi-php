@@ -41,7 +41,7 @@ export class componentGallery
 		{
 			return false;
 		} else {
-			log('gallery', 'loadIndex', index);
+			log.info('gallery', `Opening item ${index + 1}`);
 		}
 
 		/* Create video data (from preview) */
@@ -110,6 +110,7 @@ export class componentGallery
 		/* Set options */
 		options = this.setOptions(options, [
 			['console', 'debug'],
+			['extensions', 'extensions'],
 			['mobile', 'mobile'],
 			['encodeAll', 'encodeAll'],
 			['performance', 'performance'],

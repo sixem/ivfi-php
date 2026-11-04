@@ -45,6 +45,16 @@ jobs:
           tools: composer:v2
           coverage: none
 
+      - name: Test development server
+        if: matrix.node-version == '24'
+        run: pnpm test:dev
+
+      - name: Test gallery in Chromium
+        if: matrix.node-version == '24'
+        run: |
+          pnpm exec playwright-core install --with-deps chromium
+          pnpm test:gallery
+
       - name: Install PHP test dependencies
         if: matrix.node-version == '24'
         run: |

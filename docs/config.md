@@ -65,6 +65,10 @@ Key: **`selection`**
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `enabled` | Boolean | `true` | Enables file selection and ZIP archive downloads. |
+| `archive.request_delay_ms` | Integer | `0` | Delay in milliseconds between completed file requests. Accepts 0–2147483647. |
+| `archive.buffer_limit_mib` | Number | `256` | Maximum ZIP size buffered in memory, in MiB. Accepts 0–8589934591, including fractional values. |
+
+Files download sequentially. ZIPs above the buffer limit require browser support for direct saving on HTTPS or localhost; `0` always requires it. The limit includes ZIP overhead, but total memory use can be higher.
 
 Set `'selection' => ['enabled' => false]` to disable selection and ZIP downloads. Individual downloads remain available through the context menu and gallery. This does not restrict file access.
 
@@ -103,7 +107,9 @@ Initial sorting settings. A user's saved sort takes precedence.
 ## Gallery
 Key: **`gallery`**
 
-Displays images and videos from the current directory.
+Displays images, videos, and audio from the current directory.
+
+Toggle the desktop sidebar with its chevron or `L`. **Autoplay Media** applies to audio and video.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -117,7 +123,9 @@ Displays images and videos from the current directory.
 ## Preview
 Key: **`preview`**
 
-Shows an image or video preview when hovering over its filename.
+Preview media by hovering over its filename. Audio keeps its playback position when opened in the gallery.
+
+Audio and video save volume separately: use the audio controls or scroll over video previews. If autoplay starts muted, use the audio controls or click/press a key for video.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -133,7 +141,10 @@ Extensions eligible for previews and the gallery. Playback depends on browser su
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `image` | Array | `'jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'` | Extensions marked as `image`.
-| `video` | Array | `'webm', 'mp4', 'ogv', 'ogg', 'mov'` | Extensions marked as `video`.
+| `video` | Array | `'webm', 'mp4', 'ogv', 'mov'` | Extensions marked as `video`.
+| `audio` | Array | `'mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'oga', 'opus'` | Extensions marked as `audio`.
+
+OGG defaults to audio; move `ogg` to the video list for OGG video files. Set `audio` to `[]` to disable audio previews and gallery playback.
 
 ## Inject
 Key: **`inject`**
@@ -257,11 +268,12 @@ Shows generation time and optional project credits.
 | `processor` | Bool/Array | `false` | Modify listing data with PHP callbacks. See [processor](processor.md).
 | `single_page` | Bool | `false` | Enables navigation between folders without forcing a page reload (experimental).
 | `encode_all` | Bool | `false` | Should `?` and `#` characters be encoded when processing URLs and filenames.
+| `allow_unsafe_readme` | Bool | `false` | Allow HTML and unsafe links in [README previews](extras.md#readme-support). Trusted files only.
 | `allow_direct_access` | Bool | `false` | Whether direct access to the `indexer.php` should be allowed or not.
 | `path_checking` | String | `strict` | Use `strict` to keep resolved directory paths inside the media root. `weak` also allows symlinks to directories outside it.
 | `performance` | Bool/Integer | `250` | Enable [performance mode](performance.md) with `true`, or set a minimum file-and-folder count.
 | `credits` | Bool | `true` | Shows the project link and version in the footer.
-| `debug` | Bool | `false` | Enables PHP debugging and `console.log()` info messages.
+| `debug` | Bool | `false` | Enable PHP and browser debugging; use DevTools Verbose for traces.
 
 # Advanced
 ## Server <!-- {docsify-ignore} -->

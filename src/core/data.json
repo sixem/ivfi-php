@@ -9,8 +9,8 @@
 		"galleryReverseSearch": {
 			"text": "Reverse Search"
 		},
-		"galleryVideoAutoplay": {
-			"text": "Autoplay Videos"
+		"galleryMediaAutoplay": {
+			"text": "Autoplay Media"
 		},
 		"galleryFitContent": {
 			"text": "Fit Content"

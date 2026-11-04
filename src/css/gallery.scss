@@ -33,8 +33,10 @@ html > body > .rootGallery {
 
   > div {
     &.galleryBar {
-      @include mixins.fonting($key: "top-bar", $spacing: 1px);
+      @include mixins.fonting($key: "top-bar", $spacing: 0.0625rem);
 
+      box-sizing: border-box;
+      height: $toolbar-height;
       line-height: 1.4;
       background-color: map.get(variables.$gallery, "color-background-top-bar");
       border-bottom: 2px solid map.get(variables.$gallery, "color-border");
@@ -83,15 +85,6 @@ html > body > .rootGallery {
           }
         }
 
-        > button[data-action="toggle"][aria-expanded="true"] {
-          background: map.get(variables.$root, "color-background-table-selected");
-
-          &:hover,
-          &:focus-visible {
-            background: map.get(variables.$root, "color-background-table-selected-hover");
-          }
-        }
-
         > button[data-action="close"] {
           transition: background-color 150ms ease, color 150ms ease;
 
@@ -112,29 +105,39 @@ html > body > .rootGallery {
       }
 
       > div.galleryBarLeft {
-        padding: 6px 8px;
+        display: flex;
+        align-items: stretch;
         flex: 1;
         min-width: 0;
-        white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        > span,
+        > a {
+          display: flex;
+          align-items: center;
+          padding: 0 9px;
+        }
+
+        > :not(:first-child) {
+          border-left: 2px solid #0c0b0e;
+        }
 
         > span {
-          &:nth-child(1) {
-            font-feature-settings: "tnum";
-          }
-
-          &:first-child::after,
-          &:last-child::before {
-            content: "|";
-            margin: 0 7px;
-            color: map.get(variables.$gallery, "color-border");
-          }
+          flex: none;
+          font-variant-numeric: tabular-nums;
         }
 
         > a {
+          flex: 0 1 auto;
+          min-width: 0;
           color: map.get(variables.$gallery, "color-top-bar");
           text-decoration: none;
+
+          > span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
 
           &:hover {
             text-decoration: underline;
@@ -144,9 +147,79 @@ html > body > .rootGallery {
     }
 
     &.galleryContent {
-      display: table;
+      --gallery-list-width: clamp(275px, var(--gallery-list-size, 25vw), 50vw);
+
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--gallery-list-width);
+      position: relative;
+      overflow: hidden;
       width: 100vw;
       height: calc(100vh - $toolbar-height);
+      transition: grid-template-columns 360ms cubic-bezier(0.22, 1, 0.36, 1);
+
+      &.reversed {
+        grid-template-columns: var(--gallery-list-width) minmax(0, 1fr);
+      }
+
+      &.list-collapsed {
+        grid-template-columns: minmax(0, 1fr) 0;
+
+        > .list { transform: translateX(100%); }
+
+        &.reversed {
+          grid-template-columns: 0 minmax(0, 1fr);
+
+          > .list { transform: translateX(-100%); }
+        }
+      }
+
+      &.list-resizing { transition: none; }
+
+      > .media > .galleryListToggle {
+        position: absolute;
+        inset: 50% 0 auto auto;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        width: 24px;
+        height: 48px;
+        transform: translateY(-50%);
+        padding: 0;
+        border: 0;
+        border-radius: 5px 0 0 5px;
+        background: transparent;
+        color: rgb(255 255 255 / 38%);
+        cursor: pointer;
+        transition: background-color 180ms ease, color 180ms ease;
+
+        &[hidden] { display: none; }
+
+        > svg {
+          width: 16px;
+          height: 16px;
+          stroke-width: 2.5;
+          transform: rotate(90deg);
+          transition: transform 220ms ease;
+        }
+
+        &[data-points-right="true"] > svg { transform: rotate(-90deg); }
+
+        &:hover,
+        &:focus-visible {
+          background: rgb(0 0 0 / 16%);
+          color: rgb(255 255 255 / 60%);
+        }
+
+        &:focus-visible {
+          outline: 2px solid variables.$accent-color;
+          outline-offset: -2px;
+        }
+      }
+
+      &.reversed > .media > .galleryListToggle {
+        inset: 50% auto auto 0;
+        border-radius: 0 5px 5px 0;
+      }
 
       > div.list > div.drag {
         content: " ";
@@ -163,6 +236,8 @@ html > body > .rootGallery {
 
       &.reversed > div.list {
         --scrollbar-inset-right: 6;
+
+        justify-self: start;
       }
 
       &.reversed > div.list > div.drag {
@@ -213,10 +288,12 @@ html > body > .rootGallery {
       }
 
       > div.media {
-        display: table-cell;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        min-height: 0;
         text-align: center;
-        width: 100%;
-        vertical-align: middle;
         position: relative;
         user-select: none;
         backdrop-filter: blur(map.get(variables.$gallery, "blur-intensity"));
@@ -308,6 +385,7 @@ html > body > .rootGallery {
       max-height: calc(100vh - $toolbar-height);
 
       > .media > .wrapper {
+        width: 100%;
         display: flex;
         flex-flow: column wrap;
         align-items: center;
@@ -378,12 +456,13 @@ html > body > .rootGallery {
       > div.list {
         --scrollbar-inset-right: 0;
 
-        display: table-cell;
+        display: block;
         background-color: #000;
-        max-width: 50vw;
-        min-width: 275px;
-        width: 25vw;
-        float: right;
+        min-width: 0;
+        width: var(--gallery-list-width);
+        justify-self: end;
+        transform: translateX(0);
+        transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
         overflow-y: scroll;
         overflow-x: hidden;
         position: relative;
@@ -395,7 +474,7 @@ html > body > .rootGallery {
           @include mixins.fonting(
             $key: "gallery",
             $align: false,
-            $spacing: 1px,
+            $spacing: 0.0625rem,
             $color-scope: variables.$gallery,
             $color-key: "color-list-item"
           );
@@ -436,6 +515,13 @@ html > body > .rootGallery {
             font-size: 0.6875rem;
           }
         }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        &,
+        > div.list,
+        > .media > .galleryListToggle,
+        > .media > .galleryListToggle > svg { transition: none; }
       }
     }
   }

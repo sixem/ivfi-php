@@ -1,33 +1,49 @@
-@use "sass:map";
 @use "variables";
 
 html > body > dialog.dialog .archiveOptions {
+  .dialogField > input,
+  .archiveStatus {
+    font-variant-numeric: tabular-nums;
+  }
+
   .archiveSelection {
     margin-top: 16px;
   }
 
   .archiveSummary {
     display: flex;
-    align-items: baseline;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
     margin-bottom: 8px;
-    font-weight: 500;
+    font-weight: inherit;
     font-variant-numeric: tabular-nums;
   }
 
   .archiveSelectAll {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 10px;
     min-width: 0;
-    padding-left: 4px;
+    max-width: 100%;
+    padding-left: 8px;
     cursor: pointer;
   }
 
   .archiveCount {
     display: inline-flex;
-    white-space: pre;
+    min-width: 0;
+    white-space: pre-wrap;
+
+    > span:last-child {
+      min-width: 0;
+
+      /* Keep singular and plural labels from changing the summary's wrapping. */
+      width: calc(10.5ch + 1rem);
+      white-space: pre;
+    }
   }
 
   .archiveCountNumber {
@@ -40,13 +56,18 @@ html > body > dialog.dialog .archiveOptions {
     grid-template-columns: 8ch 3ch;
     gap: 0.5ch;
     flex-shrink: 0;
+    margin-left: auto;
     text-align: right;
-    color: variables.$accent-color;
+    color: inherit;
+    font-weight: inherit;
     white-space: nowrap;
   }
 
   .archiveFileList {
     position: relative;
+    margin-inline: -16px;
+    border-block: 2px solid variables.$divider-color;
+    background: #000;
   }
 
   .archiveFiles {
@@ -54,17 +75,23 @@ html > body > dialog.dialog .archiveOptions {
     overflow-y: auto;
     overscroll-behavior: contain;
     padding-right: 12px;
-    border-top: 2px solid variables.$divider-color;
-    border-bottom: 2px solid variables.$divider-color;
+  }
+
+  .archiveFileRows {
+    position: relative;
   }
 
   .archiveFile {
-    position: relative;
+    position: absolute;
+    right: 0;
+    left: 0;
     display: grid;
     grid-template-columns: 1rem minmax(0, 1fr) auto;
     align-items: center;
     gap: 10px;
-    padding: 7px 4px;
+    box-sizing: border-box;
+    height: var(--archive-row-height);
+    padding: 7px 24px;
     cursor: pointer;
 
     &[data-range-anchor]::before {
@@ -77,8 +104,9 @@ html > body > dialog.dialog .archiveOptions {
       opacity: 0.65;
     }
 
-    + .archiveFile {
-      border-top: 2px solid variables.$divider-color;
+    &:hover,
+    &:focus-within {
+      background: #121317;
     }
   }
 
@@ -89,69 +117,21 @@ html > body > dialog.dialog .archiveOptions {
   }
 
   .archiveFileSize {
+    color: inherit;
+    font-size: inherit;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
 
   .archiveStatus {
     margin: 12px 0 0;
+    color: inherit;
+    font-size: inherit;
 
     &[data-blocked] {
       padding-left: 10px;
       border-left: 2px solid #ffe581;
       color: #ffe581;
-    }
-  }
-
-  .archivePager {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 8px;
-
-    &[hidden] {
-      display: none;
-    }
-
-    > span {
-      flex: 1;
-      font-variant-numeric: tabular-nums;
-    }
-
-    > button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.75rem;
-      height: 1.75rem;
-      padding: 0;
-      border: 2px solid variables.$divider-color;
-      border-radius: 5px;
-      background: #000;
-      color: inherit;
-      cursor: pointer;
-      outline: none;
-
-      &:hover:not(:disabled),
-      &:focus-visible {
-        border-color: variables.$accent-color;
-        background: map.get(variables.$root, "color-background-table-hover");
-      }
-
-      &:disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
-
-      > svg {
-        width: 1rem;
-        height: 1rem;
-        pointer-events: none;
-      }
-
-      &.archiveNext > svg {
-        transform: rotate(180deg);
-      }
     }
   }
 }

@@ -57,6 +57,7 @@ events.handleTopBarVisibility = (): void =>
 
 events.handlePreviewScroll = (event: WheelEvent): void =>
 {
+	if(data.preview.audio) return;
 	if(data.scrollLock && !scrollData.break)
 	{
 		if(event.deltaY && Math.abs(event.deltaY) !== 0)
@@ -90,7 +91,7 @@ events.handlePreviewScroll = (event: WheelEvent): void =>
 				localStorage.setItem(`${StorageKey}.previewVolume`, data.preview.volume.toString());
 			}, 100);
 
-			log('main', 'data.previewVolume', data.preview.volume, data.preview.data);
+			log.debug('preview', `Volume: ${data.preview.volume}%`, data.preview.data);
 
 			if(data.preview.data &&
 				data.preview.data.element &&
@@ -173,14 +174,18 @@ export class componentBind
 				return;
 			}
 
-			/* Show filter */
-			if(event.shiftKey && event.code === Keys.f)
+			/* A second Find shortcut passes through to the browser while search is open. */
+			if((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey
+				&& event.key.toLowerCase() === 'f')
 			{
+				if(event.defaultPrevented || event.isComposing || data.components.filter.isOpen()) return;
 				event.preventDefault();
-				data.components.filter.toggle();
+				if(!event.repeat) data.components.filter.toggle(true);
+				return;
+			}
 
 			/* Dismiss overlays before clearing selection */
-			} else if(event.code === Keys.escape)
+			if(event.code === Keys.escape)
 			{
 				data.components.main.overlay.hide((state: boolean) =>
 				{

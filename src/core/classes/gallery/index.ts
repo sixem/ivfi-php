@@ -1,9 +1,10 @@
 /** Vendors */
 import cookies from 'js-cookie';
 import { SwipeEvent } from '../../vendors/swiped-events';
+import { formatDate } from '../../vendors/date/date';
 /** Config */
 import data from '../../config/data';
-import { user } from '../../config/config';
+import { config, user } from '../../config/config';
 /** Modules */
 import { log } from '../../modules/logger';
 import { eventHooks } from '../../modules/event-hooks';
@@ -11,12 +12,15 @@ import { createOverlayScrollbar } from '../../modules/scrollbar';
 import { onPageReplace } from '../../modules/lifecycle';
 import { loadImage, playVideo, releaseMedia } from '../../helpers/media';
 import { createContextMenu } from '../../modules/context-menu';
+import { createTooltip } from '../../modules/tooltip';
 import { showFileContextMenu, notifyDownloadStarted } from '../../modules/file-actions';
 import { createIcon } from '../../icons';
+import { AudioCard } from '../../components/audio/card';
+import { getAudioVolume, saveAudioVolume } from '../../helpers/audioVolume';
 /** Classes */
 import optimizeClass from './../optimize';
 /** Helpers */
-import { DOM, debounce, shortenString } from '../../helpers';
+import { DOM, debounce } from '../../helpers';
 /** Stylesheet */
 import '../../../css/gallery.scss';
 
@@ -61,6 +65,10 @@ export default class galleryClass
 
 	private pendingVideo: HTMLVideoElement = null;
 
+	private audioCard: AudioCard = null;
+
+	private audioResume: { src: string; time: number } = null;
+
 	private videoCleanup = new Map<HTMLVideoElement, () => void>();
 
 	private mediaRequest = 0;
@@ -90,6 +98,7 @@ export default class galleryClass
 		{
 			this.cancelMediaLoad();
 			this.optimize?.destroy();
+			this.audioCard?.dispose();
 			for(const video of this.videoCleanup.keys()) this.disposeVideo(video);
 			this.container?.querySelectorAll('img').forEach(image => releaseMedia(image));
 		});
@@ -107,7 +116,8 @@ export default class galleryClass
 		/* Valid extensions */
 		data.extensions = {
 			image: ['jpg', 'jpeg', 'gif', 'png', 'ico', 'svg', 'bmp', 'webp'],
-			video: ['mp4', 'webm', 'ogg', 'ogv', 'mov']
+			video: ['mp4', 'webm', 'ogv', 'mov'],
+			audio: ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'oga', 'opus']
 		};
 
 		/* Item list */
@@ -124,7 +134,7 @@ export default class galleryClass
 		/* Performance mode */
 		data.performance = false;
 
-		/* Video autoplay */
+		/* Media autoplay */
 		data.autoplay = true;
 
 		/* Video volume */
@@ -227,11 +237,6 @@ export default class galleryClass
 			this.useOptimzer(this.table);
 		}
 
-		/* Hide list if option is set or on mobile */
-		if(!this.options.list.show || this.options.mobile)
-		{
-			this.list.style.display = 'none';
-		}
 	}
 
 	private disposeVideo = (video: HTMLVideoElement): void =>
@@ -249,6 +254,9 @@ export default class galleryClass
 			&& preview.src === this.items[index ?? this.data.selected.index]?.url
 			&& preview.element.readyState >= 2 && !preview.element.error && preview.element.isConnected;
 	}
+
+	private hasAudioPreview = (index: number): boolean =>
+		!!data.preview.hasAudio?.(this.items[index ?? this.data.selected.index]?.url);
 
 	private cancelMediaLoad = (): void =>
 	{
@@ -346,14 +354,17 @@ export default class galleryClass
 		);
 	}
 
+	private isAudio = (filename: string, extension: string | null = null): boolean =>
+		!!this.options.extensions.audio?.includes(extension || this.getExtension(filename));
+
 	/**
-	 * Filters an array of items to make sure it only contains videos and images 
+	 * Filters an array of items to keep supported media
 	 */
 	private filterItems = (items: Array<TGalleryTableItem>) =>
 	{
 		return items.filter((item: { name: string }): boolean =>
 		{
-			return this.isImage(item.name) || this.isVideo(item.name);
+			return this.isImage(item.name) || this.isVideo(item.name) || this.isAudio(item.name);
 		});
 	}
 
@@ -423,6 +434,7 @@ export default class galleryClass
 			});
 		} else {
 			document.documentElement.removeAttribute('gallery-is-visible');
+			createTooltip().hide();
 			this.isVisible = false;
 
 			if(Object.prototype.hasOwnProperty.call(this.data, 'body'))
@@ -455,7 +467,7 @@ export default class galleryClass
 	{
 		if(items)
 		{
-			log('gallery', 'itemsUpdate', true);
+			log.debug('gallery', 'Updating items');
 
 			this.data.selected.index = null;
 			this.items = this.options.filter ? this.filterItems(items): items;
@@ -467,7 +479,7 @@ export default class galleryClass
 			index = index ?? this.data.selected.index ?? Math.min(this.options.start, this.items.length - 1);
 			this.bind().style.display = 'block';
 
-			if(index !== this.data.selected.index || !this.mediaReady || this.hasVideoPreview(index))
+			if(index !== this.data.selected.index || !this.mediaReady || this.hasVideoPreview(index) || this.hasAudioPreview(index))
 			{
 				const elements: NodeList = this.container.querySelectorAll(
 					':scope > div.galleryContent > div.media > div.wrapper img, \
@@ -489,6 +501,13 @@ export default class galleryClass
 		} else {
 			this.cancelMediaLoad();
 			this.container.querySelectorAll('video').forEach(video => video.pause());
+			if(this.audioCard)
+			{
+				this.audioResume = { src: this.data.selected.src, time: this.audioCard.media.currentTime };
+				this.audioCard.dispose();
+				this.audioCard = null;
+				this.mediaReady = false;
+			}
 			this.busy(false);
 			this.unbind();
 			this.container.style.display = 'none';
@@ -641,7 +660,7 @@ export default class galleryClass
 		{
 			if(this.options.performance && this.optimize.enabled)
 			{
-				log('gallery', 'windowResize (gallery)', 'Resized.');
+				log.debug('gallery', 'Window resized');
 				page.update();
 				this.optimize.attemptRefresh();
 			}
@@ -661,7 +680,7 @@ export default class galleryClass
 	 */
 	private populateTable = (items: Array<TGalleryTableItem>, table?: HTMLElement): HTMLElement =>
 	{
-		log('gallery', 'Populating gallery list ..');
+		log.debug('gallery', `Populating list with ${items.length} items`);
 
 		table = table || this.container.querySelector(
 			'div.galleryContent > div.list > table'
@@ -671,7 +690,7 @@ export default class galleryClass
 
 		for(let i = 0; i <= items.length - 1; i++)
 		{
-			const row = DOM.new('tr', { 'data-tooltip': items[i].name });
+			const row = DOM.new('tr');
 			row.appendChild(DOM.new('td', { text: items[i].name }));
 			buffer[i] = row.outerHTML;
 		}
@@ -689,11 +708,34 @@ export default class galleryClass
 	 * Updating functions
 	 */
 	public update = {
+		layout: (mobile: boolean = this.options.mobile): void =>
+		{
+			this.options.mobile = mobile;
+			const visible = this.options.list.show && !mobile;
+			const content = this.list.parentElement;
+			const toggle = content.querySelector<HTMLButtonElement>('.galleryListToggle');
+			if((!visible && (this.list.contains(document.activeElement)
+				|| document.activeElement?.getAttribute('aria-controls') === this.list.id))
+				|| (mobile && document.activeElement === toggle))
+			{
+				const target = mobile ? this.container.querySelector<HTMLButtonElement>('button[data-action="close"]') : toggle;
+				target?.focus({ preventScroll: true });
+			}
+			toggle.hidden = mobile;
+			this.list.toggleAttribute('inert', !visible);
+			this.list.setAttribute('aria-hidden', String(!visible));
+			content.classList.toggle('list-collapsed', !visible);
+			this.update.listToggle(visible, toggle);
+			this.update.listWidth();
+			if(visible && this.options.performance && this.optimize?.enabled)
+				this.optimize.attemptRefresh();
+		},
 		listToggle: (visible: boolean, element: HTMLElement = this.container.querySelector('button[data-action="toggle"]')): void =>
 		{
 			if(!element) return;
 			const pointsRight = visible !== this.options.list.reverse;
-			element.replaceChildren(createIcon(pointsRight ? 'list-indent-increase' : 'list-indent-decrease'));
+			if(!element.firstElementChild) element.append(createIcon('chevron'));
+			element.setAttribute('data-points-right', String(pointsRight));
 			element.setAttribute('aria-expanded', String(visible));
 			element.setAttribute('aria-label', visible ? 'Hide gallery list' : 'Show gallery list');
 		},
@@ -702,11 +744,9 @@ export default class galleryClass
 		{
 			wrapper = wrapper || this.container.querySelector(':scope > div.galleryContent > div.media > div.wrapper');
 
-			const list: HTMLElement = this.data.list ? this.data.list : (
-				this.container.querySelector(':scope > div.galleryContent > div.list')
-			);
-
-			const width = (this.options.mobile || !list || list.style.display === 'none') ? 0: list.offsetWidth;
+			/* Use the animated media width so fitted images/videos resize with the sidebar. */
+			const media = wrapper.parentElement;
+			const width = Math.max(0, this.container.clientWidth - media.clientWidth);
 
 			wrapper.style.setProperty('--width-list', `${width}px`);
 		}
@@ -845,7 +885,6 @@ export default class galleryClass
 				':scope > div.galleryBar > div.galleryBarLeft'
 			);
 
-			const name: string = this.options.mobile ? shortenString(item.name, 30): item.name;
 			const url: string = this.encodeUrl(item.url);
 
 			DOM.attributes.set(download, {
@@ -854,17 +893,20 @@ export default class galleryClass
 				'aria-label': `Download ${item.name}`
 			});
 
-			const buffer: Array<string> = [
-				DOM.new('span', { text: `${index + 1} / ${max}` }).outerHTML,
-				DOM.new('a', { target: '_blank', href: url, text: name }).outerHTML
-			];
+			const name = DOM.new('a', { class: 'galleryFileName', target: '_blank', href: url });
+			name.append(DOM.new('span', { text: item.name }));
+			const tooltip = createTooltip();
+			tooltip.hide();
+			tooltip.setDetails(name, item.name, [
+				['Size', String(item.size ?? 'Unavailable')],
+				['Modified', Number.isFinite(item.modified) ? formatDate(config.get('format.date')[0], item.modified) : 'Unavailable']
+			]);
+			left.replaceChildren(DOM.new('span', { text: `${index + 1} / ${max}` }), name);
 
 			if(Object.prototype.hasOwnProperty.call(item, 'size') && !this.options.mobile)
 			{
-				buffer.push(DOM.new('span', { text: item.size }).outerHTML);
+				left.append(DOM.new('span', { text: item.size }));
 			}
-
-			left.innerHTML = buffer.join('');
 
 			return true;
 		}
@@ -883,7 +925,7 @@ export default class galleryClass
 			height: (element.children[0] as HTMLElement).offsetHeight
 		};
 
-		log('gallery', 'isScrolledIntoView', parent, child);
+		log.debug('gallery', 'Checking item visibility', { parent, child });
 
 		return child.offset >= parent.scrolled &&
 			(child.offset + child.height) <= (parent.scrolled + parent.height);
@@ -1107,7 +1149,7 @@ export default class galleryClass
 		{
 			if(current() || (this.mediaReady && src === this.data.selected.src))
 			{
-				console.error('Failed to load video source.', event);
+				log.error('gallery', 'Failed to load video', src, event);
 				this.mediaReady = false;
 				this.busy(false);
 			}
@@ -1145,7 +1187,7 @@ export default class galleryClass
 	 */
 	private navigate = (index: number, step: number = null): boolean | void =>
 	{
-		log('gallery', 'busyState', this.busy());
+		log.debug('gallery', 'Navigation requested', { index, step, busy: this.busy() });
 
 		/* Set maximum navigation index */
 		const max = this.items.length - 1;
@@ -1163,13 +1205,15 @@ export default class galleryClass
 		}
 
 		if(this.data.selected.index === index && (this.mediaReady || this.imageLoad || this.pendingVideo)
-			&& !this.hasVideoPreview(index))
+			&& !this.hasVideoPreview(index) && !this.hasAudioPreview(index))
 		{
 			return false;
 		}
 
 		this.cancelMediaLoad();
 		this.mediaReady = false;
+		this.audioCard?.dispose();
+		this.audioCard = null;
 		const request = this.mediaRequest;
 		let item = null;
 
@@ -1187,6 +1231,8 @@ export default class galleryClass
 		item = this.items[index];
 
 		const encodedItemSource = this.encodeUrl(item.url);
+		const audioStartTime = this.audioResume?.src === encodedItemSource ? this.audioResume.time : 0;
+		this.audioResume = null;
 
 		contentContainer.querySelectorAll('video').forEach(video => video.pause());
 		this.data.selected.index = index;
@@ -1254,7 +1300,7 @@ export default class galleryClass
 			{
 				if(request !== this.mediaRequest) return;
 				/* Image could not be loaded */
-				console.error(error);
+				log.error('gallery', 'Failed to load image', encodedItemSource, error);
 
 				this.busy(false);
 				this.data.selected.index = index;
@@ -1286,6 +1332,33 @@ export default class galleryClass
 			return true;
 		}
 
+		if(this.isAudio(null, this.data.selected.ext))
+		{
+			const wrapper = this.container.querySelector('.media > .wrapper') as HTMLElement;
+			wrapper.querySelectorAll(':scope > div:not(.cover)').forEach(element => element.remove());
+			const cover = wrapper.querySelector<HTMLElement>(':scope > .cover');
+			if(cover) cover.style.display = 'none';
+			wrapper.querySelectorAll('video').forEach(video => this.disposeVideo(video));
+			const card = data.preview.takeAudio?.(item.url, wrapper) || new AudioCard({
+				src: new URL(item.url, document.baseURI).href, name: item.name,
+				volume: getAudioVolume(), startTime: audioStartTime, bytes: item.bytes
+			});
+			card.setGallery();
+			if(this.options.autoplay) void card.play(true);
+			else card.pause();
+			this.audioCard = card;
+			saveAudioVolume(card.media.muted ? 0 : card.media.volume);
+			if(card.element.parentElement !== wrapper) wrapper.append(card.element);
+			card.onVolumeChange = saveAudioVolume;
+			this.data.selected.type = 2;
+			this.mediaReady = true;
+			wrapper.style.display = '';
+			this.apply.itemInfo(true);
+			this.apply.itemDimensions(index);
+			this.busy(false);
+			return true;
+		}
+
 		/* If selected item is a video */
 		if(this.isVideo(null, this.data.selected.ext))
 		{
@@ -1307,7 +1380,7 @@ export default class galleryClass
 	 */
 	private handleKey = (key: string, callback: (prevent: boolean) => void) =>
 	{
-		log('gallery', 'handleKey', key);
+		log.debug('gallery', 'Keyboard input', key);
 
 		if(key === Keys.escape)
 		{
@@ -1317,7 +1390,10 @@ export default class galleryClass
 			|| key === Keys.pageDown
 			|| key === Keys.arrowRight)
 		{
-			if(key === Keys.arrowRight && this.mediaReady && this.data.selected.type === 1)
+			if(key === Keys.arrowRight && this.audioCard)
+			{
+				this.audioCard.seek(this.audioCard.media.currentTime + 5);
+			} else if(key === Keys.arrowRight && this.mediaReady && this.data.selected.type === 1)
 			{
 				/* Seek (+) video on `arrowRight` (video elements) */
 				if(this.video.seek(5)) this.navigate(null, 1);
@@ -1329,7 +1405,10 @@ export default class galleryClass
 			|| key === Keys.pageUp
 			|| key === Keys.arrowLeft)
 		{
-			if(key === Keys.arrowLeft && this.mediaReady && this.data.selected.type === 1)
+			if(key === Keys.arrowLeft && this.audioCard)
+			{
+				this.audioCard.seek(this.audioCard.media.currentTime - 5);
+			} else if(key === Keys.arrowLeft && this.mediaReady && this.data.selected.type === 1)
 			{
 				/* Seek (-) video on `arrowLeft` (video elements) */
 				if(this.video.seek(-5)) this.navigate(null, -1);
@@ -1337,6 +1416,9 @@ export default class galleryClass
 				/* Previous gallery item on `arrowLeft` (image elements) */
 				this.navigate(null, -1);
 			}
+		} else if(key === 'Space' && this.audioCard)
+		{
+			this.audioCard.toggle();
 		} else if(key === Keys.l)
 		{
 			/* Toggle list on `l` */
@@ -1365,6 +1447,15 @@ export default class galleryClass
 	private unbind = (): void =>
 	{
 		createContextMenu().hide();
+		if(this.data.listDragged)
+		{
+			this.data.listDragged = false;
+			this.list.parentElement.classList.remove('list-resizing');
+			this.data.listDrag.removeAttribute('dragged');
+			document.body.style.cursor = '';
+			this.list.style.pointerEvents = '';
+			this.container.querySelector<HTMLElement>('.media > .wrapper').style.pointerEvents = '';
+		}
 		Object.keys(this.data.boundEvents).forEach((eventId: string) =>
 		{
 			const { selector, events }: {
@@ -1391,37 +1482,17 @@ export default class galleryClass
 	/**
 	 * Toggles the visibility of the list of items
 	 */
-	private toggleList = (element: HTMLElement = null): boolean =>
+	private toggleList = (): boolean =>
 	{
-		const list: HTMLElement = this.container.querySelector(':scope > div.galleryContent > div.list');
-		const visible: boolean = list.style.display !== 'none';
+		if(this.options.mobile) return false;
+		const visible = !this.options.list.show;
 		const client: TUserStorage = user.get();
-
-		client.gallery.listState = (!visible ? 1: 0);
-
+		client.gallery.listState = visible ? 1 : 0;
 		user.set(client);
+		this.options.list.show = visible;
+		this.update.layout();
 
-		if(!element)
-		{
-			element = document.body.querySelector(
-				'div.rootGallery > div.galleryBar .galleryBarRight button[data-action="toggle"]'
-			);
-		}
-
-		this.update.listToggle(!visible, element);
-
-		DOM.style.set(list, {
-			'display': visible ? 'none': 'table-cell'
-		});
-
-		this.update.listWidth();
-
-		if(!visible && this.options.performance && this.optimize.enabled)
-		{
-			this.optimize.attemptRefresh();
-		}
-
-		return !visible;
+		return visible;
 	}
 
 	/**
@@ -1436,6 +1507,7 @@ export default class galleryClass
 			if(event.button !== 0) return;
 			event.preventDefault();
 			this.data.listDragged = true;
+			this.list.parentElement.classList.add('list-resizing');
 
 			const windowWidth = window.innerWidth,
 				startX = event.clientX,
@@ -1475,9 +1547,7 @@ export default class galleryClass
 
 					requestAnimationFrame((): void =>
 					{
-						DOM.style.set(this.data.list, {
-							'width': `${width}px`
-						});
+						this.list.parentElement.style.setProperty('--gallery-list-size', `${width}px`);
 					});
 				}
 			}, {
@@ -1519,9 +1589,10 @@ export default class galleryClass
 					this.data.listDrag.removeAttribute('dragged');
 				}
 
-				const lw: number = parseInt(this.data.list.style.width.replace(/[^-\d.]/g, ''));
+				const lw = Math.round(this.list.getBoundingClientRect().width);
+				this.list.parentElement.classList.remove('list-resizing');
 
-				log('gallery', 'Set list width', lw);
+				log.debug('gallery', `List width saved: ${lw} px`);
 
 				if(lw > 100)
 				{
@@ -1571,7 +1642,7 @@ export default class galleryClass
 					}),
 					toggle: ((): void =>
 					{
-						this.toggleList(eventTarget);
+						this.toggleList();
 					}),
 					close: ((): void =>
 					{
@@ -1623,6 +1694,7 @@ export default class galleryClass
 		eventHooks.listen('body > div.rootGallery > div.galleryContent \
 			> div.media', 'click', 'mediaClick', (event: MouseEvent) =>
 		{
+			if((event.target as Element).closest('.audioCard, .galleryListToggle')) return;
 			/* Hide gallery if media background is clicked */
 			if(!['IMG', 'VIDEO', 'A'].includes((event.target as HTMLElement).tagName))
 			{
@@ -1676,6 +1748,7 @@ export default class galleryClass
 			['scroll', 'DOMMouseScroll', 'mousewheel'], 'galleryScrollNavigate', 
 			(event: WheelEvent): void | boolean =>
 			{
+				if((event.target as Element).closest('.audioCard, .galleryListToggle')) return;
 				if(this.options.scrollInterval > 0 && this.data.scrollbreak === true)
 				{
 					return false;
@@ -1696,6 +1769,8 @@ export default class galleryClass
 		/* Handles `keyup` events in the gallery (well - document, but unbinds on close) */
 		eventHooks.listen(window, 'keyup', 'galleryKeyUp', (event: KeyboardEvent): void =>
 		{
+			if(event.code !== Keys.escape && (event.target as Element).closest?.('.audioCard input, .audioCard button')) return;
+			if((event.target as Element).closest?.('.galleryListToggle') && ['Space', 'Enter'].includes(event.code)) return;
 			if(document.documentElement.hasAttribute('context-menu-is-visible')
 				|| document.documentElement.hasAttribute('dialog-is-visible')) return;
 
@@ -1713,10 +1788,12 @@ export default class galleryClass
 		/* Handles `keydown` events */
 		eventHooks.listen(window, 'keydown', 'galleryKeyDown', (event: KeyboardEvent): void =>
 		{
+			if(event.code !== Keys.escape && (event.target as Element).closest?.('.audioCard input, .audioCard button')) return;
+			if((event.target as Element).closest?.('.galleryListToggle') && ['Space', 'Enter'].includes(event.code)) return;
 			if(document.documentElement.hasAttribute('context-menu-is-visible')
 				|| document.documentElement.hasAttribute('dialog-is-visible')) return;
 
-			if(this.data.keyPrevent.includes(event.code))
+			if(this.data.keyPrevent.includes(event.code) || (event.code === 'Space' && this.audioCard))
 			{
 				event.preventDefault();
 			}
@@ -1767,14 +1844,6 @@ export default class galleryClass
 			next.append(createIcon('arrow-left'));
 			bar.append(next);
 
-			/* Create `list toggle` button */
-			const listToggle: HTMLElement = DOM.new('button', {
-				type: 'button',
-				'data-action': 'toggle',
-			});
-			this.update.listToggle(this.options.list.show, listToggle);
-
-			bar.append(listToggle);
 		}
 
 		/* Create `close` button */
@@ -1825,6 +1894,8 @@ export default class galleryClass
 		const content: HTMLElement = DOM.new('div', {
 			class: 'galleryContent' + (this.options.list.reverse ? ' reversed': '')
 		});
+		const listVisible = this.options.list.show && !this.options.mobile;
+		content.classList.toggle('list-collapsed', !listVisible);
 
 		this.container.append(content);
 
@@ -1834,8 +1905,19 @@ export default class galleryClass
 
 		/* Create list */
 		const list: HTMLElement = DOM.new('div', {
-			class: 'ns list'
+			class: 'ns list',
+			id: 'gallery-list',
+			'aria-label': 'Gallery files',
+			'aria-hidden': String(!listVisible)
 		});
+		list.toggleAttribute('inert', !listVisible);
+		const listToggle = DOM.new('button', {
+			type: 'button', class: 'galleryListToggle', 'data-action': 'toggle',
+			'aria-controls': list.id, 'aria-keyshortcuts': 'L'
+		});
+		listToggle.hidden = this.options.mobile;
+		this.update.listToggle(listVisible, listToggle);
+		media.append(listToggle);
 
 		/* Add to content container, respecting list reverse status */
 		content.append(this.options.list.reverse ? list: media);
@@ -1877,9 +1959,7 @@ export default class galleryClass
 
 			if(width)
 			{
-				DOM.style.set(this.data.list, {
-					'width': `${width}px`
-				});
+				content.style.setProperty('--gallery-list-size', `${width}px`);
 			}
 		} catch (e: unknown) {
 			client.gallery.listWidth = false;
@@ -1935,8 +2015,11 @@ export default class galleryClass
 
 		createOverlayScrollbar(list, {
 			label: 'Gallery list scroll position', parent: this.container,
-			hoverOnly: true, shadows: true
+			hoverOnly: true, shadows: true, layoutElement: media
 		});
+		const layout = new ResizeObserver(() => this.update.listWidth());
+		layout.observe(media);
+		onPageReplace(() => layout.disconnect());
 
 		callback(true);
 	}

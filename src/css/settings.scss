@@ -2,30 +2,20 @@
 
 html > body > dialog.dialog .settingsOptions {
   > .section {
-    padding: 8px 0 4px;
+    padding: 0;
 
     + .section {
-      margin-top: 4px;
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 2px solid variables.$divider-color;
     }
 
     > .header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0 4px 4px;
+      margin: 0 0 4px;
       color: variables.$accent-color;
-      font-size: 0.8rem;
-      font-weight: 600;
-      line-height: 1.6;
-      letter-spacing: 1.3px;
-      text-transform: uppercase;
-
-      &::after {
-        content: "";
-        flex: 1;
-        height: 2px;
-        background: variables.$divider-color;
-      }
+      font-size: inherit;
+      font-weight: 500;
+      line-height: 1.5;
     }
 
     > .option {
@@ -35,16 +25,13 @@ html > body > dialog.dialog .settingsOptions {
       gap: 3px 12px;
       box-sizing: border-box;
       min-height: 32px;
-      padding: 6px 4px;
-      border-radius: 2px;
-
-      + .option {
-        border-top: 2px solid variables.$divider-color;
-      }
+      padding: 4px 8px;
+      margin: 0 -8px;
+      border-radius: 4px;
 
       > .option-text {
         min-width: 0;
-        font-weight: 500;
+        font-weight: inherit;
         user-select: none;
       }
 
@@ -79,11 +66,11 @@ html > body > dialog.dialog .settingsOptions {
     min-width: 0;
     min-height: 1.75rem;
     padding: 4px 7px;
-    border: 2px solid variables.$divider-color;
+    border: 2px solid var(--dialog-input-border);
     border-radius: 5px;
-    background: #000;
+    background: var(--dialog-input-background);
     color: inherit;
-    font: 500 0.8rem / 1.4 Inter, sans-serif;
+    font: inherit;
     text-align: left;
     cursor: pointer;
     outline: none;
@@ -98,7 +85,7 @@ html > body > dialog.dialog .settingsOptions {
       flex: none;
       width: 1rem;
       height: 1rem;
-      color: variables.$accent-color;
+      color: #96959d;
       transform: rotate(0deg);
       transform-origin: center;
       transition: transform 180ms ease;
@@ -117,9 +104,9 @@ html > body > dialog.dialog .settingsOptions {
 
   select:not([hidden]) {
     padding: 4px 7px;
-    border: 2px solid variables.$divider-color;
+    border: 2px solid var(--dialog-input-border);
     border-radius: 5px;
-    background: #000;
+    background: var(--dialog-input-background);
     color: inherit;
     font: inherit;
   }
@@ -129,4 +116,10 @@ html > body > dialog.dialog .settingsOptions {
       transition: none;
     }
   }
+}
+
+html > body > dialog.dialog[open] > .contextMenu {
+  border-color: var(--dialog-input-border);
+  background: var(--dialog-input-background);
+  box-shadow: none;
 }

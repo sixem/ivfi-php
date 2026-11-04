@@ -10,16 +10,16 @@ html > body > div.tableContainer > table [sortable] {
 
 body,
 input {
-  font-family: Inter, sans-serif;
+  font-family: Inter, "Inter Arial Fallback", "Inter Fallback", sans-serif;
   font-weight: normal;
 }
 
 select {
-  font-family: Inter, sans-serif;
+  font-family: Inter, "Inter Arial Fallback", "Inter Fallback", sans-serif;
   font-weight: normal;
 
   > option {
-    font-family: Inter, sans-serif;
+    font-family: Inter, "Inter Arial Fallback", "Inter Fallback", sans-serif;
     font-weight: normal;
   }
 }
@@ -231,7 +231,7 @@ html > body {
       @include mixins.fonting(
         $key: "table-header",
         $align: left,
-        $spacing: 1px,
+        $spacing: 0.0625rem,
         $color-scope: variables.$root,
         $color-key: "color-header-table"
       );
@@ -279,7 +279,7 @@ html > body {
       @include mixins.fonting(
         $key: "row-file",
         $weight: 500,
-        $spacing: 1px
+        $spacing: 0.0625rem
       );
 
       text-decoration: none;
@@ -360,29 +360,13 @@ html > body {
       visibility: hidden;
     }
 
-    /* Preview volume indicator */
-    &#indicatorPreviewVolume {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background-color: rgb(0 0 0 / 35%);
-      padding: 5px 10px;
-      border-radius: 4px;
-      pointer-events: none;
-      letter-spacing: 1px;
-      z-index: 10000;
-      font-feature-settings: "tnum";
-      transition: opacity 0.33s;
-      opacity: 0;
-    }
-
     /* Bottom container */
     &.bottom {
       padding: 8px 22px 10px 10px;
       position: relative;
       color: variables.$text-color;
       font-size: 0.8125rem;
-      letter-spacing: 1px;
+      letter-spacing: 0.0625rem;
 
       &::before {
         content: "";
@@ -422,7 +406,7 @@ html > body {
     text-overflow: ellipsis;
     font-style: normal;
     font-size: 1.1875rem;
-    letter-spacing: 1px;
+    letter-spacing: 0.0625rem;
     margin: 20px 0 16px 8px;
     padding-right: 10px;
 
@@ -438,18 +422,22 @@ html > body {
     }
   }
 
-  /* Filter container */
+  /* Directory search */
   > div.filterContainer {
     display: none;
     position: fixed;
-    top: var(--topbar-height);
-    z-index: 1;
-    left: 0;
-    right: 0;
-    width: 100%;
-    padding: 0;
-    border: none;
-    box-shadow: 0 0 6px #10151f;
+    top: calc(var(--topbar-height) + 8px);
+    z-index: 101;
+    right: 16px;
+    box-sizing: border-box;
+    width: min(25rem, calc(100% - 32px));
+    padding: 5px;
+    border: 2px solid variables.$surface-border;
+    border-radius: 8px;
+    background: #111214f5;
+    color: variables.$text-color;
+    box-shadow: 0 6px 20px rgb(0 0 0 / 35%);
+    backdrop-filter: blur(8px);
     animation: reveal-filter 160ms ease-out;
 
     &.closing {
@@ -457,87 +445,125 @@ html > body {
       pointer-events: none;
     }
 
-    > .filterIcon {
-      position: absolute;
-      top: 50%;
-      left: 10px;
-      width: 16px;
-      height: 16px;
-      transform: translateY(-50%);
-      color: variables.$text-color;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    > .filterClose,
-    > .filterCollapse {
-      position: absolute;
-      top: 0;
-      right: 16px;
-      bottom: 2px;
+    > .filterField {
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 36px;
-      padding: 0;
-      border: none;
-      background: transparent;
-      color: variables.$text-color;
-      cursor: pointer;
+      gap: 4px;
+      min-height: 2.25rem;
+      padding: 0 4px 0 9px;
+      border: 2px solid variables.$surface-border;
+      border-radius: 5px;
+      background: #0c0d0e;
 
-      > svg {
-        width: 16px;
-        height: 16px;
+      &:focus-within {
+        border-color: variables.$accent-color;
+      }
+
+      > .filterIcon {
+        flex: none;
+        width: 1rem;
+        height: 1rem;
+        opacity: 0.65;
         pointer-events: none;
       }
 
-      &:hover {
-        color: variables.$accent-color;
+      > input[type="text"] {
+        flex: 1;
+        min-width: 0;
+        width: 0;
+        padding: 8px 3px;
+        border: none;
+        background: transparent;
+        color: inherit;
+        font-size: 0.8125rem;
+        letter-spacing: 0.025rem;
+
+        &[aria-invalid="true"] {
+          color: #e99a9a;
+        }
+
+        &:focus {
+          outline: none;
+        }
       }
 
-      &:focus-visible {
-        outline: 2px solid variables.$accent-color;
-        outline-offset: -4px;
+      > .filterStatus {
+        flex: none;
+        color: #a6a8ad;
+        font-size: 0.75rem;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+
+        &[data-error] {
+          color: #e99a9a;
+        }
       }
-    }
 
-    > .filterCollapse {
-      right: 52px;
+      > button {
+        display: flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        padding: 0;
+        border: none;
+        border-radius: 3px;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
 
-      > svg {
+        > svg {
+          width: 1rem;
+          height: 1rem;
+          pointer-events: none;
+        }
+
+        &:hover {
+          background: #ffffff0d;
+          color: variables.$accent-color;
+        }
+
+        &:focus-visible {
+          outline: 2px solid variables.$accent-color;
+          outline-offset: -2px;
+        }
+      }
+
+      > .filterCollapse > svg {
         transform: rotate(180deg);
       }
     }
 
-    > input[type="text"] {
-      @include mixins.fonting(
-        $key: "default",
-        $spacing: 1px,
-        $color: variables.$text-color
-      );
+    > .filterHint {
+      margin: 5px 4px 1px;
+      color: #a6a8ad;
+      font-size: 0.75rem;
+      line-height: 1.5;
 
-      border-radius: 1px;
-      box-sizing: border-box;
-      padding: 5px 96px 5px 34px;
-      background-color: #000000d9;
-      backdrop-filter: blur(4px);
-      height: calc(1.5rem + 12px);
-      width: 100%;
-      border-top: none;
-      border-left: none;
-      border-right: none;
-      border-bottom: 2px solid variables.$divider-color;
-
-      @include mixins.media-query("screen", "isMobile") {
-        font-size: 0.75rem;
+      > kbd {
+        padding: 0 3px;
+        border: 1px solid variables.$surface-border;
+        border-radius: 3px;
+        background: #212020;
+        font: inherit;
       }
+    }
 
-      &[aria-invalid="true"] {
-        color: #e99a9a;
-      }
+    @media (max-width: 22rem) {
+      > .filterField {
+        flex-wrap: wrap;
 
-      &:focus {
-        outline: none;
+        > .filterStatus {
+          order: 1;
+          flex-basis: 100%;
+          padding: 0 4px 6px;
+          text-align: right;
+
+          &:empty {
+            display: none;
+          }
+        }
       }
     }
   }
@@ -615,7 +641,7 @@ html > body {
       &.path {
         font-style: normal;
         font-size: 1.1875rem;
-        letter-spacing: 1px;
+        letter-spacing: 0.0625rem;
         margin: 24px 0 22px 8px;
         text-align: center;
         user-select: none;
@@ -652,7 +678,7 @@ html > body {
       &.directoryInfo {
         @include mixins.fonting(
           $key: "top-bar",
-          $spacing: 1px
+          $spacing: 0.0625rem
         );
 
         display: flex;
@@ -699,7 +725,7 @@ html > body {
             padding: 0 10px;
             font: inherit;
             font-weight: 500;
-            letter-spacing: 1px;
+            letter-spacing: 0.0625rem;
 
             > .copyWgetContent {
               display: grid;
@@ -761,6 +787,10 @@ html > body {
               visibility: visible;
               pointer-events: auto;
               transition-delay: 0s;
+
+              &:disabled {
+                opacity: 0.35;
+              }
             }
 
             > svg {
@@ -906,21 +936,25 @@ html > body {
 
 @keyframes reveal-filter {
   from {
-    transform: translateY(-100%);
+    opacity: 0;
+    transform: translateY(-6px);
   }
 
   to {
+    opacity: 1;
     transform: translateY(0);
   }
 }
 
 @keyframes hide-filter {
   from {
+    opacity: 1;
     transform: translateY(0);
   }
 
   to {
-    transform: translateY(-100%);
+    opacity: 0;
+    transform: translateY(-6px);
   }
 }
 

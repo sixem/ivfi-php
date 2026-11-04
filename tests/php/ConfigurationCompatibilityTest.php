@@ -131,9 +131,55 @@ final class ConfigurationCompatibilityTest extends TestCase
             ], true) . ';');
             $config = $this->jsConfig($response);
             self::assertSame('/indexer/themes/', $config['style']['themes']['path']);
-            self::assertSame(['image' => ['avif'], 'video' => []], $config['extensions']);
+            self::assertSame(['image' => ['avif'], 'video' => [],
+                'audio' => ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'oga', 'opus']], $config['extensions']);
             self::assertFalse($config['selection']['enabled']);
             self::assertTrue($config['preview']['enabled']);
+        }
+    }
+
+    public function testAudioIsMediaAndCanBeDisabledOrReclassified(): void
+    {
+        $extensions = ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'oga', 'opus'];
+        foreach (array_merge($extensions, ['ogv', 'txt']) as $extension) {
+            file_put_contents($this->root . '/media/track.' . $extension, 'fixture');
+        }
+        foreach ($this->variants() as $variant) {
+            $response = $this->render($variant);
+            self::assertSame($extensions, $this->jsConfig($response)['extensions']['audio']);
+            foreach (array_merge($extensions, ['ogv']) as $extension) {
+                self::assertMatchesRegularExpression('~<a[^>]+href="[^"<]*track\.' . $extension . '"[^>]+class="preview"~', $response['body']);
+            }
+            self::assertDoesNotMatchRegularExpression('~<a[^>]+href="[^"<]*track\.txt"[^>]+class="preview"~', $response['body']);
+            $disabled = $this->render($variant, '<?php return ["extensions" => ["audio" => [], "video" => ["ogg"]]];');
+            self::assertSame([], $this->jsConfig($disabled)['extensions']['audio']);
+            self::assertDoesNotMatchRegularExpression('~<a[^>]+href="[^"<]*track\.mp3"[^>]+class="preview"~', $disabled['body']);
+            self::assertMatchesRegularExpression('~<a[^>]+href="[^"<]*track\.ogg"[^>]+class="preview"~', $disabled['body']);
+        }
+    }
+
+    public function testArchiveSettingsDefaultAndValidateInBothDistributions(): void
+    {
+        foreach ($this->variants() as $variant) {
+            $defaults = ['requestDelayMs' => 0, 'bufferLimitMib' => 256];
+            self::assertSame($defaults, $this->jsConfig($this->render($variant))['selection']['archive']);
+            $partial = '<?php return ["selection" => ["archive" => ["request_delay_ms" => 125]]];';
+            self::assertSame(['requestDelayMs' => 125, 'bufferLimitMib' => 256],
+                $this->jsConfig($this->render($variant, $partial))['selection']['archive']);
+            $zero = '<?php return ["selection" => ["archive" => ["buffer_limit_mib" => 0]]];';
+            self::assertSame(['requestDelayMs' => 0, 'bufferLimitMib' => 0],
+                $this->jsConfig($this->render($variant, $zero))['selection']['archive']);
+            $fraction = '<?php return ["selection" => ["archive" => ["buffer_limit_mib" => 0.5]]];';
+            self::assertSame(['requestDelayMs' => 0, 'bufferLimitMib' => 0.5],
+                $this->jsConfig($this->render($variant, $fraction))['selection']['archive']);
+            foreach ([
+                ['request_delay_ms' => -1], ['request_delay_ms' => 2147483648],
+                ['request_delay_ms' => '10'], ['buffer_limit_mib' => -1],
+                ['buffer_limit_mib' => 8589934592], ['buffer_limit_mib' => INF],
+            ] as $invalid) {
+                $config = '<?php return ' . var_export(['selection' => ['archive' => $invalid]], true) . ';';
+                self::assertSame(500, $this->render($variant, $config)['status']);
+            }
         }
     }
 

@@ -8,7 +8,8 @@ import type { RowSelection } from '../../modules/row-selection';
  */
 export type TComponentFilter = {
 	apply?: (query: string) => void;
-	toggle?: () => void;
+	toggle?: (open?: boolean) => void;
+	isOpen?: () => boolean;
 };
 
 /**
@@ -179,6 +180,8 @@ export namespace MComponentMain
 			url?: string;
 			name?: string;
 			size?: string;
+			bytes?: number;
+			modified?: number;
 		}>;
 
 		sortTableColumn?: (

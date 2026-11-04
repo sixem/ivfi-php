@@ -90,7 +90,7 @@ export default class optimizeClass
 	 */
 	private setup = (): boolean =>
 	{
-		log('optimize', '->', 'optimize.setup');
+		log.debug('optimize', 'Initializing row layout');
 
 		const table: HTMLElement = this.table;
 		this.focused = table.contains(document.activeElement)
@@ -121,7 +121,7 @@ export default class optimizeClass
 
 		this.rows = Array.from(rows);
 
-		log('optimize', `Calculated rows in ${performance.now() - measureStart} ms.`);
+		log.debug('optimize', `Measured ${rows.length} rows in ${(performance.now() - measureStart).toFixed(1)} ms`);
 
 		/* Apply table height */
 		DOM.style.set(table, {
@@ -162,9 +162,10 @@ export default class optimizeClass
 		{
 			const item: TOptimizeRowItem = rows[i];
 			const itemClasses: Array<string> = ['rel-row'];
+			item._isHidden = !(i >= start && i <= limit) && item !== this.focused;
 
 			/* Out of viewport? hide it here - speeds up page load */
-			if(!(i >= start && i <= limit) && item !== this.focused)
+			if(item._isHidden)
 			{
 				itemClasses.push('hid-row');
 			}
@@ -197,7 +198,7 @@ export default class optimizeClass
 		/* Start measuring execution time */
 		const measureStart: number = performance.now();
 
-		log('optimize', '->', 'optimize.refactor');
+		log.debug('optimize', 'Updating row layout');
 
 		/* Declare variables */
 		const table: HTMLElement = this.table;
@@ -231,7 +232,23 @@ export default class optimizeClass
 		this.activeHasChanged = true;
 		this.page.scrolledY = (this.scope[0])[this.scope[1]];
 
-		const [activeRows] = this.getActiveData();
+		const [activeRows, activeIndexes] = this.getActiveData();
+		const origin = Math.ceil(-table.getBoundingClientRect().top + this.page.windowHeight / 2);
+		const margin = Math.ceil(Math.ceil(this.page.windowHeight / this.rowHeight) * 1.75);
+		const fullIndex = this.scanForClosest(origin, 1E3, 0);
+		const index = this.getRelativeIndex(activeIndexes, fullIndex) ?? fullIndex;
+		const [start, limit] = this.calculateRange(index, margin);
+
+		/* Reveal incoming rows before moving them; the deferred refresh hides outgoing rows. */
+		for(let i = start; i <= limit && i < activeRows.length; i++)
+		{
+			const item = activeRows[i];
+			if(item._isHidden)
+			{
+				item.classList.remove('hid-row');
+				item._isHidden = false;
+			}
+		}
 
 		/* Iterate over stored rows, check status and arrange new table */
 		for(let index = 0; index < (this.rows).length; index++)
@@ -256,7 +273,7 @@ export default class optimizeClass
 		/* Set table height */
 		table.style.height = `${combinedHeight + 6}px`;
 
-		log('optimize', `Ran refactor in ${performance.now() - measureStart} ms.`);
+		log.debug('optimize', `Updated row layout in ${(performance.now() - measureStart).toFixed(1)} ms`);
 
 		/* Call a refresh after refactor */
 		this.attemptRefresh();
@@ -270,6 +287,35 @@ export default class optimizeClass
 		this.activeHasChanged = true;
 
 		return state;
+	}
+
+	/** Remeasure rows when a font finishes loading after optimization started. */
+	public remeasure = (): void =>
+	{
+		if(this.destroyed || !this.initiated) return;
+		const first = this.table.querySelector<TOptimizeRowItem>('tbody > tr');
+		if(!first) return;
+		const container = this.table.closest<HTMLElement>('.tableContainer');
+		const filter = container?.getAttribute('is-active-filter');
+		const wasRelative = first.classList.contains('rel-row');
+		const hidden = this.rows.filter(row => row.classList.contains('hid-row'));
+
+		/* Temporarily expose hidden and filtered rows to measure their actual heights.
+		 * The changes are restored synchronously, before the browser can paint. */
+		if(filter !== null && filter !== undefined) container.removeAttribute('is-active-filter');
+		for(const row of hidden) row.classList.remove('hid-row');
+		if(wasRelative) first.classList.remove('rel-row');
+		try
+		{
+			this.tableOffsetBegin = first.offsetTop;
+			for(const row of this.rows) row._offsetHeight = row.offsetHeight || row._offsetHeight;
+			this.rowHeight = first._offsetHeight || 1;
+		} finally {
+			if(wasRelative) first.classList.add('rel-row');
+			for(const row of hidden) row.classList.add('hid-row');
+			if(filter !== null && filter !== undefined) container.setAttribute('is-active-filter', filter);
+		}
+		this.refactor();
 	}
 
 	/**
@@ -296,7 +342,7 @@ export default class optimizeClass
 	{
 		if(this.activeHasChanged || !this.activeData)
 		{
-			log('optimize', 'Updating active data ..');
+			log.debug('optimize', 'Updating visible rows');
 
 			const activeRows: Array<TOptimizeRowItem> = [],
 				activeIndexes: {

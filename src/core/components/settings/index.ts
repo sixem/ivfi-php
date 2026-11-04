@@ -220,7 +220,7 @@ update.gallery.listAlignment = (alignment: number) =>
 		data.instances.gallery.options.list.reverse = (
 			alignment === 0 ? false : true
 		);
-		data.instances.gallery.update.listToggle(detached.style.display !== 'none');
+		data.instances.gallery.update.listToggle(data.instances.gallery.options.list.show);
 	}
 };
 
@@ -438,7 +438,8 @@ options.set = (setData: object, client: TUserClient) =>
 		});
 	});
 
-	log('settings', 'Set settings:', setData);
+	log.info('settings', 'Preferences saved');
+	log.debug('settings', 'Changed preferences', setData);
 
 	/** Save settings to client */
 	user.set(client);
@@ -602,7 +603,7 @@ export class componentSettings
 		]);
 
 		sets.push([
-			data.text.settingsLabels.galleryVideoAutoplay.text,
+			data.text.settingsLabels.galleryMediaAutoplay.text,
 			'autoplay'
 		]);
 

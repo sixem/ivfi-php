@@ -6,6 +6,6 @@ Optional features are disabled in standard builds. Enable them under `extraFeatu
 
 Set `readmeSupport` to `true` to display a directory's `README.md` above its listing. Requires PHP `mbstring`.
 
-[Parsedown](https://github.com/erusev/parsedown) renders Markdown in safe mode: raw HTML is displayed as text and unsafe links are blocked.
+[Parsedown](https://github.com/erusev/parsedown) renders Markdown in safe mode: raw HTML is displayed as text and unsafe links are blocked. Set `allow_unsafe_readme` to `true` to allow both. Use only with trusted files; scripts can execute.
 
 Unreadable files and files over 1 MiB are skipped. Without `mbstring`, listings still work but README previews are omitted.

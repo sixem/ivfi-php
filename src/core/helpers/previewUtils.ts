@@ -1,47 +1,31 @@
-import { DOM } from './dom';
+import { isAutoplayMuted } from './media';
+import { addOverlayItem } from '../modules/overlay-stack';
+import { onPageReplace } from '../modules/lifecycle';
 
-let timerVolumeIndicator: number | null = null;
+let timerVolumeIndicator: number = null;
+let volumeIndicator: HTMLDivElement = null;
+let showVolume: (visible: boolean) => void = null;
 
-/**
- * Shows the volume indicator when scrolling on a video preview
- */
-export const showVolumeIndicator = (volume: number): void =>
+/** Show the chosen video volume alongside other page indicators. */
+export const showVolumeIndicator = (volume: number, blocked = false): void =>
 {
 	clearTimeout(timerVolumeIndicator);
-
-	let container: HTMLElement = document.body.querySelector(':scope > div#indicatorPreviewVolume');
-
-	/* Create text */
-	const volumeText: string = (volume === 0 ? 'Muted': `Volume: ${volume}%`);
-
-	if(!container)
+	if(!volumeIndicator)
 	{
-		/* Create element if non-existant */
-		container = DOM.new('div', {
-			id: 'indicatorPreviewVolume',
-			text: volumeText
+		volumeIndicator = document.createElement('div');
+		volumeIndicator.id = 'indicatorPreviewVolume';
+		volumeIndicator.setAttribute('role', 'status');
+		showVolume = addOverlayItem(volumeIndicator);
+		onPageReplace(() =>
+		{
+			clearTimeout(timerVolumeIndicator);
+			volumeIndicator = null;
+			showVolume = null;
 		});
-
-		document.body.prepend(container);
-	} else {
-		container.textContent = volumeText;
 	}
-
-	/* Show element */
-	setTimeout(() =>
-	{
-		DOM.style.set(container, {
-			opacity: '1'
-		});
-	});
-
-	/* Hide element */
-	timerVolumeIndicator = window.setTimeout(() =>
-	{
-		DOM.style.set(container, {
-			opacity: '0'
-		});
-	}, 2500);
+	volumeIndicator.textContent = volume === 0 ? 'Muted' : `Volume: ${volume}%${blocked ? ' · Click to enable sound' : ''}`;
+	showVolume(true);
+	timerVolumeIndicator = window.setTimeout(() => showVolume(false), 2500);
 };
 
 /**
@@ -56,6 +40,9 @@ export const setVideoVolume = (
 	if(!video) return;
 	
 	video.volume = Math.max(0, Math.min(1, volume));
-	video.muted = video.volume === 0;
-	if(indicator) showVolumeIndicator(Math.round(video.volume * 100));
+	// Wheel events do not grant user activation. Keep muted playback moving until a real gesture.
+	const activation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
+	const blocked = isAutoplayMuted(video) && activation?.hasBeenActive === false;
+	video.muted = video.volume === 0 || blocked;
+	if(indicator) showVolumeIndicator(Math.round(video.volume * 100), blocked);
 };

@@ -9,7 +9,9 @@ import { log } from './modules/logger';
 import { createIcon } from './icons';
 import { eventHooks } from './modules/event-hooks';
 import { disposePage, onPageReplace } from './modules/lifecycle';
-import { playVideo } from './helpers/media';
+import { playVideo, isAutoplayMuted } from './helpers/media';
+import { getAudioVolume, saveAudioVolume } from './helpers/audioVolume';
+import { AudioPreview } from './components/audio/preview';
 import { createOverlayScrollbar } from './modules/scrollbar';
 import { createRowSelection } from './modules/row-selection';
 import { createTooltip } from './modules/tooltip';
@@ -49,6 +51,20 @@ import '../css/root.scss';
 import '../css/fonts.scss';
 import '../css/main.scss';
 
+/* Keep managed media exclusive without loading or polling inactive players. */
+const pauseOtherMedia = (event: Event) =>
+{
+	const playing = event.target;
+	if(!(playing instanceof HTMLMediaElement)
+		|| !playing.closest('.preview-container, .rootGallery, .audioCard')) return;
+	document.querySelectorAll<HTMLMediaElement>('.preview-container video, .rootGallery video, .audioCard audio').forEach(media =>
+	{
+		if(media !== playing && !media.paused) media.pause();
+	});
+};
+document.addEventListener('play', pauseOtherMedia, true);
+onPageReplace(() => document.removeEventListener('play', pauseOtherMedia, true));
+
 /* References */
 const selector = data.instances.selector;
 
@@ -58,7 +74,7 @@ try
 	navigator.mediaSession.setActionHandler('play', null);
 } catch(error)
 {
-	log('error', error);
+	log.debug('media', 'Media Session controls are unavailable', error);
 }
 
 /* Set main component in data */
@@ -136,6 +152,14 @@ if(config.get('performance'))
 			});
 			data.instances.optimize.main = optimizer;
 			onPageReplace(() => optimizer.destroy());
+			/* Font swaps can change row heights after the initial measurement. */
+			if(document.fonts && document.fonts.status === 'loading')
+			{
+				void document.fonts.ready.then(() =>
+				{
+					if(table.isConnected && optimizer.enabled) optimizer.remeasure();
+				});
+			}
 		});
 	}, 1);
 }
@@ -225,7 +249,7 @@ eventHooks.listen(selector.use('TABLE') as HTMLElement, 'click', 'sortClick', (e
  */
 eventHooks.listen(window, 'resize', 'windowResize', debounce((): void =>
 {
-	log('event', 'windowResize (main)', 'Resized');
+	log.debug('layout', 'Window resized');
 
 	/** Get mobile status */
 	const isMobile = Modernizr.mq('(max-width: 768px)');
@@ -235,13 +259,12 @@ eventHooks.listen(window, 'resize', 'windowResize', debounce((): void =>
 		/** Update mobile status */
 		config.set('mobile', Modernizr.mq('(max-width: 768px)'));
 
-		log('view', `Switched to ${isMobile ? 'mobile' : 'desktop'} view`);
+		log.info('layout', `Switched to ${isMobile ? 'mobile' : 'desktop'} view`);
 	}
 
 	if(data.instances.gallery)
 	{
-		data.instances.gallery.options.mobile = isMobile;
-		data.instances.gallery.update.listWidth();
+		data.instances.gallery.update.layout(isMobile);
 	}
 
 	/* Update page values */
@@ -265,7 +288,7 @@ if(config.get('mobile') === false
 
 	const onLoaded = (event: TOnPreviewLoad) =>
 	{
-		log('preview', 'Preview loaded =>', event);
+		log.debug('preview', 'Loaded', event);
 
 		cancelReveal?.();
 
@@ -340,13 +363,42 @@ if(config.get('mobile') === false
 		resolve: element =>
 		{
 			const identified = identifyExtension(stripUrl(element.getAttribute('href')), extensions);
-			return identified ? { extension: identified[0], type: identified[1] } : null;
+			return identified && identified[1] !== 2 ? { extension: identified[0], type: identified[1] } : null;
 		},
 		on: { onLoaded }
 	});
 	data.preview.takeVideo = (src, parent) => preview.takeVideo(src, parent);
 
-	const hidePreview = () => preview.hide(true);
+	const audioPreview = new AudioPreview(selector.use('TABLE') as HTMLElement, {
+		extensions,
+		delay: config.get('preview.hoverDelay'),
+		volume: getAudioVolume,
+		onExpand: config.get('gallery.enabled') ? anchor => anchor.click() : undefined,
+		available: () => data.preview.isLoadable && document.hasFocus() && !document.hidden
+			&& !document.documentElement.hasAttribute('gallery-is-visible')
+			&& !document.documentElement.hasAttribute('dialog-is-visible')
+			&& !document.documentElement.hasAttribute('context-menu-is-visible'),
+		onActive: card =>
+		{
+			data.preview.audio = card;
+			data.scrollLock = !card && !!(data.preview.data?.loaded && data.preview.data?.audible);
+		},
+		onVolumeChange: saveAudioVolume
+	});
+	data.preview.takeAudio = (src, parent) => audioPreview.take(src, parent);
+	data.preview.hasAudio = src => audioPreview.has(src);
+	const unlockVideo = () =>
+	{
+		const video = data.preview.data?.element;
+		if(video instanceof HTMLVideoElement && isAutoplayMuted(video))
+		{
+			setVideoVolume(video, data.preview.volume / 100);
+			void playVideo(video, true, () => data.preview.data?.element === video);
+		}
+	};
+	window.addEventListener('pointerdown', unlockVideo);
+	window.addEventListener('keydown', unlockVideo);
+	const hidePreview = () => { preview.hide(true); audioPreview.hide(); };
 	const onVisibility = () => { if(document.hidden) hidePreview(); };
 	window.addEventListener('blur', hidePreview);
 	window.addEventListener('pagehide', hidePreview);
@@ -354,7 +406,12 @@ if(config.get('mobile') === false
 	eventHooks.subscribe('galleryOpen', 'hidePreview', hidePreview);
 	onPageReplace(() =>
 	{
+		window.removeEventListener('pointerdown', unlockVideo);
+		window.removeEventListener('keydown', unlockVideo);
 		preview.destroy();
+		audioPreview.destroy();
+		data.preview.takeAudio = null;
+		data.preview.hasAudio = null;
 		data.preview.takeVideo = null;
 		cancelReveal?.();
 		window.removeEventListener('blur', hidePreview);
@@ -439,7 +496,7 @@ if(config.get('singlePage'))
 			 * This removes any accidental navigates to unknown sources */
 			if(response.headers.get('navigate-type') === 'dynamic')
 			{
-				log('main', 'Valid header. Navigating pages ..');
+				log.info('navigation', 'Loading directory');
 				
 				response.text().then((content) =>
 				{
@@ -555,22 +612,24 @@ data.components.main.dates.load();
 /* Add the filter controls using the shared icons. */
 const filterInput = selector.use('FILTER_INPUT') as HTMLInputElement;
 filterInput.value = '';
-filterInput.setAttribute('aria-label', 'Filter files and folders');
-const filterIcon = createIcon('filter');
+filterInput.setAttribute('aria-label', 'Search files and folders');
+const findModifier = /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? 'Cmd' : 'Ctrl';
+document.querySelector('.filterShortcut').textContent = findModifier;
+const filterIcon = createIcon('search');
 filterIcon.classList.add('filterIcon');
 filterInput.before(filterIcon);
 
 const collapseFilter = document.createElement('button');
 collapseFilter.type = 'button';
 collapseFilter.className = 'filterCollapse';
-collapseFilter.setAttribute('aria-label', 'Collapse filter');
+collapseFilter.setAttribute('aria-label', 'Hide search (keep filter)');
 collapseFilter.append(createIcon('chevron'));
 collapseFilter.addEventListener('click', () => componentFilter.toggle());
 
 const closeFilter = document.createElement('button');
 closeFilter.type = 'button';
 closeFilter.className = 'filterClose';
-closeFilter.setAttribute('aria-label', 'Exit filter');
+closeFilter.setAttribute('aria-label', 'Clear and close search');
 closeFilter.append(createIcon('close'));
 closeFilter.addEventListener('click', () =>
 {
@@ -578,7 +637,7 @@ closeFilter.addEventListener('click', () =>
 	componentFilter.apply(null);
 	componentFilter.toggle();
 });
-filterInput.after(collapseFilter, closeFilter);
+filterInput.parentElement.append(collapseFilter, closeFilter);
 
 /* Create toolbar actions */
 data.components.main.toolbar.create();
@@ -608,4 +667,5 @@ eventHooks.subscribe('galleryUnbound', 'mainBind', () =>
 	data.components.main.bind();
 });
 
-log('main', 'Config loaded =>', config.data);
+log.debug('config', 'Loaded', config.data);
+log.info('main', 'Ready. Enable Verbose in DevTools for detailed diagnostics.');

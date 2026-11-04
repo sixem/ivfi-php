@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+trap 'printf "Docker smoke test failed at line %s: %s\n" "$LINENO" "$BASH_COMMAND" >&2' ERR
 cd "$(dirname "$0")/.."
 for command in docker curl; do
   command -v "$command" >/dev/null || { echo "Required command: $command" >&2; exit 1; }
@@ -46,7 +47,7 @@ request() {
 }
 request 200 /
 grep -q '<title>Docker /</title>' "$scratch/body"
-grep -q '"selection":{"enabled":false}' "$scratch/body"
+grep -Eq '"selection":\{"enabled":false([,}])' "$scratch/body"
 request 200 /indexer/main.js
 request 200 /indexer/css/style.css
 request 200 /nested/

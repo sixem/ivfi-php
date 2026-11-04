@@ -10,7 +10,11 @@ return [
     'single_page' => false,
     /** Enables file selection and ZIP archive downloads together */
     'selection' => [
-        'enabled' => true
+        'enabled' => true,
+        'archive' => [
+            'request_delay_ms' => 0, /* Pause between file requests, in milliseconds */
+            'buffer_limit_mib' => 256 /* In-memory ZIP limit; larger archives require direct saving */
+        ]
     ],
     /**
      * Formatting options
@@ -64,7 +68,8 @@ return [
      */
     'extensions' => [
         'image' => ['jpg', 'jpeg', 'png', 'gif', 'ico', 'svg', 'bmp', 'webp'],
-        'video' => ['webm', 'mp4', 'ogg', 'ogv', 'mov']
+        'video' => ['webm', 'mp4', 'ogv', 'mov'],
+        'audio' => ['mp3', 'wav', 'flac', 'm4a', 'aac', 'ogg', 'oga', 'opus']
     ],
     /**
      * Injection options
@@ -117,6 +122,8 @@ return [
     'processor' => false,
     /* Should ? and # characters be encoded when processing URLs */
     'encode_all' => false,
+    /* Allow raw HTML and unsafe links in README previews (trusted files only) */
+    'allow_unsafe_readme' => false,
     /* Whether this .php file should be directly accessible */
     'allow_direct_access' => false,
     /* Set to 'strict' or 'weak'.

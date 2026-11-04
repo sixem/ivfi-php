@@ -8,3 +8,5 @@ docker/public
 *.zip
 *.ignore
 docker/.env
+/.ivfi-dev/
+/dev.config.local.json
