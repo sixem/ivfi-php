@@ -9,6 +9,7 @@ import { log } from './modules/logger';
 import { createIcon } from './icons';
 import { eventHooks } from './modules/event-hooks';
 import { disposePage, onPageReplace } from './modules/lifecycle';
+import { enablePreviewSound, hasPreviewSoundPrompt } from './helpers/previewUtils';
 import { playVideo, isAutoplayMuted } from './helpers/media';
 import { getAudioVolume, saveAudioVolume } from './helpers/audioVolume';
 import { AudioPreview } from './components/audio/preview';
@@ -210,6 +211,11 @@ if(selector.use('README_CONTAINER'))
 eventHooks.listen(selector.use('TABLE') as HTMLElement, 'click', 'sortClick', (event: MouseEvent) =>
 {
 	const eventTarget: HTMLElement = event.target as HTMLElement;
+	const previewLink = eventTarget.closest<HTMLAnchorElement>('a.preview');
+	const currentPreview = data.preview.data;
+	if(previewLink && currentPreview?.type === 'VIDEO' && currentPreview.loaded
+		&& previewLink.getAttribute('href') === currentPreview.src
+		&& enablePreviewSound(event, currentPreview.element as HTMLVideoElement)) return;
 
 	if(eventTarget.tagName === 'SPAN'
 		&& eventTarget.hasAttribute('sortable'))
@@ -387,9 +393,15 @@ if(config.get('mobile') === false
 	});
 	data.preview.takeAudio = (src, parent) => audioPreview.take(src, parent);
 	data.preview.hasAudio = src => audioPreview.has(src);
-	const unlockVideo = () =>
+	const unlockVideo = (event: Event) =>
 	{
 		const video = data.preview.data?.element;
+		// Keep the prompt active until the matching click can consume it.
+		const link = event.target instanceof Element ? event.target.closest('a.preview') : null;
+		if(event instanceof MouseEvent && event.type === 'pointerdown' && event.button === 0
+			&& !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey
+			&& link?.getAttribute('href') === data.preview.data?.src
+			&& hasPreviewSoundPrompt(video as HTMLVideoElement)) return;
 		if(video instanceof HTMLVideoElement && isAutoplayMuted(video))
 		{
 			setVideoVolume(video, data.preview.volume / 100);

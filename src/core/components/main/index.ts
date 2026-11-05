@@ -460,8 +460,11 @@ main.sortTableColumn = (target: HTMLTableCellElement) =>
 	const sortingTypes: number = config.get('sorting.types');
 	if((sortingTypes === 0 || sortingTypes === 2) && !skipDirectories)
 	{
+		const unknown = columnIndex === 2 ? rows.directories.filter(row => !row.children[2].hasAttribute('data-raw')) : [];
+		if(columnIndex === 2) rows.directories = rows.directories.filter(row => row.children[2].hasAttribute('data-raw'));
 		rows.directories.sort(comparer(columnIndex));
 		if(column.asc) rows.directories.reverse();
+		rows.directories.push(...unknown);
 	}
 	if(sortingTypes === 0 || sortingTypes === 1)
 	{

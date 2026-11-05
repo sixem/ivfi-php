@@ -202,6 +202,7 @@ export function loadVideo(src, callback)
 	video.style.maxWidth = 'inherit';
 	video.style.maxHeight = 'inherit';
 	let loaded = false;
+	let updateVolumeHint: (() => void) = null;
 	const current = () => this.active && id === this.id;
 	const metadata = () =>
 	{
@@ -216,17 +217,56 @@ export function loadVideo(src, callback)
 			return;
 		}
 		loaded = true;
-		this.data.on.onLoaded?.({ loaded: true, type: 'VIDEO', audible: isAudible(video), element: video, src });
+		metadata();
+		const audible = isAudible(video);
+		this.data.on.onLoaded?.({ loaded: true, type: 'VIDEO', audible, element: video, src });
+		{
+			const indicator = document.createElement('span');
+			indicator.className = 'previewVolumeHint';
+			indicator.setAttribute('aria-hidden', 'true');
+			indicator.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/>${video.volume > 0 ? '<path d="M16 9a5 5 0 0 1 0 6"/>' : ''}${video.volume >= 0.1 ? '<path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>' : ''}</svg>`;
+			if(!audible) indicator.querySelector('svg').innerHTML = '<path d="M16 9a5 5 0 0 1 .95 2.293"/><path d="M19.364 5.636a9 9 0 0 1 1.889 9.96"/><path d="m2 2 20 20"/><path d="m7 7-.587.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298V11"/><path d="M9.828 4.172A.686.686 0 0 1 11 4.657v.686"/>';
+			this.data.container?.appendChild(indicator);
+			if(audible)
+			{
+				const volumeState = () => video.volume === 0 ? 0 : video.volume < 0.1 ? 1 : 2;
+				let state = volumeState();
+				updateVolumeHint = () =>
+				{
+					const nextState = volumeState();
+					if(nextState === state || !current()) return;
+					state = nextState;
+					const svg = indicator.querySelector('svg');
+					svg.querySelectorAll('path:not(:first-child)').forEach(path => path.remove());
+					const waves = ['M16 9a5 5 0 0 1 0 6', 'M19.364 18.364a9 9 0 0 0 0-12.728'];
+					for(const path of waves.slice(0, state))
+					{
+						const wave = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+						wave.setAttribute('d', path);
+						svg.appendChild(wave);
+					}
+					const opacity = Number(getComputedStyle(indicator).opacity);
+					indicator.getAnimations().forEach(animation => animation.cancel());
+					indicator.style.animation = 'none';
+					indicator.animate([
+						{ opacity, offset: 0 },
+						{ opacity: 1, offset: 0.1 },
+						{ opacity: 1, offset: 0.75 },
+						{ opacity: 0, offset: 1 }
+					], { duration: 1600, easing: 'ease', fill: 'forwards' });
+				};
+				video.addEventListener('volumechange', updateVolumeHint);
+			}
+		}
 	};
 	const error = () => { if(current()) callback(false); };
-	video.addEventListener('loadedmetadata', metadata);
 	video.addEventListener('loadeddata', ready);
 	video.addEventListener('canplay', ready);
 	video.addEventListener('error', error);
 	source.addEventListener('error', error);
 	this.cleanupMedia = () =>
 	{
-		video.removeEventListener('loadedmetadata', metadata);
+		if(updateVolumeHint) video.removeEventListener('volumechange', updateVolumeHint);
 		video.removeEventListener('loadeddata', ready);
 		video.removeEventListener('canplay', ready);
 		video.removeEventListener('error', error);

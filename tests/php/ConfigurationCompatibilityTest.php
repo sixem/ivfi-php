@@ -28,6 +28,54 @@ final class ConfigurationCompatibilityTest extends TestCase
         rmdir($this->root);
     }
 
+    public function testProcessorDirectorySizes(): void
+    {
+        mkdir($this->root . '/media/empty');
+        mkdir($this->root . '/media/unknown');
+        file_put_contents($this->root . '/media/empty/file', 'nonempty');
+        foreach ($this->variants() as $variant) {
+            $config = '<?php return ["directory_sizes"=>["enabled"=>true,"source"=>"processor"],'
+                . '"processor"=>["item"=>function($data){foreach($data["directories"] as &$dir)'
+                . '{if($dir[1]==="empty")$dir["size"]=0;}return $data;}]];';
+            $response = $this->render($variant, $config);
+            self::assertSame(200, $response['status']);
+            self::assertStringContainsString('data-raw="0">0 B</td>', $response['body']);
+            self::assertStringContainsString('data-count="size">–</span>', $response['body']);
+        }
+    }
+
+    public function testDirectoryScanCountsVisibleFilesOnly(): void
+    {
+        mkdir($this->root . '/media/folder/nested', 0700, true);
+        file_put_contents($this->root . '/media/folder/file', 'abc');
+        file_put_contents($this->root . '/media/folder/.hidden', 'ignored');
+        file_put_contents($this->root . '/media/folder/nested/file', '12345');
+        foreach ($this->variants() as $variant) {
+            foreach ([false, true] as $recursive) {
+                $response = $this->render($variant, '<?php return ["directory_sizes"=>["enabled"=>true,"recursive"=>' . ($recursive ? 'true' : 'false') . ']];');
+                self::assertSame(200, $response['status']);
+                self::assertMatchesRegularExpression('/class="directory".*?<td data-raw="' . ($recursive ? 8 : 3) . '">/s', $response['body']);
+            }
+        }
+    }
+
+    public function testUnknownDirectorySizesSortLast(): void
+    {
+        foreach (['unknown', 'zero', 'large'] as $name) mkdir($this->root . '/media/' . $name);
+        foreach ($this->variants() as $variant) {
+            foreach (['SORT_ASC', 'SORT_DESC'] as $order) {
+                $config = '<?php return ["directory_sizes"=>["enabled"=>true,"source"=>"processor"],'
+                    . '"sorting"=>["enabled"=>true,"sort_by"=>"size","order"=>' . $order . '],'
+                    . '"processor"=>["item"=>function($data){foreach($data["directories"] as &$dir)'
+                    . '{$dir["size"]=["zero"=>0,"large"=>999][$dir[1]]??null;}return $data;}]];';
+                $response = $this->render($variant, $config);
+                self::assertSame(200, $response['status']);
+                preg_match_all('/<tr class="directory"><td data-raw="([^"]+)"/', $response['body'], $matches);
+                self::assertSame($order === 'SORT_ASC' ? ['zero', 'large', 'unknown'] : ['large', 'zero', 'unknown'], $matches[1]);
+            }
+        }
+    }
+
     private function variants(): array
     {
         $variant = getenv('IVFI_PHP_VARIANT');

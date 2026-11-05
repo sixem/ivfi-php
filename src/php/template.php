@@ -671,6 +671,10 @@ $config['debug'] = true;
 /* Apply explicit debugging before validating the remaining settings. */
 ini_set('display_errors', isset($config['debug']) && $config['debug'] === true ? '1' : '0');
 $config = mergeConfigDefaults($config, $defaults);
+if(!in_array($config['directory_sizes']['source'], ['filesystem', 'processor'], true))
+{
+  throw new RuntimeException('directory_sizes.source must be filesystem or processor.');
+}
 $archiveConfig = $config['selection']['archive'];
 if(!is_int($archiveConfig['request_delay_ms']) || $archiveConfig['request_delay_ms'] < 0
   || $archiveConfig['request_delay_ms'] > 2147483647)
@@ -1145,13 +1149,12 @@ class Indexer extends Helpers
       $url = $this->handlePathing($dir['url'], true);
 
       /** Directory size */
-      $size = $this->directorySizes['enabled']
-        ? self::getReadableFileSize($dir['size'])
-        : '-';
+      $knownSize = $this->directorySizes['enabled'] && $dir['size'] !== null;
+      $size = $knownSize ? self::getReadableFileSize($dir['size']) : '–';
 
       if($this->directorySizes['enabled'])
       {
-        $totalSize = ($totalSize + $dir['size']);
+        $totalSize = $totalSize === null || $dir['size'] === null ? null : $totalSize + $dir['size'];
       }
 
       /** Create directory name column */
@@ -1169,7 +1172,7 @@ class Indexer extends Helpers
       ], parent::createElementHtml('span', [], $dir['modified'][1]));
 
       /** Create size column */
-      $tdSize = parent::createElement('td', $this->directorySizes['enabled']
+      $tdSize = parent::createElement('td', $knownSize
         ? ['data-raw' => $dir['size']]
         : [], $size
       );
@@ -1295,11 +1298,11 @@ class Indexer extends Helpers
       $item['modified'] = self::formatModified($modified, $timezone['offset']);
       $item['type'] = 'directory';
       $item['url'] = $urlPrefix . $dirName;
-      $item['size'] = $this->directorySizes['enabled']
+      $item['size'] = $this->directorySizes['enabled'] && $this->directorySizes['source'] === 'filesystem'
         ? ($this->directorySizes['recursive']
           ? self::getDirectorySizeRecursively($dirPath)
           : self::getDirectorySize($dirPath))
-        : 0;
+        : ($this->directorySizes['enabled'] ? null : 0);
     }
     unset($item);
 
@@ -1341,6 +1344,15 @@ class Indexer extends Helpers
       $data = $this->processor['item']($data, $this);
     }
 
+    foreach($data['directories'] as &$directory)
+    {
+      $bytes = $directory['size'] ?? null;
+      if($bytes !== null && (!is_int($bytes) || $bytes < 0))
+        throw new RuntimeException('Processor directory sizes must be non-negative integer bytes or null.');
+      $directory['size'] = $bytes;
+    }
+    unset($directory);
+
     /* Sort items server-side */
     if($sorting)
     {
@@ -1355,11 +1367,20 @@ class Indexer extends Helpers
 
       if($sortItems === 0 || $sortItems === 2)
       {
-        array_multisort(
-          array_column($data['directories'], $sortType),
-          $sorting,
-          $data['directories']
-        );
+        if($sortType === 'size')
+        {
+          usort($data['directories'], static function ($a, $b) use ($sorting) {
+            if($a['size'] === null || $b['size'] === null)
+              return ($a['size'] === null) <=> ($b['size'] === null);
+            return ($sorting === SORT_DESC ? -1 : 1) * ($a['size'] <=> $b['size']);
+          });
+        } else {
+          array_multisort(
+            array_column($data['directories'], $sortType),
+            $sorting,
+            $data['directories']
+          );
+        }
       }
     }
 
@@ -1373,12 +1394,12 @@ class Indexer extends Helpers
     $HTML .= (implode(PHP_EOL, $directoryRows['rows']) . implode(PHP_EOL, $fileRows['rows']));
   
     /** Set request data */
-    $data['size']['total'] = ($directoryRows['totalSize'] + $fileRows['totalSize']);
+    $data['size']['total'] = ($directoryRows['totalSize'] === null ? null : $directoryRows['totalSize'] + $fileRows['totalSize']);
     $data['recent']['directory'] = $directoryRows['mostRecentTimestamp'];
     $data['recent']['file'] = $fileRows['mostRecentTimestamp'];
 
     /** Get readable size */
-    $data['size']['readable'] = self::getReadableFileSize($data['size']['total']);
+    $data['size']['readable'] = $data['size']['total'] === null ? '–' : self::getReadableFileSize($data['size']['total']);
 
     return [
       'contents' => $HTML,
@@ -1711,64 +1732,37 @@ class Indexer extends Helpers
    * 
    * @return Integer
    */ 
-  private function getDirectorySize($path)
+  private function getDirectorySize($path, $recursive = false)
   {
     $size = 0;
-
-    try
+    $entries = @scandir($path, SCANDIR_SORT_NONE);
+    if($entries === false) return null;
+    foreach($entries as $name)
     {
-      foreach(scandir($path, SCANDIR_SORT_NONE) as $file)
+      // Hidden entries and symlinks are excluded consistently in both modes.
+      if($name[0] === '.') continue;
+      $file = $this->joinPaths($path, $name);
+      $stat = @lstat($file);
+      if($stat === false) return null;
+      $type = $stat['mode'] & 0170000;
+      if($type === 0120000) continue;
+      if($type === 0040000)
       {
-        if($file[0] === '.')
-        {
-          continue;
-        } else {
-          $filesize = filesize($this->joinPaths($path, $file));
-
-          if($filesize && $filesize > 0)
-          {
-            $size += $filesize;
-          }
-        }
+        if(!$recursive) continue;
+        $bytes = $this->getDirectorySize($file, true);
+      } else {
+        if($type !== 0100000) continue;
+        $bytes = $stat['size'];
       }
-    } catch (Exception $e)
-    {
-      $size += 0;
+      if($bytes === null || $bytes < 0 || $bytes > PHP_INT_MAX - $size) return null;
+      $size += $bytes;
     }
-
     return $size;
   }
 
-  /**
-   * Gets the full size of a director using recursive scanning
-   *
-   * @param String   $path   File path
-   * 
-   * @return Integer
-   */ 
   private function getDirectorySizeRecursively($path)
   {
-    $size = 0;
-
-    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
-
-    try
-    {
-      foreach($iterator as $file)
-      {
-        if($file->isDir())
-        {
-          continue;
-        } else {
-          $size += filesize($file->getPathname());
-        }
-      }
-    } catch (Exception $e)
-    {
-      $size += 0;
-    }
-
-    return $size;
+    return $this->getDirectorySize($path, true);
   }
 
   /**

@@ -246,11 +246,12 @@ An example that'll exclude any `jpg` or `jpeg` files:
 ## Directory Sizes
 Key: **`directory_sizes`**
 
-Calculates directory sizes. This can slow down listings, especially with recursive scanning.
+Filesystem sizing counts visible regular files and skips symlinks. Failed scans show “–”; recursive scans can be slow.
 
 | Child key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `enabled` | Bool | `false` | Whether directory sizes should be calculated or not.
+| `enabled` | Bool | `false` | Display directory sizes from the selected source.
+| `source` | String | `filesystem` | Use `processor` to supply sizes without scanning. |
 | `recursive` | Bool | `false` | Recursively scans the directories when calculating the size.
 
 ## Footer

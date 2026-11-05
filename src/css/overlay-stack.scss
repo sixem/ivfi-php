@@ -39,13 +39,16 @@ html > body > .overlayStack {
   }
 
   .selectionSummary,
-  #indicatorPreviewVolume {
+  #indicatorPreviewVolume,
+  #indicatorPreviewSound {
     box-sizing: border-box;
     max-width: 100%;
     padding: 4px 8px;
     border: 2px solid variables.$surface-border;
     border-radius: 4px;
-    background: #08090a;
+    background: rgb(8 9 10 / 65%);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+    backdrop-filter: blur(8px);
     color: variables.$text-color;
     font: 500 0.8125rem / 1.35 Inter, sans-serif;
     font-variant-numeric: tabular-nums;

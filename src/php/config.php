@@ -111,6 +111,7 @@ return [
      * option, so be aware of that
      */
     'directory_sizes' => [
+      'source' => 'filesystem', /* filesystem or processor */
       /* Whether directory sizes should be calculated or not */
       'enabled' => false,
       /* Recursively scans the directories when calculating the size */

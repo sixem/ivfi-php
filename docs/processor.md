@@ -12,7 +12,7 @@ Use `processor.item` to modify listing data before sorting and rendering. The ca
 | `1` | Displayed filename | Directory name |
 | `name` | Lowercase sorting name, when sorting by name | Same |
 | `type` | `[type, extension]`, e.g. `['image', 'jpg']` | `'directory'` |
-| `size` | `[bytes, readable size]` | Bytes, or `0` when directory sizes are disabled |
+| `size` | `[bytes, readable size]` | Bytes, `null` when unknown, or `0` when disabled |
 | `modified` | `[timestamp, date HTML]` | Same |
 | `url` | File URL | Directory URL |
 
@@ -31,3 +31,5 @@ return [
     ]
 ];
 ```
+
+Set `directory_sizes.enabled` to `true` and `directory_sizes.source` to `processor` to skip scans. Supply non-negative integer bytes in each directory’s `size`; `null` displays as “–”, while `0` means empty. Unknown sizes sort last and make the total unknown.
